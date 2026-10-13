@@ -1,0 +1,29 @@
+[
+  {
+    "id": "word_12_01",
+    "topicId": "topic_12_unit1",
+    "grade": 12,
+    "english": "perseverance",
+    "ipa": "/ˌpɜː.sɪˈvɪə.rəns/",
+    "meaningVi": "sự kiên trì, bền chí",
+    "example": "Through hard work and perseverance, she finally achieved her dream."
+  },
+  {
+    "id": "word_12_02",
+    "topicId": "topic_12_unit2",
+    "grade": 12,
+    "english": "infrastructure",
+    "ipa": "/ˈɪn.frəˌstrʌk.tʃər/",
+    "meaningVi": "cơ sở hạ tầng",
+    "example": "Rapid urbanisation demands massive investments in municipal infrastructure."
+  },
+  {
+    "id": "word_12_03",
+    "topicId": "topic_12_unit3",
+    "grade": 12,
+    "english": "biodegradable",
+    "ipa": "/ˌbaɪ.əʊ.dɪˈɡreɪ.də.bəl/",
+    "meaningVi": "có thể phân hủy sinh học",
+    "example": "Many supermarkets have switched to biodegradable shopping bags."
+  }
+]

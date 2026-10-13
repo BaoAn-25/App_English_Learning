@@ -1,0 +1,53 @@
+[
+  {
+    "id": "q_12_01",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Many secondary school graduates strive to gain _______ independence before stepping into university.",
+    "options": [
+      "financial",
+      "finance",
+      "financially",
+      "financier"
+    ],
+    "correctIndex": 0,
+    "explanation": "Trước danh từ 'independence' cần một tính từ bổ nghĩa. 'financial' (thuộc về tài chính) là tính từ chính xác để tạo cụm 'financial independence' (sự tự chủ về tài chính).",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_02",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "By the time the volunteers reached the remote flooded village, the floodwaters _______ significantly.",
+    "options": [
+      "receded",
+      "had receded",
+      "have receded",
+      "recede"
+    ],
+    "correctIndex": 1,
+    "explanation": "Cấu trúc 'By the time + S + V(quá khứ đơn), S + had + VpII' diễn tả hành động nước lũ rút xảy ra và hoàn tất trước thời điểm các tình nguyện viên đến.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_03",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Nam: 'Shall we organize a green campaign to collect plastic waste this Sunday?' - Phong: '_______'",
+    "options": [
+      "That's a fantastic idea!",
+      "You're welcome.",
+      "Never mind about that.",
+      "No, not at all."
+    ],
+    "correctIndex": 0,
+    "explanation": "Đây là câu đề nghị hành động chung ('Shall we...?'). Câu đáp lại đồng tình và ủng hộ tự nhiên nhất là 'That's a fantastic idea!' (Ý tưởng tuyệt vời đấy!).",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  }
+]
