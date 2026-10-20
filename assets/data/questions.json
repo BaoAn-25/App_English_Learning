@@ -49,5 +49,1144 @@
     "topicId": "topic_12_unit3",
     "passageId": null,
     "difficulty": 1
+  },
+  {
+    "id": "q_12_04",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "If I had studied harder, I _______ the exam.",
+    "options": [
+      "will pass",
+      "would pass",
+      "would have passed",
+      "pass"
+    ],
+    "correctIndex": 2,
+    "explanation": "Câu điều kiện loại 3 diễn tả tình huống trái với quá khứ. Cấu trúc: If + S + had + V3, S + would have + V3.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_05",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Her remarkable achievements have become a source of _______ for young people.",
+    "options": [
+      "inspiration",
+      "inspire",
+      "inspiring",
+      "inspired"
+    ],
+    "correctIndex": 0,
+    "explanation": "Sau cụm 'a source of' cần danh từ. 'Inspiration' nghĩa là nguồn cảm hứng.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_06",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Rapid _______ has created both opportunities and challenges for major cities.",
+    "options": [
+      "urbanisation",
+      "urbanise",
+      "urban",
+      "urbanised"
+    ],
+    "correctIndex": 0,
+    "explanation": "Vị trí chủ ngữ cần danh từ. 'Urbanisation' nghĩa là quá trình đô thị hóa.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_07",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Using reusable shopping bags can help reduce plastic _______.",
+    "options": [
+      "pollution",
+      "pollute",
+      "polluted",
+      "polluting"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cụm từ đúng là 'plastic pollution', nghĩa là ô nhiễm nhựa.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_08",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The scientist was widely _______ for her contribution to medical research.",
+    "options": [
+      "recognised",
+      "recognition",
+      "recognise",
+      "recognisable"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cấu trúc bị động 'was recognised for' nghĩa là được công nhận vì đóng góp nào đó.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_09",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The government is investing in public transport to reduce traffic _______.",
+    "options": [
+      "congestion",
+      "congest",
+      "congested",
+      "congesting"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cụm 'traffic congestion' có nghĩa là tình trạng ùn tắc giao thông.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_10",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "If people use less plastic, the environment _______ cleaner.",
+    "options": [
+      "will become",
+      "would become",
+      "had become",
+      "became"
+    ],
+    "correctIndex": 0,
+    "explanation": "Câu điều kiện loại 1: If + hiện tại đơn, S + will + động từ nguyên mẫu.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_11",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The new bridge _______ by the end of next year.",
+    "options": [
+      "will have been completed",
+      "has completed",
+      "had completed",
+      "completes"
+    ],
+    "correctIndex": 0,
+    "explanation": "Thì tương lai hoàn thành bị động: will have been + V3. Dấu hiệu là 'by the end of next year'.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 3
+  },
+  {
+    "id": "q_12_12",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "She is the most inspiring person _______ I have ever met.",
+    "options": [
+      "that",
+      "whose",
+      "where",
+      "when"
+    ],
+    "correctIndex": 0,
+    "explanation": "Đại từ quan hệ 'that' thay thế cho người và làm tân ngữ trong mệnh đề quan hệ. Trong câu này, 'that' phù hợp nhất trong các lựa chọn.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_13",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Despite _______ very busy, he still volunteers at the local shelter.",
+    "options": [
+      "being",
+      "be",
+      "to be",
+      "is"
+    ],
+    "correctIndex": 0,
+    "explanation": "Sau giới từ 'despite' có thể dùng danh từ hoặc V-ing. Vì vậy 'being' là đáp án đúng.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_14",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The more trees we plant, _______ the air becomes.",
+    "options": [
+      "the cleaner",
+      "cleaner",
+      "the cleanest",
+      "cleanest"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cấu trúc so sánh kép: The + so sánh hơn, the + so sánh hơn.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_15",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Her determination helped her _______ many difficulties in life.",
+    "options": [
+      "overcome",
+      "prevent",
+      "avoid",
+      "refuse"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Overcome difficulties' nghĩa là vượt qua khó khăn. Sau 'helped her' dùng động từ nguyên mẫu.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_16",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The city needs to improve its public transport _______ to meet growing demand.",
+    "options": [
+      "infrastructure",
+      "population",
+      "pollution",
+      "congestion"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Infrastructure' nghĩa là cơ sở hạ tầng, phù hợp với ngữ cảnh cải thiện hệ thống giao thông công cộng.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_17",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Switching to renewable energy is an effective way to reduce carbon _______.",
+    "options": [
+      "emissions",
+      "admissions",
+      "permissions",
+      "missions"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Carbon emissions' nghĩa là lượng khí thải carbon.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_18",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The young entrepreneur received an award for her _______ ideas.",
+    "options": [
+      "innovative",
+      "ordinary",
+      "traditional",
+      "outdated"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Innovative' nghĩa là sáng tạo, đổi mới, phù hợp với ngữ cảnh được trao giải thưởng.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_19",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "When I arrived at the station, the train _______.",
+    "options": [
+      "had already left",
+      "has already left",
+      "already leaves",
+      "will already leave"
+    ],
+    "correctIndex": 0,
+    "explanation": "Hành động tàu rời ga xảy ra trước hành động tôi đến, nên dùng thì quá khứ hoàn thành.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_20",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The students _______ won the competition were invited to the ceremony.",
+    "options": [
+      "who",
+      "which",
+      "where",
+      "whose"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Who' là đại từ quan hệ thay thế cho người và làm chủ ngữ của mệnh đề quan hệ.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_21",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "If I _______ you, I would apply for that scholarship.",
+    "options": [
+      "were",
+      "am",
+      "will be",
+      "have been"
+    ],
+    "correctIndex": 0,
+    "explanation": "Câu điều kiện loại 2: If + S + V(quá khứ đơn), S + would + V. Trong giả định, thường dùng 'If I were you'.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_22",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The new environmental regulations _______ next month.",
+    "options": [
+      "will be introduced",
+      "introduced",
+      "have introduced",
+      "introducing"
+    ],
+    "correctIndex": 0,
+    "explanation": "Câu bị động ở thì tương lai đơn: will be + V3.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_23",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "She suggested _______ a recycling programme at school.",
+    "options": [
+      "starting",
+      "start",
+      "to start",
+      "started"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cấu trúc 'suggest + V-ing' dùng để đề xuất thực hiện một hành động.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_24",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Not only _______ hard, but she also volunteers regularly.",
+    "options": [
+      "does she study",
+      "she studies",
+      "she does study",
+      "studies she"
+    ],
+    "correctIndex": 0,
+    "explanation": "Khi 'Not only' đứng đầu câu, mệnh đề phải đảo ngữ: Not only + trợ động từ + chủ ngữ + động từ.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 3
+  },
+  {
+    "id": "q_12_25",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "He has lived in this city _______ 2018.",
+    "options": [
+      "since",
+      "for",
+      "during",
+      "from"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Since' đi với một mốc thời gian cụ thể, còn 'for' đi với khoảng thời gian.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_26",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The project was successful _______ the limited budget.",
+    "options": [
+      "despite",
+      "although",
+      "because",
+      "however"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Despite + cụm danh từ' diễn tả sự tương phản. 'Although' phải đi với mệnh đề.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_27",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST in meaning to 'remarkable': Her remarkable achievements inspired many young people.",
+    "options": [
+      "extraordinary",
+      "ordinary",
+      "unimportant",
+      "common"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Remarkable' nghĩa là đáng chú ý, phi thường; gần nghĩa nhất với 'extraordinary'.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_28",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE in meaning to 'temporary': Many workers live in temporary accommodation.",
+    "options": [
+      "permanent",
+      "short-term",
+      "brief",
+      "provisional"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Temporary' là tạm thời, trái nghĩa với 'permanent' là lâu dài, vĩnh viễn.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_29",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST in meaning to 'conserve': We should conserve natural resources.",
+    "options": [
+      "protect",
+      "waste",
+      "destroy",
+      "consume"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Conserve' nghĩa là bảo tồn, gìn giữ; 'protect' là lựa chọn gần nghĩa nhất.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_30",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE in meaning to 'prosperous': The region has become prosperous.",
+    "options": [
+      "impoverished",
+      "wealthy",
+      "successful",
+      "affluent"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Prosperous' nghĩa là thịnh vượng; 'impoverished' nghĩa là nghèo khó.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_31",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST in meaning to 'determination': Her determination helped her succeed.",
+    "options": [
+      "resolve",
+      "hesitation",
+      "uncertainty",
+      "confusion"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Determination' nghĩa là sự quyết tâm; 'resolve' cũng có nghĩa là quyết tâm.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_32",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE in meaning to 'sustainable': The company adopted sustainable practices.",
+    "options": [
+      "unsustainable",
+      "eco-friendly",
+      "responsible",
+      "renewable"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Sustainable' nghĩa là bền vững; 'unsustainable' nghĩa là không bền vững.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_33",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST in meaning to 'significant': The city has experienced significant changes.",
+    "options": [
+      "considerable",
+      "minor",
+      "insignificant",
+      "trivial"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Significant' nghĩa là đáng kể; 'considerable' là từ gần nghĩa.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_34",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE in meaning to 'reluctant': He was reluctant to accept the offer.",
+    "options": [
+      "willing",
+      "hesitant",
+      "unwilling",
+      "uncertain"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Reluctant' nghĩa là miễn cưỡng; 'willing' nghĩa là sẵn lòng.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_35",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST in meaning to 'mitigate': New policies aim to mitigate air pollution.",
+    "options": [
+      "reduce",
+      "increase",
+      "intensify",
+      "worsen"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Mitigate' nghĩa là làm giảm mức độ nghiêm trọng; 'reduce' gần nghĩa nhất trong ngữ cảnh.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 3
+  },
+  {
+    "id": "q_12_36",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE in meaning to 'scarce': Clean water is scarce in some areas.",
+    "options": [
+      "abundant",
+      "limited",
+      "rare",
+      "insufficient"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Scarce' nghĩa là khan hiếm; 'abundant' nghĩa là dồi dào.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_37",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Mai: 'Would you mind helping me carry these books?' - Lan: '_______'",
+    "options": [
+      "Not at all. I'd be happy to.",
+      "Yes, I would love books.",
+      "No, I don't carry.",
+      "You're welcome."
+    ],
+    "correctIndex": 0,
+    "explanation": "Câu 'Would you mind...?' là lời nhờ giúp đỡ. 'Not at all. I'd be happy to.' thể hiện sự đồng ý lịch sự.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_38",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Tom: 'Congratulations on winning the scholarship!' - Hoa: '_______'",
+    "options": [
+      "Thank you very much!",
+      "Never mind.",
+      "That's a pity.",
+      "No problem."
+    ],
+    "correctIndex": 0,
+    "explanation": "Khi nhận lời chúc mừng, câu đáp tự nhiên nhất là 'Thank you very much!'.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_39",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Anna: 'Why don't we take the bus instead of driving?' - Ben: '_______'",
+    "options": [
+      "That's a good idea.",
+      "I don't think buses exist.",
+      "You're welcome.",
+      "It doesn't matter who."
+    ],
+    "correctIndex": 0,
+    "explanation": "'Why don't we...?' là cấu trúc đề xuất. 'That's a good idea.' là lời đồng tình phù hợp.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_40",
+    "grade": 12,
+    "type": "communication",
+    "stem": "David: 'I'm sorry for arriving late.' - Minh: '_______'",
+    "options": [
+      "That's all right.",
+      "Congratulations!",
+      "Good luck!",
+      "Nice to meet you."
+    ],
+    "correctIndex": 0,
+    "explanation": "Khi người khác xin lỗi, 'That's all right.' là cách đáp lại tự nhiên để chấp nhận lời xin lỗi.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_41",
+    "grade": 12,
+    "type": "signs",
+    "stem": "A sign reads: 'NO LITTERING – KEEP THIS AREA CLEAN'. What does it mean?",
+    "options": [
+      "Visitors may leave rubbish here.",
+      "Visitors must not throw rubbish in this area.",
+      "Only plastic rubbish is allowed.",
+      "Visitors must clean the area every morning."
+    ],
+    "correctIndex": 1,
+    "explanation": "'No littering' nghĩa là cấm xả rác. Biển báo yêu cầu mọi người giữ vệ sinh khu vực.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_42",
+    "grade": 12,
+    "type": "signs",
+    "stem": "A sign reads: 'PEDESTRIAN ZONE – NO MOTOR VEHICLES'. What does it mean?",
+    "options": [
+      "Cars can enter at any time.",
+      "Motorcycles have priority.",
+      "Only buses can enter.",
+      "Motor vehicles are not allowed in this area."
+    ],
+    "correctIndex": 3,
+    "explanation": "'Pedestrian zone' là khu vực dành cho người đi bộ. 'No motor vehicles' nghĩa là cấm phương tiện cơ giới.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_43",
+    "grade": 12,
+    "type": "signs",
+    "stem": "A notice reads: 'PLEASE SWITCH OFF THE LIGHTS WHEN LEAVING'. What should people do?",
+    "options": [
+      "Turn off the lights before leaving.",
+      "Leave all lights on.",
+      "Replace the lights every day.",
+      "Avoid entering the room."
+    ],
+    "correctIndex": 0,
+    "explanation": "'Switch off the lights' nghĩa là tắt đèn. Thông báo nhắc mọi người tiết kiệm điện khi rời phòng.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_44",
+    "grade": 12,
+    "type": "signs",
+    "stem": "A sign reads: 'STAFF ONLY – AUTHORISED PERSONNEL BEYOND THIS POINT'. What does it mean?",
+    "options": [
+      "Everyone can enter freely.",
+      "Visitors should wait for a bus.",
+      "Only authorised staff may enter.",
+      "All students must enter."
+    ],
+    "correctIndex": 2,
+    "explanation": "'Staff only' và 'authorised personnel' cho biết chỉ nhân viên hoặc người được phép mới được vào.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_45",
+    "grade": 12,
+    "type": "signs",
+    "stem": "A notice reads: 'APPLICATION DEADLINE: 30 JUNE. LATE SUBMISSIONS WILL NOT BE ACCEPTED.' What does it mean?",
+    "options": [
+      "Applications must be submitted after 30 June.",
+      "Applications submitted after 30 June will be rejected.",
+      "The application process begins on 30 June.",
+      "Applicants can submit documents at any time."
+    ],
+    "correctIndex": 1,
+    "explanation": "'Deadline' là hạn chót. 'Late submissions will not be accepted' nghĩa là hồ sơ nộp muộn sẽ không được chấp nhận.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_46",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences into a logical paragraph. a. Finally, she received a scholarship to study abroad. b. Lan had always dreamed of becoming a scientist. c. To achieve her goal, she studied hard and joined science competitions. d. Her determination inspired many classmates.",
+    "options": [
+      "a - b - c - d",
+      "c - b - d - a",
+      "b - c - a - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 2,
+    "explanation": "Mở đầu bằng ước mơ (b), tiếp theo là nỗ lực (c), kết quả nhận học bổng (a), cuối cùng là ảnh hưởng tích cực (d).",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_47",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences into a logical paragraph. a. As a result, air pollution has become a serious concern. b. Many people have moved from rural areas to large cities. c. Governments are therefore investing in cleaner public transport. d. This population growth has increased traffic and energy consumption.",
+    "options": [
+      "b - d - a - c",
+      "a - c - b - d",
+      "d - b - c - a",
+      "c - a - d - b"
+    ],
+    "correctIndex": 0,
+    "explanation": "Bắt đầu bằng di cư đến thành phố (b), hệ quả tăng giao thông và năng lượng (d), gây ô nhiễm (a), rồi đến giải pháp (c).",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_48",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the dialogue. a. Minh: That sounds great! What should I bring? b. Hoa: We are organising a tree-planting event this Sunday. c. Minh: Are there any environmental activities this weekend? d. Hoa: Just bring a hat and a reusable water bottle.",
+    "options": [
+      "b - c - d - a",
+      "a - b - c - d",
+      "d - c - b - a",
+      "c - b - a - d"
+    ],
+    "correctIndex": 3,
+    "explanation": "Minh hỏi về hoạt động (c), Hoa giới thiệu sự kiện (b), Minh hỏi cần mang gì (a), Hoa trả lời (d).",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_49",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences into a logical paragraph. a. He later founded a company that developed affordable medical devices. b. Today, his inventions improve the lives of thousands of patients. c. As a student, Nam was interested in solving healthcare problems. d. He spent several years researching and testing new ideas.",
+    "options": [
+      "a - c - d - b",
+      "c - d - a - b",
+      "d - a - b - c",
+      "b - c - a - d"
+    ],
+    "correctIndex": 1,
+    "explanation": "Giới thiệu sở thích thời sinh viên (c), quá trình nghiên cứu (d), thành lập công ty (a), tác động hiện tại (b).",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_50",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences into a logical paragraph. a. First, residents separate paper, plastic and glass at home. b. Recycling can significantly reduce household waste. c. These materials are then collected and sent to recycling centres. d. Finally, they are processed into useful new products.",
+    "options": [
+      "a - b - d - c",
+      "c - a - b - d",
+      "b - a - c - d",
+      "d - b - a - c"
+    ],
+    "correctIndex": 2,
+    "explanation": "Câu chủ đề (b), bước phân loại (a), thu gom (c), cuối cùng tái chế thành sản phẩm mới (d).",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_51",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the email sentences. a. I would be grateful if you could provide more information. b. Dear Sir or Madam, c. I am writing to enquire about your summer internship programme. d. Yours faithfully, Minh Nguyen.",
+    "options": [
+      "b - c - a - d",
+      "c - b - d - a",
+      "a - c - b - d",
+      "d - b - a - c"
+    ],
+    "correctIndex": 0,
+    "explanation": "Email trang trọng gồm lời chào (b), mục đích viết (c), yêu cầu thông tin (a), lời kết (d).",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_52",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences into a logical paragraph. a. Consequently, housing prices have increased in many districts. b. Rapid urbanisation has attracted large numbers of new residents. c. Local authorities are planning more affordable housing projects. d. The growing population has created greater demand for accommodation.",
+    "options": [
+      "d - a - b - c",
+      "a - c - d - b",
+      "c - b - d - a",
+      "b - d - a - c"
+    ],
+    "correctIndex": 3,
+    "explanation": "Đô thị hóa thu hút dân cư (b), nhu cầu nhà ở tăng (d), giá nhà tăng (a), chính quyền đề xuất giải pháp (c).",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_53",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the dialogue. a. An: Congratulations! You really deserve it. b. Binh: I have just won first prize in the science competition. c. An: You look very happy today. What happened? d. Binh: Thank you! I worked hard for several months.",
+    "options": [
+      "a - b - c - d",
+      "c - b - a - d",
+      "b - d - c - a",
+      "d - a - b - c"
+    ],
+    "correctIndex": 1,
+    "explanation": "An hỏi lý do vui (c), Bình báo tin (b), An chúc mừng (a), Bình cảm ơn (d).",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_54",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences into a logical paragraph. a. As a result, electricity consumption decreased noticeably. b. The school launched an energy-saving campaign last month. c. Students were encouraged to switch off unused electrical devices. d. The campaign showed how small actions can make a difference.",
+    "options": [
+      "c - a - b - d",
+      "a - b - d - c",
+      "b - c - a - d",
+      "d - c - a - b"
+    ],
+    "correctIndex": 2,
+    "explanation": "Giới thiệu chiến dịch (b), hành động cụ thể (c), kết quả (a), kết luận (d).",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_55",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the email sentences. a. Thank you for considering my application. b. Dear Recruitment Team, c. I am particularly interested in your environmental research projects. d. I would like to apply for the volunteer position advertised on your website. e. Yours sincerely, Hoa Tran.",
+    "options": [
+      "b - d - c - a - e",
+      "d - b - a - c - e",
+      "b - a - d - e - c",
+      "c - d - b - a - e"
+    ],
+    "correctIndex": 0,
+    "explanation": "Email bắt đầu bằng lời chào (b), nêu mục đích ứng tuyển (d), trình bày sự quan tâm (c), cảm ơn (a), ký tên (e).",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 3
+  },
+  {
+    "id": "q_12_56",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: Many cities are developing public transport systems to _______ traffic congestion.",
+    "options": [
+      "increase",
+      "reduce",
+      "produce",
+      "expand"
+    ],
+    "correctIndex": 1,
+    "explanation": "'Reduce traffic congestion' nghĩa là giảm ùn tắc giao thông.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_57",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: Renewable energy sources, _______ solar and wind power, are becoming more popular.",
+    "options": [
+      "despite",
+      "instead",
+      "although",
+      "such as"
+    ],
+    "correctIndex": 3,
+    "explanation": "'Such as' dùng để đưa ra ví dụ, ở đây là năng lượng mặt trời và gió.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_58",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: Students who participate in volunteer activities often develop valuable _______ skills.",
+    "options": [
+      "social",
+      "society",
+      "socially",
+      "socialise"
+    ],
+    "correctIndex": 0,
+    "explanation": "Trước danh từ 'skills' cần tính từ. 'Social skills' nghĩa là kỹ năng xã hội.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_59",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: _______ the high cost of living, many young people choose to work in large cities.",
+    "options": [
+      "Because",
+      "Although",
+      "Despite",
+      "Therefore"
+    ],
+    "correctIndex": 2,
+    "explanation": "'Despite' đi với cụm danh từ 'the high cost of living' và diễn tả sự tương phản.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_60",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: If everyone _______ reusable bottles, plastic waste would decrease.",
+    "options": [
+      "uses",
+      "used",
+      "will use",
+      "had used"
+    ],
+    "correctIndex": 1,
+    "explanation": "Câu điều kiện loại 2: If + quá khứ đơn, S + would + V.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_61",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: The scientist dedicated her entire career _______ finding solutions to environmental problems.",
+    "options": [
+      "for",
+      "with",
+      "at",
+      "to"
+    ],
+    "correctIndex": 3,
+    "explanation": "Cấu trúc 'dedicate something to + V-ing' nghĩa là cống hiến điều gì cho một hoạt động.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_62",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: The new metro line is expected to _______ thousands of passengers every day.",
+    "options": [
+      "carry",
+      "bring up",
+      "look after",
+      "turn down"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Carry passengers' nghĩa là vận chuyển hành khách.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_63",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: The environmental campaign was successful _______ the active participation of local residents.",
+    "options": [
+      "although",
+      "despite",
+      "because of",
+      "unless"
+    ],
+    "correctIndex": 2,
+    "explanation": "'Because of + cụm danh từ' diễn tả nguyên nhân. Chiến dịch thành công nhờ sự tham gia tích cực của người dân.",
+    "topicId": "topic_12_unit3",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_64",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: Her biography describes the challenges she faced and how she _______ them.",
+    "options": [
+      "gave up",
+      "overcame",
+      "turned off",
+      "looked into"
+    ],
+    "correctIndex": 1,
+    "explanation": "'Overcome challenges' nghĩa là vượt qua thử thách. Dùng 'overcame' để phù hợp với ngữ cảnh quá khứ.",
+    "topicId": "topic_12_unit1",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_65",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Complete the sentence: Urban green spaces provide places _______ residents can relax and exercise.",
+    "options": [
+      "which",
+      "whose",
+      "whom",
+      "where"
+    ],
+    "correctIndex": 3,
+    "explanation": "'Where' là trạng từ quan hệ chỉ nơi chốn, bổ nghĩa cho 'places'.",
+    "topicId": "topic_12_unit2",
+    "passageId": null,
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_66",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Marie Curie was a pioneering scientist who conducted important research on radioactivity. Despite facing many difficulties, she became the first person to receive two Nobel Prizes in different scientific fields. Her achievements continue to inspire researchers around the world.' Question: What is the main idea of the passage?",
+    "options": [
+      "The history of universities",
+      "The disadvantages of scientific research",
+      "Marie Curie's scientific achievements",
+      "The development of modern transport"
+    ],
+    "correctIndex": 2,
+    "explanation": "Đoạn văn tập trung vào nghiên cứu, hai giải Nobel và ảnh hưởng của Marie Curie.",
+    "topicId": "topic_12_unit1",
+    "passageId": "passage_12_01",
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_67",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Marie Curie was a pioneering scientist who conducted important research on radioactivity. Despite facing many difficulties, she became the first person to receive two Nobel Prizes in different scientific fields. Her achievements continue to inspire researchers around the world.' Question: According to the passage, what made Marie Curie's achievements particularly remarkable?",
+    "options": [
+      "She received two Nobel Prizes in different scientific fields.",
+      "She invented the first computer.",
+      "She established the first university.",
+      "She became a famous politician."
+    ],
+    "correctIndex": 0,
+    "explanation": "Đoạn văn nêu rõ Marie Curie là người đầu tiên nhận hai giải Nobel thuộc hai lĩnh vực khoa học khác nhau.",
+    "topicId": "topic_12_unit1",
+    "passageId": "passage_12_01",
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_68",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Urbanisation creates new jobs and improves access to education and healthcare. However, rapid population growth can also cause traffic congestion, pollution and housing shortages. Careful urban planning is therefore necessary for sustainable development.' Question: Which problem of urbanisation is mentioned?",
+    "options": [
+      "A decline in all job opportunities",
+      "A complete lack of schools",
+      "The disappearance of public transport",
+      "Traffic congestion and housing shortages"
+    ],
+    "correctIndex": 3,
+    "explanation": "Đoạn văn nêu các vấn đề gồm ùn tắc giao thông, ô nhiễm và thiếu nhà ở.",
+    "topicId": "topic_12_unit2",
+    "passageId": "passage_12_02",
+    "difficulty": 1
+  },
+  {
+    "id": "q_12_69",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Urbanisation creates new jobs and improves access to education and healthcare. However, rapid population growth can also cause traffic congestion, pollution and housing shortages. Careful urban planning is therefore necessary for sustainable development.' Question: What does the writer suggest?",
+    "options": [
+      "Cities should stop providing healthcare.",
+      "Cities need careful planning for sustainable development.",
+      "People should avoid all forms of public transport.",
+      "Urbanisation has no positive effects."
+    ],
+    "correctIndex": 1,
+    "explanation": "Câu cuối khẳng định cần quy hoạch đô thị cẩn thận để phát triển bền vững.",
+    "topicId": "topic_12_unit2",
+    "passageId": "passage_12_02",
+    "difficulty": 2
+  },
+  {
+    "id": "q_12_70",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Plastic pollution threatens marine ecosystems because many sea animals mistake plastic waste for food. Reducing single-use plastics and improving recycling systems can help protect marine life. Individuals can contribute by choosing reusable products.' Question: What can individuals do to help protect marine life?",
+    "options": [
+      "Use more disposable plastic products.",
+      "Throw plastic waste into rivers.",
+      "Choose reusable products.",
+      "Avoid recycling household waste."
+    ],
+    "correctIndex": 2,
+    "explanation": "Câu cuối cho biết mỗi cá nhân có thể góp phần bảo vệ sinh vật biển bằng cách chọn sản phẩm tái sử dụng.",
+    "topicId": "topic_12_unit3",
+    "passageId": "passage_12_03",
+    "difficulty": 1
   }
 ]

@@ -15,46 +15,81 @@ class AppRepository {
 
   // --- Cài đặt (App Settings) ---
   Future<String?> getSetting(String key) => _db.getSetting(key);
-  Future<void> setSetting(String key, String value) => _db.setSetting(key, value);
+  Future<void> setSetting(String key, String value) =>
+      _db.setSetting(key, value);
 
   // --- Chủ đề (Topics) ---
   Future<void> insertTopics(List<Topic> topics) => _db.insertTopics(topics);
   Future<List<Topic>> getAllTopics() => _db.getAllTopics();
-  Future<List<Topic>> getTopicsByGrade(int grade) => _db.getTopicsByGrade(grade);
+  Future<List<Topic>> getTopicsByGrade(int grade) =>
+      _db.getTopicsByGrade(grade);
 
   // --- Từ vựng (Words) ---
   Future<void> insertWords(List<Word> words) => _db.insertWords(words);
   Future<List<Word>> getAllWords() => _db.getAllWords();
   Future<List<Word>> getWordsByGrade(int grade) => _db.getWordsByGrade(grade);
-  Future<List<Word>> getWordsByTopicId(String topicId) => _db.getWordsByTopicId(topicId);
+  Future<List<Word>> getWordsByTopicId(String topicId) =>
+      _db.getWordsByTopicId(topicId);
 
   // --- Câu hỏi (Questions) ---
-  Future<void> insertQuestions(List<Question> questions) => _db.insertQuestions(questions);
+  Future<void> insertQuestions(List<Question> questions) =>
+      _db.insertQuestions(questions);
+  Future<int> insertMissingQuestions(List<Question> questions) {
+    return _db.insertMissingQuestions(questions);
+  }
+
   Future<List<Question>> getAllQuestions() => _db.getAllQuestions();
-  Future<List<Question>> getQuestionsByGrade(int grade) => _db.getQuestionsByGrade(grade);
-  Future<List<Question>> getQuestionsByType(String type) => _db.getQuestionsByType(type);
+  Future<List<Question>> getQuestionsByGrade(int grade) =>
+      _db.getQuestionsByGrade(grade);
+  Future<List<Question>> getQuestionsByType(String type) =>
+      _db.getQuestionsByType(type);
 
   // --- Lượt làm bài (Attempts) ---
   Future<int> insertAttempt(Attempt attempt) => _db.insertAttempt(attempt);
   Future<List<Attempt>> getAllAttempts() => _db.getAllAttempts();
-  Future<List<Attempt>> getAttempts({int? limit}) => _db.getAttempts(limit: limit);
+  Future<List<Attempt>> getAttempts({int? limit}) =>
+      _db.getAttempts(limit: limit);
 
   // --- Chi tiết câu trả lời (Attempt Answers) ---
-  Future<void> insertAttemptAnswers(List<AttemptAnswer> answers) => _db.insertAttemptAnswers(answers);
-  Future<List<AttemptAnswer>> getAllAttemptAnswers() => _db.getAllAttemptAnswers();
-  Future<List<AttemptAnswer>> getAttemptAnswers(int attemptId) => _db.getAttemptAnswers(attemptId);
+  Future<void> insertAttemptAnswers(List<AttemptAnswer> answers) =>
+      _db.insertAttemptAnswers(answers);
+  Future<List<AttemptAnswer>> getAllAttemptAnswers() =>
+      _db.getAllAttemptAnswers();
+  Future<List<AttemptAnswer>> getAttemptAnswers(int attemptId) =>
+      _db.getAttemptAnswers(attemptId);
 
   // --- Sổ câu sai (Wrong Book) ---
-  Future<void> insertWrongBookEntries(List<WrongBookEntry> entries) => _db.insertWrongBookEntries(entries);
-  Future<List<WrongBookEntry>> getAllWrongBookEntries() => _db.getAllWrongBookEntries();
-  Future<void> upsertWrongBookEntry(WrongBookEntry entry) => _db.upsertWrongBookEntry(entry);
-  Future<List<WrongBookEntry>> getDueWrongBookEntries(int beforeOrAtTimestamp) =>
-      _db.getDueWrongBookEntries(beforeOrAtTimestamp);
+  Future<void> insertWrongBookEntries(List<WrongBookEntry> entries) =>
+      _db.insertWrongBookEntries(entries);
+  Future<List<WrongBookEntry>> getAllWrongBookEntries() =>
+      _db.getAllWrongBookEntries();
+  Future<void> upsertWrongBookEntry(WrongBookEntry entry) =>
+      _db.upsertWrongBookEntry(entry);
+  Future<List<WrongBookEntry>> getDueWrongBookEntries(
+    int beforeOrAtTimestamp,
+  ) => _db.getDueWrongBookEntries(beforeOrAtTimestamp);
 
   // --- Thống kê hàng ngày (Daily Stats) ---
-  Future<void> insertDailyStats(List<DailyStat> stats) => _db.insertDailyStats(stats);
+  Future<void> insertDailyStats(List<DailyStat> stats) =>
+      _db.insertDailyStats(stats);
   Future<List<DailyStat>> getAllDailyStats() => _db.getAllDailyStats();
   Future<void> upsertDailyStat(DailyStat stat) => _db.upsertDailyStat(stat);
-  Future<List<DailyStat>> getDailyStatsInRange(String startDate, String endDate) =>
-      _db.getDailyStatsInRange(startDate, endDate);
+  Future<List<DailyStat>> getDailyStatsInRange(
+    String startDate,
+    String endDate,
+  ) => _db.getDailyStatsInRange(startDate, endDate);
+
+  Future<void> savePracticeResult({
+    required Attempt attempt,
+    required List<AttemptAnswer> Function(int attemptId) buildAnswers,
+    required List<WrongBookEntry> wrongEntries,
+    required DailyStat dailyStat,
+  }) {
+    return _db.savePracticeResult(
+      attempt: attempt,
+      buildAnswers: buildAnswers,
+      wrongEntries: wrongEntries,
+      dailyStat: dailyStat,
+    );
+  }
 }

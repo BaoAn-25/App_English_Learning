@@ -154,11 +154,10 @@ class AppDatabase {
 
   Future<void> setSetting(String key, String value) async {
     final db = await database;
-    await db.insert(
-      'app_settings',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('app_settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // --- Topics ---
@@ -244,6 +243,28 @@ class AppDatabase {
       );
     }
     await batch.commit(noResult: true);
+  }
+
+  Future<int> insertMissingQuestions(List<Question> questions) async {
+    final db = await database;
+
+    return db.transaction((txn) async {
+      int insertedCount = 0;
+
+      for (final question in questions) {
+        final result = await txn.insert(
+          'questions',
+          question.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+
+        if (result != -1) {
+          insertedCount++;
+        }
+      }
+
+      return insertedCount;
+    });
   }
 
   Future<List<Question>> getAllQuestions() async {
@@ -375,7 +396,9 @@ class AppDatabase {
     }
   }
 
-  Future<List<WrongBookEntry>> getDueWrongBookEntries(int beforeOrAtTimestamp) async {
+  Future<List<WrongBookEntry>> getDueWrongBookEntries(
+    int beforeOrAtTimestamp,
+  ) async {
     final db = await database;
     final maps = await db.query(
       'wrong_book',
@@ -427,7 +450,8 @@ class AppDatabase {
         'daily_stats',
         {
           'xp': (row['xp'] as num).toInt() + stat.xp,
-          'questionsDone': (row['questionsDone'] as num).toInt() + stat.questionsDone,
+          'questionsDone':
+              (row['questionsDone'] as num).toInt() + stat.questionsDone,
           'correct': (row['correct'] as num).toInt() + stat.correct,
           'minutes': (row['minutes'] as num).toInt() + stat.minutes,
         },
@@ -437,7 +461,10 @@ class AppDatabase {
     }
   }
 
-  Future<List<DailyStat>> getDailyStatsInRange(String startDate, String endDate) async {
+  Future<List<DailyStat>> getDailyStatsInRange(
+    String startDate,
+    String endDate,
+  ) async {
     final db = await database;
     final maps = await db.query(
       'daily_stats',
@@ -446,6 +473,73 @@ class AppDatabase {
       orderBy: 'date ASC',
     );
     return maps.map(DailyStat.fromMap).toList();
+  }
+
+  Future<void> savePracticeResult({
+    required Attempt attempt,
+    required List<AttemptAnswer> Function(int attemptId) buildAnswers,
+    required List<WrongBookEntry> wrongEntries,
+    required DailyStat dailyStat,
+  }) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      // 1. Lưu lượt làm bài.
+      final attemptId = await txn.insert('attempts', attempt.toMap());
+
+      // 2. Lưu từng đáp án.
+      final answers = buildAnswers(attemptId);
+
+      final batch = txn.batch();
+      for (final answer in answers) {
+        batch.insert('attempt_answers', answer.toMap());
+      }
+      await batch.commit(noResult: true);
+
+      // 3. Cộng dồn số lần trả lời sai.
+      for (final entry in wrongEntries) {
+        await txn.rawInsert(
+          '''
+          INSERT INTO wrong_book (
+            questionId, wrongCount, lastWrongAt, nextReviewAt
+          )
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(questionId) DO UPDATE SET
+            wrongCount = wrongCount + excluded.wrongCount,
+            lastWrongAt = excluded.lastWrongAt,
+            nextReviewAt = excluded.nextReviewAt
+        ''',
+          [
+            entry.questionId,
+            entry.wrongCount,
+            entry.lastWrongAt,
+            entry.nextReviewAt,
+          ],
+        );
+      }
+
+      // 4. Cộng dồn thống kê trong ngày.
+      await txn.rawInsert(
+        '''
+        INSERT INTO daily_stats (
+          date, xp, questionsDone, correct, minutes
+        )
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(date) DO UPDATE SET
+          xp = xp + excluded.xp,
+          questionsDone = questionsDone + excluded.questionsDone,
+          correct = correct + excluded.correct,
+          minutes = minutes + excluded.minutes
+      ''',
+        [
+          dailyStat.date,
+          dailyStat.xp,
+          dailyStat.questionsDone,
+          dailyStat.correct,
+          dailyStat.minutes,
+        ],
+      );
+    });
   }
 
   // --- Helper kiểm tra bảng rỗng để seed dữ liệu ---
