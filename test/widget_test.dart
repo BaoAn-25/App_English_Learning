@@ -17,8 +17,8 @@ void main() {
     expect(find.text('Thống kê'), findsWidgets);
     expect(find.text('Cá nhân'), findsWidgets);
 
-    // Ban dau tab 'Học' dang duoc chon
-    expect(find.text('Học Từ Vựng & Chuyên Đề'), findsOneWidget);
+    // Ban dau tab 'Học' dang duoc chon (man hinh Tu Vung)
+    expect(find.text('Từ Vựng'), findsWidgets);
 
     // Chuyen sang tab 'Luyện đề'
     await tester.tap(find.text('Luyện đề').first);

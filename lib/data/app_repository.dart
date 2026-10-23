@@ -5,6 +5,7 @@ import 'models/daily_stat.dart';
 import 'models/question.dart';
 import 'models/topic.dart';
 import 'models/word.dart';
+import 'models/word_progress.dart';
 import 'models/wrong_book_entry.dart';
 
 /// Lớp mỏng bọc AppDatabase, là nơi duy nhất các màn hình gọi để truy xuất dữ liệu.
@@ -33,6 +34,7 @@ class AppRepository {
   Future<List<Question>> getAllQuestions() => _db.getAllQuestions();
   Future<List<Question>> getQuestionsByGrade(int grade) => _db.getQuestionsByGrade(grade);
   Future<List<Question>> getQuestionsByType(String type) => _db.getQuestionsByType(type);
+  Future<List<Question>> getQuestionsByTopicId(String topicId) => _db.getQuestionsByTopicId(topicId);
 
   // --- Lượt làm bài (Attempts) ---
   Future<int> insertAttempt(Attempt attempt) => _db.insertAttempt(attempt);
@@ -57,4 +59,11 @@ class AppRepository {
   Future<void> upsertDailyStat(DailyStat stat) => _db.upsertDailyStat(stat);
   Future<List<DailyStat>> getDailyStatsInRange(String startDate, String endDate) =>
       _db.getDailyStatsInRange(startDate, endDate);
+
+  // --- Tiến độ từ vựng (Word Progress / SRS) ---
+  Future<WordProgress?> getWordProgress(String wordId) => _db.getWordProgress(wordId);
+  Future<List<WordProgress>> getAllWordProgress() => _db.getAllWordProgress();
+  Future<void> upsertWordProgress(WordProgress progress) => _db.upsertWordProgress(progress);
+  Future<List<WordProgress>> getDueWordProgress() => _db.getDueWordProgress();
 }
+
