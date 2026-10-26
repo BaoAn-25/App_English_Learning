@@ -57,4 +57,18 @@ class AppRepository {
   Future<void> upsertDailyStat(DailyStat stat) => _db.upsertDailyStat(stat);
   Future<List<DailyStat>> getDailyStatsInRange(String startDate, String endDate) =>
       _db.getDailyStatsInRange(startDate, endDate);
+
+  /// Lưu lượt làm, đáp án, câu sai và thống kê ngày trong một giao dịch.
+  /// Ném lỗi nếu dữ liệu không nhất quán; caller chỉ báo thành công sau await.
+  Future<void> savePracticeResult({
+    required Attempt attempt,
+    required List<AttemptAnswer> Function(int attemptId) buildAnswers,
+    required List<WrongBookEntry> wrongEntries,
+    required DailyStat dailyStat,
+  }) => _db.savePracticeResult(
+    attempt: attempt,
+    buildAnswers: buildAnswers,
+    wrongEntries: wrongEntries,
+    dailyStat: dailyStat,
+  );
 }

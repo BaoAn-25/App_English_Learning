@@ -47,8 +47,15 @@ Nhóm áp dụng mô hình phân nhánh Git chuẩn để tránh xung đột mã
 
 | Thành viên | Thư mục phụ trách | Trách nhiệm chính |
 | :--- | :--- | :--- |
-| **An** | `lib/data/`<br>`lib/navigation/` | Cấu trúc dữ liệu (Model, SQLite `AppDatabase`, `AssetSeeder`, `AppRepository`), khung điều hướng chính `MainShell` |
-| **Tài** | `lib/ui/theme/`<br>`lib/ui/home/`<br>`lib/ui/stats/`<br>`lib/ui/settings/` | Hệ thống giao diện theme Material 3, màn hình Trang chủ (Streak, XP, mục tiêu ngày), màn hình Thống kê tiến độ, màn hình Cá nhân & Cài đặt |
+| **Tài** | `lib/data/`<br>`lib/navigation/` | Cấu trúc dữ liệu (Model, SQLite `AppDatabase`, `AssetSeeder`, `AppRepository`), khung điều hướng chính `MainShell` |
+| **An** | `lib/ui/theme/`<br>`lib/ui/home/`<br>`lib/ui/stats/`<br>`lib/ui/settings/` | Hệ thống giao diện theme Material 3, màn hình Trang chủ (Streak, XP, mục tiêu ngày), màn hình Thống kê tiến độ, màn hình Cá nhân & Cài đặt |
 | **Lượng** | `lib/ui/vocab/` | Màn hình Học từ vựng, danh sách từ vựng theo chủ đề (Topic, Word) |
 | **Viễn** | `lib/ui/practice/`<br>`lib/ui/mock/` | Màn hình Luyện tập theo dạng câu hỏi (Question), màn hình Thi thử 50 câu 60 phút (Attempt, AttemptAnswer) |
 | **Chung** | `assets/data/` | Dữ liệu JSON mẫu (topics, words, questions) |
+
+
+## Lưu kết quả bài làm
+
+`AppRepository.savePracticeResult` lưu lượt làm, đáp án, sổ câu sai và thống kê ngày trong một giao dịch, kiểm tra dữ liệu trước khi ghi và rollback khi lỗi. Xem [hướng dẫn tích hợp và kiểm chứng](docs/save-practice-result.md).
+
+Bộ test dữ liệu dùng SQLite trong bộ nhớ qua Python 3 có sẵn (`sqlite3` trong thư viện chuẩn); không tải dependency khi chạy `flutter test --no-pub`. Xem [hiện trạng và ưu tiên tiếp theo](docs/project-audit.md).

@@ -448,6 +448,122 @@ class AppDatabase {
     return maps.map(DailyStat.fromMap).toList();
   }
 
+  /// Lưu toàn bộ kết quả hoặc không lưu gì nếu có lỗi.
+  /// Giữ cùng giao diện với luồng luyện tập/thi thử của nhóm.
+  Future<void> savePracticeResult({
+    required Attempt attempt,
+    required List<AttemptAnswer> Function(int attemptId) buildAnswers,
+    required List<WrongBookEntry> wrongEntries,
+    required DailyStat dailyStat,
+  }) async {
+    final date = DateTime.tryParse(dailyStat.date);
+    if (attempt.id != null ||
+        attempt.mode.trim().isEmpty ||
+        attempt.startedAt < 0 ||
+        attempt.durationSec < 0 ||
+        attempt.total <= 0 ||
+        attempt.score < 0 ||
+        attempt.score > attempt.total) {
+      throw ArgumentError('Lượt làm bài không hợp lệ.');
+    }
+    if (date == null ||
+        !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dailyStat.date) ||
+        date.toIso8601String().substring(0, 10) != dailyStat.date ||
+        dailyStat.xp < 0 ||
+        dailyStat.minutes < 0 ||
+        dailyStat.questionsDone != attempt.total ||
+        dailyStat.correct != attempt.score) {
+      throw ArgumentError('Thống kê ngày không khớp kết quả bài làm.');
+    }
+    final wrongBook = List<WrongBookEntry>.of(wrongEntries);
+    final db = await database;
+
+    await db.transaction((txn) async {
+      // 1. Lưu lượt làm bài.
+      final attemptId = await txn.insert('attempts', attempt.toMap());
+
+      // 2. Lưu từng đáp án.
+      final answers = List<AttemptAnswer>.of(buildAnswers(attemptId));
+      if (answers.length != attempt.total ||
+          answers.map((answer) => answer.questionId).toSet().length !=
+              answers.length ||
+          answers.any((answer) => answer.attemptId != attemptId) ||
+          answers.where((answer) => answer.isCorrect).length != attempt.score) {
+        throw ArgumentError('Danh sách đáp án không khớp lượt làm bài.');
+      }
+      for (final answer in answers) {
+        final rows = await txn.query(
+          'questions',
+          where: 'id = ?',
+          whereArgs: [answer.questionId],
+          limit: 1,
+        );
+        if (rows.isEmpty) throw ArgumentError('Câu hỏi không tồn tại.');
+        final question = Question.fromMap(rows.single);
+        if (question.correctIndex < 0 ||
+            question.correctIndex >= question.options.length) {
+          throw StateError('Đáp án của câu hỏi trong ngân hàng không hợp lệ.');
+        }
+        if (answer.chosenIndex < -1 ||
+            answer.chosenIndex >= question.options.length ||
+            answer.isCorrect != (answer.chosenIndex == question.correctIndex)) {
+          throw ArgumentError(
+            'Lựa chọn hoặc kết quả chấm câu hỏi không hợp lệ.',
+          );
+        }
+      }
+      final wrongIds = answers
+          .where((answer) => !answer.isCorrect)
+          .map((answer) => answer.questionId)
+          .toSet();
+      if (wrongBook.length != wrongIds.length ||
+          wrongBook.map((entry) => entry.questionId).toSet().length !=
+              wrongBook.length ||
+          wrongBook.any(
+            (entry) =>
+                !wrongIds.contains(entry.questionId) ||
+                entry.wrongCount != 1 ||
+                entry.lastWrongAt < 0 ||
+                entry.nextReviewAt < entry.lastWrongAt,
+          )) {
+        throw ArgumentError('Sổ câu sai không khớp các đáp án sai.');
+      }
+
+      final batch = txn.batch();
+      for (final answer in answers) {
+        batch.insert('attempt_answers', answer.toMap());
+      }
+      await batch.commit(noResult: true);
+
+      // UPDATE rồi INSERT trong cùng transaction để hỗ trợ cả SQLite cũ.
+      for (final entry in wrongBook) {
+        final updated = await txn.rawUpdate(
+          'UPDATE wrong_book SET wrongCount = wrongCount + ?, '
+          'lastWrongAt = ?, nextReviewAt = ? WHERE questionId = ?',
+          [
+            entry.wrongCount,
+            entry.lastWrongAt,
+            entry.nextReviewAt,
+            entry.questionId,
+          ],
+        );
+        if (updated == 0) await txn.insert('wrong_book', entry.toMap());
+      }
+      final updated = await txn.rawUpdate(
+        'UPDATE daily_stats SET xp = xp + ?, questionsDone = questionsDone + ?, '
+        'correct = correct + ?, minutes = minutes + ? WHERE date = ?',
+        [
+          dailyStat.xp,
+          dailyStat.questionsDone,
+          dailyStat.correct,
+          dailyStat.minutes,
+          dailyStat.date,
+        ],
+      );
+      if (updated == 0) await txn.insert('daily_stats', dailyStat.toMap());
+    });
+  }
+
   // --- Helper kiểm tra bảng rỗng để seed dữ liệu ---
   Future<bool> isTableEmpty(String tableName) async {
     final db = await database;
