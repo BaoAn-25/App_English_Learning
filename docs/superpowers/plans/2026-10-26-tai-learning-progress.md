@@ -26,10 +26,10 @@
 - [x] Chạy flutter test --no-pub và flutter analyze --no-pub; commit riêng.
 
 ## Task 2: Thống kê
-- [ ] Viết test LearningSummary.fromStats(List<DailyStat>, {required DateTime now}) cho tổng, 7 ngày đủ cả ngày 0, weighted accuracy, streak và ngày tương lai.
-- [ ] Viết widget test dữ liệu rỗng, tải/lỗi/thử lại, refresh và responsive.
-- [ ] Chạy đỏ, triển khai lib/ui/stats/learning_summary.dart và StatsScreen. Đọc lại khi active false → true.
-- [ ] Chạy toàn bộ test/analyze; commit riêng.
+- [x] Viết test LearningSummary.fromStats(List<DailyStat>, {required DateTime now}) cho tổng, 7 ngày đủ cả ngày 0, weighted accuracy, streak và ngày tương lai.
+- [x] Viết widget test dữ liệu rỗng, tải/lỗi/thử lại, refresh và responsive.
+- [x] Chạy đỏ, triển khai lib/ui/stats/learning_summary.dart và StatsScreen. Đọc lại khi active false → true.
+- [x] Chạy toàn bộ test/analyze; commit riêng.
 
 ## Task 3: Trang chủ
 - [ ] Viết test mục tiêu/XP/streak, giới hạn progress, điều hướng, mục tiêu đổi sau trở lại và tải/lỗi.
