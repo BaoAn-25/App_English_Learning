@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:thpt_english/data/app_repository.dart';
+import 'support/fake_repository.dart';
 import 'package:thpt_english/navigation/main_shell.dart';
 
 void main() {
-  testWidgets('Smoke test: kiem tra MainShell va chuyen doi 4 tab', (WidgetTester tester) async {
+  testWidgets('Smoke test: kiem tra MainShell va chuyen doi 4 tab', (
+    WidgetTester tester,
+  ) async {
     // Khoi dong MainShell trong MaterialApp khong phu thuoc SQLite
     await tester.pumpWidget(
-      const MaterialApp(
-        home: MainShell(),
+      Provider<AppRepository>.value(
+        value: FakeRepository(),
+        child: const MaterialApp(home: MainShell()),
       ),
     );
+
+    await tester.pumpAndSettle();
 
     // Kiem tra hien thi 4 muc tren NavigationBar
     expect(find.text('Học'), findsWidgets);
