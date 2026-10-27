@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../data/app_repository.dart';
 import '../data/asset_seeder.dart';
+import '../data/question_sync_service.dart';
 import 'main_shell.dart';
 
 class AppStartup extends StatefulWidget {
@@ -25,7 +28,14 @@ class _AppStartupState extends State<AppStartup> {
   Future<void> _initialize() async {
     _initializing = true;
     try {
-      await (widget.initialize ?? () => AssetSeeder.seedIfEmpty())();
+      final initialize = widget.initialize;
+      if (initialize != null) {
+        await initialize();
+      } else {
+        final repository = context.read<AppRepository>();
+        await AssetSeeder.seedIfEmpty();
+        await QuestionSyncService.syncQuestions(repository);
+      }
     } finally {
       _initializing = false;
     }

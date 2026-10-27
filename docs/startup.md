@@ -1,6 +1,6 @@
 # Khởi động và nạp dữ liệu an toàn
 
-Ứng dụng hiển thị giao diện ngay, sau đó `AppStartup` mở SQLite và nạp dữ liệu. Chỉ khi thành công mới vào MainShell. Lỗi được hiển thị bằng thông báo chung, không đưa đường dẫn/nội dung lỗi nội bộ lên màn hình; nút Thử lại khởi tạo lại và chặn gọi song song.
+Ứng dụng hiển thị giao diện ngay, sau đó `AppStartup` mở/nâng cấp SQLite, seed các bảng rỗng rồi đồng bộ câu hỏi qua QuestionSyncService. Chỉ khi thành công mới vào MainShell. Lỗi được hiển thị bằng thông báo chung, không đưa đường dẫn/nội dung lỗi nội bộ lên màn hình; nút Thử lại khởi tạo lại và chặn gọi song song.
 
 `AssetSeeder.seedIfEmpty` giữ giao diện cũ, thêm `AssetBundle? bundle` tùy chọn. Kiểm tra bảng rỗng và nạp topics/words/questions nằm trong cùng transaction. JSON hỏng, root không phải list, bản ghi không đúng kiểu, trùng ID hoặc lỗi SQL đều throw và rollback; không thay thế bảng đã có dữ liệu. Transaction ngăn hai lần seed đồng thời cùng ghi vào bảng rỗng.
 
@@ -14,4 +14,11 @@ Không tự xóa database khi lỗi. Nếu tài nguyên bị hỏng hoặc nền
 - `flutter analyze --no-pub` và `git diff --check` sạch.
 - Review độc lập phần seed/startup không phát hiện lỗi quan trọng mới.
 
-Chưa build release hoặc kiểm thử plugin native Android/iOS trên thiết bị. Các test dùng initializer giả cho widget; kết nối SQLite và assets được kiểm tra riêng trong seed test.
+Chưa build release hoặc kiểm thử plugin native Android/iOS trên thiết bị. Ngoài test widget với initializer giả, startup_data_test chạy luồng khởi động mặc định với SQLite thật trong bộ nhớ: bổ sung câu hỏi trên bản cài đã có dữ liệu, rollback khi đồng bộ lỗi và retry thành công. TTS được giả lập ở kênh nền tảng.
+
+## Kiểm chứng sau tích hợp main
+
+- 195/195 test đạt trên bộ mã đã gộp luyện thi và từ vựng; analyzer không báo lỗi.
+- Giữ schema v2/migration và API từ main; whitelist bao gồm bảng word_progress.
+- Luồng seed → sync → MainShell được kiểm thử với SQLite thật trong bộ nhớ, gồm lỗi đồng bộ và retry.
+- Khóa chọn đáp án khi đang lưu bài luyện tập; test trì hoãn ghi xác nhận điểm và đáp án không lệch nhau.

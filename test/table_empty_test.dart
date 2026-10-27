@@ -52,6 +52,7 @@ void main() {
         'attempt_answers',
         'wrong_book',
         'daily_stats',
+        'word_progress',
       ]) {
         expect(await appDatabase.isTableEmpty(name), isTrue, reason: name);
       }

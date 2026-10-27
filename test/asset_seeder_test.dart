@@ -156,7 +156,11 @@ void main() {
       AssetSeeder.seedIfEmpty(bundle: SeedBundle(files)),
       AssetSeeder.seedIfEmpty(bundle: SeedBundle(files)),
     ]);
-    expect((await database.query('topics')).length, 3);
-    expect((await database.query('questions')).length, 3);
+    for (final table in tables) {
+      expect(
+        (await database.query(table)).length,
+        (jsonDecode(files['assets/data/$table.json']!) as List).length,
+      );
+    }
   });
 }

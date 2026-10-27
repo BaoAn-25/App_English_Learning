@@ -2,22 +2,50 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:thpt_english/data/app_repository.dart';
+import 'package:thpt_english/data/models/topic.dart';
+import 'package:thpt_english/data/models/word_progress.dart';
+import 'package:thpt_english/navigation/main_shell.dart';
 import 'package:thpt_english/navigation/app_startup.dart';
 
+class StartupRepository extends Fake implements AppRepository {
+  @override
+  Future<List<Topic>> getTopicsByGrade(int grade) async => [];
+  @override
+  Future<List<WordProgress>> getAllWordProgress() async => [];
+}
+
 Widget startup(Future<void> Function() initialize) =>
-    MaterialApp(home: AppStartup(initialize: initialize));
+    Provider<AppRepository>.value(
+      value: StartupRepository(),
+      child: MaterialApp(home: AppStartup(initialize: initialize)),
+    );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('flutter_tts'),
+          (_) async => 1,
+        );
+  });
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('flutter_tts'), null);
+  });
   testWidgets(
     'shows loading then opens the application only after initialization',
     (tester) async {
       final completion = Completer<void>();
       await tester.pumpWidget(startup(() => completion.future));
       expect(find.text('Đang chuẩn bị dữ liệu học…'), findsOneWidget);
-      expect(find.text('Học Từ Vựng & Chuyên Đề'), findsNothing);
+      expect(find.byType(MainShell), findsNothing);
       completion.complete();
       await tester.pumpAndSettle();
-      expect(find.text('Học Từ Vựng & Chuyên Đề'), findsOneWidget);
+      expect(find.byType(MainShell), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     },
   );
@@ -37,7 +65,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Không tải được dữ liệu.'), findsOneWidget);
     expect(find.textContaining('/private'), findsNothing);
-    expect(find.text('Học Từ Vựng & Chuyên Đề'), findsNothing);
+    expect(find.byType(MainShell), findsNothing);
     await tester.tap(find.text('Thử lại'));
     await tester.pump();
     expect(calls, 2);
@@ -45,7 +73,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     retry.complete();
     await tester.pumpAndSettle();
-    expect(find.text('Học Từ Vựng & Chuyên Đề'), findsOneWidget);
+    expect(find.byType(MainShell), findsOneWidget);
   });
 
   testWidgets(
@@ -71,7 +99,7 @@ void main() {
       }
       attempts.last.complete();
       await tester.pumpAndSettle();
-      expect(find.text('Học Từ Vựng & Chuyên Đề'), findsOneWidget);
+      expect(find.byType(MainShell), findsOneWidget);
     },
   );
 
