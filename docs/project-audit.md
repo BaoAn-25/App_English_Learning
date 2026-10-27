@@ -6,7 +6,7 @@ Tài và An đổi vai trò: Tài phụ trách `lib/data/` và `lib/navigation/`
 ## Hiện trạng
 - Main đã tích hợp luyện thi và từ vựng; dùng Flutter/Material 3, Provider, SQLite phiên bản 2 với 9 bảng, gồm word_progress. Chưa có backend máy chủ.
 - Assets sau tích hợp có 10 chủ đề, 200 từ và 405 câu hỏi.
-- Main đã nhận PR luyện thi của Viễn và từ vựng của Lương. feature/tai gộp main, giữ các API mới, migration và phần kiểm tra/lưu dữ liệu an toàn.
+- Main đã nhận PR luyện thi của Viễn, từ vựng của Lượng và giao diện của An. feature/tai gộp main, giữ các API mới, migration và phần kiểm tra/lưu dữ liệu an toàn.
 - Remote chưa có develop; PR vào main để leader duyệt, không tự merge.
 
 ## Đã hoàn thiện trong PR này
@@ -32,3 +32,5 @@ Chưa thêm server; chỉ cập nhật feature/tai từ main theo yêu cầu, kh
 - Bổ sung đồng bộ chủ đề/từ vựng còn thiếu theo ID trên bản cài cũ, giữ dữ liệu/tiến độ và rollback khi lỗi; AppStartup hỗ trợ thử lại bước này.
 
 - 28/10: sửa hiển thị chủ đề cũ/mới trùng bằng ánh xạ ba cặp ID mẫu tại tầng đọc; mở chung nội dung của hai ID khi metadata khớp, bảo toàn toàn bộ bản ghi và tiến độ. Còn số đếm cố định và các từ cùng nội dung khác ID trong UI từ vựng.
+
+- 28/10: tích hợp main `0f03eae`, bỏ dấu xung đột còn sót trong mã/lockfile/registrant, giữ cả ThemeController và AppStartup. Sửa lỗi notify sau dispose của controller Thống kê/Cài đặt; bốn test tái hiện lỗi trước bản sửa. Đồng bộ máy chủ trong giao diện An vẫn là mô phỏng, chưa có backend thật.

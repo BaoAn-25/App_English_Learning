@@ -4,13 +4,17 @@ import 'package:provider/provider.dart';
 import 'data/app_repository.dart';
 import 'navigation/app_startup.dart';
 import 'ui/theme/app_theme.dart';
+import 'ui/theme/theme_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
-    Provider<AppRepository>(
-      create: (_) => AppRepository(),
+    MultiProvider(
+      providers: [
+        Provider<AppRepository>(create: (_) => AppRepository()),
+        ChangeNotifierProvider<ThemeController>(create: (_) => ThemeController()),
+      ],
       child: const ThptEnglishApp(),
     ),
   );
@@ -26,7 +30,7 @@ class ThptEnglishApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: context.watch<ThemeController>().themeMode,
       home: const AppStartup(),
     );
   }

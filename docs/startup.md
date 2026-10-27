@@ -40,3 +40,11 @@ Kiểm chứng sau bổ sung: 202/202 test đạt, analyzer sạch; gồm giữ 
 - Số từ trong nhóm có thể vượt 20 vì giữ riêng các ID từ cũ/mới; số đếm cố định trong UI từ vựng cần được rà soát ở phần giao diện.
 
 Bản sửa chủ đề: 208/208 test đạt, analyzer sạch, review độc lập không có phát hiện cần sửa. Lần chạy toàn bộ đầu tiên bị đóng kết nối khi nạp file test mới; chạy riêng 6 test và chạy lại toàn bộ đều đạt.
+
+## Tích hợp giao diện An — 28/10/2026
+
+- Gộp main `0f03eae`, giải quyết xung đột và loại bỏ dấu conflict còn trong main/lockfile/plugin registrant. Giữ MultiProvider cho AppRepository + ThemeController và trình tự AppStartup.
+- Test entrypoint thật xác nhận theme đã lưu được áp dụng, đổi theme vẫn giữ màn hình thử lại và không chạy lại khởi tạo DB.
+- Suite phát hiện StatsController/SettingsController thông báo sau dispose khi đọc dữ liệu còn chạy. Bốn test riêng tái hiện trước sửa; sau sửa ngăn thông báo cho màn hình đã hủy, không hủy thao tác ghi dữ liệu.
+- 224/224 test đạt; analyzer sạch; review độc lập không có phát hiện cần sửa. Không tiếp tục kiểm thử điện thoại vì người dùng hiện không có máy.
+- Build APK debug sau tích hợp thành công. Gradle còn cảnh báo tương thích Kotlin của flutter_tts cho phiên bản Flutter tương lai và Java source/target 8 từ plugin; không làm thất bại build hiện tại. Chưa build release.

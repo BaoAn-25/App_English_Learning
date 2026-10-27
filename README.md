@@ -43,7 +43,7 @@ Nhóm áp dụng mô hình phân nhánh Git chuẩn để tránh xung đột mã
 
 ## 👥 Phân Chia Thư Mục & Trách Nhiệm Thành Viên
 
-Tài và An đã đổi vai trò. Phân công dưới đây là phân công hiện tại; các dòng “Phụ trách” còn trong màn hình mẫu chưa phản ánh thay đổi này.
+Tài và An đã đổi vai trò. Phân công dưới đây là phân công hiện tại.
 
 Để tránh sửa chung file và giảm thiểu xung đột Git, mỗi thành viên chịu trách nhiệm trong thư mục riêng:
 
@@ -69,10 +69,10 @@ Các phần sau đã có trên `feature/tai`, được đẩy lên [PR #3](https
 | Cập nhật đồng thời | Ngăn mất số đếm khi cộng thống kê ngày và số lần trả lời sai từ nhiều lời gọi đồng thời. |
 | Tương thích chủ đề cũ/mới | Hiển thị chung ba cặp ID chủ đề mẫu đã biết khi thông tin khớp; mở chung từ vựng/câu hỏi của hai ID và giữ nguyên dữ liệu gốc. Chủ đề đã sửa thông tin vẫn tách riêng. |
 | Kiểm tra tên bảng | Chỉ cho phép truy vấn kiểm tra bảng rỗng với 9 bảng ứng dụng hợp lệ, gồm word_progress. |
-| Tích hợp với nhóm | Giải quyết xung đột với main, giữ chức năng luyện thi của Viễn, từ vựng của Lượng và schema SQLite v2/migration tiến độ từ vựng. |
-| Sửa lỗi phát hiện khi tích hợp | Khóa chọn đáp án trong lúc lưu bài luyện tập để đáp án không lệch với điểm và sổ câu sai. |
+| Tích hợp với nhóm | Giải quyết xung đột với main, giữ chức năng luyện thi của Viễn, từ vựng của Lượng, giao diện Thống kê/Cài đặt và theme của An; giữ schema SQLite v2/migration tiến độ từ vựng. |
+| Sửa lỗi phát hiện khi tích hợp | Khóa chọn đáp án trong lúc lưu bài luyện tập; chặn thông báo cập nhật sau khi hủy controller Thống kê/Cài đặt trong lúc đọc dữ liệu. |
 
-**Kiểm chứng sau sửa chủ đề trùng:** 208/208 test đạt, `flutter analyze --no-pub` không báo vấn đề; đã review phần gộp code và sửa phát hiện từ review. Đã build debug và kiểm tra khởi động/nâng cấp SQLite trên Android 17 tại commit `fde5130`; chưa kiểm thử đầy đủ các luồng trên thiết bị, TTS hoặc bản release. Bản sửa gộp chủ đề sau đó mới được kiểm thử tự động.
+**Kiểm chứng sau tích hợp giao diện An:** 224/224 test đạt, `flutter analyze --no-pub` không báo vấn đề, build APK debug thành công; đã review phần tích hợp và các bản sửa. Đã kiểm tra khởi động/nâng cấp SQLite trên Android 17 tại commit `fde5130`; các thay đổi sau đó mới được kiểm thử tự động, chưa kiểm thử đầy đủ TTS, thông báo hoặc các luồng trên thiết bị.
 
 **Phần còn lại:** kiểm thử nâng cấp và plugin trên thiết bị thật. Giữ nguyên ID từ vựng và tiến độ; chưa hợp nhất các từ trùng nội dung nhưng khác ID. Màn hình Trang chủ, Thống kê và Cá nhân/Cài đặt thuộc phần An, không tính là chức năng Tài đã hoàn thành trong PR này.
 
