@@ -570,6 +570,19 @@ class AppDatabase {
 
   // --- Helper kiểm tra bảng rỗng để seed dữ liệu ---
   Future<bool> isTableEmpty(String tableName) async {
+    const tables = {
+      'topics',
+      'words',
+      'questions',
+      'attempts',
+      'attempt_answers',
+      'wrong_book',
+      'daily_stats',
+      'app_settings',
+    };
+    if (!tables.contains(tableName)) {
+      throw ArgumentError.value(tableName, 'tableName', 'Unknown application table');
+    }
     final db = await database;
     final count = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM $tableName'),
