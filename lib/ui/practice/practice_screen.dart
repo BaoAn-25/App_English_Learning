@@ -7,6 +7,7 @@ import 'mock_exam_screen.dart';
 import 'practice_history_screen.dart';
 import 'practice_quiz_screen.dart';
 import 'services/exam_builder_service.dart';
+import 'widgets/adaptive_learning_section.dart';
 import 'wrong_book_screen.dart';
 
 class PracticeScreen extends StatelessWidget {
@@ -65,6 +66,10 @@ class PracticeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
+          // Khu vực Luyện tập thích ứng thông minh
+          const AdaptiveLearningSection(),
+          const SizedBox(height: 20),
+
           // Tiêu đề nhóm 1: Tiện ích & Thi thử
           Text(
             'Luyện thi & Tiện ích',

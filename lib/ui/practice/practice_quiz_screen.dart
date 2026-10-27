@@ -45,7 +45,8 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
 
     startedAt = DateTime.now();
     selectedAnswers = List<int?>.filled(widget.questions.length, null);
-    optionMappings = widget.optionMappings ??
+    optionMappings =
+        widget.optionMappings ??
         List.generate(
           widget.questions.length,
           (i) => QuestionOptionMapping.shuffled(
@@ -128,11 +129,18 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
       final finishedAt = DateTime.now();
       final durationSec = finishedAt.difference(startedAt).inSeconds;
 
+      final hasMultipleTypes =
+          widget.questions.map((q) => q.type).toSet().length > 1;
+      final attemptType =
+          (widget.mode == 'wrong_review' ||
+              widget.mode == 'mock_exam' ||
+              hasMultipleTypes)
+          ? null
+          : (widget.questions.isNotEmpty ? widget.questions.first.type : null);
+
       final attempt = Attempt(
         mode: widget.mode,
-        type: widget.mode == 'wrong_review'
-            ? null
-            : widget.questions.first.type,
+        type: attemptType,
         startedAt: startedAt.millisecondsSinceEpoch,
         durationSec: durationSec,
         score: score,
@@ -348,9 +356,12 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: List.generate(mapping.length, (slotIndex) {
-                        final originalIndex = mapping.originalIndexAt(slotIndex);
+                        final originalIndex = mapping.originalIndexAt(
+                          slotIndex,
+                        );
                         final isSelected = selected == originalIndex;
-                        final isCorrect = question.correctIndex == originalIndex;
+                        final isCorrect =
+                            question.correctIndex == originalIndex;
 
                         return QuizOptionCard(
                           index: slotIndex,
