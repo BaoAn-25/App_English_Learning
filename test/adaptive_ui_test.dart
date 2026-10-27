@@ -10,17 +10,18 @@ import 'package:thpt_english/data/models/question.dart';
 import 'package:thpt_english/data/models/wrong_book_entry.dart';
 import 'package:thpt_english/ui/practice/practice_quiz_screen.dart';
 import 'package:thpt_english/ui/practice/practice_screen.dart';
-import 'package:thpt_english/ui/practice/services/adaptive_learning_service.dart';
 import 'package:thpt_english/ui/practice/widgets/adaptive_learning_section.dart';
 
+/// Fake AppRepository phục vụ kiểm thử Widget và luồng tương tác thực tế
 class _FakeAdaptiveRepo implements AppRepository {
   final List<Question> questions;
-  List<Attempt> attempts;
-  List<AttemptAnswer> answers;
-  List<WrongBookEntry> wrongEntries;
+  final List<Attempt> attempts;
+  final List<AttemptAnswer> answers;
+  final List<WrongBookEntry> wrongEntries;
 
-  Attempt? savedAttempt;
   int saveCount = 0;
+  Attempt? savedAttempt;
+  List<AttemptAnswer>? savedAnswers;
 
   _FakeAdaptiveRepo({
     required this.questions,
@@ -33,18 +34,15 @@ class _FakeAdaptiveRepo implements AppRepository {
   Future<List<Question>> getAllQuestions() async => questions;
 
   @override
-  Future<List<Attempt>> getAllAttempts() async => attempts;
+  Future<List<Attempt>> getAllAttempts() async => List.from(attempts);
 
   @override
-  Future<List<AttemptAnswer>> getAllAttemptAnswers() async => answers;
+  Future<List<AttemptAnswer>> getAllAttemptAnswers() async =>
+      List.from(answers);
 
   @override
-  Future<List<WrongBookEntry>> getAllWrongBookEntries() async => wrongEntries;
-
-  @override
-  Future<List<Question>> getQuestionsByType(String type) async {
-    return questions.where((q) => q.type == type).toList();
-  }
+  Future<List<WrongBookEntry>> getAllWrongBookEntries() async =>
+      List.from(wrongEntries);
 
   @override
   Future<void> savePracticeResult({
@@ -55,87 +53,84 @@ class _FakeAdaptiveRepo implements AppRepository {
   }) async {
     saveCount++;
     savedAttempt = attempt;
+    savedAnswers = buildAnswers(999);
   }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Question _makeQ(
-  String id,
-  String type, {
-  int difficulty = 1,
-  String? passageId,
-}) {
+Question _makeQ(String id, String type, {String? passageId}) {
   return Question(
     id: id,
     type: type,
-    difficulty: difficulty,
     grade: 12,
-    stem: 'Stem $id',
-    options: const ['Option A', 'Option B', 'Option C', 'Option D'],
+    difficulty: 1,
+    stem: 'Test question stem for $id',
+    options: ['Option A', 'Option B', 'Option C', 'Option D'],
     correctIndex: 0,
-    explanation: 'Explanation $id',
+    explanation: 'Test explanation for $id',
     passageId: passageId,
   );
 }
 
-Widget _buildTestApp(_FakeAdaptiveRepo repo, {Widget? home}) {
+Widget _buildTestApp(AppRepository repo) {
   return Provider<AppRepository>.value(
     value: repo,
-    child: MaterialApp(home: home ?? const PracticeScreen()),
+    child: const MaterialApp(home: PracticeScreen()),
   );
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // Tạo ngân hàng câu hỏi chuẩn gồm 8 dạng bài
-  final standardBank = <Question>[];
-  for (final type in AdaptiveLearningService.standardTypes) {
-    for (int i = 0; i < 12; i++) {
-      standardBank.add(_makeQ('${type}_$i', type));
-    }
-  }
+  // Ngân hàng câu hỏi chuẩn gồm 8 dạng bài tốt nghiệp THPT
+  final standardBank = <Question>[
+    for (int i = 0; i < 5; i++) _makeQ('grammar_$i', 'grammar'),
+    for (int i = 0; i < 5; i++) _makeQ('vocab_$i', 'vocab'),
+    for (int i = 0; i < 5; i++)
+      _makeQ('reading_$i', 'reading', passageId: 'p1'),
+    for (int i = 0; i < 5; i++) _makeQ('arrange_$i', 'arrange'),
+    for (int i = 0; i < 5; i++) _makeQ('cloze_$i', 'cloze', passageId: 'c1'),
+    for (int i = 0; i < 5; i++) _makeQ('synonym_antonym_$i', 'synonym_antonym'),
+    for (int i = 0; i < 5; i++) _makeQ('communication_$i', 'communication'),
+    for (int i = 0; i < 5; i++) _makeQ('signs_$i', 'signs'),
+  ];
 
-  group('Adaptive Learning UI & Luồng luyện tập thực tế', () {
+  group('Adaptive Learning UI/UX Refinement & Luồng luyện tập thực tế', () {
     testWidgets(
-      '1. Cold start: Hiển thị Thẻ năng lực ban đầu và các nhiệm vụ khảo sát',
+      '1. Cold start: Hiển thị đúng thẻ Khám phá, không có điểm 50/100 giả',
       (tester) async {
         final repo = _FakeAdaptiveRepo(questions: standardBank);
 
         await tester.pumpWidget(_buildTestApp(repo));
-        // Chờ async loadData hoàn tất
         await tester.pumpAndSettle();
 
-        // Kiểm tra Thẻ hồ sơ năng lực
-        expect(find.text('Lộ trình thích ứng cá nhân hóa'), findsOneWidget);
-        expect(find.textContaining('Thành thạo:'), findsOneWidget);
-        expect(find.text('Chưa có lịch sử làm bài'), findsOneWidget);
-        expect(
-          find.textContaining(
-            'Bắt đầu các bài luyện bên dưới để hệ thống nhận diện',
-          ),
-          findsOneWidget,
-        );
+        // Thẻ nổi bật "HÔM NAY HỌC GÌ?"
+        expect(find.text('HÔM NAY HỌC GÌ?'), findsOneWidget);
+        expect(find.text('Bắt đầu khám phá trình độ của bạn'), findsOneWidget);
+        expect(find.widgetWithText(FilledButton, 'Bắt đầu'), findsOneWidget);
 
-        // Kiểm tra danh sách nhiệm vụ
-        expect(find.text('Nhiệm vụ đề xuất hôm nay'), findsOneWidget);
-        expect(find.text('Khảo sát năng lực'), findsWidgets);
-        expect(find.text('Kiểm tra tổng hợp'), findsOneWidget);
-        expect(find.text('Bắt đầu luyện tập'), findsNWidgets(3));
+        // Khu vực "Lộ trình của bạn"
+        expect(find.text('Lộ trình của bạn'), findsOneWidget);
+        expect(find.text('3 nhiệm vụ'), findsOneWidget);
+
+        // Khu vực "Tiến bộ của tôi": Không được hiển thị điểm 50/100 giả khi chưa đủ dữ liệu
+        expect(find.text('Tiến bộ của tôi'), findsOneWidget);
+        expect(find.text('Đang khảo sát năng lực'), findsOneWidget);
+        expect(find.textContaining('50 / 100'), findsNothing);
       },
     );
 
     testWidgets(
-      '2. Có điểm yếu: Thẻ hồ sơ và Task 1 hiển thị Chinh phục điểm yếu',
+      '2. Có điểm yếu: Thẻ Hôm nay học gì và Lộ trình hiển thị rõ nhiệm vụ ưu tiên',
       (tester) async {
-        // Giả lập đã làm 8 câu reading đều sai
+        // Giả lập đã làm 8 câu reading đều sai -> điểm yếu rõ ràng
         final attempts = [
           Attempt(
             id: 1,
-            mode: 'mock_exam',
-            type: null,
+            mode: 'practice',
+            type: 'reading',
             startedAt: DateTime.now().millisecondsSinceEpoch,
             durationSec: 300,
             score: 0,
@@ -161,12 +156,16 @@ void main() {
         await tester.pumpWidget(_buildTestApp(repo));
         await tester.pumpAndSettle();
 
-        // Kiểm tra thẻ năng lực chỉ rõ điểm yếu
-        expect(find.textContaining('Cần tập trung: Đọc hiểu'), findsOneWidget);
+        // Thẻ Hôm nay học gì: có nút "Học ngay"
+        expect(find.text('HÔM NAY HỌC GÌ?'), findsOneWidget);
+        expect(find.widgetWithText(FilledButton, 'Học ngay'), findsOneWidget);
+        expect(find.textContaining('Đọc hiểu'), findsWidgets);
 
-        // Task 1 là Chinh phục điểm yếu
-        expect(find.text('Cải thiện điểm yếu'), findsOneWidget);
-        expect(find.text('Chinh phục điểm yếu: Đọc hiểu'), findsOneWidget);
+        // Khu vực Lộ trình: Có badge "Cần cải thiện"
+        expect(find.text('Cần cải thiện'), findsWidgets);
+
+        // Khu vực Tiến bộ của tôi: Có điểm thành thạo và nút "Xem chi tiết"
+        expect(find.text('Xem chi tiết'), findsOneWidget);
       },
     );
 
@@ -190,7 +189,7 @@ void main() {
       await tester.pumpWidget(_buildTestApp(repo));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ôn tập câu sai'), findsOneWidget);
+      expect(find.text('Ôn câu sai'), findsWidgets);
       expect(find.text('Ôn tập sổ câu sai'), findsOneWidget);
     });
 
@@ -205,10 +204,10 @@ void main() {
         await tester.pumpWidget(_buildTestApp(repo));
         await tester.pumpAndSettle();
 
-        // Không có huy hiệu "Ôn tập câu sai"
-        expect(find.text('Ôn tập câu sai'), findsNothing);
-        // Vẫn có đủ 3 nhiệm vụ hợp lệ
-        expect(find.text('Bắt đầu luyện tập'), findsNWidgets(3));
+        // Không có badge "Ôn câu sai"
+        expect(find.text('Ôn câu sai'), findsNothing);
+        // Vẫn có đủ 3 nhiệm vụ hợp lệ trong danh sách
+        expect(find.byType(Card), findsNWidgets(3));
       },
     );
 
@@ -224,21 +223,21 @@ void main() {
 
         // Không đủ câu để tạo 3 nhiệm vụ độc lập -> chỉ tạo 2 nhiệm vụ
         expect(find.text('2 nhiệm vụ'), findsOneWidget);
-        expect(find.text('Bắt đầu luyện tập'), findsNWidgets(2));
+        expect(find.byType(Card), findsNWidgets(2));
       },
     );
 
     testWidgets(
-      '6. Nhấn Bắt đầu luyện tập mở PracticeQuizScreen và truyền đúng Question IDs',
+      '6. Nhấn Bắt đầu trên Hero Card mở PracticeQuizScreen và thoát an toàn',
       (tester) async {
         final repo = _FakeAdaptiveRepo(questions: standardBank);
 
         await tester.pumpWidget(_buildTestApp(repo));
         await tester.pumpAndSettle();
 
-        // Nhấn nút "Bắt đầu luyện tập" của nhiệm vụ đầu tiên
-        final firstStartBtn = find.text('Bắt đầu luyện tập').first;
-        await tester.tap(firstStartBtn);
+        // Nhấn nút "Bắt đầu" trên thẻ Hero
+        final startBtn = find.widgetWithText(FilledButton, 'Bắt đầu');
+        await tester.tap(startBtn);
         await tester.pumpAndSettle();
 
         // Xác nhận đã chuyển sang PracticeQuizScreen
@@ -269,7 +268,7 @@ void main() {
       await tester.pumpWidget(_buildTestApp(repo));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Bắt đầu luyện tập').first);
+      await tester.tap(find.widgetWithText(FilledButton, 'Bắt đầu'));
       await tester.pumpAndSettle();
 
       final quizState = tester.state<State>(find.byType(PracticeQuizScreen));
@@ -292,7 +291,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Nhấn bắt đầu
-        await tester.tap(find.text('Bắt đầu luyện tập').first);
+        await tester.tap(find.widgetWithText(FilledButton, 'Bắt đầu'));
         await tester.pumpAndSettle();
 
         // Chọn đáp án
@@ -331,7 +330,7 @@ void main() {
     );
 
     testWidgets(
-      '9. Giao diện Responsive: Không bị overflow trên màn hình 320px và 360px với textScale 1.3',
+      '9. Giao diện Responsive: Không bị overflow trên màn hình 320px và 360px với textScale 1.3 và 1.5',
       (tester) async {
         tester.view.physicalSize = const Size(320, 700);
         tester.view.devicePixelRatio = 1.0;
@@ -344,7 +343,7 @@ void main() {
             value: repo,
             child: const MaterialApp(
               home: MediaQuery(
-                data: MediaQueryData(textScaler: TextScaler.linear(1.3)),
+                data: MediaQueryData(textScaler: TextScaler.linear(1.5)),
                 child: PracticeScreen(),
               ),
             ),
@@ -382,9 +381,9 @@ void main() {
         await tester.pumpWidget(_buildTestApp(repo));
         await tester.pumpAndSettle();
 
-        // Tìm nút Bắt đầu luyện tập của nhiệm vụ Kiểm tra tổng hợp (nhiệm vụ thứ 3)
-        final task3StartBtn = find.text('Bắt đầu luyện tập').at(2);
-        await tester.tap(task3StartBtn);
+        // Nhấn vào thẻ nhiệm vụ thứ 3 (Kiểm tra năng lực tổng hợp)
+        final task3Card = find.byType(Card).at(2);
+        await tester.tap(task3Card);
         await tester.pumpAndSettle();
 
         final quizState = tester.state<State>(find.byType(PracticeQuizScreen));
@@ -393,6 +392,37 @@ void main() {
         // Xác nhận mode là 'practice', tuyệt đối không gán 'mock_exam'
         expect(quizWidget.mode, 'practice');
         expect(quizWidget.mode, isNot('mock_exam'));
+      },
+    );
+
+    testWidgets(
+      '12. Nút "Vì sao?" mở BottomSheet giải thích lý do đề xuất thực tế',
+      (tester) async {
+        final repo = _FakeAdaptiveRepo(questions: standardBank);
+
+        await tester.pumpWidget(_buildTestApp(repo));
+        await tester.pumpAndSettle();
+
+        // Nhấn nút tooltip "Vì sao đề xuất?" trên thẻ nhiệm vụ đầu tiên
+        final whyBtn = find.byTooltip('Vì sao đề xuất?').first;
+        await tester.tap(whyBtn);
+        await tester.pumpAndSettle();
+
+        // Xác nhận BottomSheet mở lên với nội dung giải thích thật
+        expect(find.text('Vì sao đề xuất bài này?'), findsOneWidget);
+        expect(
+          find.widgetWithText(FilledButton, 'Bắt đầu luyện tập'),
+          findsOneWidget,
+        );
+
+        // Bấm nút "Bắt đầu luyện tập" trong BottomSheet
+        await tester.tap(
+          find.widgetWithText(FilledButton, 'Bắt đầu luyện tập'),
+        );
+        await tester.pumpAndSettle();
+
+        // Chuyển thẳng vào làm bài quiz
+        expect(find.byType(PracticeQuizScreen), findsOneWidget);
       },
     );
   });
