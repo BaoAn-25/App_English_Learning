@@ -70,6 +70,7 @@ class AdaptivePlanGenerator {
       nowMs: nowMs,
     );
 
+    final task1Ids = task1?.questions.map((q) => q.id).toSet() ?? <String>{};
     if (task1 != null && task1.isValid) {
       tasks.add(task1);
     }
@@ -86,9 +87,11 @@ class AdaptivePlanGenerator {
       seenQuestionIds: seenQuestionIds,
       lastSeenTimestamps: lastSeenTimestamps,
       excludedType: task1TargetType,
+      excludedQuestionIds: task1Ids,
       nowMs: nowMs,
     );
 
+    final task2Ids = task2?.questions.map((q) => q.id).toSet() ?? <String>{};
     if (task2 != null && task2.isValid) {
       tasks.add(task2);
     }
@@ -96,7 +99,11 @@ class AdaptivePlanGenerator {
     // =========================================================================
     // NHIỆM VỤ 3: KIỂM TRA TỔNG HỢP (Bài test ngắn 10 câu đa dạng)
     // =========================================================================
-    final task3 = _buildComprehensiveTask(allQuestions: allQuestions);
+    final combinedExcludedIds = <String>{...task1Ids, ...task2Ids};
+    final task3 = _buildComprehensiveTask(
+      allQuestions: allQuestions,
+      excludedQuestionIds: combinedExcludedIds,
+    );
 
     if (task3 != null && task3.isValid) {
       tasks.add(task3);
@@ -128,6 +135,19 @@ class AdaptivePlanGenerator {
       generatedAt: now,
       tasks: finalizedTasks,
     );
+  }
+
+  /// Xác định độ khó ưu tiên từ cấp độ năng lực
+  int _determinePreferredDifficulty(AdaptiveSkillLevel level) {
+    switch (level) {
+      case AdaptiveSkillLevel.weak:
+        return 1; // Ưu tiên câu dễ & trung bình để củng cố nền tảng
+      case AdaptiveSkillLevel.moderate:
+      case AdaptiveSkillLevel.insufficientData:
+        return 2; // Ưu tiên câu trung bình
+      case AdaptiveSkillLevel.strong:
+        return 3; // Ưu tiên câu phân hóa / thử thách
+    }
   }
 
   /// Xây dựng Nhiệm vụ 1: Luyện điểm yếu nhất hoặc Khảo sát năng lực
@@ -176,12 +196,15 @@ class AdaptivePlanGenerator {
       return null;
     }
 
+    final preferredDiff = _determinePreferredDifficulty(targetSkill.level);
+
     final selection = _selector.selectQuestions(
       bank: allQuestions,
       targetType: targetSkill.type,
       requestedCount: 10,
       seenQuestionIds: seenQuestionIds,
       lastSeenTimestamps: lastSeenTimestamps,
+      preferredDifficulty: preferredDiff,
       referenceTimeMs: nowMs,
     );
 
@@ -208,29 +231,50 @@ class AdaptivePlanGenerator {
     required Set<String> seenQuestionIds,
     required Map<String, int> lastSeenTimestamps,
     required String? excludedType,
+    Set<String> excludedQuestionIds = const {},
     required int nowMs,
   }) {
     // 1. Kiểm tra Sổ câu sai (Wrong Book)
-    final validWrongQuestions = <Question>[];
-    final seenWrongIds = <String>{};
-
-    // Sắp xếp các câu sai theo wrongCount giảm dần (sai nhiều lần ưu tiên làm trước)
+    // Sắp xếp các câu sai theo 3 tầng ưu tiên minh bạch dựa trên dữ liệu SQLite:
+    // Tầng 1: Câu đến hạn ôn (nextReviewAt > 0 và <= nowMs)
+    // Tầng 2: Câu sai nhiều lần (wrongCount giảm dần)
+    // Tầng 3: Câu chưa được ôn gần đây (lastWrongAt cũ hơn đứng trước)
     final sortedEntries = List<WrongBookEntry>.from(wrongBookEntries)
-      ..sort((a, b) => b.wrongCount.compareTo(a.wrongCount));
+      ..sort((a, b) {
+        final aDue = a.nextReviewAt > 0 && a.nextReviewAt <= nowMs;
+        final bDue = b.nextReviewAt > 0 && b.nextReviewAt <= nowMs;
+        if (aDue != bDue) {
+          return aDue ? -1 : 1;
+        }
+        if (b.wrongCount != a.wrongCount) {
+          return b.wrongCount.compareTo(a.wrongCount);
+        }
+        return a.lastWrongAt.compareTo(b.lastWrongAt);
+      });
+
+    final validWrongNonExcluded = <Question>[];
+    final validWrongExcluded = <Question>[];
+    final seenWrongIds = <String>{};
 
     for (final entry in sortedEntries) {
       if (entry.wrongCount > 0) {
         final q = questionMap[entry.questionId];
         if (q != null && seenWrongIds.add(q.id)) {
-          validWrongQuestions.add(q);
+          if (excludedQuestionIds.contains(q.id)) {
+            validWrongExcluded.add(q);
+          } else {
+            validWrongNonExcluded.add(q);
+          }
         }
       }
     }
 
-    if (validWrongQuestions.isNotEmpty) {
-      // Có câu sai hợp lệ -> Sinh nhiệm vụ ôn tập câu sai
-      final pickedCount = min(10, validWrongQuestions.length);
-      final selectedWrong = validWrongQuestions.take(pickedCount).toList();
+    // Ghép câu chưa trùng trong Task 1 trước, nếu thiếu mới lấy câu trùng lặp
+    final combinedWrong = [...validWrongNonExcluded, ...validWrongExcluded];
+
+    if (combinedWrong.isNotEmpty) {
+      final pickedCount = min(10, combinedWrong.length);
+      final selectedWrong = combinedWrong.take(pickedCount).toList();
 
       return AdaptiveTask(
         id: 'task_wrong_book',
@@ -282,12 +326,18 @@ class AdaptivePlanGenerator {
 
     if (secondSkill == null) return null;
 
+    final preferredDiff = _determinePreferredDifficulty(secondSkill.level);
+
+    // Bổ sung excludedQuestionIds vào seenQuestionIds để selector ưu tiên câu khác tránh trùng Task 1
+    final combinedSeenIds = {...seenQuestionIds, ...excludedQuestionIds};
+
     final selection = _selector.selectQuestions(
       bank: allQuestions,
       targetType: secondSkill.type,
       requestedCount: 10,
-      seenQuestionIds: seenQuestionIds,
+      seenQuestionIds: combinedSeenIds,
       lastSeenTimestamps: lastSeenTimestamps,
+      preferredDifficulty: preferredDiff,
       referenceTimeMs: nowMs,
     );
 
@@ -318,26 +368,76 @@ class AdaptivePlanGenerator {
   /// Xây dựng Nhiệm vụ 3: Bài kiểm tra tổng hợp ngắn 10 câu
   AdaptiveTask? _buildComprehensiveTask({
     required List<Question> allQuestions,
+    Set<String> excludedQuestionIds = const {},
   }) {
     if (allQuestions.isEmpty) return null;
 
-    // Tận dụng ExamBuilderService hiện có để tạo đề 10 câu theo đúng ma trận THPT
-    final buildResult = ExamBuilderService().buildMockExam(
-      allQuestions,
-      count: 10,
-    );
+    // Hạn chế trùng lặp với các câu hỏi đã chọn trong Task 1 và Task 2
+    final targetCount = min(10, allQuestions.length);
+    List<Question> selectedQuestions = [];
 
-    if (buildResult.questions.isEmpty) return null;
+    if (excludedQuestionIds.isNotEmpty) {
+      final candidateBank = allQuestions
+          .where((q) => !excludedQuestionIds.contains(q.id))
+          .toList();
+
+      if (candidateBank.length >= targetCount) {
+        // Trường hợp lý tưởng: Ngân hàng chưa sử dụng đủ để tạo trọn vẹn đề
+        final examAttempt = ExamBuilderService().buildMockExam(
+          candidateBank,
+          count: targetCount,
+        );
+        if (examAttempt.questions.length == targetCount) {
+          selectedQuestions = examAttempt.questions;
+        }
+      }
+
+      // Nếu candidateBank thiếu câu hoặc examAttempt không đủ targetCount câu:
+      // Ưu tiên tối đa số câu chưa dùng từ candidateBank, chỉ bù phần thiếu từ các câu đã dùng
+      if (selectedQuestions.isEmpty && candidateBank.isNotEmpty) {
+        final candidateResult = ExamBuilderService().buildMockExam(
+          candidateBank,
+          count: min(targetCount, candidateBank.length),
+        );
+        final initialQuestions = candidateResult.questions;
+        final selectedIds = initialQuestions.map((q) => q.id).toSet();
+
+        final deficit = targetCount - initialQuestions.length;
+        if (deficit > 0) {
+          final supplementBank = allQuestions
+              .where((q) => !selectedIds.contains(q.id))
+              .toList();
+          final supplementResult = ExamBuilderService().buildPracticeSet(
+            supplementBank,
+            count: deficit,
+          );
+          selectedQuestions = [...initialQuestions, ...supplementResult];
+        } else {
+          selectedQuestions = initialQuestions;
+        }
+      }
+    }
+
+    // Fallback an toàn tuyệt đối nếu các bước trên chưa chọn được câu nào
+    if (selectedQuestions.isEmpty) {
+      final buildResult = ExamBuilderService().buildMockExam(
+        allQuestions,
+        count: targetCount,
+      );
+      selectedQuestions = buildResult.questions;
+    }
+
+    if (selectedQuestions.isEmpty) return null;
 
     return AdaptiveTask(
       id: 'task_mini_mock_exam',
       type: AdaptiveTaskType.comprehensiveCheck,
       targetType: 'mixed',
-      title: 'Kiểm tra tổng hợp 10 câu',
+      title: 'Kiểm tra tổng hợp ${selectedQuestions.length} câu',
       subtitle: 'Bài kiểm tra nhanh mô phỏng cấu trúc đề thi THPT',
       reasoning:
           'Luyện tập phản xạ chuyển đổi linh hoạt giữa các dạng bài khác nhau và kiểm tra độ vững vàng kiến thức tổng thể.',
-      questions: buildResult.questions,
+      questions: selectedQuestions,
       priorityOrder: 3,
     );
   }

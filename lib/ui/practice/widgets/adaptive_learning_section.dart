@@ -23,11 +23,13 @@ class AdaptiveLearningSection extends StatefulWidget {
 
   @override
   State<AdaptiveLearningSection> createState() =>
-      _AdaptiveLearningSectionState();
+      AdaptiveLearningSectionState();
 }
 
-class _AdaptiveLearningSectionState extends State<AdaptiveLearningSection> {
+class AdaptiveLearningSectionState extends State<AdaptiveLearningSection> {
   bool _isLoading = true;
+  bool _isFetching = false;
+  bool _hasPendingRefresh = false;
   String? _errorMessage;
   _AdaptiveData? _data;
 
@@ -37,14 +39,29 @@ class _AdaptiveLearningSectionState extends State<AdaptiveLearningSection> {
     _loadData();
   }
 
+  /// Làm mới lại dữ liệu từ SQLite (ví dụ khi quay về từ màn hình làm bài)
+  void reload() {
+    _loadData(showLoadingState: false);
+  }
+
   /// Tải dữ liệu thực tế từ SQLite qua AppRepository và tính toán lộ trình thích ứng
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool showLoadingState = true}) async {
     if (!mounted) return;
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (_isFetching) {
+      // Đang có lượt nạp chạy: ghi nhớ yêu cầu làm mới để kích hoạt ngay khi xong
+      _hasPendingRefresh = true;
+      return;
+    }
+
+    _isFetching = true;
+
+    if (showLoadingState && _data == null) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
       final repository = context.read<AppRepository>();
@@ -97,6 +114,7 @@ class _AdaptiveLearningSectionState extends State<AdaptiveLearningSection> {
       setState(() {
         _data = _AdaptiveData(profile: profile, plan: plan);
         _isLoading = false;
+        _errorMessage = null;
       });
     } catch (e) {
       if (!mounted) return;
@@ -104,6 +122,12 @@ class _AdaptiveLearningSectionState extends State<AdaptiveLearningSection> {
         _errorMessage = 'Không thể tải lộ trình học tập: $e';
         _isLoading = false;
       });
+    } finally {
+      _isFetching = false;
+      if (_hasPendingRefresh && mounted) {
+        _hasPendingRefresh = false;
+        _loadData(showLoadingState: false);
+      }
     }
   }
 
@@ -133,7 +157,7 @@ class _AdaptiveLearningSectionState extends State<AdaptiveLearningSection> {
     // Khi người dùng hoàn thành bài làm hoặc thoát bài quay lại PracticeScreen:
     // Tự động tải lại dữ liệu SQLite mới nhất để cập nhật lại hồ sơ năng lực và nhiệm vụ!
     if (!mounted) return;
-    _loadData();
+    _loadData(showLoadingState: false);
   }
 
   @override

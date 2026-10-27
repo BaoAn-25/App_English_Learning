@@ -45,6 +45,7 @@ class AdaptiveQuestionSelector {
     Map<String, int> lastSeenTimestamps = const {},
     int? preferredDifficulty,
     int? referenceTimeMs,
+    int cooldownWindowMs = 24 * 60 * 60 * 1000,
   }) {
     if (bank.isEmpty || requestedCount <= 0) {
       return const AdaptiveQuestionSelectionResult(
@@ -120,21 +121,58 @@ class AdaptiveQuestionSelector {
       return a.questions.first.id.compareTo(b.questions.first.id);
     });
 
-    // 5. Sắp xếp trong nhóm Seen:
-    seenUnits.shuffle(_random);
-    seenUnits.sort((a, b) {
-      final aOldest = _getOldestTimestamp(a.questions, lastSeenTimestamps, now);
-      final bOldest = _getOldestTimestamp(b.questions, lastSeenTimestamps, now);
+    // 5. Phân nhóm trong nhóm Seen:
+    // Ưu tiên câu làm từ lâu (> 24 giờ), hạn chế câu vừa làm trong 24 giờ nếu còn lựa chọn khác
+    final seenOlderThan24h = <_QuestionUnit>[];
+    final seenRecentWithin24h = <_QuestionUnit>[];
 
-      // So sánh: timestamp nhỏ hơn (làm lâu hơn) đứng trước
-      if (aOldest != bOldest) {
-        return aOldest.compareTo(bOldest);
+    for (final unit in seenUnits) {
+      final newest = _getNewestTimestamp(unit.questions, lastSeenTimestamps, 0);
+      if (newest > 0 && (now - newest) < cooldownWindowMs) {
+        seenRecentWithin24h.add(unit);
+      } else {
+        seenOlderThan24h.add(unit);
       }
-      return a.questions.first.id.compareTo(b.questions.first.id);
-    });
+    }
 
-    // 6. Ghép danh sách candidate units: Unseen trước, sau đó bổ sung Seen
-    final candidateUnits = <_QuestionUnit>[...unseenUnits, ...seenUnits];
+    void sortSeen(List<_QuestionUnit> list) {
+      list.shuffle(_random);
+      list.sort((a, b) {
+        if (preferredDifficulty != null) {
+          final aDiffMatch = (a.averageDifficulty - preferredDifficulty).abs();
+          final bDiffMatch = (b.averageDifficulty - preferredDifficulty).abs();
+          if (aDiffMatch != bDiffMatch) {
+            return aDiffMatch.compareTo(bDiffMatch);
+          }
+        }
+        final aOldest = _getOldestTimestamp(
+          a.questions,
+          lastSeenTimestamps,
+          now,
+        );
+        final bOldest = _getOldestTimestamp(
+          b.questions,
+          lastSeenTimestamps,
+          now,
+        );
+
+        // So sánh: timestamp nhỏ hơn (làm lâu hơn) đứng trước
+        if (aOldest != bOldest) {
+          return aOldest.compareTo(bOldest);
+        }
+        return a.questions.first.id.compareTo(b.questions.first.id);
+      });
+    }
+
+    sortSeen(seenOlderThan24h);
+    sortSeen(seenRecentWithin24h);
+
+    // 6. Ghép danh sách candidate units: Unseen trước, sau đó Seen > 24h, cuối cùng mới fallback về Seen < 24h
+    final candidateUnits = <_QuestionUnit>[
+      ...unseenUnits,
+      ...seenOlderThan24h,
+      ...seenRecentWithin24h,
+    ];
 
     // 7. Thuật toán chọn câu hỏi bảo toàn cụm passage
     final selectedUnits = <_QuestionUnit>[];
@@ -246,5 +284,21 @@ class AdaptiveQuestionSelector {
       }
     }
     return oldest;
+  }
+
+  /// Lấy timestamp làm bài gần nhất của một danh sách câu
+  int _getNewestTimestamp(
+    List<Question> questions,
+    Map<String, int> timestamps,
+    int defaultValue,
+  ) {
+    int newest = defaultValue;
+    for (final q in questions) {
+      final t = timestamps[q.id];
+      if (t != null && t > newest) {
+        newest = t;
+      }
+    }
+    return newest;
   }
 }

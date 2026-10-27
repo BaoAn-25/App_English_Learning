@@ -10,8 +10,16 @@ import 'services/exam_builder_service.dart';
 import 'widgets/adaptive_learning_section.dart';
 import 'wrong_book_screen.dart';
 
-class PracticeScreen extends StatelessWidget {
+class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key});
+
+  @override
+  State<PracticeScreen> createState() => _PracticeScreenState();
+}
+
+class _PracticeScreenState extends State<PracticeScreen> {
+  final GlobalKey<AdaptiveLearningSectionState> _adaptiveKey =
+      GlobalKey<AdaptiveLearningSectionState>();
 
   static const Map<String, _TypeInfo> _questionTypeDetails = {
     'grammar': _TypeInfo(
@@ -67,7 +75,7 @@ class PracticeScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           // Khu vực Luyện tập thích ứng thông minh
-          const AdaptiveLearningSection(),
+          AdaptiveLearningSection(key: _adaptiveKey),
           const SizedBox(height: 20),
 
           // Tiêu đề nhóm 1: Tiện ích & Thi thử
@@ -123,11 +131,14 @@ class PracticeScreen extends StatelessWidget {
                 ),
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MockExamScreen()),
                 );
+                if (mounted) {
+                  _adaptiveKey.currentState?.reload();
+                }
               },
             ),
           ),
@@ -174,11 +185,14 @@ class PracticeScreen extends StatelessWidget {
                 ),
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const WrongBookScreen()),
                 );
+                if (mounted) {
+                  _adaptiveKey.currentState?.reload();
+                }
               },
             ),
           ),
@@ -237,14 +251,17 @@ class PracticeScreen extends StatelessWidget {
                   ),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
                           QuestionListScreen(type: type, title: info.title),
                     ),
                   );
+                  if (mounted) {
+                    _adaptiveKey.currentState?.reload();
+                  }
                 },
               ),
             );
