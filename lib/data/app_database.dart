@@ -346,33 +346,35 @@ class AppDatabase {
 
   Future<void> upsertWrongBookEntry(WrongBookEntry entry) async {
     final db = await database;
-    final existing = await db.query(
-      'wrong_book',
-      where: 'questionId = ?',
-      whereArgs: [entry.questionId],
-      limit: 1,
-    );
-
-    if (existing.isEmpty) {
-      await db.insert(
+    await db.transaction((txn) async {
+      final existing = await txn.query(
         'wrong_book',
-        entry.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    } else {
-      final currentCount = (existing.first['wrongCount'] as num).toInt();
-      final addedCount = entry.wrongCount > 0 ? entry.wrongCount : 1;
-      await db.update(
-        'wrong_book',
-        {
-          'wrongCount': currentCount + addedCount,
-          'lastWrongAt': entry.lastWrongAt,
-          'nextReviewAt': entry.nextReviewAt,
-        },
         where: 'questionId = ?',
         whereArgs: [entry.questionId],
+        limit: 1,
       );
-    }
+
+      if (existing.isEmpty) {
+        await txn.insert(
+          'wrong_book',
+          entry.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } else {
+        final currentCount = (existing.first['wrongCount'] as num).toInt();
+        final addedCount = entry.wrongCount > 0 ? entry.wrongCount : 1;
+        await txn.update(
+          'wrong_book',
+          {
+            'wrongCount': currentCount + addedCount,
+            'lastWrongAt': entry.lastWrongAt,
+            'nextReviewAt': entry.nextReviewAt,
+          },
+          where: 'questionId = ?',
+          whereArgs: [entry.questionId],
+        );
+      }
+    });
   }
 
   Future<List<WrongBookEntry>> getDueWrongBookEntries(int beforeOrAtTimestamp) async {
@@ -408,33 +410,35 @@ class AppDatabase {
 
   Future<void> upsertDailyStat(DailyStat stat) async {
     final db = await database;
-    final existing = await db.query(
-      'daily_stats',
-      where: 'date = ?',
-      whereArgs: [stat.date],
-      limit: 1,
-    );
-
-    if (existing.isEmpty) {
-      await db.insert(
+    await db.transaction((txn) async {
+      final existing = await txn.query(
         'daily_stats',
-        stat.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    } else {
-      final row = existing.first;
-      await db.update(
-        'daily_stats',
-        {
-          'xp': (row['xp'] as num).toInt() + stat.xp,
-          'questionsDone': (row['questionsDone'] as num).toInt() + stat.questionsDone,
-          'correct': (row['correct'] as num).toInt() + stat.correct,
-          'minutes': (row['minutes'] as num).toInt() + stat.minutes,
-        },
         where: 'date = ?',
         whereArgs: [stat.date],
+        limit: 1,
       );
-    }
+
+      if (existing.isEmpty) {
+        await txn.insert(
+          'daily_stats',
+          stat.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } else {
+        final row = existing.first;
+        await txn.update(
+          'daily_stats',
+          {
+            'xp': (row['xp'] as num).toInt() + stat.xp,
+            'questionsDone': (row['questionsDone'] as num).toInt() + stat.questionsDone,
+            'correct': (row['correct'] as num).toInt() + stat.correct,
+            'minutes': (row['minutes'] as num).toInt() + stat.minutes,
+          },
+          where: 'date = ?',
+          whereArgs: [stat.date],
+        );
+      }
+    });
   }
 
   Future<List<DailyStat>> getDailyStatsInRange(String startDate, String endDate) async {
