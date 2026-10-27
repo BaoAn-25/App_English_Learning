@@ -7,6 +7,7 @@ import 'data/asset_seeder.dart';
 import 'data/question_sync_service.dart';
 import 'navigation/main_shell.dart';
 import 'ui/theme/app_theme.dart';
+import 'ui/theme/theme_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +26,20 @@ void main() async {
   debugPrint('Đồng bộ câu hỏi: thêm $insertedCount câu mới');
 
   runApp(
+<<<<<<< HEAD
+    MultiProvider(
+      providers: [
+        Provider<AppRepository>(
+          create: (_) => AppRepository(db: appDb),
+        ),
+        ChangeNotifierProvider<ThemeController>(
+          create: (_) => ThemeController(),
+        ),
+      ],
+=======
     Provider<AppRepository>(
       create: (_) => appRepository,
+>>>>>>> 62b1c0d8493bae5c8c8d2e59637a73223ba2d991
       child: const ThptEnglishApp(),
     ),
   );
@@ -37,12 +50,14 @@ class ThptEnglishApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = Provider.of<ThemeController>(context);
+
     return MaterialApp(
       title: 'Luyện Thi THPT Tiếng Anh',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: themeController.themeMode,
       home: const MainShell(),
     );
   }
