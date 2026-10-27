@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -9,12 +11,38 @@ import 'models/topic.dart';
 import 'models/word.dart';
 import 'models/wrong_book_entry.dart';
 
+/// Kết quả đồng bộ câu hỏi an toàn
+class QuestionSyncResult {
+  final int insertedCount;
+  final int updatedCount;
+  final int skippedCount;
+
+  const QuestionSyncResult({
+    required this.insertedCount,
+    required this.updatedCount,
+    required this.skippedCount,
+  });
+
+  int get totalProcessed => insertedCount + updatedCount + skippedCount;
+
+  @override
+  String toString() =>
+      'QuestionSyncResult(inserted: $insertedCount, updated: $updatedCount, skipped: $skippedCount)';
+}
+
 class AppDatabase {
   static const String _databaseName = 'thpt_english.db';
   static const int _databaseVersion = 1;
 
   AppDatabase._internal();
   static final AppDatabase instance = AppDatabase._internal();
+
+  @visibleForTesting
+  static AppDatabase withDatabase(Database db) {
+    final appDb = AppDatabase._internal();
+    appDb._database = db;
+    return appDb;
+  }
 
   Database? _database;
 
@@ -154,11 +182,10 @@ class AppDatabase {
 
   Future<void> setSetting(String key, String value) async {
     final db = await database;
-    await db.insert(
-      'app_settings',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('app_settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // --- Topics ---
@@ -244,6 +271,209 @@ class AppDatabase {
       );
     }
     await batch.commit(noResult: true);
+  }
+
+  Future<int> insertMissingQuestions(List<Question> questions) async {
+    final db = await database;
+
+    return db.transaction((txn) async {
+      int insertedCount = 0;
+
+      for (final question in questions) {
+        final result = await txn.insert(
+          'questions',
+          question.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+
+        if (result != -1) {
+          insertedCount++;
+        }
+      }
+
+      return insertedCount;
+    });
+  }
+
+  /// Đồng bộ câu hỏi an toàn (Safe Selective Sync)
+  /// - Thêm mới hoàn toàn nếu chưa tồn tại
+  /// - Nếu câu hỏi đã có trong attempt_answers hoặc wrong_book: KHÔNG đổi id, stem, options, correctIndex, type, grade, topicId, passageId
+  /// - Chỉ cập nhật explanation và difficulty nếu có thay đổi
+  /// - Nếu câu hỏi chưa có trong lịch sử: cho phép cập nhật đầy đủ nếu có thay đổi
+  /// - Idempotent: chạy lại cùng dữ liệu không ghi đè thừa
+  /// - Ghi nhận targetVersion vào app_settings chỉ khi transaction thành công
+  Future<QuestionSyncResult> syncQuestionsSafe(
+    List<Question> questions, {
+    String? targetVersion,
+  }) async {
+    final db = await database;
+
+    return db.transaction((txn) async {
+      // 1. Kiểm tra phiên bản nếu có targetVersion
+      if (targetVersion != null && targetVersion.isNotEmpty) {
+        final versionResults = await txn.query(
+          'app_settings',
+          columns: ['value'],
+          where: 'key = ?',
+          whereArgs: ['questions_sync_version'],
+          limit: 1,
+        );
+
+        if (versionResults.isNotEmpty) {
+          final currentVersion = versionResults.first['value'] as String?;
+          if (currentVersion == targetVersion) {
+            // Xác nhận trạng thái dữ liệu phù hợp trước khi bỏ qua
+            final count = Sqflite.firstIntValue(
+              await txn.rawQuery('SELECT COUNT(*) FROM questions'),
+            );
+            if ((count ?? 0) >= questions.length) {
+              return const QuestionSyncResult(
+                insertedCount: 0,
+                updatedCount: 0,
+                skippedCount: 0,
+              );
+            }
+          }
+        }
+      }
+
+      // 2. Lấy dữ liệu câu hỏi hiện có trong DB
+      final existingRows = await txn.query('questions');
+      final existingMap = <String, Map<String, dynamic>>{
+        for (final row in existingRows) row['id'] as String: row,
+      };
+
+      // 3. Lấy tập hợp ID câu hỏi đã có trong attempt_answers hoặc wrong_book
+      final attemptRows = await txn.rawQuery(
+        'SELECT DISTINCT questionId FROM attempt_answers',
+      );
+      final wrongRows = await txn.rawQuery(
+        'SELECT DISTINCT questionId FROM wrong_book',
+      );
+
+      final lockedQuestionIds = <String>{
+        for (final row in attemptRows) row['questionId'] as String,
+        for (final row in wrongRows) row['questionId'] as String,
+      };
+
+      int insertedCount = 0;
+      int updatedCount = 0;
+      int skippedCount = 0;
+
+      for (final q in questions) {
+        final existing = existingMap[q.id];
+
+        if (existing == null) {
+          // Yêu cầu 1: Câu hỏi mới chưa có trong SQLite -> Thêm đầy đủ
+          await txn.insert(
+            'questions',
+            q.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.abort,
+          );
+          insertedCount++;
+        } else {
+          final isLocked = lockedQuestionIds.contains(q.id);
+
+          if (!isLocked) {
+            // Yêu cầu 3: Chưa xuất hiện trong cả 2 bảng -> cập nhật theo JSON nếu có thay đổi
+            final newMap = q.toMap();
+            bool hasChanged = false;
+            for (final entry in newMap.entries) {
+              if (entry.key == 'options') {
+                if (!_areOptionsEqual(existing['options'], q.options)) {
+                  hasChanged = true;
+                  break;
+                }
+              } else if (existing[entry.key] != entry.value) {
+                hasChanged = true;
+                break;
+              }
+            }
+
+            if (hasChanged) {
+              await txn.update(
+                'questions',
+                newMap,
+                where: 'id = ?',
+                whereArgs: [q.id],
+              );
+              updatedCount++;
+            } else {
+              skippedCount++;
+            }
+          } else {
+            // Yêu cầu 4: Đã có trong lịch sử (attempt_answers hoặc wrong_book)
+            // Không đổi: id, stem, options, correctIndex, type, grade, topicId, passageId
+            // Chỉ cập nhật: explanation và difficulty khi có thay đổi
+            bool hasChanged = false;
+            final updates = <String, dynamic>{};
+
+            if (existing['explanation'] != q.explanation) {
+              updates['explanation'] = q.explanation;
+              hasChanged = true;
+            }
+            if (existing['difficulty'] != q.difficulty) {
+              updates['difficulty'] = q.difficulty;
+              hasChanged = true;
+            }
+
+            if (hasChanged) {
+              await txn.update(
+                'questions',
+                updates,
+                where: 'id = ?',
+                whereArgs: [q.id],
+              );
+              updatedCount++;
+            } else {
+              skippedCount++;
+            }
+          }
+        }
+      }
+
+      // 4. Chỉ ghi nhận phiên bản mới khi toàn bộ transaction thành công
+      if (targetVersion != null && targetVersion.isNotEmpty) {
+        await txn.insert(
+          'app_settings',
+          {
+            'key': 'questions_sync_version',
+            'value': targetVersion,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+
+      return QuestionSyncResult(
+        insertedCount: insertedCount,
+        updatedCount: updatedCount,
+        skippedCount: skippedCount,
+      );
+    });
+  }
+
+  bool _areOptionsEqual(dynamic storedOptions, List<String> newOptions) {
+    if (storedOptions is String) {
+      try {
+        final decoded = jsonDecode(storedOptions);
+        if (decoded is List) {
+          if (decoded.length != newOptions.length) return false;
+          for (int i = 0; i < decoded.length; i++) {
+            if (decoded[i].toString() != newOptions[i]) return false;
+          }
+          return true;
+        }
+      } catch (_) {
+        return false;
+      }
+    } else if (storedOptions is List) {
+      if (storedOptions.length != newOptions.length) return false;
+      for (int i = 0; i < storedOptions.length; i++) {
+        if (storedOptions[i].toString() != newOptions[i]) return false;
+      }
+      return true;
+    }
+    return false;
   }
 
   Future<List<Question>> getAllQuestions() async {
@@ -375,7 +605,9 @@ class AppDatabase {
     }
   }
 
-  Future<List<WrongBookEntry>> getDueWrongBookEntries(int beforeOrAtTimestamp) async {
+  Future<List<WrongBookEntry>> getDueWrongBookEntries(
+    int beforeOrAtTimestamp,
+  ) async {
     final db = await database;
     final maps = await db.query(
       'wrong_book',
@@ -427,7 +659,8 @@ class AppDatabase {
         'daily_stats',
         {
           'xp': (row['xp'] as num).toInt() + stat.xp,
-          'questionsDone': (row['questionsDone'] as num).toInt() + stat.questionsDone,
+          'questionsDone':
+              (row['questionsDone'] as num).toInt() + stat.questionsDone,
           'correct': (row['correct'] as num).toInt() + stat.correct,
           'minutes': (row['minutes'] as num).toInt() + stat.minutes,
         },
@@ -437,7 +670,10 @@ class AppDatabase {
     }
   }
 
-  Future<List<DailyStat>> getDailyStatsInRange(String startDate, String endDate) async {
+  Future<List<DailyStat>> getDailyStatsInRange(
+    String startDate,
+    String endDate,
+  ) async {
     final db = await database;
     final maps = await db.query(
       'daily_stats',
@@ -446,6 +682,73 @@ class AppDatabase {
       orderBy: 'date ASC',
     );
     return maps.map(DailyStat.fromMap).toList();
+  }
+
+  Future<void> savePracticeResult({
+    required Attempt attempt,
+    required List<AttemptAnswer> Function(int attemptId) buildAnswers,
+    required List<WrongBookEntry> wrongEntries,
+    required DailyStat dailyStat,
+  }) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      // 1. Lưu lượt làm bài.
+      final attemptId = await txn.insert('attempts', attempt.toMap());
+
+      // 2. Lưu từng đáp án.
+      final answers = buildAnswers(attemptId);
+
+      final batch = txn.batch();
+      for (final answer in answers) {
+        batch.insert('attempt_answers', answer.toMap());
+      }
+      await batch.commit(noResult: true);
+
+      // 3. Cộng dồn số lần trả lời sai.
+      for (final entry in wrongEntries) {
+        await txn.rawInsert(
+          '''
+          INSERT INTO wrong_book (
+            questionId, wrongCount, lastWrongAt, nextReviewAt
+          )
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(questionId) DO UPDATE SET
+            wrongCount = wrongCount + excluded.wrongCount,
+            lastWrongAt = excluded.lastWrongAt,
+            nextReviewAt = excluded.nextReviewAt
+        ''',
+          [
+            entry.questionId,
+            entry.wrongCount,
+            entry.lastWrongAt,
+            entry.nextReviewAt,
+          ],
+        );
+      }
+
+      // 4. Cộng dồn thống kê trong ngày.
+      await txn.rawInsert(
+        '''
+        INSERT INTO daily_stats (
+          date, xp, questionsDone, correct, minutes
+        )
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(date) DO UPDATE SET
+          xp = xp + excluded.xp,
+          questionsDone = questionsDone + excluded.questionsDone,
+          correct = correct + excluded.correct,
+          minutes = minutes + excluded.minutes
+      ''',
+        [
+          dailyStat.date,
+          dailyStat.xp,
+          dailyStat.questionsDone,
+          dailyStat.correct,
+          dailyStat.minutes,
+        ],
+      );
+    });
   }
 
   // --- Helper kiểm tra bảng rỗng để seed dữ liệu ---
