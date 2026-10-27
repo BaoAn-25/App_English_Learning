@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,7 +64,7 @@ void main() {
   test(
     'seeds real bundled assets and repeated calls preserve changes',
     () async {
-      await AssetSeeder.seedIfEmpty(bundle: SeedBundle(files));
+      await AssetSeeder.seedIfEmpty();
       for (final table in tables) {
         expect(
           (await database.query(table)).length,

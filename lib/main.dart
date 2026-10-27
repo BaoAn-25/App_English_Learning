@@ -1,25 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'data/app_database.dart';
 import 'data/app_repository.dart';
-import 'data/asset_seeder.dart';
-import 'navigation/main_shell.dart';
+import 'navigation/app_startup.dart';
 import 'ui/theme/app_theme.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Mở database cục bộ SQLite
-  final appDb = AppDatabase.instance;
-  await appDb.database;
-
-  // Nạp dữ liệu mẫu từ assets nếu bảng còn rỗng
-  await AssetSeeder.seedIfEmpty(dbInstance: appDb);
 
   runApp(
     Provider<AppRepository>(
-      create: (_) => AppRepository(db: appDb),
+      create: (_) => AppRepository(),
       child: const ThptEnglishApp(),
     ),
   );
@@ -36,7 +27,7 @@ class ThptEnglishApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      home: const MainShell(),
+      home: const AppStartup(),
     );
   }
 }

@@ -59,3 +59,8 @@ Nhóm áp dụng mô hình phân nhánh Git chuẩn để tránh xung đột mã
 `AppRepository.savePracticeResult` lưu lượt làm, đáp án, sổ câu sai và thống kê ngày trong một giao dịch, kiểm tra dữ liệu trước khi ghi và rollback khi lỗi. Xem [hướng dẫn tích hợp và kiểm chứng](docs/save-practice-result.md).
 
 Bộ test dữ liệu dùng SQLite trong bộ nhớ qua Python 3 có sẵn (`sqlite3` trong thư viện chuẩn); không tải dependency khi chạy `flutter test --no-pub`. Xem [hiện trạng và ưu tiên tiếp theo](docs/project-audit.md).
+
+
+## Khởi động có thể thử lại
+
+Ứng dụng hiển thị trạng thái nạp dữ liệu trước khi mở các tab. Khi lỗi có nút **Thử lại**, không tự xóa database. Dữ liệu mẫu được nạp trong một transaction để tránh nạp dở dang. Xem [luồng khởi động và kiểm chứng](docs/startup.md).

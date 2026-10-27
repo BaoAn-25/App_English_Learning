@@ -14,9 +14,15 @@ API `AppRepository.savePracticeResult` giữ đúng interface đang được nh�
 
 ## Việc tiếp theo
 - Tích hợp API với nhánh Viễn, kiểm thử luồng nộp bài trên thiết bị thật.
-- Đảm bảo seed dữ liệu đồng bộ và có xử lý lỗi khởi động để app không dừng trước runApp.
+- Theo dõi phản hồi leader và kiểm thử khởi động trên Android/iOS thật.
 - Rà soát mở DB đồng thời, ràng buộc/di trú dữ liệu và whitelist tên bảng trong helper isTableEmpty.
 - Thống nhất khóa chống gửi trùng nếu cần hỗ trợ retry tự động; hiện caller phải chặn nộp lặp.
 - Bổ sung dữ liệu đã được rà soát, CI và kiểm thử plugin theo nền tảng hỗ trợ.
 
 Chưa thêm server hoặc tự gộp các nhánh của thành viên khác.
+
+
+## Bổ sung ngày 27/10/2026
+- Seed ba bảng trong cùng transaction, bảo toàn bảng có dữ liệu và rollback khi lỗi.
+- AppStartup có loading/lỗi/thử lại, không hiển thị lỗi nội bộ và chặn retry song song.
+- Chi tiết kiểm chứng: [khởi động](startup.md).
