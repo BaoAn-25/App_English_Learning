@@ -6,6 +6,7 @@ import 'data/app_repository.dart';
 import 'data/asset_seeder.dart';
 import 'navigation/main_shell.dart';
 import 'ui/theme/app_theme.dart';
+import 'ui/theme/theme_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,8 +19,15 @@ void main() async {
   await AssetSeeder.seedIfEmpty(dbInstance: appDb);
 
   runApp(
-    Provider<AppRepository>(
-      create: (_) => AppRepository(db: appDb),
+    MultiProvider(
+      providers: [
+        Provider<AppRepository>(
+          create: (_) => AppRepository(db: appDb),
+        ),
+        ChangeNotifierProvider<ThemeController>(
+          create: (_) => ThemeController(),
+        ),
+      ],
       child: const ThptEnglishApp(),
     ),
   );
@@ -30,12 +38,14 @@ class ThptEnglishApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = Provider.of<ThemeController>(context);
+
     return MaterialApp(
       title: 'Luyện Thi THPT Tiếng Anh',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: themeController.themeMode,
       home: const MainShell(),
     );
   }
