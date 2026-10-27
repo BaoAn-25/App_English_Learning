@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:thpt_english/data/app_repository.dart';
+import 'package:thpt_english/data/models/topic.dart';
+import 'package:thpt_english/data/models/word_progress.dart';
 import 'package:thpt_english/navigation/main_shell.dart';
+
+class FakeAppRepository extends Fake implements AppRepository {
+  @override
+  Future<List<Topic>> getTopicsByGrade(int grade) async => [];
+
+  @override
+  Future<List<WordProgress>> getAllWordProgress() async => [];
+}
 
 void main() {
   testWidgets('Smoke test: kiem tra MainShell va chuyen doi 4 tab', (WidgetTester tester) async {
-    // Khoi dong MainShell trong MaterialApp khong phu thuoc SQLite
+    // Khoi dong MainShell trong MaterialApp voi FakeAppRepository khong phu thuoc SQLite
     await tester.pumpWidget(
-      const MaterialApp(
-        home: MainShell(),
+      Provider<AppRepository>.value(
+        value: FakeAppRepository(),
+        child: const MaterialApp(
+          home: MainShell(),
+        ),
       ),
     );
 

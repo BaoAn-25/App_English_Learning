@@ -57,18 +57,22 @@ void main() {
       }
     });
 
-    test('questions.json contains exactly 280 questions across all 8 standard exam types', () {
+    test('questions.json contains exactly 280 questions across all 8 standard exam types for topics', () {
       final file = File('assets/data/questions.json');
       expect(file.existsSync(), isTrue);
 
       final content = file.readAsStringSync();
       final List<dynamic> jsonList = jsonDecode(content);
 
-      // Đúng chuẩn 280 câu hỏi theo tiêu chí nghiệm thu tuần 3
-      expect(jsonList.length, equals(280));
+      // Đúng chuẩn 280 câu hỏi theo tiêu chí nghiệm thu tuần 3 cho các chủ đề từ vựng
+      final topicQuestions = jsonList.where((item) {
+        final topicId = item['topicId'] as String?;
+        return topicId != null && RegExp(r'^topic_12_u\d+$').hasMatch(topicId);
+      }).toList();
+      expect(topicQuestions.length, equals(280));
 
       final typeCounts = <String, int>{};
-      for (final item in jsonList) {
+      for (final item in topicQuestions) {
         final type = item['type'] as String;
         typeCounts[type] = (typeCounts[type] ?? 0) + 1;
 

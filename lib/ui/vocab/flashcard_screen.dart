@@ -170,6 +170,15 @@ class _FlashcardScreenState extends State<FlashcardScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_deck.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.topicTitle)),
+        body: const Center(
+          child: Text('Chưa có thẻ từ vựng nào.'),
+        ),
+      );
+    }
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final word = _deck[_currentIndex];

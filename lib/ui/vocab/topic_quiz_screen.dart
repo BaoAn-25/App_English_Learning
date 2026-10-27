@@ -295,7 +295,7 @@ class _TopicQuizScreenState extends State<TopicQuizScreen> {
                 const Spacer(),
                 Row(
                   children: List.generate(
-                    q.difficulty,
+                    q.difficulty.clamp(0, 5),
                     (_) => const Icon(Icons.star_rounded, size: 16, color: Colors.amber),
                   ),
                 ),
