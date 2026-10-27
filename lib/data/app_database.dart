@@ -212,6 +212,52 @@ class AppDatabase {
   }
 
   // --- Topics ---
+  static const _legacyTopicIds = {
+    'topic_12_unit1': 'topic_12_u1',
+    'topic_12_unit2': 'topic_12_u2',
+    'topic_12_unit3': 'topic_12_u3',
+  };
+
+  // Chỉ gộp khi đọc các cặp ID mẫu đã biết có cùng thông tin chủ đề.
+  Map<String, String> _topicAliases(List<Topic> topics) {
+    final byId = {for (final topic in topics) topic.id: topic};
+    final aliases = <String, String>{};
+    for (final pair in _legacyTopicIds.entries) {
+      final old = byId[pair.key];
+      final current = byId[pair.value];
+      if (old != null &&
+          current != null &&
+          old.grade == current.grade &&
+          old.title == current.title &&
+          old.order == current.order) {
+        aliases[pair.key] = pair.value;
+      }
+    }
+    return aliases;
+  }
+
+  List<Topic> _visibleTopics(List<Map<String, Object?>> maps) {
+    final topics = maps.map(Topic.fromMap).toList();
+    final aliases = _topicAliases(topics);
+    return topics.where((topic) => !aliases.containsKey(topic.id)).toList();
+  }
+
+  Future<List<String>> _topicIdsForRead(Database db, String topicId) async {
+    for (final pair in _legacyTopicIds.entries) {
+      if (topicId != pair.key && topicId != pair.value) continue;
+      final rows = await db.query(
+        'topics',
+        where: 'id IN (?, ?)',
+        whereArgs: [pair.key, pair.value],
+      );
+      if (_topicAliases(rows.map(Topic.fromMap).toList()).containsKey(pair.key)) {
+        return [pair.key, pair.value];
+      }
+      break;
+    }
+    return [topicId];
+  }
+
   Future<void> insertTopics(List<Topic> topics) async {
     final db = await database;
     final batch = db.batch();
@@ -228,7 +274,7 @@ class AppDatabase {
   Future<List<Topic>> getAllTopics() async {
     final db = await database;
     final maps = await db.query('topics', orderBy: '"order" ASC');
-    return maps.map(Topic.fromMap).toList();
+    return _visibleTopics(maps);
   }
 
   Future<List<Topic>> getTopicsByGrade(int grade) async {
@@ -239,7 +285,7 @@ class AppDatabase {
       whereArgs: [grade],
       orderBy: '"order" ASC',
     );
-    return maps.map(Topic.fromMap).toList();
+    return _visibleTopics(maps);
   }
 
   // --- Words ---
@@ -274,10 +320,11 @@ class AppDatabase {
 
   Future<List<Word>> getWordsByTopicId(String topicId) async {
     final db = await database;
+    final ids = await _topicIdsForRead(db, topicId);
     final maps = await db.query(
       'words',
-      where: 'topicId = ?',
-      whereArgs: [topicId],
+      where: 'topicId IN (${List.filled(ids.length, '?').join(', ')})',
+      whereArgs: ids,
     );
     return maps.map(Word.fromMap).toList();
   }
@@ -527,10 +574,11 @@ class AppDatabase {
 
   Future<List<Question>> getQuestionsByTopicId(String topicId) async {
     final db = await database;
+    final ids = await _topicIdsForRead(db, topicId);
     final maps = await db.query(
       'questions',
-      where: 'topicId = ?',
-      whereArgs: [topicId],
+      where: 'topicId IN (${List.filled(ids.length, '?').join(', ')})',
+      whereArgs: ids,
     );
     return maps.map(Question.fromMap).toList();
   }

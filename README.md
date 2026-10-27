@@ -56,7 +56,7 @@ Tài và An đã đổi vai trò. Phân công dưới đây là phân công hi�
 | **Chung** | `assets/data/` | Dữ liệu JSON mẫu (topics, words, questions) |
 
 
-## Tiến độ phần Tài — cập nhật 27/10/2026
+## Tiến độ phần Tài — cập nhật 28/10/2026
 
 Các phần sau đã có trên `feature/tai`, được đẩy lên [PR #3](https://github.com/BaoAn-25/App_English_Learning/pull/3) để leader duyệt:
 
@@ -67,13 +67,14 @@ Các phần sau đã có trên `feature/tai`, được đẩy lên [PR #3](https
 | Đồng bộ từ vựng khi nâng cấp | Bổ sung chủ đề/từ vựng thiếu theo ID trong một giao dịch; giữ nội dung đã có và tiến độ ôn tập, chạy lặp không tạo trùng ID. |
 | Khởi động và thử lại | Hiển thị loading/lỗi/Thử lại; chạy seed, đồng bộ chủ đề/từ vựng rồi đồng bộ câu hỏi trước khi vào MainShell; chặn retry song song và không hiện lỗi nội bộ. |
 | Cập nhật đồng thời | Ngăn mất số đếm khi cộng thống kê ngày và số lần trả lời sai từ nhiều lời gọi đồng thời. |
+| Tương thích chủ đề cũ/mới | Hiển thị chung ba cặp ID chủ đề mẫu đã biết khi thông tin khớp; mở chung từ vựng/câu hỏi của hai ID và giữ nguyên dữ liệu gốc. Chủ đề đã sửa thông tin vẫn tách riêng. |
 | Kiểm tra tên bảng | Chỉ cho phép truy vấn kiểm tra bảng rỗng với 9 bảng ứng dụng hợp lệ, gồm word_progress. |
 | Tích hợp với nhóm | Giải quyết xung đột với main, giữ chức năng luyện thi của Viễn, từ vựng của Lượng và schema SQLite v2/migration tiến độ từ vựng. |
 | Sửa lỗi phát hiện khi tích hợp | Khóa chọn đáp án trong lúc lưu bài luyện tập để đáp án không lệch với điểm và sổ câu sai. |
 
-**Kiểm chứng sau bổ sung đồng bộ từ vựng:** 202/202 test đạt, `flutter analyze --no-pub` không báo vấn đề; đã review phần gộp code và sửa phát hiện từ review. Chưa build release hoặc kiểm thử SQLite/TTS trên thiết bị Android/iOS thật.
+**Kiểm chứng sau sửa chủ đề trùng:** 208/208 test đạt, `flutter analyze --no-pub` không báo vấn đề; đã review phần gộp code và sửa phát hiện từ review. Đã build debug và kiểm tra khởi động/nâng cấp SQLite trên Android 17 tại commit `fde5130`; chưa kiểm thử đầy đủ các luồng trên thiết bị, TTS hoặc bản release. Bản sửa gộp chủ đề sau đó mới được kiểm thử tự động.
 
-**Phần còn lại:** kiểm thử nâng cấp và plugin trên thiết bị thật. Đồng bộ theo ID, không tự gộp/xóa các mục cũ có ID khác bộ dữ liệu mới. Màn hình Trang chủ, Thống kê và Cá nhân/Cài đặt thuộc phần An, không tính là chức năng Tài đã hoàn thành trong PR này.
+**Phần còn lại:** kiểm thử nâng cấp và plugin trên thiết bị thật. Giữ nguyên ID từ vựng và tiến độ; chưa hợp nhất các từ trùng nội dung nhưng khác ID. Màn hình Trang chủ, Thống kê và Cá nhân/Cài đặt thuộc phần An, không tính là chức năng Tài đã hoàn thành trong PR này.
 
 
 ## Lưu kết quả bài làm

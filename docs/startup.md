@@ -29,6 +29,14 @@ Chưa build release hoặc kiểm thử plugin native Android/iOS trên thiết 
 
 AppStartup gọi sau seed và trước đồng bộ câu hỏi. Lỗi đồng bộ từ vựng được đưa vào màn hình lỗi/Thử lại; chỉ mở MainShell khi mọi bước hoàn tất. Mỗi bước có transaction riêng, không rollback bước đã hoàn tất trước đó.
 
-Không tự suy đoán các ID khác nhau là cùng một mục: bản cài có 3 chủ đề cũ với ID khác 10 chủ đề mới sẽ giữ cả 13 mục. Muốn hợp nhất phải có quy tắc ánh xạ ID được thống nhất, để bảo toàn liên kết và tiến độ.
+Database giữ 13 bản ghi chủ đề trên bản cài có đủ 3 ID cũ và 10 ID mới. Tầng đọc chỉ hiển thị 10 chủ đề nếu ba cặp topic_12_unit1..3 / topic_12_u1..3 có cùng grade, title, order; mở một trong hai ID sẽ trả nội dung của cả cặp. Thông tin khác nhau hoặc ID không thuộc ba cặp này được giữ tách biệt. Không đổi ID từ/câu hỏi, lịch sử hoặc tiến độ.
 
 Kiểm chứng sau bổ sung: 202/202 test đạt, analyzer sạch; gồm giữ dữ liệu/tiến độ cũ, đồng bộ lặp/đồng thời, rollback và retry sau lỗi đồng bộ từ vựng. Review độc lập không có phát hiện cần sửa.
+
+## Kiểm tra Android và tương thích chủ đề — 28/10/2026
+
+- Bản `fde5130` đã build debug, cài cập nhật và khởi động trên PLG110/Android 17. Database tăng từ 3 lên 13 chủ đề, 3 lên 203 từ; 405 câu hỏi và toàn bộ dữ liệu cũ được giữ nguyên khi đối chiếu. Đã thấy chủ đề trùng trên giao diện trước bản sửa tương thích.
+- Chưa hoàn tất kiểm thử nộp bài/phát âm trên máy thật do dừng phiên thiết bị. Bản sửa hiển thị gộp chủ đề được kiểm tra bằng SQLite thật trong bộ nhớ; cần chạy lại trên điện thoại khi có máy.
+- Số từ trong nhóm có thể vượt 20 vì giữ riêng các ID từ cũ/mới; số đếm cố định trong UI từ vựng cần được rà soát ở phần giao diện.
+
+Bản sửa chủ đề: 208/208 test đạt, analyzer sạch, review độc lập không có phát hiện cần sửa. Lần chạy toàn bộ đầu tiên bị đóng kết nối khi nạp file test mới; chạy riêng 6 test và chạy lại toàn bộ đều đạt.

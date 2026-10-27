@@ -30,3 +30,5 @@ Chưa thêm server; chỉ cập nhật feature/tai từ main theo yêu cầu, kh
 - Đã tích hợp đồng bộ câu hỏi vào AppStartup sau seed; lỗi đồng bộ giữ màn hình lỗi và cho phép thử lại.
 
 - Bổ sung đồng bộ chủ đề/từ vựng còn thiếu theo ID trên bản cài cũ, giữ dữ liệu/tiến độ và rollback khi lỗi; AppStartup hỗ trợ thử lại bước này.
+
+- 28/10: sửa hiển thị chủ đề cũ/mới trùng bằng ánh xạ ba cặp ID mẫu tại tầng đọc; mở chung nội dung của hai ID khi metadata khớp, bảo toàn toàn bộ bản ghi và tiến độ. Còn số đếm cố định và các từ cùng nội dung khác ID trong UI từ vựng.
