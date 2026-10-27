@@ -34,6 +34,7 @@ class _AppStartupState extends State<AppStartup> {
       } else {
         final repository = context.read<AppRepository>();
         await AssetSeeder.seedIfEmpty();
+        await AssetSeeder.syncVocabulary();
         await QuestionSyncService.syncQuestions(repository);
       }
     } finally {

@@ -9,6 +9,58 @@ import 'models/topic.dart';
 import 'models/word.dart';
 
 class AssetSeeder {
+  /// Bổ sung dữ liệu mới, giữ nguyên nội dung và tiến độ của các ID đã có.
+  static Future<void> syncVocabulary({
+    AppDatabase? dbInstance,
+    AssetBundle? bundle,
+  }) async {
+    final db = await (dbInstance ?? AppDatabase.instance).database;
+    final assets = bundle ?? rootBundle;
+
+    await db.transaction((txn) async {
+      for (final table in ['topics', 'words']) {
+        final decoded = jsonDecode(
+          await assets.loadString('assets/data/$table.json'),
+        );
+        if (decoded is! List) {
+          throw FormatException('Dữ liệu $table phải là một danh sách.');
+        }
+        final existingIds = (await txn.query(
+          table,
+          columns: ['id'],
+        )).map((row) => row['id']).toSet();
+        final topicIds = table == 'words'
+            ? (await txn.query(
+                'topics',
+                columns: ['id'],
+              )).map((row) => row['id']).toSet()
+            : null;
+        final assetIds = <String>{};
+        final batch = txn.batch();
+        for (final item in decoded) {
+          if (item is! Map<String, dynamic>) {
+            throw FormatException('Bản ghi trong $table không hợp lệ.');
+          }
+          final row = table == 'topics'
+              ? Topic.fromMap(item).toMap()
+              : Word.fromMap(item).toMap();
+          final id = row['id'] as String;
+          if (id.trim().isEmpty || !assetIds.add(id)) {
+            throw FormatException('ID trong $table bị trống hoặc trùng.');
+          }
+          if (existingIds.contains(id)) continue;
+          if (topicIds != null && !topicIds.contains(row['topicId'])) {
+            throw const FormatException(
+              'Từ vựng tham chiếu chủ đề không tồn tại.',
+            );
+          }
+          batch.insert(table, row);
+        }
+        await batch.commit(noResult: true);
+      }
+    });
+  }
+
   static Future<void> seedIfEmpty({
     AppDatabase? dbInstance,
     AssetBundle? bundle,

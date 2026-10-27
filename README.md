@@ -64,15 +64,16 @@ Các phần sau đã có trên `feature/tai`, được đẩy lên [PR #3](https
 | :--- | :--- |
 | Lưu kết quả bài làm | Ghi lượt làm, đáp án, sổ câu sai và thống kê trong một giao dịch; kiểm tra tính nhất quán và rollback toàn bộ lần lưu khi lỗi. |
 | Nạp dữ liệu mẫu | Seed topics/words/questions trong cùng giao dịch; không ghi đè bảng đã có dữ liệu và không để dữ liệu nạp dở. |
-| Khởi động và thử lại | Hiển thị loading/lỗi/Thử lại; chạy seed rồi đồng bộ câu hỏi trước khi vào MainShell; chặn retry song song và không hiện lỗi nội bộ. |
+| Đồng bộ từ vựng khi nâng cấp | Bổ sung chủ đề/từ vựng thiếu theo ID trong một giao dịch; giữ nội dung đã có và tiến độ ôn tập, chạy lặp không tạo trùng ID. |
+| Khởi động và thử lại | Hiển thị loading/lỗi/Thử lại; chạy seed, đồng bộ chủ đề/từ vựng rồi đồng bộ câu hỏi trước khi vào MainShell; chặn retry song song và không hiện lỗi nội bộ. |
 | Cập nhật đồng thời | Ngăn mất số đếm khi cộng thống kê ngày và số lần trả lời sai từ nhiều lời gọi đồng thời. |
 | Kiểm tra tên bảng | Chỉ cho phép truy vấn kiểm tra bảng rỗng với 9 bảng ứng dụng hợp lệ, gồm word_progress. |
 | Tích hợp với nhóm | Giải quyết xung đột với main, giữ chức năng luyện thi của Viễn, từ vựng của Lượng và schema SQLite v2/migration tiến độ từ vựng. |
 | Sửa lỗi phát hiện khi tích hợp | Khóa chọn đáp án trong lúc lưu bài luyện tập để đáp án không lệch với điểm và sổ câu sai. |
 
-**Kiểm chứng tại commit `b2d26a9`:** 195/195 test đạt, `flutter analyze --no-pub` không báo vấn đề; đã review phần gộp code và sửa phát hiện từ review. Chưa build release hoặc kiểm thử SQLite/TTS trên thiết bị Android/iOS thật.
+**Kiểm chứng sau bổ sung đồng bộ từ vựng:** 202/202 test đạt, `flutter analyze --no-pub` không báo vấn đề; đã review phần gộp code và sửa phát hiện từ review. Chưa build release hoặc kiểm thử SQLite/TTS trên thiết bị Android/iOS thật.
 
-**Phần còn lại:** bổ sung đồng bộ chủ đề/từ vựng cho bản cài đã có dữ liệu cũ; kiểm thử trên thiết bị thật. Màn hình Trang chủ, Thống kê và Cá nhân/Cài đặt thuộc phần An, không tính là chức năng Tài đã hoàn thành trong PR này.
+**Phần còn lại:** kiểm thử nâng cấp và plugin trên thiết bị thật. Đồng bộ theo ID, không tự gộp/xóa các mục cũ có ID khác bộ dữ liệu mới. Màn hình Trang chủ, Thống kê và Cá nhân/Cài đặt thuộc phần An, không tính là chức năng Tài đã hoàn thành trong PR này.
 
 
 ## Lưu kết quả bài làm

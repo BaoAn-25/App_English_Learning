@@ -1,6 +1,6 @@
 # Khởi động và nạp dữ liệu an toàn
 
-Ứng dụng hiển thị giao diện ngay, sau đó `AppStartup` mở/nâng cấp SQLite, seed các bảng rỗng rồi đồng bộ câu hỏi qua QuestionSyncService. Chỉ khi thành công mới vào MainShell. Lỗi được hiển thị bằng thông báo chung, không đưa đường dẫn/nội dung lỗi nội bộ lên màn hình; nút Thử lại khởi tạo lại và chặn gọi song song.
+Ứng dụng hiển thị giao diện ngay, sau đó `AppStartup` mở/nâng cấp SQLite, seed các bảng rỗng, bổ sung chủ đề/từ vựng thiếu rồi đồng bộ câu hỏi qua QuestionSyncService. Chỉ khi thành công mới vào MainShell. Lỗi được hiển thị bằng thông báo chung, không đưa đường dẫn/nội dung lỗi nội bộ lên màn hình; nút Thử lại khởi tạo lại và chặn gọi song song.
 
 `AssetSeeder.seedIfEmpty` giữ giao diện cũ, thêm `AssetBundle? bundle` tùy chọn. Kiểm tra bảng rỗng và nạp topics/words/questions nằm trong cùng transaction. JSON hỏng, root không phải list, bản ghi không đúng kiểu, trùng ID hoặc lỗi SQL đều throw và rollback; không thay thế bảng đã có dữ liệu. Transaction ngăn hai lần seed đồng thời cùng ghi vào bảng rỗng.
 
@@ -22,3 +22,13 @@ Chưa build release hoặc kiểm thử plugin native Android/iOS trên thiết 
 - Giữ schema v2/migration và API từ main; whitelist bao gồm bảng word_progress.
 - Luồng seed → sync → MainShell được kiểm thử với SQLite thật trong bộ nhớ, gồm lỗi đồng bộ và retry.
 - Khóa chọn đáp án khi đang lưu bài luyện tập; test trì hoãn ghi xác nhận điểm và đáp án không lệch nhau.
+
+## Bổ sung chủ đề và từ vựng khi nâng cấp
+
+`AssetSeeder.syncVocabulary` đọc topics/words từ assets và chỉ thêm ID chưa tồn tại. Hai bảng được xử lý trong cùng transaction; lỗi JSON/SQL, ID trống/trùng hoặc từ mới tham chiếu chủ đề không tồn tại làm rollback đợt đồng bộ. Bản ghi có sẵn và word_progress không bị ghi đè; chạy lặp/đồng thời không thêm trùng ID.
+
+AppStartup gọi sau seed và trước đồng bộ câu hỏi. Lỗi đồng bộ từ vựng được đưa vào màn hình lỗi/Thử lại; chỉ mở MainShell khi mọi bước hoàn tất. Mỗi bước có transaction riêng, không rollback bước đã hoàn tất trước đó.
+
+Không tự suy đoán các ID khác nhau là cùng một mục: bản cài có 3 chủ đề cũ với ID khác 10 chủ đề mới sẽ giữ cả 13 mục. Muốn hợp nhất phải có quy tắc ánh xạ ID được thống nhất, để bảo toàn liên kết và tiến độ.
+
+Kiểm chứng sau bổ sung: 202/202 test đạt, analyzer sạch; gồm giữ dữ liệu/tiến độ cũ, đồng bộ lặp/đồng thời, rollback và retry sau lỗi đồng bộ từ vựng. Review độc lập không có phát hiện cần sửa.

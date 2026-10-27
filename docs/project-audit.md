@@ -28,3 +28,5 @@ Chưa thêm server; chỉ cập nhật feature/tai từ main theo yêu cầu, kh
 - Chi tiết kiểm chứng: [khởi động](startup.md).
 
 - Đã tích hợp đồng bộ câu hỏi vào AppStartup sau seed; lỗi đồng bộ giữ màn hình lỗi và cho phép thử lại.
+
+- Bổ sung đồng bộ chủ đề/từ vựng còn thiếu theo ID trên bản cài cũ, giữ dữ liệu/tiến độ và rollback khi lỗi; AppStartup hỗ trợ thử lại bước này.
