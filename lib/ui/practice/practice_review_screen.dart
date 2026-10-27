@@ -5,6 +5,10 @@ import '../../data/app_repository.dart';
 import '../../data/models/attempt.dart';
 import '../../data/models/attempt_answer.dart';
 import '../../data/models/question.dart';
+import 'practice_quiz_screen.dart';
+import 'services/exam_builder_service.dart';
+import 'services/exam_diagnostic_service.dart';
+import 'widgets/exam_diagnostic_card.dart';
 import 'widgets/question_stem_view.dart';
 
 class PracticeReviewScreen extends StatefulWidget {
@@ -67,6 +71,44 @@ class _PracticeReviewScreenState extends State<PracticeReviewScreen> {
       return '$mins phút $remainingSecs giây';
     }
     return '$sec giây';
+  }
+
+  Future<void> _startRemediation(String type, String typeTitle) async {
+    try {
+      final repository = context.read<AppRepository>();
+      final questions = await repository.getQuestionsByType(type);
+
+      if (!mounted) return;
+
+      if (questions.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Chưa có đủ câu hỏi để luyện tập dạng $typeTitle.'),
+          ),
+        );
+        return;
+      }
+
+      final quizQuestions =
+          ExamBuilderService().buildPracticeSet(questions, count: 10);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PracticeQuizScreen(
+            title: typeTitle,
+            questions: quizQuestions,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể bắt đầu luyện tập: $e'),
+        ),
+      );
+    }
   }
 
   @override
@@ -213,6 +255,18 @@ class _PracticeReviewScreenState extends State<PracticeReviewScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              if (widget.attempt.mode == 'mock_exam') ...[
+                ExamDiagnosticCard(
+                  diagnostic: ExamDiagnosticService.analyzeFromAttemptAnswers(
+                    questions: items.map((e) => e.question).toList(),
+                    answers: items.map((e) => e.answer).toList(),
+                  ),
+                  onStartRemediation: (type, typeTitle) =>
+                      _startRemediation(type, typeTitle),
+                ),
+                const SizedBox(height: 20),
+              ],
 
               // Danh sách từng câu hỏi và giải thích
               ...List.generate(items.length, (index) {

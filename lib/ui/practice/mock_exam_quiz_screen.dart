@@ -9,8 +9,12 @@ import '../../data/models/attempt_answer.dart';
 import '../../data/models/daily_stat.dart';
 import '../../data/models/question.dart';
 import '../../data/models/wrong_book_entry.dart';
+import 'practice_quiz_screen.dart';
 import 'practice_review_screen.dart';
+import 'services/exam_builder_service.dart';
+import 'services/exam_diagnostic_service.dart';
 import 'services/option_shuffler.dart';
+import 'widgets/exam_diagnostic_card.dart';
 import 'widgets/question_stem_view.dart';
 import 'widgets/quiz_option_card.dart';
 
@@ -432,6 +436,44 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
     }
   }
 
+  Future<void> _startRemediation(String type, String typeTitle) async {
+    try {
+      final repository = context.read<AppRepository>();
+      final questions = await repository.getQuestionsByType(type);
+
+      if (!mounted) return;
+
+      if (questions.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Chưa có đủ câu hỏi để luyện tập dạng $typeTitle.'),
+          ),
+        );
+        return;
+      }
+
+      final quizQuestions =
+          ExamBuilderService().buildPracticeSet(questions, count: 10);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PracticeQuizScreen(
+            title: typeTitle,
+            questions: quizQuestions,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể bắt đầu luyện tập: $e'),
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
     timer?.cancel();
@@ -618,9 +660,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
 
-                if (savedAttempt != null)
+                if (savedAttempt != null) ...[
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -640,8 +682,20 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                ],
 
-                const SizedBox(height: 12),
+                // Phân tích điểm mạnh, điểm yếu và gợi ý luyện tập
+                ExamDiagnosticCard(
+                  diagnostic: ExamDiagnosticService.analyze(
+                    questions: widget.questions,
+                    selectedAnswers: selectedAnswers,
+                  ),
+                  onStartRemediation: (type, typeTitle) =>
+                      _startRemediation(type, typeTitle),
+                ),
+
+                const SizedBox(height: 20),
 
                 SizedBox(
                   width: double.infinity,
