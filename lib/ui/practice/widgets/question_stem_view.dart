@@ -36,7 +36,15 @@ class QuestionStemView extends StatelessWidget {
       }
     }
 
-    // 2. Kiểm tra dạng Đọc hiểu (Reading)
+    // 2. Kiểm tra dạng Điền từ (Cloze) có bài đọc
+    if (_isClozeQuestion()) {
+      final parsed = _parseClozeStem();
+      if (parsed != null) {
+        return _buildClozeView(context, parsed);
+      }
+    }
+
+    // 3. Kiểm tra dạng Đọc hiểu (Reading)
     if (_isReadingQuestion()) {
       final parsed = _parseReadingStem();
       if (parsed != null) {
@@ -44,7 +52,7 @@ class QuestionStemView extends StatelessWidget {
       }
     }
 
-    // 3. Kiểm tra dạng Biển báo (Signs)
+    // 4. Kiểm tra dạng Biển báo (Signs)
     if (_isSignsQuestion()) {
       final parsed = _parseSignsStem();
       if (parsed != null) {
@@ -52,7 +60,7 @@ class QuestionStemView extends StatelessWidget {
       }
     }
 
-    // 4. Mặc định: Hiển thị câu hỏi tiêu chuẩn với kiểu chữ thoáng, dễ đọc
+    // 5. Mặc định: Hiển thị câu hỏi tiêu chuẩn với kiểu chữ thoáng, dễ đọc
     return Text(
       stem,
       style: theme.textTheme.titleMedium?.copyWith(
@@ -71,7 +79,17 @@ class QuestionStemView extends StatelessWidget {
         lower.contains('arrange the email');
   }
 
+  bool _isClozeQuestion() {
+    if (type == 'cloze' && stem.contains('Question:')) return true;
+    final lower = stem.toLowerCase();
+    return (lower.contains('read the cloze passage:') ||
+            lower.contains('cloze passage:') ||
+            lower.contains('đoạn văn điền từ')) &&
+        stem.contains('Question:');
+  }
+
   bool _isReadingQuestion() {
+    if (type == 'cloze') return false;
     if (type == 'reading') return true;
     final lower = stem.toLowerCase();
     return lower.contains('read the passage:') ||
@@ -82,7 +100,9 @@ class QuestionStemView extends StatelessWidget {
     if (type == 'signs') return true;
     final lower = stem.toLowerCase();
     return lower.contains('a sign reads:') ||
+        lower.contains('a notice reads:') ||
         lower.contains('what does the sign say') ||
+        lower.contains('what does the notice say') ||
         lower.contains('what does it mean');
   }
 
@@ -101,17 +121,36 @@ class QuestionStemView extends StatelessWidget {
       final body = stem.substring(matchA.start);
 
       // Tách các mục a., b., c., d., e.
-      final itemRegex = RegExp(r'([a-eA-E][\.\)])\s+');
-      final matches = itemRegex.allMatches(body).toList();
-      if (matches.isEmpty) return null;
+      // Dùng \b để chỉ nhận diện nhãn thực sự, tránh nhận nhầm đuôi từ tiếng Anh (abroad., home., programme., website.)
+      final itemRegex = RegExp(r'\b([a-eA-E][\.\)])\s+');
+      final allMatches = itemRegex.allMatches(body).toList();
+      if (allMatches.isEmpty) return null;
+
+      // Lọc các nhãn theo đúng thứ tự tuần tự a -> b -> c -> d (-> e)
+      final validMatches = <RegExpMatch>[];
+      int expectedCharCode = 'a'.codeUnitAt(0);
+
+      for (final match in allMatches) {
+        final labelChar = match.group(1)![0].toLowerCase();
+        if (labelChar.codeUnitAt(0) == expectedCharCode) {
+          validMatches.add(match);
+          expectedCharCode++;
+          if (expectedCharCode > 'e'.codeUnitAt(0)) {
+            break;
+          }
+        }
+      }
+
+      // Đề bài dạng sắp xếp chuẩn cần tối thiểu 3 mục a, b, c
+      if (validMatches.length < 3) return null;
 
       final items = <_ArrangeItem>[];
-      for (int i = 0; i < matches.length; i++) {
-        final currentMatch = matches[i];
+      for (int i = 0; i < validMatches.length; i++) {
+        final currentMatch = validMatches[i];
         final label = currentMatch.group(1)!;
         final startContent = currentMatch.end;
-        final endContent = (i + 1 < matches.length)
-            ? matches[i + 1].start
+        final endContent = (i + 1 < validMatches.length)
+            ? validMatches[i + 1].start
             : body.length;
 
         final content = body.substring(startContent, endContent).trim();
@@ -225,6 +264,107 @@ class QuestionStemView extends StatelessWidget {
     );
   }
 
+  // --- Parser & Renderer cho Dạng Điền từ (Cloze) ---
+
+  _ClozeData? _parseClozeStem() {
+    try {
+      final questionIndex = stem.indexOf('Question:');
+      if (questionIndex == -1) return null;
+
+      var passagePart = stem.substring(0, questionIndex).trim();
+      final questionPart = stem.substring(questionIndex).trim();
+
+      // Bỏ tiền tố "Read the cloze passage:" hoặc "Read the passage:" nếu có
+      final passageMatch = RegExp(
+        r'''^(?:Read the cloze passage|Read the passage|Read the following passage[^:\n]*):\s*['"“”]?([\s\S]+?)['"“”]?$''',
+        caseSensitive: false,
+      ).firstMatch(passagePart);
+      if (passageMatch != null) {
+        passagePart = passageMatch.group(1)?.trim() ?? passagePart;
+      }
+
+      return _ClozeData(passage: passagePart, question: questionPart);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _buildClozeView(BuildContext context, _ClozeData data) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Đoạn văn điền từ
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.edit_note_rounded,
+                    size: 20,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Bài đọc điền từ',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                data.passage,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.5,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Câu hỏi cho vị trí điền từ
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.help_outline_rounded,
+              size: 20,
+              color: colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                data.question,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   // --- Parser & Renderer cho Dạng Đọc hiểu (Reading) ---
 
   _ReadingData? _parseReadingStem() {
@@ -237,7 +377,7 @@ class QuestionStemView extends StatelessWidget {
 
       // Bỏ tiền tố "Read the passage:" nếu có
       final passageMatch = RegExp(
-        r'''^Read the passage:\s*['"“”]?([\s\S]+?)['"“”]?$''',
+        r'''^(?:Read the passage|Read the following passage[^:\n]*):\s*['"“”]?([\s\S]+?)['"“”]?$''',
         caseSensitive: false,
       ).firstMatch(passagePart);
       if (passageMatch != null) {
@@ -330,9 +470,12 @@ class QuestionStemView extends StatelessWidget {
 
   _SignsData? _parseSignsStem() {
     try {
-      // Ví dụ: A sign reads: 'NO LITTERING – KEEP THIS AREA CLEAN'. What does it mean?
+      // Hỗ trợ cả 2 tiền tố: "A sign reads:" và "A notice reads:"
+      // Ví dụ:
+      // A sign reads: 'NO LITTERING – KEEP THIS AREA CLEAN'. What does it mean?
+      // A notice reads: 'PLEASE SWITCH OFF THE LIGHTS WHEN LEAVING'. What should people do?
       final signMatch = RegExp(
-        r'''A sign reads:\s*['"“”]([\s\S]+?)['"“”]\.?\s*([\s\S]*)''',
+        r'''(?:A sign reads|A notice reads):\s*['"“”]([\s\S]+?)['"“”]\.?\s*([\s\S]*)''',
         caseSensitive: false,
       ).firstMatch(stem);
 
@@ -438,6 +581,13 @@ class _ReadingData {
   final String question;
 
   const _ReadingData({required this.passage, required this.question});
+}
+
+class _ClozeData {
+  final String passage;
+  final String question;
+
+  const _ClozeData({required this.passage, required this.question});
 }
 
 class _SignsData {

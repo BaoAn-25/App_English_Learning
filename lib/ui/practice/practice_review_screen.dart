@@ -195,10 +195,13 @@ class _PracticeReviewScreenState extends State<PracticeReviewScreen> {
                                 color: colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                'Thời gian: ${formatDuration(widget.attempt.durationSec)}',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                              Flexible(
+                                child: Text(
+                                  'Thời gian: ${formatDuration(widget.attempt.durationSec)}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                             ],

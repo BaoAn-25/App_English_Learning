@@ -7,6 +7,7 @@ import '../../data/models/attempt_answer.dart';
 import '../../data/models/daily_stat.dart';
 import '../../data/models/question.dart';
 import '../../data/models/wrong_book_entry.dart';
+import 'services/option_shuffler.dart';
 import 'widgets/question_stem_view.dart';
 import 'widgets/quiz_option_card.dart';
 
@@ -15,11 +16,15 @@ class PracticeQuizScreen extends StatefulWidget {
   final List<Question> questions;
   final String mode;
 
+  /// Ánh xạ thứ tự hiển thị phương án (tùy chọn, mặc định xáo trộn ngẫu nhiên).
+  final List<QuestionOptionMapping>? optionMappings;
+
   const PracticeQuizScreen({
     super.key,
     required this.title,
     required this.questions,
     this.mode = 'practice',
+    this.optionMappings,
   });
 
   @override
@@ -29,6 +34,7 @@ class PracticeQuizScreen extends StatefulWidget {
 class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
   int currentIndex = 0;
   late final List<int?> selectedAnswers;
+  late final List<QuestionOptionMapping> optionMappings;
   bool submitted = false;
   bool isSaving = false;
   late final DateTime startedAt;
@@ -39,6 +45,13 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
 
     startedAt = DateTime.now();
     selectedAnswers = List<int?>.filled(widget.questions.length, null);
+    optionMappings = widget.optionMappings ??
+        List.generate(
+          widget.questions.length,
+          (i) => QuestionOptionMapping.shuffled(
+            widget.questions[i].options.length,
+          ),
+        );
   }
 
   int get score {
@@ -328,20 +341,31 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
                 QuestionStemView(stem: question.stem, type: question.type),
                 const SizedBox(height: 20),
 
-                // Danh sách các lựa chọn đáp án
-                ...List.generate(question.options.length, (index) {
-                  final isSelected = selected == index;
-                  final isCorrect = question.correctIndex == index;
+                // Danh sách các lựa chọn đáp án (được xáo trộn hiển thị)
+                Builder(
+                  builder: (_) {
+                    final mapping = optionMappings[currentIndex];
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(mapping.length, (slotIndex) {
+                        final originalIndex = mapping.originalIndexAt(slotIndex);
+                        final isSelected = selected == originalIndex;
+                        final isCorrect = question.correctIndex == originalIndex;
 
-                  return QuizOptionCard(
-                    index: index,
-                    text: question.options[index],
-                    isSelected: isSelected,
-                    isSubmitted: submitted,
-                    isCorrect: isCorrect,
-                    onTap: submitted ? null : () => selectAnswer(index),
-                  );
-                }),
+                        return QuizOptionCard(
+                          index: slotIndex,
+                          text: question.options[originalIndex],
+                          isSelected: isSelected,
+                          isSubmitted: submitted,
+                          isCorrect: isCorrect,
+                          onTap: submitted
+                              ? null
+                              : () => selectAnswer(originalIndex),
+                        );
+                      }),
+                    );
+                  },
+                ),
 
                 // Khung giải thích chi tiết khi đã nộp bài
                 if (submitted) ...[
@@ -370,14 +394,17 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
                               size: 22,
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Lời giải chi tiết',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
+                            Expanded(
+                              child: Text(
+                                'Lời giải chi tiết',
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
                               ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -388,7 +415,7 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                'Đáp án: ${String.fromCharCode(65 + question.correctIndex)}',
+                                'Đáp án đúng: ${optionMappings[currentIndex].displayLetterOfOriginal(question.correctIndex)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green,
@@ -430,12 +457,17 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    'Kết quả: $score/${questions.length} câu đúng '
-                    '(${(score / questions.length * 100).toStringAsFixed(0)}%)',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Kết quả: $score/${questions.length} câu đúng '
+                        '(${(score / questions.length * 100).toStringAsFixed(0)}%)',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                 ],

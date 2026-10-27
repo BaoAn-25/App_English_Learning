@@ -1188,5 +1188,940 @@
     "topicId": "topic_12_unit3",
     "passageId": "passage_12_03",
     "difficulty": 1
+  },
+  {
+    "id": "q_12_71",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_04",
+    "stem": "Read the passage: 'Artificial intelligence (AI) is transforming modern healthcare by improving medical diagnosis, personalising treatments, and streamlining hospital operations. Machine learning algorithms can analyze complex medical images, such as X-rays and MRI scans, with remarkable accuracy. In many cases, these algorithms can detect early signs of diseases like pneumonia and cancer much faster than traditional methods, allowing physicians to intervene before conditions worsen. Furthermore, AI-powered systems can sift through vast databases of genetic information to recommend tailored therapies for individual patients, which significantly boosts treatment efficacy. Despite these extraordinary benefits, the integration of AI in medicine faces considerable hurdles. Data privacy remains a paramount concern, as patients\\' confidential health records must be safeguarded against unauthorized access and cyber threats. Moreover, AI models can inadvertently inherit biases present in the training datasets, potentially resulting in unequal healthcare outcomes for minority groups. Therefore, while AI holds immense promise, medical experts emphasize that it should complement, rather than completely replace, the compassionate care and critical judgement of human healthcare professionals.' Question: What is the main idea of the passage?",
+    "options": [
+      "AI has completely replaced human doctors in diagnosing critical diseases.",
+      "AI offers tremendous advantages in healthcare, though several challenges and ethical issues must be addressed.",
+      "Data privacy is the only major obstacle preventing the adoption of AI in hospitals.",
+      "Machine learning algorithms are too unreliable to analyze complex medical scans."
+    ],
+    "correctIndex": 1,
+    "explanation": "Đoạn văn trình bày toàn diện về vai trò của AI trong y tế: các lợi ích vượt bậc (chẩn đoán hình ảnh, cá nhân hóa phác đồ điều trị) đi kèm các rào cản và thách thức lớn (bảo mật hồ sơ bệnh án, định kiến dữ liệu), từ đó nhấn mạnh AI là công cụ hỗ trợ chứ không thay thế hoàn toàn bác sĩ con người. Phương án B thể hiện chính xác nhất ý chính toàn bài."
+  },
+  {
+    "id": "q_12_72",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 1,
+    "type": "reading",
+    "passageId": "passage_12_04",
+    "stem": "Read the passage: 'Artificial intelligence (AI) is transforming modern healthcare by improving medical diagnosis, personalising treatments, and streamlining hospital operations. Machine learning algorithms can analyze complex medical images, such as X-rays and MRI scans, with remarkable accuracy. In many cases, these algorithms can detect early signs of diseases like pneumonia and cancer much faster than traditional methods, allowing physicians to intervene before conditions worsen. Furthermore, AI-powered systems can sift through vast databases of genetic information to recommend tailored therapies for individual patients, which significantly boosts treatment efficacy. Despite these extraordinary benefits, the integration of AI in medicine faces considerable hurdles. Data privacy remains a paramount concern, as patients\\' confidential health records must be safeguarded against unauthorized access and cyber threats. Moreover, AI models can inadvertently inherit biases present in the training datasets, potentially resulting in unequal healthcare outcomes for minority groups. Therefore, while AI holds immense promise, medical experts emphasize that it should complement, rather than completely replace, the compassionate care and critical judgement of human healthcare professionals.' Question: According to paragraph 1, how do machine learning algorithms assist physicians?",
+    "options": [
+      "By manufacturing low-cost medical equipment for rural hospitals.",
+      "By directly performing complex surgical operations without human supervision.",
+      "By detecting early signs of illnesses in medical images faster than conventional methods.",
+      "By replacing genetic researchers in developing pharmaceutical drugs."
+    ],
+    "correctIndex": 2,
+    "explanation": "Căn cứ vào câu trong đoạn 1: 'In many cases, these algorithms can detect early signs of diseases like pneumonia and cancer much faster than traditional methods, allowing physicians to intervene before conditions worsen.' Do đó phương án C là thông tin được nêu trực tiếp trong bài."
+  },
+  {
+    "id": "q_12_73",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_04",
+    "stem": "Read the passage: 'Artificial intelligence (AI) is transforming modern healthcare by improving medical diagnosis, personalising treatments, and streamlining hospital operations. Machine learning algorithms can analyze complex medical images, such as X-rays and MRI scans, with remarkable accuracy. In many cases, these algorithms can detect early signs of diseases like pneumonia and cancer much faster than traditional methods, allowing physicians to intervene before conditions worsen. Furthermore, AI-powered systems can sift through vast databases of genetic information to recommend tailored therapies for individual patients, which significantly boosts treatment efficacy. Despite these extraordinary benefits, the integration of AI in medicine faces considerable hurdles. Data privacy remains a paramount concern, as patients\\' confidential health records must be safeguarded against unauthorized access and cyber threats. Moreover, AI models can inadvertently inherit biases present in the training datasets, potentially resulting in unequal healthcare outcomes for minority groups. Therefore, while AI holds immense promise, medical experts emphasize that it should complement, rather than completely replace, the compassionate care and critical judgement of human healthcare professionals.' Question: The word \"paramount\" in the passage is closest in meaning to _______.",
+    "options": [
+      "minor and negligible",
+      "of secondary importance",
+      "unpredictable",
+      "of primary importance"
+    ],
+    "correctIndex": 3,
+    "explanation": "Tu 'paramount' co nghia la toi quan trong, quan trong hang dau (of primary importance / supreme). Ngu canh: 'Data privacy remains a paramount concern...' (Bao mat du lieu van la moi ban tam hang dau...). Phuong an D la dap an dung."
+  },
+  {
+    "id": "q_12_74",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_04",
+    "stem": "Read the passage: 'Artificial intelligence (AI) is transforming modern healthcare by improving medical diagnosis, personalising treatments, and streamlining hospital operations. Machine learning algorithms can analyze complex medical images, such as X-rays and MRI scans, with remarkable accuracy. In many cases, these algorithms can detect early signs of diseases like pneumonia and cancer much faster than traditional methods, allowing physicians to intervene before conditions worsen. Furthermore, AI-powered systems can sift through vast databases of genetic information to recommend tailored therapies for individual patients, which significantly boosts treatment efficacy. Despite these extraordinary benefits, the integration of AI in medicine faces considerable hurdles. Data privacy remains a paramount concern, as patients\\' confidential health records must be safeguarded against unauthorized access and cyber threats. Moreover, AI models can inadvertently inherit biases present in the training datasets, potentially resulting in unequal healthcare outcomes for minority groups. Therefore, while AI holds immense promise, medical experts emphasize that it should complement, rather than completely replace, the compassionate care and critical judgement of human healthcare professionals.' Question: The word \"it\" in the final sentence refers to _______.",
+    "options": [
+      "data privacy",
+      "artificial intelligence",
+      "genetic information",
+      "critical judgement"
+    ],
+    "correctIndex": 1,
+    "explanation": "Căn cứ vào mệnh đề cuối bài: 'Therefore, while AI holds immense promise, medical experts emphasize that it should complement, rather than completely replace...'. Đại từ 'it' thay thế cho chủ ngữ 'AI' (Artificial intelligence) được nhắc ngay phía trước."
+  },
+  {
+    "id": "q_12_75",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 3,
+    "type": "reading",
+    "passageId": "passage_12_04",
+    "stem": "Read the passage: 'Artificial intelligence (AI) is transforming modern healthcare by improving medical diagnosis, personalising treatments, and streamlining hospital operations. Machine learning algorithms can analyze complex medical images, such as X-rays and MRI scans, with remarkable accuracy. In many cases, these algorithms can detect early signs of diseases like pneumonia and cancer much faster than traditional methods, allowing physicians to intervene before conditions worsen. Furthermore, AI-powered systems can sift through vast databases of genetic information to recommend tailored therapies for individual patients, which significantly boosts treatment efficacy. Despite these extraordinary benefits, the integration of AI in medicine faces considerable hurdles. Data privacy remains a paramount concern, as patients\\' confidential health records must be safeguarded against unauthorized access and cyber threats. Moreover, AI models can inadvertently inherit biases present in the training datasets, potentially resulting in unequal healthcare outcomes for minority groups. Therefore, while AI holds immense promise, medical experts emphasize that it should complement, rather than completely replace, the compassionate care and critical judgement of human healthcare professionals.' Question: Which of the following is NOT true according to the passage?",
+    "options": [
+      "AI systems can analyze large volumes of genetic data to propose tailored treatments.",
+      "Algorithmic bias may cause unequal healthcare outcomes for minority populations.",
+      "Early detection of illnesses gives doctors the chance to intervene before health deteriorates.",
+      "Medical experts advise that AI should entirely take over the work of human physicians."
+    ],
+    "correctIndex": 3,
+    "explanation": "Doan cuoi bai khang dinh: 'medical experts emphasize that it should complement, rather than completely replace...' (AI nen bo tro chu khong phai thay the hoan toan bac si). Do do nhan dinh 'AI should entirely take over...' o phuong an D la thong tin sai lech (NOT true). Chon D."
+  },
+  {
+    "id": "q_12_76",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_05",
+    "stem": "Read the passage: 'Urbanisation has accelerated dramatically over the past few decades, with more than half of the world\\'s population currently residing in cities. While cities serve as vibrant economic hubs offering superior employment, education, and cultural opportunities, rapid urban expansion has generated severe environmental and social strains. Megacities worldwide are grappling with worsening air quality, acute traffic congestion, inadequate affordable housing, and strained public sanitation systems. To tackle these pressing issues, urban planners are shifting their focus toward the concept of sustainable smart cities. This visionary approach prioritizes the development of eco-friendly public transportation, such as electric buses and integrated metro networks, to curtail private vehicle dependence and carbon emissions. In addition, green architectural practices—including vertical gardens, energy-efficient building insulation, and widespread solar panel installation—are being incorporated into modern city zoning. Equally vital is the promotion of inclusive urban policies that guarantee equitable access to clean water, green parks, and healthcare for all residents regardless of socioeconomic status. Transforming conventional cities into sustainable urban environments is an ambitious undertaking, but it is indispensable for guaranteeing a healthy and resilient future for forthcoming generations.' Question: What is the passage mainly about?",
+    "options": [
+      "The historical reasons why rural inhabitants migrated into metropolitan areas in the past century.",
+      "Why private vehicles should be completely prohibited from all modern city centres.",
+      "The challenges of rapid urban expansion and strategies for creating sustainable cities.",
+      "Architectural blueprints for constructing luxury high-rise residential complexes."
+    ],
+    "correctIndex": 2,
+    "explanation": "Bài đọc phân tích những áp lực nặng nề do đô thị hóa nhanh gây ra (ô nhiễm, kẹt xe, thiếu nhà ở) và các định hướng xây dựng thành phố thông minh bền vững (giao thông công cộng xanh, kiến trúc tiết kiệm năng lượng, chính sách hòa nhập xã hội). Phương án C thâu tóm chính xác và đầy đủ nhất chủ đề bài đọc."
+  },
+  {
+    "id": "q_12_77",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 1,
+    "type": "reading",
+    "passageId": "passage_12_05",
+    "stem": "Read the passage: 'Urbanisation has accelerated dramatically over the past few decades, with more than half of the world\\'s population currently residing in cities. While cities serve as vibrant economic hubs offering superior employment, education, and cultural opportunities, rapid urban expansion has generated severe environmental and social strains. Megacities worldwide are grappling with worsening air quality, acute traffic congestion, inadequate affordable housing, and strained public sanitation systems. To tackle these pressing issues, urban planners are shifting their focus toward the concept of sustainable smart cities. This visionary approach prioritizes the development of eco-friendly public transportation, such as electric buses and integrated metro networks, to curtail private vehicle dependence and carbon emissions. In addition, green architectural practices—including vertical gardens, energy-efficient building insulation, and widespread solar panel installation—are being incorporated into modern city zoning. Equally vital is the promotion of inclusive urban policies that guarantee equitable access to clean water, green parks, and healthcare for all residents regardless of socioeconomic status. Transforming conventional cities into sustainable urban environments is an ambitious undertaking, but it is indispensable for guaranteeing a healthy and resilient future for forthcoming generations.' Question: According to paragraph 2, how can cities reduce carbon emissions and vehicle dependency?",
+    "options": [
+      "By constructing broader multi-lane highways and underground car parks.",
+      "By relocating commercial business offices to remote suburban zones.",
+      "By increasing speed limits on major urban thoroughfares during rush hours.",
+      "By developing eco-friendly transit such as electric buses and metro networks."
+    ],
+    "correctIndex": 3,
+    "explanation": "Căn cứ đoạn 2: 'This visionary approach prioritizes the development of eco-friendly public transportation, such as electric buses and integrated metro networks, to curtail private vehicle dependence and carbon emissions.' -> Phương án D đúng."
+  },
+  {
+    "id": "q_12_78",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_05",
+    "stem": "Read the passage: 'Urbanisation has accelerated dramatically over the past few decades, with more than half of the world\\'s population currently residing in cities. While cities serve as vibrant economic hubs offering superior employment, education, and cultural opportunities, rapid urban expansion has generated severe environmental and social strains. Megacities worldwide are grappling with worsening air quality, acute traffic congestion, inadequate affordable housing, and strained public sanitation systems. To tackle these pressing issues, urban planners are shifting their focus toward the concept of sustainable smart cities. This visionary approach prioritizes the development of eco-friendly public transportation, such as electric buses and integrated metro networks, to curtail private vehicle dependence and carbon emissions. In addition, green architectural practices—including vertical gardens, energy-efficient building insulation, and widespread solar panel installation—are being incorporated into modern city zoning. Equally vital is the promotion of inclusive urban policies that guarantee equitable access to clean water, green parks, and healthcare for all residents regardless of socioeconomic status. Transforming conventional cities into sustainable urban environments is an ambitious undertaking, but it is indispensable for guaranteeing a healthy and resilient future for forthcoming generations.' Question: The word \"curtail\" in the passage is closest in meaning to _______.",
+    "options": [
+      "promote",
+      "increase",
+      "reduce",
+      "maintain"
+    ],
+    "correctIndex": 2,
+    "explanation": "Động từ 'curtail' có nghĩa là cắt giảm, hạn chế (reduce / limit / cut back). Ngữ cảnh: 'to curtail private vehicle dependence' (để giảm bớt sự phụ thuộc vào phương tiện cá nhân)."
+  },
+  {
+    "id": "q_12_79",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_05",
+    "stem": "Read the passage: 'Urbanisation has accelerated dramatically over the past few decades, with more than half of the world\\'s population currently residing in cities. While cities serve as vibrant economic hubs offering superior employment, education, and cultural opportunities, rapid urban expansion has generated severe environmental and social strains. Megacities worldwide are grappling with worsening air quality, acute traffic congestion, inadequate affordable housing, and strained public sanitation systems. To tackle these pressing issues, urban planners are shifting their focus toward the concept of sustainable smart cities. This visionary approach prioritizes the development of eco-friendly public transportation, such as electric buses and integrated metro networks, to curtail private vehicle dependence and carbon emissions. In addition, green architectural practices—including vertical gardens, energy-efficient building insulation, and widespread solar panel installation—are being incorporated into modern city zoning. Equally vital is the promotion of inclusive urban policies that guarantee equitable access to clean water, green parks, and healthcare for all residents regardless of socioeconomic status. Transforming conventional cities into sustainable urban environments is an ambitious undertaking, but it is indispensable for guaranteeing a healthy and resilient future for forthcoming generations.' Question: Which green architectural feature is NOT mentioned in the text?",
+    "options": [
+      "Energy-efficient building insulation",
+      "Vertical gardens",
+      "Rainwater harvesting underground reservoirs",
+      "Widespread solar panel installation"
+    ],
+    "correctIndex": 2,
+    "explanation": "Đoạn 2 liệt kê rõ: 'green architectural practices—including vertical gardens, energy-efficient building insulation, and widespread solar panel installation'. Phương án C (hệ thống bể ngầm thu gom nước mưa) không hề xuất hiện trong bài."
+  },
+  {
+    "id": "q_12_80",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 3,
+    "type": "reading",
+    "passageId": "passage_12_05",
+    "stem": "Read the passage: 'Urbanisation has accelerated dramatically over the past few decades, with more than half of the world\\'s population currently residing in cities. While cities serve as vibrant economic hubs offering superior employment, education, and cultural opportunities, rapid urban expansion has generated severe environmental and social strains. Megacities worldwide are grappling with worsening air quality, acute traffic congestion, inadequate affordable housing, and strained public sanitation systems. To tackle these pressing issues, urban planners are shifting their focus toward the concept of sustainable smart cities. This visionary approach prioritizes the development of eco-friendly public transportation, such as electric buses and integrated metro networks, to curtail private vehicle dependence and carbon emissions. In addition, green architectural practices—including vertical gardens, energy-efficient building insulation, and widespread solar panel installation—are being incorporated into modern city zoning. Equally vital is the promotion of inclusive urban policies that guarantee equitable access to clean water, green parks, and healthcare for all residents regardless of socioeconomic status. Transforming conventional cities into sustainable urban environments is an ambitious undertaking, but it is indispensable for guaranteeing a healthy and resilient future for forthcoming generations.' Question: Which of the following can be inferred from the passage?",
+    "options": [
+      "Building sustainable cities requires a combination of green infrastructure and social equity.",
+      "Technological innovations alone are sufficient to resolve all urban inequality issues.",
+      "Only wealthy nations have the capability to adopt electric public transit systems.",
+      "Rural migration to metropolitan centres will completely stop in the near future."
+    ],
+    "correctIndex": 0,
+    "explanation": "Có thể suy luận chắc chắn từ bài đọc: việc phát triển đô thị bền vững không chỉ là hạ tầng kỹ thuật xanh (xe điện, pin mặt trời) mà còn cần sự công bằng xã hội ('inclusive urban policies that guarantee equitable access... for all residents regardless of socioeconomic status'). Do đó phương án A hoàn toàn chính xác."
+  },
+  {
+    "id": "q_12_81",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_06",
+    "stem": "Read the passage: 'The global proliferation of high-speed internet and portable digital devices has fundamentally reshaped traditional employment structures. Rather than commuting daily to rigid corporate offices, millions of employees now enjoy the flexibility of remote working arrangements. A growing segment of this workforce has embraced the \"digital nomad\" lifestyle, travelling across different countries while fulfilling their professional duties online. For workers, remote employment offers significant advantages, including flexible working schedules, eliminating exhausting daily commutes, and achieving a healthier balance between work and personal life. Companies also reap substantial financial benefits by downsizing expensive physical real estate, lowering utility expenditures, and gaining access to a borderless talent pool of international professionals. Nevertheless, remote work is not devoid of substantial drawbacks. Prolonged physical isolation can undermine team cohesion and induce feelings of professional loneliness and anxiety. Furthermore, the boundaries between professional duties and private life often become blurred, causing many individuals to work excessive hours and experience psychological burnout. To foster a productive and sustainable remote working model, organisations must establish clear communication protocols, respect off-hour boundaries, and provide robust digital well-being resources for their dispersed teams.' Question: What is the primary purpose of the author in this passage?",
+    "options": [
+      "To persuade corporate executives to completely shut down physical office buildings.",
+      "To discourage young professionals from choosing freelance online occupations.",
+      "To review the best portable computer hardware for digital nomads.",
+      "To analyze the benefits, challenges, and requirements of remote work arrangements."
+    ],
+    "correctIndex": 3,
+    "explanation": "Muc dich chinh cua tac gia la phan tich mot cach khach quan toan dien ve xu huong lam viec tu xa: nhung loi ich noi bat cho ca ca nhan va doanh nghiep, cac thach thuc tam ly/suc khoe di kem, va de xuat giai phap de van hanh hieu qua. Phuong an D la dap an chinh xac."
+  },
+  {
+    "id": "q_12_82",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "reading",
+    "passageId": "passage_12_06",
+    "stem": "Read the passage: 'The global proliferation of high-speed internet and portable digital devices has fundamentally reshaped traditional employment structures. Rather than commuting daily to rigid corporate offices, millions of employees now enjoy the flexibility of remote working arrangements. A growing segment of this workforce has embraced the \"digital nomad\" lifestyle, travelling across different countries while fulfilling their professional duties online. For workers, remote employment offers significant advantages, including flexible working schedules, eliminating exhausting daily commutes, and achieving a healthier balance between work and personal life. Companies also reap substantial financial benefits by downsizing expensive physical real estate, lowering utility expenditures, and gaining access to a borderless talent pool of international professionals. Nevertheless, remote work is not devoid of substantial drawbacks. Prolonged physical isolation can undermine team cohesion and induce feelings of professional loneliness and anxiety. Furthermore, the boundaries between professional duties and private life often become blurred, causing many individuals to work excessive hours and experience psychological burnout. To foster a productive and sustainable remote working model, organisations must establish clear communication protocols, respect off-hour boundaries, and provide robust digital well-being resources for their dispersed teams.' Question: According to paragraph 2, which benefit does remote work provide for businesses?",
+    "options": [
+      "It guarantees that employees will work continuous overtime without extra pay.",
+      "It eliminates the necessity of maintaining robust cybersecurity safeguards.",
+      "It cuts down real estate expenses and opens access to an international talent pool.",
+      "It allows companies to avoid paying regular health insurance premiums for workers."
+    ],
+    "correctIndex": 2,
+    "explanation": "Căn cứ đoạn 2: 'Companies also reap substantial financial benefits by downsizing expensive physical real estate, lowering utility expenditures, and gaining access to a borderless talent pool of international professionals.' -> Phương án C phản ánh đúng thông tin."
+  },
+  {
+    "id": "q_12_83",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_06",
+    "stem": "Read the passage: 'The global proliferation of high-speed internet and portable digital devices has fundamentally reshaped traditional employment structures. Rather than commuting daily to rigid corporate offices, millions of employees now enjoy the flexibility of remote working arrangements. A growing segment of this workforce has embraced the \"digital nomad\" lifestyle, travelling across different countries while fulfilling their professional duties online. For workers, remote employment offers significant advantages, including flexible working schedules, eliminating exhausting daily commutes, and achieving a healthier balance between work and personal life. Companies also reap substantial financial benefits by downsizing expensive physical real estate, lowering utility expenditures, and gaining access to a borderless talent pool of international professionals. Nevertheless, remote work is not devoid of substantial drawbacks. Prolonged physical isolation can undermine team cohesion and induce feelings of professional loneliness and anxiety. Furthermore, the boundaries between professional duties and private life often become blurred, causing many individuals to work excessive hours and experience psychological burnout. To foster a productive and sustainable remote working model, organisations must establish clear communication protocols, respect off-hour boundaries, and provide robust digital well-being resources for their dispersed teams.' Question: The word \"devoid of\" in the passage is closest in meaning to _______.",
+    "options": [
+      "full of",
+      "lacking in",
+      "capable of",
+      "aware of"
+    ],
+    "correctIndex": 1,
+    "explanation": "Cụm tính từ 'devoid of' có nghĩa là hoàn toàn không có, thiếu vắng (lacking in / without). Ngữ cảnh: 'remote work is not devoid of substantial drawbacks' nghĩa là làm việc từ xa không phải là không có những nhược điểm lớn."
+  },
+  {
+    "id": "q_12_84",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_06",
+    "stem": "Read the passage: 'The global proliferation of high-speed internet and portable digital devices has fundamentally reshaped traditional employment structures. Rather than commuting daily to rigid corporate offices, millions of employees now enjoy the flexibility of remote working arrangements. A growing segment of this workforce has embraced the \"digital nomad\" lifestyle, travelling across different countries while fulfilling their professional duties online. For workers, remote employment offers significant advantages, including flexible working schedules, eliminating exhausting daily commutes, and achieving a healthier balance between work and personal life. Companies also reap substantial financial benefits by downsizing expensive physical real estate, lowering utility expenditures, and gaining access to a borderless talent pool of international professionals. Nevertheless, remote work is not devoid of substantial drawbacks. Prolonged physical isolation can undermine team cohesion and induce feelings of professional loneliness and anxiety. Furthermore, the boundaries between professional duties and private life often become blurred, causing many individuals to work excessive hours and experience psychological burnout. To foster a productive and sustainable remote working model, organisations must establish clear communication protocols, respect off-hour boundaries, and provide robust digital well-being resources for their dispersed teams.' Question: The word \"their\" in the final sentence refers to _______.",
+    "options": [
+      "organisations",
+      "boundaries",
+      "duties",
+      "physical commutes"
+    ],
+    "correctIndex": 0,
+    "explanation": "Căn cứ vào câu cuối: '...organisations must establish clear communication protocols, respect off-hour boundaries, and provide robust digital well-being resources for their dispersed teams.' Tính từ sở hữu 'their' chỉ các đội nhóm của 'các tổ chức/doanh nghiệp' (organisations)."
+  },
+  {
+    "id": "q_12_85",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "reading",
+    "passageId": "passage_12_06",
+    "stem": "Read the passage: 'The global proliferation of high-speed internet and portable digital devices has fundamentally reshaped traditional employment structures. Rather than commuting daily to rigid corporate offices, millions of employees now enjoy the flexibility of remote working arrangements. A growing segment of this workforce has embraced the \"digital nomad\" lifestyle, travelling across different countries while fulfilling their professional duties online. For workers, remote employment offers significant advantages, including flexible working schedules, eliminating exhausting daily commutes, and achieving a healthier balance between work and personal life. Companies also reap substantial financial benefits by downsizing expensive physical real estate, lowering utility expenditures, and gaining access to a borderless talent pool of international professionals. Nevertheless, remote work is not devoid of substantial drawbacks. Prolonged physical isolation can undermine team cohesion and induce feelings of professional loneliness and anxiety. Furthermore, the boundaries between professional duties and private life often become blurred, causing many individuals to work excessive hours and experience psychological burnout. To foster a productive and sustainable remote working model, organisations must establish clear communication protocols, respect off-hour boundaries, and provide robust digital well-being resources for their dispersed teams.' Question: According to the passage, why do many remote workers experience psychological burnout?",
+    "options": [
+      "Because they are forced to travel to foreign destinations every month.",
+      "Because employer surveillance software reduces their internet connection speed.",
+      "Because the lines between working hours and personal life become indistinct.",
+      "Because digital nomad visas are excessively expensive to renew regularly."
+    ],
+    "correctIndex": 2,
+    "explanation": "Căn cứ đoạn 3: 'Furthermore, the boundaries between professional duties and private life often become blurred, causing many individuals to work excessive hours and experience psychological burnout.' Ranh giới mờ nhạt giữa công việc và đời sống cá nhân khiến họ làm việc quá giờ và kiệt sức."
+  },
+  {
+    "id": "q_12_86",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_01",
+    "stem": "Read the cloze passage: 'Lifelong learning is the ongoing and voluntary pursuit of knowledge for either personal or professional reasons. In our rapidly evolving global economy, technological breakthroughs are redefining workforce requirements. Professionals who fail to update their skills risk becoming obsolete, whereas those who actively embrace lifelong education enjoy enhanced employment (1) _______ . Moreover, continuing to acquire new competencies enhances mental adaptability and equips people to (2) _______ effectively to shifting industrial demands. (3) _______ , maintaining a rigorous study routine alongside a demanding full-time career poses undeniable time-management hurdles. Fortunately, modern digital learning platforms offer flexible, self-paced courses (4) _______ allow adult learners to study whenever their schedules permit. In conclusion, cultivating a passion for continuous education not only drives professional achievement (5) _______ also enriches personal life with purpose and intellectual fulfillment.' Question: Which word best fits the blank (1)?",
+    "options": [
+      "disasters",
+      "barriers",
+      "prospects",
+      "redundancies"
+    ],
+    "correctIndex": 2,
+    "explanation": "Cum danh tu co dinh: 'employment prospects' (trien vong nghe nghiep/viec lam). Cac tu con lai khong phu hop ngu canh: disasters (tham hoa), barriers (rao can), redundancies (su sa thai nhan luc). Phuong an C la dap an dung."
+  },
+  {
+    "id": "q_12_87",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_01",
+    "stem": "Read the cloze passage: 'Lifelong learning is the ongoing and voluntary pursuit of knowledge for either personal or professional reasons. In our rapidly evolving global economy, technological breakthroughs are redefining workforce requirements. Professionals who fail to update their skills risk becoming obsolete, whereas those who actively embrace lifelong education enjoy enhanced employment (1) _______ . Moreover, continuing to acquire new competencies enhances mental adaptability and equips people to (2) _______ effectively to shifting industrial demands. (3) _______ , maintaining a rigorous study routine alongside a demanding full-time career poses undeniable time-management hurdles. Fortunately, modern digital learning platforms offer flexible, self-paced courses (4) _______ allow adult learners to study whenever their schedules permit. In conclusion, cultivating a passion for continuous education not only drives professional achievement (5) _______ also enriches personal life with purpose and intellectual fulfillment.' Question: Which word best fits the blank (2)?",
+    "options": [
+      "hesitate",
+      "prevent",
+      "adapt",
+      "confess"
+    ],
+    "correctIndex": 2,
+    "explanation": "Cấu trúc 'adapt to sth' (thích ứng với cái gì): 'equips people to adapt effectively to shifting industrial demands' (trang bị cho con người khả năng thích ứng hiệu quả với những thay đổi về nhu cầu công nghiệp)."
+  },
+  {
+    "id": "q_12_88",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_01",
+    "stem": "Read the cloze passage: 'Lifelong learning is the ongoing and voluntary pursuit of knowledge for either personal or professional reasons. In our rapidly evolving global economy, technological breakthroughs are redefining workforce requirements. Professionals who fail to update their skills risk becoming obsolete, whereas those who actively embrace lifelong education enjoy enhanced employment (1) _______ . Moreover, continuing to acquire new competencies enhances mental adaptability and equips people to (2) _______ effectively to shifting industrial demands. (3) _______ , maintaining a rigorous study routine alongside a demanding full-time career poses undeniable time-management hurdles. Fortunately, modern digital learning platforms offer flexible, self-paced courses (4) _______ allow adult learners to study whenever their schedules permit. In conclusion, cultivating a passion for continuous education not only drives professional achievement (5) _______ also enriches personal life with purpose and intellectual fulfillment.' Question: Which word or phrase best fits the blank (3)?",
+    "options": [
+      "Therefore",
+      "In addition",
+      "Because",
+      "However"
+    ],
+    "correctIndex": 3,
+    "explanation": "Cau truoc neu bat cac loi ich to lon cua viec hoc, cau sau chuyen sang neu tro ngai ve quan ly thoi gian ('poses undeniable time-management hurdles'). Can trang tu lien ket chi su tuong phan: 'However' (Tuy nhien). Phuong an D la dap an dung."
+  },
+  {
+    "id": "q_12_89",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_01",
+    "stem": "Read the cloze passage: 'Lifelong learning is the ongoing and voluntary pursuit of knowledge for either personal or professional reasons. In our rapidly evolving global economy, technological breakthroughs are redefining workforce requirements. Professionals who fail to update their skills risk becoming obsolete, whereas those who actively embrace lifelong education enjoy enhanced employment (1) _______ . Moreover, continuing to acquire new competencies enhances mental adaptability and equips people to (2) _______ effectively to shifting industrial demands. (3) _______ , maintaining a rigorous study routine alongside a demanding full-time career poses undeniable time-management hurdles. Fortunately, modern digital learning platforms offer flexible, self-paced courses (4) _______ allow adult learners to study whenever their schedules permit. In conclusion, cultivating a passion for continuous education not only drives professional achievement (5) _______ also enriches personal life with purpose and intellectual fulfillment.' Question: Which word best fits the blank (4)?",
+    "options": [
+      "whom",
+      "where",
+      "whose",
+      "which"
+    ],
+    "correctIndex": 3,
+    "explanation": "Đại từ quan hệ 'which' làm chủ ngữ thay thế cho danh từ chỉ vật 'courses' (các khóa học). 'whom' chỉ người, 'where' chỉ nơi chốn, 'whose' chỉ quan hệ sở hữu."
+  },
+  {
+    "id": "q_12_90",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_01",
+    "stem": "Read the cloze passage: 'Lifelong learning is the ongoing and voluntary pursuit of knowledge for either personal or professional reasons. In our rapidly evolving global economy, technological breakthroughs are redefining workforce requirements. Professionals who fail to update their skills risk becoming obsolete, whereas those who actively embrace lifelong education enjoy enhanced employment (1) _______ . Moreover, continuing to acquire new competencies enhances mental adaptability and equips people to (2) _______ effectively to shifting industrial demands. (3) _______ , maintaining a rigorous study routine alongside a demanding full-time career poses undeniable time-management hurdles. Fortunately, modern digital learning platforms offer flexible, self-paced courses (4) _______ allow adult learners to study whenever their schedules permit. In conclusion, cultivating a passion for continuous education not only drives professional achievement (5) _______ also enriches personal life with purpose and intellectual fulfillment.' Question: Which word best fits the blank (5)?",
+    "options": [
+      "or",
+      "and",
+      "so",
+      "but"
+    ],
+    "correctIndex": 3,
+    "explanation": "Cau truc tuong quan quen thuoc: 'not only ... but also ...' (khong nhung ... ma con ...). Ve truoc da co 'not only drives...', vi tri can dien la 'but'. Phuong an D la dap an dung."
+  },
+  {
+    "id": "q_12_91",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_02",
+    "stem": "Read the cloze passage: 'Ecotourism has emerged as a promising alternative to conventional mass tourism, emphasizing the protection of delicate ecosystems and the well-being of local communities. Unlike traditional sightseeing trips that frequently generate excessive waste and accelerate habitat destruction, ecotourism encourages visitors to minimize their environmental (1) _______ . Responsible travelers are introduced to pristine wilderness reserves under the guidance of local experts who educate them on native wildlife and conservation efforts. (2) _______ , the revenue generated from park entrance fees and eco-friendly lodges directly finances wildlife protection projects and provides sustainable livelihoods for indigenous residents. Nonetheless, genuine ecotourism requires strict regulation to succeed. If visitor numbers are not carefully (3) _______ , even well-intentioned tours can disturb animal breeding grounds and degrade sensitive natural habitats. (4) _______ businesses that falsely market themselves as eco-friendly without implementing real conservation practices must be held accountable. Ultimately, when practiced with integrity, ecotourism demonstrates that economic development and environmental preservation can (5) _______ successfully.' Question: Which word best fits the blank (1)?",
+    "options": [
+      "resource",
+      "footprint",
+      "climate",
+      "heritage"
+    ],
+    "correctIndex": 1,
+    "explanation": "Cụm danh từ: 'environmental footprint' (dấu chân sinh thái / tác động tới môi trường). 'minimize their environmental footprint' nghĩa là giảm thiểu tối đa tác động xấu đến môi trường tự nhiên."
+  },
+  {
+    "id": "q_12_92",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_02",
+    "stem": "Read the cloze passage: 'Ecotourism has emerged as a promising alternative to conventional mass tourism, emphasizing the protection of delicate ecosystems and the well-being of local communities. Unlike traditional sightseeing trips that frequently generate excessive waste and accelerate habitat destruction, ecotourism encourages visitors to minimize their environmental (1) _______ . Responsible travelers are introduced to pristine wilderness reserves under the guidance of local experts who educate them on native wildlife and conservation efforts. (2) _______ , the revenue generated from park entrance fees and eco-friendly lodges directly finances wildlife protection projects and provides sustainable livelihoods for indigenous residents. Nonetheless, genuine ecotourism requires strict regulation to succeed. If visitor numbers are not carefully (3) _______ , even well-intentioned tours can disturb animal breeding grounds and degrade sensitive natural habitats. (4) _______ businesses that falsely market themselves as eco-friendly without implementing real conservation practices must be held accountable. Ultimately, when practiced with integrity, ecotourism demonstrates that economic development and environmental preservation can (5) _______ successfully.' Question: Which word or phrase best fits the blank (2)?",
+    "options": [
+      "On the contrary",
+      "In addition",
+      "In contrast",
+      "Otherwise"
+    ],
+    "correctIndex": 1,
+    "explanation": "Câu trước nói về việc nâng cao nhận thức bảo tồn cho du khách, câu sau bổ sung thêm lợi ích tài chính trực tiếp cho người dân bản địa ('revenue... directly finances... and provides livelihoods'). Dùng liên từ bổ sung thông tin: 'In addition' (Ngoài ra / Hơn nữa)."
+  },
+  {
+    "id": "q_12_93",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_02",
+    "stem": "Read the cloze passage: 'Ecotourism has emerged as a promising alternative to conventional mass tourism, emphasizing the protection of delicate ecosystems and the well-being of local communities. Unlike traditional sightseeing trips that frequently generate excessive waste and accelerate habitat destruction, ecotourism encourages visitors to minimize their environmental (1) _______ . Responsible travelers are introduced to pristine wilderness reserves under the guidance of local experts who educate them on native wildlife and conservation efforts. (2) _______ , the revenue generated from park entrance fees and eco-friendly lodges directly finances wildlife protection projects and provides sustainable livelihoods for indigenous residents. Nonetheless, genuine ecotourism requires strict regulation to succeed. If visitor numbers are not carefully (3) _______ , even well-intentioned tours can disturb animal breeding grounds and degrade sensitive natural habitats. (4) _______ businesses that falsely market themselves as eco-friendly without implementing real conservation practices must be held accountable. Ultimately, when practiced with integrity, ecotourism demonstrates that economic development and environmental preservation can (5) _______ successfully.' Question: Which word best fits the blank (3)?",
+    "options": [
+      "ignored",
+      "exaggerated",
+      "controlled",
+      "abandoned"
+    ],
+    "correctIndex": 2,
+    "explanation": "Căn cứ ngữ cảnh câu điều kiện: 'If visitor numbers are not carefully controlled...' (Nếu số lượng du khách không được kiểm soát cẩn thận, tour có thể gây hại cho môi trường sống của động vật hoang dã)."
+  },
+  {
+    "id": "q_12_94",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_02",
+    "stem": "Read the cloze passage: 'Ecotourism has emerged as a promising alternative to conventional mass tourism, emphasizing the protection of delicate ecosystems and the well-being of local communities. Unlike traditional sightseeing trips that frequently generate excessive waste and accelerate habitat destruction, ecotourism encourages visitors to minimize their environmental (1) _______ . Responsible travelers are introduced to pristine wilderness reserves under the guidance of local experts who educate them on native wildlife and conservation efforts. (2) _______ , the revenue generated from park entrance fees and eco-friendly lodges directly finances wildlife protection projects and provides sustainable livelihoods for indigenous residents. Nonetheless, genuine ecotourism requires strict regulation to succeed. If visitor numbers are not carefully (3) _______ , even well-intentioned tours can disturb animal breeding grounds and degrade sensitive natural habitats. (4) _______ businesses that falsely market themselves as eco-friendly without implementing real conservation practices must be held accountable. Ultimately, when practiced with integrity, ecotourism demonstrates that economic development and environmental preservation can (5) _______ successfully.' Question: Which word best fits the blank (4)?",
+    "options": [
+      "Such",
+      "Much",
+      "Every",
+      "Another"
+    ],
+    "correctIndex": 0,
+    "explanation": "'Such + danh từ số nhiều' (Những doanh nghiệp như vậy). Danh từ phía sau là 'businesses' (số nhiều), do đó 'Much' (đi với danh từ không đếm được), 'Every' và 'Another' (đi với danh từ số ít) đều sai ngữ pháp."
+  },
+  {
+    "id": "q_12_95",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "cloze",
+    "passageId": "cloze_passage_12_02",
+    "stem": "Read the cloze passage: 'Ecotourism has emerged as a promising alternative to conventional mass tourism, emphasizing the protection of delicate ecosystems and the well-being of local communities. Unlike traditional sightseeing trips that frequently generate excessive waste and accelerate habitat destruction, ecotourism encourages visitors to minimize their environmental (1) _______ . Responsible travelers are introduced to pristine wilderness reserves under the guidance of local experts who educate them on native wildlife and conservation efforts. (2) _______ , the revenue generated from park entrance fees and eco-friendly lodges directly finances wildlife protection projects and provides sustainable livelihoods for indigenous residents. Nonetheless, genuine ecotourism requires strict regulation to succeed. If visitor numbers are not carefully (3) _______ , even well-intentioned tours can disturb animal breeding grounds and degrade sensitive natural habitats. (4) _______ businesses that falsely market themselves as eco-friendly without implementing real conservation practices must be held accountable. Ultimately, when practiced with integrity, ecotourism demonstrates that economic development and environmental preservation can (5) _______ successfully.' Question: Which word best fits the blank (5)?",
+    "options": [
+      "divide",
+      "collide",
+      "coexist",
+      "surrender"
+    ],
+    "correctIndex": 2,
+    "explanation": "Động từ 'coexist' có nghĩa là cùng tồn tại, cùng song hành hòa hợp: 'economic development and environmental preservation can coexist successfully' (phát triển kinh tế và bảo tồn môi trường có thể cùng tồn tại thành công)."
+  },
+  {
+    "id": "q_12_96",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "signs",
+    "passageId": null,
+    "stem": "A notice reads: 'LABORATORY SAFETY: PROTECTIVE EYEWEAR AND COATS MUST BE WORN AT ALL TIMES BEYOND THIS POINT'. What does it mean?",
+    "options": [
+      "Visitors are advised to store their protective glasses in the locker outside.",
+      "Anyone entering the laboratory is required to wear safety goggles and a coat.",
+      "Coats and eyewear can only be purchased inside the laboratory reception desk.",
+      "Wearing protective equipment is optional for experienced laboratory staff."
+    ],
+    "correctIndex": 1,
+    "explanation": "Thông báo quy định: 'Kính bảo hộ và áo blouse phải luôn được mặc sau vị trí này'. Cụm 'must be worn at all times' mang ý nghĩa bắt buộc ('is required to wear')."
+  },
+  {
+    "id": "q_12_97",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "signs",
+    "passageId": null,
+    "stem": "A sign reads: 'RESERVED PARKING FOR ELECTRIC VEHICLES ONLY WHILE ACTIVELY CHARGING'. What does the sign say?",
+    "options": [
+      "Electric vehicles can park here indefinitely even when not connected to a charger.",
+      "Any vehicle may park here provided that the parking fee is settled in advance.",
+      "Only electric cars currently being charged are permitted to occupy this parking space.",
+      "Charging points in this parking lot are reserved exclusively for maintenance staff."
+    ],
+    "correctIndex": 2,
+    "explanation": "Biển báo quy định: Vị trí đỗ chỉ dành riêng cho xe điện trong khi đang thực sự sạc điện ('only while actively charging'). Các xe không trong quá trình sạc không được đỗ ở đây."
+  },
+  {
+    "id": "q_12_98",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "signs",
+    "passageId": null,
+    "stem": "A notice reads: 'UNIVERSITY LIBRARY: SILENT STUDY ZONE. PLEASE MUTE ALL MOBILE PHONES AND REFRAIN FROM CONVERSATIONS.' What should students do?",
+    "options": [
+      "Students may hold brief telephone conversations if they speak in low whispers.",
+      "Group discussions are allowed provided that phones are switched off completely.",
+      "Students must keep their phones silent and not talk to one another in this area.",
+      "Students should leave their mobile devices with the library receptionist at the door."
+    ],
+    "correctIndex": 2,
+    "explanation": "Biển báo yêu cầu: 'Khu vực tự học yên tĩnh. Vui lòng tắt chuông điện thoại và không nói chuyện'. 'Refrain from conversations' nghĩa là kiềm chế, không nói chuyện."
+  },
+  {
+    "id": "q_12_99",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 1,
+    "type": "signs",
+    "passageId": null,
+    "stem": "A sign reads: 'FIRE EXIT: KEEP CLEAR AT ALL TIMES. DO NOT OBSTRUCT WITH BOXES OR EQUIPMENT.' What does this sign mean?",
+    "options": [
+      "Heavy equipment and cardboard boxes may be stored here during business hours.",
+      "The door is only accessible when fire drills are being conducted by staff.",
+      "This exit must remain unobstructed and free of any objects permanently.",
+      "Only firefighting personnel are authorized to open this security doorway."
+    ],
+    "correctIndex": 2,
+    "explanation": "'Keep clear at all times' và 'Do not obstruct' có nghĩa là lối thoát hiểm hỏa hoạn phải luôn được giữ thông thoáng, không bị đồ đạc hay thùng hộp chắn lối."
+  },
+  {
+    "id": "q_12_100",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 2,
+    "type": "signs",
+    "passageId": null,
+    "stem": "A notice reads: 'AIRPORT SHUTTLE BUS: EXACT FARE REQUIRED. DRIVERS DO NOT CARRY CASH TO GIVE CHANGE.' What does it mean?",
+    "options": [
+      "Passengers must pay the precise ticket amount because the driver cannot return change.",
+      "Shuttle bus journeys are complimentary for travelers with valid airline boarding passes.",
+      "Tickets can only be bought at airline customer counters prior to departure.",
+      "Drivers will provide bank notes and coins to passengers who need to break large bills."
+    ],
+    "correctIndex": 0,
+    "explanation": "'Exact fare required. Drivers do not carry cash to give change' nghĩa là hành khách phải trả đúng số tiền vé ('exact fare / precise ticket amount') vì tài xế không mang theo tiền mặt để thối lại."
+  },
+  {
+    "id": "q_12_101",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 1,
+    "type": "signs",
+    "passageId": null,
+    "stem": "A sign reads: 'NATIONAL BOTANIC GARDEN: PLEASE REMAIN ON DESIGNATED FOOTPATHS TO PROTECT SENSITIVE PLANT SPECIES.' What does it mean?",
+    "options": [
+      "Visitors should only walk along marked paths to avoid damaging rare flora.",
+      "Visitors are permitted to collect botanical plant samples along designated routes.",
+      "The garden is closed to pedestrians while gardeners are tending to plant beds.",
+      "Walking off designated trails is allowed if accompanied by registered tour guides."
+    ],
+    "correctIndex": 0,
+    "explanation": "'Please remain on designated footpaths' nghĩa là khách tham quan chỉ được đi trên các lối mòn đã quy định để bảo vệ các loài thực vật quý hiếm khỏi bị giẫm đạp."
+  },
+  {
+    "id": "q_12_102",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "signs",
+    "passageId": null,
+    "stem": "A notice reads: 'CONFERENCE ROOM B: RESERVED FOR VIRTUAL JOB INTERVIEWS FROM 9 AM TO 12 PM. DO NOT DISTURB.' What does the notice indicate?",
+    "options": [
+      "Anyone can enter Conference Room B for informal meetings until noon.",
+      "Online job interviews are being conducted in this room during the specified morning period.",
+      "Job candidates must assemble in Conference Room B before 9 AM for interview registration.",
+      "The room is undergoing technical maintenance and internet upgrades throughout the day."
+    ],
+    "correctIndex": 1,
+    "explanation": "Thông báo nêu rõ: Phòng họp B đã được đặt trước cho các cuộc phỏng vấn xin việc trực tuyến ('virtual job interviews') trong khung giờ từ 9h đến 12h và yêu cầu không làm phiền."
+  },
+  {
+    "id": "q_12_103",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 1,
+    "type": "communication",
+    "passageId": null,
+    "stem": "Mark and Susan are discussing renewable energy solutions in urban planning.\n- Mark: \"I believe converting all city buses to electric power by 2030 is completely achievable.\"\n- Susan: \"_______. Many municipal authorities have already begun introducing electric fleets.\"",
+    "options": [
+      "I couldn't agree with you more",
+      "That is entirely out of the question",
+      "I doubt whether that would ever work",
+      "You must be completely mistaken"
+    ],
+    "correctIndex": 0,
+    "explanation": "Susan đưa ra luận điểm củng cố quan điểm của Mark ('Nhiều chính quyền thành phố đã bắt đầu triển khai đội xe buýt điện'). Do đó Susan hoàn toàn đồng tình: 'I couldn't agree with you more' (Tôi hoàn toàn đồng ý với bạn)."
+  },
+  {
+    "id": "q_12_104",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "communication",
+    "passageId": null,
+    "stem": "David is talking to his teacher, Mrs. Jenkins, after class.\n- David: \"Would you mind reviewing the first draft of my university admission essay, Mrs. Jenkins?\"\n- Mrs. Jenkins: \"_______. Leave it on my desk and I will give you feedback tomorrow morning.\"",
+    "options": [
+      "Yes, I would definitely mind",
+      "I'm afraid that is not my responsibility",
+      "Never mind, you can leave now",
+      "Not at all. I would be glad to"
+    ],
+    "correctIndex": 3,
+    "explanation": "Khi dap lai loi thinh cau lich su 'Would you mind doing sth?', neu san sang giup do ta tra loi 'Not at all' (Khong phien chut nao) kem loi dong y nhiet tinh 'I would be glad to'. Phuong an D la dap an dung."
+  },
+  {
+    "id": "q_12_105",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "communication",
+    "passageId": null,
+    "stem": "Liam and Chloe are sharing opinions about artificial intelligence in education.\n- Liam: \"AI tutoring applications will make human teachers completely unnecessary in the near future.\"\n- Chloe: \"_______. Machines cannot provide emotional empathy or moral guidance like human educators.\"",
+    "options": [
+      "I totally share your viewpoint",
+      "That sounds like a wonderful certainty",
+      "I'm afraid I have to disagree with you",
+      "There is no doubt you are right"
+    ],
+    "correctIndex": 2,
+    "explanation": "Chloe phản bác lập luận của Liam bằng lý do máy móc không thể có sự thấu cảm hay định hướng đạo đức. Vì vậy Chloe bày tỏ sự bất đồng một cách lịch sự: 'I\\'m afraid I have to disagree with you'."
+  },
+  {
+    "id": "q_12_106",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "communication",
+    "passageId": null,
+    "stem": "Minh and Lan are meeting outside the career fair pavilion.\n- Minh: \"I just got accepted for the software development apprenticeship at TechCorp!\"\n- Lan: \"_______! You've worked so hard for this opportunity.\"",
+    "options": [
+      "Better luck next time",
+      "Don't mention it at all",
+      "You should be more careful",
+      "Congratulations! That's fantastic news"
+    ],
+    "correctIndex": 3,
+    "explanation": "Khi don nhan tin vui lon tu ban be (duoc trung tuyen thuc tap), loi dap giao tiep chuan muc la chuc mung: 'Congratulations! That's fantastic news!'. Phuong an D la dap an dung."
+  },
+  {
+    "id": "q_12_107",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 1,
+    "type": "communication",
+    "passageId": null,
+    "stem": "Tom accidentally bumped into a colleague and spilled coffee on the office hallway carpet.\n- Tom: \"I'm terribly sorry for spilling coffee on the floor! Let me help clean it up right away.\"\n- Colleague: \"_______. I'll grab some paper towels from the pantry.\"",
+    "options": [
+      "Don't worry about it. Accidents happen",
+      "It serves you right for being careless",
+      "You had better leave immediately",
+      "That is totally unacceptable behaviour"
+    ],
+    "correctIndex": 0,
+    "explanation": "Khi đồng nghiệp xin lỗi vì một sự cố ngoài ý muốn, câu đáp hòa nhã nhằm xoa dịu tình huống là: 'Don\\'t worry about it. Accidents happen' (Đừng lo. Tai nạn sơ suất thôi mà)."
+  },
+  {
+    "id": "q_12_108",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 1,
+    "type": "communication",
+    "passageId": null,
+    "stem": "Emma is giving feedback to Alex on his community volunteer presentation.\n- Emma: \"Your presentation on combating food waste in our neighbourhood was truly inspiring!\"\n- Alex: \"_______. That really means a lot to me.\"",
+    "options": [
+      "You can say that again if you like",
+      "Thank you so much for your kind words",
+      "I don't care about your opinion",
+      "It wasn't my fault at all"
+    ],
+    "correctIndex": 1,
+    "explanation": "Khi nhận được lời khen ngợi chân thành, câu đáp lịch thiệp là cảm ơn: 'Thank you so much for your kind words' (Cảm ơn bạn rất nhiều vì những lời tốt đẹp)."
+  },
+  {
+    "id": "q_12_109",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 1,
+    "type": "communication",
+    "passageId": null,
+    "stem": "Two classmates, Huy and Mai, are discussing an upcoming environmental workshop.\n- Huy: \"Why don't we set up a student booth to collect discarded batteries this Friday?\"\n- Mai: \"_______! That will help prevent toxic chemical leaks into the soil.\"",
+    "options": [
+      "That's a great idea",
+      "I couldn't care less",
+      "What a terrible suggestion",
+      "It's none of our business"
+    ],
+    "correctIndex": 0,
+    "explanation": "Huy đưa ra một sáng kiến ('Why don\\'t we...?') và Mai khen ngợi vì sáng kiến này mang lại lợi ích môi trường thực tế: 'That\\'s a great idea!' (Đó là một ý kiến tuyệt vời!)."
+  },
+  {
+    "id": "q_12_110",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 2,
+    "type": "vocab",
+    "passageId": null,
+    "stem": "The municipal council decided to _______ old industrial warehouses into modern creative art hubs and community centres.",
+    "options": [
+      "demolish",
+      "deteriorate",
+      "convert",
+      "abandon"
+    ],
+    "correctIndex": 2,
+    "explanation": "Cấu trúc: 'convert sth into sth' (chuyển đổi cái gì thành cái gì). Các từ khác: 'demolish' (phá hủy hoàn toàn), 'deteriorate' (xuống cấp), 'abandon' (bỏ rơi) không phù hợp nghĩa câu."
+  },
+  {
+    "id": "q_12_111",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 1,
+    "type": "vocab",
+    "passageId": null,
+    "stem": "Many modern smart cities are investing in renewable energy to reduce their reliance on _______ fuels such as coal and oil.",
+    "options": [
+      "artificial",
+      "synthetic",
+      "organic",
+      "fossil"
+    ],
+    "correctIndex": 3,
+    "explanation": "Cum tu quen thuoc: 'fossil fuels' (nhien lieu hoa thach, nhu than da va dau mo). Phuong an D la dap an dung."
+  },
+  {
+    "id": "q_12_112",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "vocab",
+    "passageId": null,
+    "stem": "Dr. Minh made a significant _______ to the development of solar-powered water filtration systems in rural areas.",
+    "options": [
+      "distraction",
+      "contribution",
+      "hesitation",
+      "disruption"
+    ],
+    "correctIndex": 1,
+    "explanation": "Collocation: 'make a contribution to sth' (đóng góp đáng kể vào việc gì). 'distraction' (sự xao nhãng), 'hesitation' (sự do dự), 'disruption' (sự gián đoạn)."
+  },
+  {
+    "id": "q_12_113",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 3,
+    "type": "vocab",
+    "passageId": null,
+    "stem": "With the rise of automation, workers need to acquire new digital skills so that they do not become _______ in the modern labour market.",
+    "options": [
+      "prominent",
+      "obsolete",
+      "prevalent",
+      "durable"
+    ],
+    "correctIndex": 1,
+    "explanation": "Tính từ 'obsolete' có nghĩa là lỗi thời, bị đào thải vì không còn phù hợp với công nghệ/nhu cầu hiện đại. 'prominent' (nổi bật), 'prevalent' (thịnh hành), 'durable' (bền bỉ)."
+  },
+  {
+    "id": "q_12_114",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "vocab",
+    "passageId": null,
+    "stem": "The company launched an awareness campaign to encourage employees to adopt eco-friendly habits and live _______.",
+    "options": [
+      "sustainably",
+      "aggressively",
+      "extravagantly",
+      "destructively"
+    ],
+    "correctIndex": 0,
+    "explanation": "'live sustainably' là cụm từ chuẩn diễn tả lối sống bền vững, thân thiện với môi trường sinh thái. 'extravagantly' (xa hoa lãng phí), 'destructively' (phá hoại)."
+  },
+  {
+    "id": "q_12_115",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 2,
+    "type": "vocab",
+    "passageId": null,
+    "stem": "To ensure equal opportunities, universities should provide financial aid to students from _______ backgrounds.",
+    "options": [
+      "disadvantaged",
+      "affluent",
+      "privileged",
+      "prosperous"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cụm danh từ: 'disadvantaged backgrounds' (hoàn cảnh khó khăn / yếu thế trong xã hội). Các từ 'affluent', 'privileged', 'prosperous' đều mang nghĩa giàu có, khá giả."
+  },
+  {
+    "id": "q_12_116",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "grammar",
+    "passageId": null,
+    "stem": "_______ by the historic success of his mentor, Khoa decided to pursue advanced studies in biotechnology.",
+    "options": [
+      "Inspiring",
+      "Having inspired",
+      "To inspire",
+      "Inspired"
+    ],
+    "correctIndex": 3,
+    "explanation": "Rut gon menh de trang ngu o the bi dong dong chu ngu: 'Because Khoa was inspired by...', rut gon con phan tu hai 'Inspired'. Phuong an D la dap an dung."
+  },
+  {
+    "id": "q_12_117",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 3,
+    "type": "grammar",
+    "passageId": null,
+    "stem": "Had the municipal council invested earlier in flood drainage infrastructure, the downtown avenues _______ so badly during yesterday's storm.",
+    "options": [
+      "would not be flooded",
+      "will not have flooded",
+      "would not have been flooded",
+      "are not flooded"
+    ],
+    "correctIndex": 2,
+    "explanation": "Đảo ngữ câu điều kiện loại 3 diễn tả sự việc trái ngược với thực tế trong quá khứ ('yesterday\\'s storm'): 'Had + S + PII, S + would have + PII'. Do chủ ngữ là 'downtown avenues' (các đại lộ) chịu tác động bị động của ngập nước nên dùng 'would not have been flooded'."
+  },
+  {
+    "id": "q_12_118",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "grammar",
+    "passageId": null,
+    "stem": "The scientists _______ research into renewable biofuels has received an international award, will deliver a lecture tomorrow.",
+    "options": [
+      "whose",
+      "who",
+      "which",
+      "whom"
+    ],
+    "correctIndex": 0,
+    "explanation": "Dai tu quan he chi so huu: 'whose + noun' ('nhung nha khoa hoc ma nghien cuu cua ho...'). Phuong an A la dap an dung."
+  },
+  {
+    "id": "q_12_119",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "grammar",
+    "passageId": null,
+    "stem": "The environmental inspector recommended that the local chemical plant _______ immediate steps to eliminate toxic wastewater discharge.",
+    "options": [
+      "take",
+      "takes",
+      "took",
+      "is taking"
+    ],
+    "correctIndex": 0,
+    "explanation": "Thức giả định (Subjunctive) sau động từ 'recommend': 'recommend that + S + (should) + V_bare'. Do đó động từ 'take' ở dạng nguyên thể không chia."
+  },
+  {
+    "id": "q_12_120",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 1,
+    "type": "grammar",
+    "passageId": null,
+    "stem": "The more extensively urban authorities expand green parks, _______ the living conditions become for local residents.",
+    "options": [
+      "the healthier",
+      "healthier",
+      "the healthiest",
+      "more healthy"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cấu trúc so sánh kép (The more... the more...): 'The + comparative ..., the + comparative ...'. Cần điền 'the healthier'."
+  },
+  {
+    "id": "q_12_121",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "synonym_antonym",
+    "passageId": null,
+    "stem": "Mark the letter A, B, C, or D to indicate the word(s) CLOSEST in meaning to the underlined word in the following sentence:\nThe innovative solar project was initiated to tackle the severe energy shortages in isolated rural communities.",
+    "options": [
+      "worsen",
+      "avoid",
+      "resolve",
+      "ignore"
+    ],
+    "correctIndex": 2,
+    "explanation": "Động từ 'tackle' (giải quyết, xử lý một vấn đề khó khăn) đồng nghĩa với 'resolve' (giải quyết) hoặc 'deal with'. Các từ còn lại: 'worsen' (làm xấu đi), 'avoid' (tránh né), 'ignore' (phớt lờ)."
+  },
+  {
+    "id": "q_12_122",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 2,
+    "type": "synonym_antonym",
+    "passageId": null,
+    "stem": "Mark the letter A, B, C, or D to indicate the word(s) CLOSEST in meaning to the underlined word in the following sentence:\nYoung entrepreneurs must remain resilient in the face of initial business setbacks and financial uncertainty.",
+    "options": [
+      "adaptable and strong",
+      "vulnerable and fearful",
+      "reluctant to change",
+      "careless and reckless"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tính từ 'resilient' (kiên cường, bền bỉ và có khả năng phục hồi nhanh sau thất bại) đồng nghĩa với 'adaptable and strong'. 'vulnerable' (dễ tổn thương), 'reluctant' (miễn cưỡng)."
+  },
+  {
+    "id": "q_12_123",
+    "grade": 12,
+    "topicId": "topic_12_unit3",
+    "difficulty": 2,
+    "type": "synonym_antonym",
+    "passageId": null,
+    "stem": "Mark the letter A, B, C, or D to indicate the word(s) OPPOSITE in meaning to the underlined word in the following sentence:\nInstalling energy-saving light bulbs is an economical way to reduce household electricity bills over time.",
+    "options": [
+      "affordable",
+      "costly",
+      "extravagant",
+      "reasonable"
+    ],
+    "correctIndex": 1,
+    "explanation": "Tu 'economical' mang nghia tiet kiem chi phi. Tu trai nghia (OPPOSITE) la 'costly' (dat do, ton kem). 'affordable' va 'reasonable' deu dong nghia voi 'economical'. 'extravagant' cung la trai nghia nhung 'costly' pho bien hon trong van canh nay. Phuong an B la dap an dung."
+  },
+  {
+    "id": "q_12_124",
+    "grade": 12,
+    "topicId": "topic_12_unit1",
+    "difficulty": 3,
+    "type": "synonym_antonym",
+    "passageId": null,
+    "stem": "Mark the letter A, B, C, or D to indicate the word(s) OPPOSITE in meaning to the underlined word in the following sentence:\nVolunteering at local charity shelters has had a profound impact on his perspective toward social inequality.",
+    "options": [
+      "significant",
+      "superficial",
+      "long-lasting",
+      "meaningful"
+    ],
+    "correctIndex": 1,
+    "explanation": "'profound' có nghĩa là sâu sắc, to lớn, có ảnh hưởng sâu rộng. Từ trái nghĩa (OPPOSITE) là 'superficial' (nông cạn, hời hợt, không đáng kể). 'significant' và 'meaningful' là từ đồng nghĩa."
+  },
+  {
+    "id": "q_12_125",
+    "grade": 12,
+    "topicId": "topic_12_unit2",
+    "difficulty": 2,
+    "type": "synonym_antonym",
+    "passageId": null,
+    "stem": "Mark the letter A, B, C, or D to indicate the word(s) OPPOSITE in meaning to the underlined word in the following sentence:\nThe government decided to terminate the contract with the construction firm due to repeated safety violations.",
+    "options": [
+      "conclude",
+      "cancel",
+      "continue",
+      "suspend"
+    ],
+    "correctIndex": 2,
+    "explanation": "'terminate' có nghĩa là chấm dứt, đình chỉ. Từ trái nghĩa (OPPOSITE) là 'continue' (tiếp tục, duy trì). 'conclude' và 'cancel' đồng nghĩa với 'terminate'."
   }
 ]

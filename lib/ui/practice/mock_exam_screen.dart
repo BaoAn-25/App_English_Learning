@@ -5,6 +5,7 @@ import '../../data/app_repository.dart';
 import '../../data/models/question.dart';
 import 'mock_exam_history_screen.dart';
 import 'mock_exam_quiz_screen.dart';
+import 'services/exam_builder_service.dart';
 
 class MockExamScreen extends StatefulWidget {
   const MockExamScreen({super.key});
@@ -459,12 +460,12 @@ class _MockExamScreenState extends State<MockExamScreen> {
                 FilledButton.icon(
                   onPressed: canStart
                       ? () {
-                          final examQuestions = List<Question>.from(questions)
-                            ..shuffle();
-
-                          final selectedQuestions = examQuestions
-                              .take(currentMode.questionCount)
-                              .toList();
+                          final selectedQuestions = ExamBuilderService()
+                              .buildMockExam(
+                                questions,
+                                count: currentMode.questionCount,
+                              )
+                              .questions;
 
                           Navigator.push(
                             context,

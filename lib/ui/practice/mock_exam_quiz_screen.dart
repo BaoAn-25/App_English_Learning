@@ -10,6 +10,7 @@ import '../../data/models/daily_stat.dart';
 import '../../data/models/question.dart';
 import '../../data/models/wrong_book_entry.dart';
 import 'practice_review_screen.dart';
+import 'services/option_shuffler.dart';
 import 'widgets/question_stem_view.dart';
 import 'widgets/quiz_option_card.dart';
 
@@ -17,10 +18,18 @@ class MockExamQuizScreen extends StatefulWidget {
   final List<Question> questions;
   final int durationMinutes;
 
+  /// Đồng hồ hệ thống (có thể thay thế khi kiểm thử đếm ngược).
+  final DateTime Function()? clock;
+
+  /// Ánh xạ thứ tự hiển thị phương án (tùy chọn, mặc định xáo trộn ngẫu nhiên).
+  final List<QuestionOptionMapping>? optionMappings;
+
   const MockExamQuizScreen({
     super.key,
     required this.questions,
     required this.durationMinutes,
+    this.clock,
+    this.optionMappings,
   });
 
   @override
@@ -29,10 +38,13 @@ class MockExamQuizScreen extends StatefulWidget {
 
 class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   late final List<int?> selectedAnswers;
+  late final List<QuestionOptionMapping> optionMappings;
   late final DateTime startedAt;
   late final DateTime deadline;
 
   Timer? timer;
+
+  DateTime _now() => (widget.clock ?? DateTime.now)();
 
   int currentIndex = 0;
   int remainingSeconds = 0;
@@ -41,6 +53,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   bool submitted = false;
   bool isSubmitDialogOpen = false;
   Attempt? savedAttempt;
+  int usedSeconds = 0;
 
   @override
   void initState() {
@@ -48,19 +61,27 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
 
     selectedAnswers = List<int?>.filled(widget.questions.length, null);
 
-    startedAt = DateTime.now();
+    startedAt = _now();
 
     deadline = startedAt.add(Duration(minutes: widget.durationMinutes));
 
     remainingSeconds = widget.durationMinutes * 60;
 
     timer = Timer.periodic(const Duration(seconds: 1), (_) => updateTimer());
+
+    optionMappings = widget.optionMappings ??
+        List.generate(
+          widget.questions.length,
+          (i) => QuestionOptionMapping.shuffled(
+            widget.questions[i].options.length,
+          ),
+        );
   }
 
   void updateTimer() {
     if (!mounted || submitted || isSaving) return;
 
-    final seconds = deadline.difference(DateTime.now()).inSeconds;
+    final seconds = deadline.difference(_now()).inSeconds;
 
     if (seconds <= 0) {
       timer?.cancel();
@@ -221,11 +242,12 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
 
     try {
       final repository = context.read<AppRepository>();
-      final finishedAt = DateTime.now();
+      final finishedAt = _now();
 
       final elapsedSeconds = finishedAt.difference(startedAt).inSeconds;
 
       final durationSec = elapsedSeconds.clamp(0, widget.durationMinutes * 60);
+      usedSeconds = durationSec;
 
       final attempt = Attempt(
         mode: 'mock_exam',
@@ -495,7 +517,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                               icon: Icons.timer_outlined,
                               iconColor: colorScheme.primary,
                               label: 'Thời gian',
-                              value: '${widget.durationMinutes}p',
+                              value:
+                                  '${(usedSeconds ~/ 60).toString().padLeft(2, '0')}:'
+                                  '${(usedSeconds % 60).toString().padLeft(2, '0')}',
                             ),
                           ),
                         ],
@@ -695,17 +719,29 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                   QuestionStemView(stem: question.stem, type: question.type),
                   const SizedBox(height: 20),
 
-                  ...List.generate(question.options.length, (index) {
-                    final isSelected = selectedAnswers[currentIndex] == index;
+                  Builder(
+                    builder: (_) {
+                      final mapping = optionMappings[currentIndex];
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(mapping.length, (slotIndex) {
+                          final originalIndex = mapping.originalIndexAt(slotIndex);
+                          final isSelected =
+                              selectedAnswers[currentIndex] == originalIndex;
 
-                    return QuizOptionCard(
-                      index: index,
-                      text: question.options[index],
-                      isSelected: isSelected,
-                      isSubmitted: false,
-                      onTap: isSaving ? null : () => selectAnswer(index),
-                    );
-                  }),
+                          return QuizOptionCard(
+                            index: slotIndex,
+                            text: question.options[originalIndex],
+                            isSelected: isSelected,
+                            isSubmitted: false,
+                            onTap: isSaving
+                                ? null
+                                : () => selectAnswer(originalIndex),
+                          );
+                        }),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

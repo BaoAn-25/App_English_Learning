@@ -37,6 +37,12 @@ class AppRepository {
   Future<int> insertMissingQuestions(List<Question> questions) {
     return _db.insertMissingQuestions(questions);
   }
+  Future<QuestionSyncResult> syncQuestionsSafe(
+    List<Question> questions, {
+    String? targetVersion,
+  }) {
+    return _db.syncQuestionsSafe(questions, targetVersion: targetVersion);
+  }
 
   Future<List<Question>> getAllQuestions() => _db.getAllQuestions();
   Future<List<Question>> getQuestionsByGrade(int grade) =>

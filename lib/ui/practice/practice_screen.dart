@@ -6,6 +6,7 @@ import '../../data/models/question.dart';
 import 'mock_exam_screen.dart';
 import 'practice_history_screen.dart';
 import 'practice_quiz_screen.dart';
+import 'services/exam_builder_service.dart';
 import 'wrong_book_screen.dart';
 
 class PracticeScreen extends StatelessWidget {
@@ -383,9 +384,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () {
-                        final shuffled = List<Question>.of(questions)
-                          ..shuffle();
-                        final quizQuestions = shuffled.take(10).toList();
+                        final quizQuestions = ExamBuilderService()
+                            .buildPracticeSet(questions, count: 10);
 
                         Navigator.push(
                           context,
