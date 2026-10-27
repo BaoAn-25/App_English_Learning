@@ -11,12 +11,16 @@ void main() {
       questions = json.decode(file.readAsStringSync()) as List<dynamic>;
     });
 
-    test('Total count is exactly 125', () {
-      expect(questions.length, 125);
+    test('Mock exam bank has exactly 125 questions', () {
+      final mockExamQs = questions.where((q) => (q['id'] as String).startsWith('q_12_')).toList();
+      expect(mockExamQs.length, 125);
     });
 
-    test('All IDs are unique and match q_12_01 to q_12_125', () {
-      final ids = questions.map((q) => q['id'] as String).toList();
+    test('All mock exam IDs are unique and match q_12_01 to q_12_125', () {
+      final ids = questions
+          .map((q) => q['id'] as String)
+          .where((id) => id.startsWith('q_12_'))
+          .toList();
       final idSet = ids.toSet();
       expect(idSet.length, 125, reason: 'Duplicate IDs found');
 
@@ -68,7 +72,9 @@ void main() {
     });
 
     test('Reading questions (q_12_66 to q_12_85) have passageId and Question: in stem', () {
-      final readingQs = questions.where((q) => q['type'] == 'reading').toList();
+      final readingQs = questions
+          .where((q) => q['type'] == 'reading' && (q['id'] as String).startsWith('q_12_'))
+          .toList();
       expect(readingQs.length, 20);
       for (final q in readingQs) {
         final id = q['id'] as String;
@@ -96,13 +102,15 @@ void main() {
 
     test('Single-sentence cloze questions (q_12_56-q_12_65) have null passageId', () {
       final singleCloze = questions
-          .where((q) => q['type'] == 'cloze' && q['passageId'] == null)
+          .where((q) => q['type'] == 'cloze' && q['passageId'] == null && (q['id'] as String).startsWith('q_12_'))
           .toList();
       expect(singleCloze.length, 10);
     });
 
     test('Signs questions (q_12_41 to q_12_102 signs) have sign text in stem', () {
-      final signsQs = questions.where((q) => q['type'] == 'signs').toList();
+      final signsQs = questions
+          .where((q) => q['type'] == 'signs' && (q['id'] as String).startsWith('q_12_'))
+          .toList();
       expect(signsQs.length, 12);
       for (final q in signsQs) {
         final id = q['id'] as String;
@@ -116,6 +124,7 @@ void main() {
     test('New questions (q_12_71 to q_12_125) all have explanation', () {
       for (final q in questions) {
         final id = q['id'] as String;
+        if (!id.startsWith('q_12_')) continue;
         final num = int.parse(id.split('_').last);
         if (num >= 71) {
           final expl = q['explanation'] as String?;

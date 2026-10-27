@@ -9,6 +9,7 @@ import 'models/daily_stat.dart';
 import 'models/question.dart';
 import 'models/topic.dart';
 import 'models/word.dart';
+import 'models/word_progress.dart';
 import 'models/wrong_book_entry.dart';
 
 /// Kết quả đồng bộ câu hỏi an toàn
@@ -32,7 +33,7 @@ class QuestionSyncResult {
 
 class AppDatabase {
   static const String _databaseName = 'thpt_english.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 2;
 
   AppDatabase._internal();
   static final AppDatabase instance = AppDatabase._internal();
@@ -60,6 +61,7 @@ class AppDatabase {
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -156,12 +158,33 @@ class AppDatabase {
       )
     ''');
 
+    // 9. Word Progress (SRS)
+    await _createWordProgressTable(db);
+
     // Cài đặt mặc định ban đầu
     final batch = db.batch();
     batch.insert('app_settings', {'key': 'daily_goal', 'value': '20'});
     batch.insert('app_settings', {'key': 'streak_freeze_left', 'value': '2'});
     batch.insert('app_settings', {'key': 'grade', 'value': '12'});
     await batch.commit(noResult: true);
+  }
+
+  Future<void> _createWordProgressTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS word_progress (
+        wordId TEXT PRIMARY KEY,
+        reviewCount INTEGER NOT NULL DEFAULT 0,
+        streak INTEGER NOT NULL DEFAULT 0,
+        nextReviewAt INTEGER NOT NULL,
+        lastReviewedAt INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createWordProgressTable(db);
+    }
   }
 
   // --- App Settings ---
@@ -502,6 +525,16 @@ class AppDatabase {
     return maps.map(Question.fromMap).toList();
   }
 
+  Future<List<Question>> getQuestionsByTopicId(String topicId) async {
+    final db = await database;
+    final maps = await db.query(
+      'questions',
+      where: 'topicId = ?',
+      whereArgs: [topicId],
+    );
+    return maps.map(Question.fromMap).toList();
+  }
+
   // --- Attempts ---
   Future<int> insertAttempt(Attempt attempt) async {
     final db = await database;
@@ -758,5 +791,45 @@ class AppDatabase {
       await db.rawQuery('SELECT COUNT(*) FROM $tableName'),
     );
     return (count ?? 0) == 0;
+  }
+
+  // --- Word Progress (SRS) ---
+  Future<WordProgress?> getWordProgress(String wordId) async {
+    final db = await database;
+    final maps = await db.query(
+      'word_progress',
+      where: 'wordId = ?',
+      whereArgs: [wordId],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return WordProgress.fromMap(maps.first);
+  }
+
+  Future<List<WordProgress>> getAllWordProgress() async {
+    final db = await database;
+    final maps = await db.query('word_progress');
+    return maps.map(WordProgress.fromMap).toList();
+  }
+
+  Future<void> upsertWordProgress(WordProgress progress) async {
+    final db = await database;
+    await db.insert(
+      'word_progress',
+      progress.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<WordProgress>> getDueWordProgress() async {
+    final db = await database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final maps = await db.query(
+      'word_progress',
+      where: 'nextReviewAt <= ?',
+      whereArgs: [now],
+      orderBy: 'nextReviewAt ASC',
+    );
+    return maps.map(WordProgress.fromMap).toList();
   }
 }

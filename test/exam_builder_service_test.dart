@@ -136,7 +136,7 @@ void main() {
         expect(q.correctIndex, originals[q.id]!.$2);
       }
       // Danh sách đầu vào không bị thay đổi thứ tự/độ dài.
-      expect(bank.length, 125);
+      expect(bank.length, originals.length);
     });
 
     test('Đề thi là các câu thuộc ngân hàng (cùng instance)', () {

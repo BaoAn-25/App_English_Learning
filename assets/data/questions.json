@@ -2123,5 +2123,4765 @@
     ],
     "correctIndex": 2,
     "explanation": "'terminate' có nghĩa là chấm dứt, đình chỉ. Từ trái nghĩa (OPPOSITE) là 'continue' (tiếp tục, duy trì). 'conclude' và 'cancel' đồng nghĩa với 'terminate'."
+  },
+  {
+    "id": "q_v01",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "She showed great ______ by continuing to study even after failing the exam twice.",
+    "options": [
+      "laziness",
+      "perseverance",
+      "ignorance",
+      "hesitation"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Perseverance' means continuing despite difficulties – fits the context of not giving up."
+  },
+  {
+    "id": "q_v02",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "His ______ to become a doctor drove him to study for sixteen hours a day.",
+    "options": [
+      "ambition",
+      "confusion",
+      "relaxation",
+      "decoration"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Ambition' means a strong desire to achieve something."
+  },
+  {
+    "id": "q_v03",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The athlete's story of overcoming injury ______ many young people to pursue sport.",
+    "options": [
+      "bored",
+      "inspired",
+      "confused",
+      "prevented"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Inspired' means to encourage or motivate someone."
+  },
+  {
+    "id": "q_v04",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Winning the Nobel Prize was the greatest ______ of her scientific career.",
+    "options": [
+      "failure",
+      "achievement",
+      "accident",
+      "attempt"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Achievement' means something accomplished successfully."
+  },
+  {
+    "id": "q_v05",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The new highway is a ______ project that will transform the region's development.",
+    "options": [
+      "trivial",
+      "outdated",
+      "prestigious",
+      "harmful"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Prestigious' means respected and admired as very important."
+  },
+  {
+    "id": "q_v06",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The city's poor ______ makes it difficult to supply clean water to all residents.",
+    "options": [
+      "cuisine",
+      "infrastructure",
+      "decoration",
+      "literature"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Infrastructure' refers to basic physical systems like roads, water supply, etc."
+  },
+  {
+    "id": "q_v07",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Traffic ______ in major cities causes delays and increases pollution levels.",
+    "options": [
+      "reduction",
+      "congestion",
+      "relaxation",
+      "movement"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Congestion' means excessive overcrowding or blockage, especially of traffic."
+  },
+  {
+    "id": "q_v08",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Many people moved to the ______ to escape the noise and pollution of the city centre.",
+    "options": [
+      "slum",
+      "suburb",
+      "factory",
+      "harbour"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Suburb' is a residential area on the outskirts of a city."
+  },
+  {
+    "id": "q_v09",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The building was completely ______ and turned into modern apartments.",
+    "options": [
+      "demolished",
+      "decorated",
+      "renovated",
+      "polluted"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Renovated' means restored or improved to a good condition."
+  },
+  {
+    "id": "q_v10",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Urban ______ is threatening farmland and natural habitats on the outskirts of cities.",
+    "options": [
+      "sprawl",
+      "design",
+      "art",
+      "culture"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Sprawl' means the uncontrolled expansion of urban areas."
+  },
+  {
+    "id": "q_v11",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Using ______ packaging helps reduce plastic waste in landfills.",
+    "options": [
+      "durable",
+      "biodegradable",
+      "artificial",
+      "metallic"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Biodegradable' means capable of being decomposed by bacteria or other living organisms."
+  },
+  {
+    "id": "q_v12",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Solar and wind power are examples of ______ energy sources.",
+    "options": [
+      "fossil",
+      "nuclear",
+      "renewable",
+      "chemical"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Renewable' means naturally replenished and not permanently used up."
+  },
+  {
+    "id": "q_v13",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Factories release dangerous ______ into the atmosphere every day.",
+    "options": [
+      "emissions",
+      "nutrients",
+      "melodies",
+      "signals"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Emissions' are substances discharged into the air, especially pollutants."
+  },
+  {
+    "id": "q_v14",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "______  programmes in tropical countries have helped restore millions of hectares of forest.",
+    "options": [
+      "Deforestation",
+      "Reforestation",
+      "Urbanisation",
+      "Industrialisation"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Reforestation' is the process of replanting trees in areas that have been deforested."
+  },
+  {
+    "id": "q_v15",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Reducing your ______ by flying less and eating less meat helps fight climate change.",
+    "options": [
+      "carbon footprint",
+      "blood pressure",
+      "savings account",
+      "social media"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Carbon footprint' is the total amount of greenhouse gases produced by an individual's activities."
+  },
+  {
+    "id": "q_v16",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The tech company filed for a ______ to protect its new invention from being copied.",
+    "options": [
+      "patent",
+      "licence",
+      "ticket",
+      "warranty"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Patent' is an official right to be the only person or company to make or sell an invention."
+  },
+  {
+    "id": "q_v17",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Many factories have adopted ______ to reduce costs and increase efficiency.",
+    "options": [
+      "decoration",
+      "automation",
+      "pollution",
+      "migration"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Automation' is the use of technology to control processes with minimal human input."
+  },
+  {
+    "id": "q_v18",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Storing company data on remote servers is known as ______.",
+    "options": [
+      "cloud computing",
+      "hard drive",
+      "blockchain",
+      "algorithm"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Cloud computing' refers to storing and accessing data and programs over the internet."
+  },
+  {
+    "id": "q_v19",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The app uses a complex ______ to recommend personalised content to each user.",
+    "options": [
+      "password",
+      "algorithm",
+      "hashtag",
+      "cursor"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Algorithm' is a set of rules a computer follows to solve a problem."
+  },
+  {
+    "id": "q_v20",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The smartphone model became ______ within just a few years as newer versions were released.",
+    "options": [
+      "popular",
+      "expensive",
+      "obsolete",
+      "durable"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Obsolete' means no longer produced or used; out of date."
+  },
+  {
+    "id": "q_v21",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Scientists warn that rising temperatures could reach a ______ beyond which the damage is irreversible.",
+    "options": [
+      "tipping point",
+      "starting line",
+      "safe zone",
+      "border"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Tipping point' means a critical moment when change becomes unstoppable."
+  },
+  {
+    "id": "q_v22",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Melting ______ in Arctic regions releases large amounts of trapped methane gas.",
+    "options": [
+      "coral reefs",
+      "permafrost",
+      "glaciers",
+      "volcanoes"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "'Permafrost' is a thick layer of soil that remains frozen throughout the year."
+  },
+  {
+    "id": "q_v23",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Many countries have signed agreements to achieve ______ by 2050, meaning they will not add net carbon to the atmosphere.",
+    "options": [
+      "net zero",
+      "net gain",
+      "gross surplus",
+      "total loss"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Net zero' means any greenhouse gases emitted are balanced by an equivalent amount removed."
+  },
+  {
+    "id": "q_v24",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The severe ______ destroyed harvests and caused a water shortage in the region.",
+    "options": [
+      "flood",
+      "drought",
+      "hurricane",
+      "snowstorm"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Drought' is a prolonged period of abnormally low rainfall."
+  },
+  {
+    "id": "q_v25",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Governments must develop ______ strategies to help coastal communities deal with flooding.",
+    "options": [
+      "adaptation",
+      "decoration",
+      "isolation",
+      "recreation"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Adaptation' means the process of changing to suit new conditions."
+  },
+  {
+    "id": "q_v26",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The school updated its ______ to include digital skills and coding.",
+    "options": [
+      "timetable",
+      "curriculum",
+      "examination",
+      "library"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Curriculum' is the subjects comprising a course of study in a school."
+  },
+  {
+    "id": "q_v27",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "She applied for a ______ that would cover all her university tuition fees.",
+    "options": [
+      "deposit",
+      "scholarship",
+      "insurance",
+      "pension"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Scholarship' is a grant of financial aid awarded to a student."
+  },
+  {
+    "id": "q_v28",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Online tools ______ collaborative learning by allowing students to work together remotely.",
+    "options": [
+      "block",
+      "facilitate",
+      "replace",
+      "complicate"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Facilitate' means to make an action or process easier."
+  },
+  {
+    "id": "q_v29",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "______  education supports students with special needs by teaching them alongside their peers.",
+    "options": [
+      "Exclusive",
+      "Vocational",
+      "Inclusive",
+      "Traditional"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Inclusive' education integrates students of all abilities in regular classrooms."
+  },
+  {
+    "id": "q_v30",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The student wrote a ______ on the impact of social media on teenagers for her final year project.",
+    "options": [
+      "novel",
+      "poem",
+      "thesis",
+      "letter"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Thesis' is a long essay on a particular subject written for a degree."
+  },
+  {
+    "id": "q_v31",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The doctor ordered several tests before making a final ______ of the patient's condition.",
+    "options": [
+      "treatment",
+      "diagnosis",
+      "prescription",
+      "surgery"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Diagnosis' is the identification of a disease from its signs and symptoms."
+  },
+  {
+    "id": "q_v32",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Chicken pox is highly ______, spreading rapidly among children in schools.",
+    "options": [
+      "chronic",
+      "contagious",
+      "preventive",
+      "hereditary"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Contagious' means a disease able to be transmitted from one person to another."
+  },
+  {
+    "id": "q_v33",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "He suffered from ______ back pain that required ongoing medical treatment.",
+    "options": [
+      "temporary",
+      "acute",
+      "chronic",
+      "mild"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Chronic' means persisting for a long time or constantly recurring."
+  },
+  {
+    "id": "q_v34",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The new ______ has been effective in protecting children against measles.",
+    "options": [
+      "tablet",
+      "vaccine",
+      "bandage",
+      "cream"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Vaccine' is a substance used to stimulate the production of antibodies."
+  },
+  {
+    "id": "q_v35",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Overuse of ______ has led to the rise of drug-resistant bacteria.",
+    "options": [
+      "vitamins",
+      "antibiotics",
+      "nutrients",
+      "painkillers"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Antibiotics' are medicines that kill or inhibit bacteria."
+  },
+  {
+    "id": "q_v36",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The community centre worked to ______ different groups and help immigrants settle in.",
+    "options": [
+      "isolate",
+      "integrate",
+      "separate",
+      "eliminate"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Integrate' means to combine or mix people so they can work together effectively."
+  },
+  {
+    "id": "q_v37",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The museum displayed ancient ______ that revealed the everyday life of people 2,000 years ago.",
+    "options": [
+      "artefacts",
+      "devices",
+      "chemicals",
+      "symbols"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Artefacts' are objects made by a human being, especially ones of historical interest."
+  },
+  {
+    "id": "q_v38",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The government launched a campaign to preserve ______ customs of ethnic minorities.",
+    "options": [
+      "foreign",
+      "indigenous",
+      "modern",
+      "commercial"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Indigenous' means originating or occurring naturally in a particular place."
+  },
+  {
+    "id": "q_v39",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Vietnamese ______ is known worldwide for its fresh herbs and balanced flavours.",
+    "options": [
+      "etiquette",
+      "cuisine",
+      "heritage",
+      "ritual"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Cuisine' refers to a style or method of cooking, especially as characteristic of a place."
+  },
+  {
+    "id": "q_v40",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Despite the mixed backgrounds of its residents, the city has a strong sense of ______.",
+    "options": [
+      "stereotype",
+      "diversity",
+      "prejudice",
+      "conformity"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Diversity' is the state of being varied or having great variety."
+  },
+  {
+    "id": "q_v41",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The start-up attracted millions in ______ capital from investors who believed in its potential.",
+    "options": [
+      "venture",
+      "deficit",
+      "austerity",
+      "tariff"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Venture capital' is money invested in a new or growing business at high risk."
+  },
+  {
+    "id": "q_v42",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The government raised import ______ to protect domestic steel producers.",
+    "options": [
+      "subsidies",
+      "tariffs",
+      "revenues",
+      "dividends"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Tariffs' are taxes on imported goods, making foreign products more expensive."
+  },
+  {
+    "id": "q_v43",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The company faced ______ after years of falling sales and rising costs.",
+    "options": [
+      "promotion",
+      "bankruptcy",
+      "revolution",
+      "partnership"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Bankruptcy' is the state of being unable to pay debts."
+  },
+  {
+    "id": "q_v44",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Rising ______ made everyday goods more expensive, reducing consumers' purchasing power.",
+    "options": [
+      "literacy",
+      "inflation",
+      "competition",
+      "output"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Inflation' is the rate at which prices rise over time."
+  },
+  {
+    "id": "q_v45",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "The two airlines announced a ______ that would create the world's largest carrier.",
+    "options": [
+      "deficit",
+      "merger",
+      "tariff",
+      "recession"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Merger' is the combination of two companies into one."
+  },
+  {
+    "id": "q_v46",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Before travelling, she prepared a detailed ______ listing every activity for each day.",
+    "options": [
+      "itinerary",
+      "passport",
+      "visa",
+      "invoice"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Itinerary' is a planned route or journey."
+  },
+  {
+    "id": "q_v47",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Hoi An is a well-preserved ______ site that attracts millions of visitors each year.",
+    "options": [
+      "heritage",
+      "shopping",
+      "industrial",
+      "military"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Heritage site' is a place of special cultural or historical importance."
+  },
+  {
+    "id": "q_v48",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "After the long flight across twelve time zones, she experienced terrible ______.",
+    "options": [
+      "seasickness",
+      "jet lag",
+      "heatstroke",
+      "altitude sickness"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Jet lag' is tiredness and confusion after a long flight across time zones."
+  },
+  {
+    "id": "q_v49",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "Tourists must present their ______ and ______ to enter most foreign countries.",
+    "options": [
+      "passport and visa",
+      "boarding pass and souvenir",
+      "brochure and map",
+      "credit card and receipt"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Passport' and 'visa' are essential travel documents for international travel."
+  },
+  {
+    "id": "q_v50",
+    "grade": 12,
+    "type": "vocab",
+    "stem": "A ______ tour includes flights, hotel, and meals all arranged by a travel agency.",
+    "options": [
+      "budget",
+      "package",
+      "solo",
+      "virtual"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Package tour' is an organised holiday where travel and accommodation are booked together."
+  },
+  {
+    "id": "q_sa01",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: Her DETERMINATION to succeed never wavered.",
+    "options": [
+      "confusion",
+      "resolve",
+      "distraction",
+      "hesitation"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Determination' and 'resolve' both mean a firm decision to do something."
+  },
+  {
+    "id": "q_sa02",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The company made an OUTSTANDING profit last year.",
+    "options": [
+      "average",
+      "remarkable",
+      "disappointing",
+      "modest"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Outstanding' and 'remarkable' both mean exceptionally good."
+  },
+  {
+    "id": "q_sa03",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: She made a significant CONTRIBUTION to the project.",
+    "options": [
+      "hinderance",
+      "dedication",
+      "offering",
+      "input"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Contribution' means help or input. 'Hindrance' means an obstacle – the opposite."
+  },
+  {
+    "id": "q_sa04",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The neighbourhood has undergone rapid URBANISATION.",
+    "options": [
+      "deforestation",
+      "industrialisation",
+      "city growth",
+      "migration"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Urbanisation' means city growth – the increase in the proportion of people living in towns."
+  },
+  {
+    "id": "q_sa05",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: Housing in the city centre is very AFFORDABLE.",
+    "options": [
+      "cheap",
+      "available",
+      "expensive",
+      "modern"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Affordable' means reasonably priced. Its opposite is 'expensive'."
+  },
+  {
+    "id": "q_sa06",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: They chose a SUSTAINABLE approach to farming.",
+    "options": [
+      "destructive",
+      "eco-friendly",
+      "costly",
+      "outdated"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Sustainable' and 'eco-friendly' both mean not causing harm to the environment."
+  },
+  {
+    "id": "q_sa07",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: Deforestation is one of the main threats to wildlife.",
+    "options": [
+      "Reforestation",
+      "Urbanisation",
+      "Pollution",
+      "Industrialisation"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Deforestation' means clearing trees. 'Reforestation' means planting them back – the opposite."
+  },
+  {
+    "id": "q_sa08",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The company is known for its innovative products.",
+    "options": [
+      "traditional",
+      "conventional",
+      "creative",
+      "outdated"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Innovative' and 'creative' both suggest introducing new ideas or methods."
+  },
+  {
+    "id": "q_sa09",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: The technology quickly became OBSOLETE.",
+    "options": [
+      "modern",
+      "affordable",
+      "inefficient",
+      "digital"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Obsolete' means out of date. Its opposite is 'modern' (up to date)."
+  },
+  {
+    "id": "q_sa10",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The platform is designed to be SCALABLE.",
+    "options": [
+      "expandable",
+      "limited",
+      "secure",
+      "affordable"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "'Scalable' and 'expandable' both refer to the ability to grow or be enlarged."
+  },
+  {
+    "id": "q_sa11",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The government pledged to MITIGATE the effects of climate change.",
+    "options": [
+      "worsen",
+      "reduce",
+      "ignore",
+      "delay"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Mitigate' means to reduce the severity, seriousness, or painfulness of something."
+  },
+  {
+    "id": "q_sa12",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: The region experienced an unusually SEVERE drought.",
+    "options": [
+      "mild",
+      "prolonged",
+      "destructive",
+      "sudden"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Severe' means very bad. Its opposite is 'mild'."
+  },
+  {
+    "id": "q_sa13",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The refugees PLEDGED to protect the environment in their new home.",
+    "options": [
+      "promised",
+      "refused",
+      "forgot",
+      "delayed"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Pledged' and 'promised' both mean to make a serious commitment."
+  },
+  {
+    "id": "q_sa14",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The school aims to develop students' COMPETENCE in English.",
+    "options": [
+      "inability",
+      "proficiency",
+      "interest",
+      "certificate"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Competence' and 'proficiency' both mean the ability to do something well."
+  },
+  {
+    "id": "q_sa15",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: The school has a very INCLUSIVE admission policy.",
+    "options": [
+      "exclusive",
+      "academic",
+      "progressive",
+      "fair"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Inclusive' means including everyone. 'Exclusive' means leaving people out – the opposite."
+  },
+  {
+    "id": "q_sa16",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The patient made a full recovery after therapy.",
+    "options": [
+      "treatment",
+      "diagnosis",
+      "surgery",
+      "medication"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Therapy' and 'treatment' both refer to medical care given to improve health."
+  },
+  {
+    "id": "q_sa17",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: The disease had an ACUTE onset.",
+    "options": [
+      "chronic",
+      "mild",
+      "sudden",
+      "severe"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "'Acute' means sudden and severe. 'Chronic' means long-lasting – the opposite."
+  },
+  {
+    "id": "q_sa18",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The government's PREVENTIVE measures reduced disease outbreaks.",
+    "options": [
+      "reactive",
+      "proactive",
+      "expensive",
+      "compulsory"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Preventive' and 'proactive' both mean acting in advance to stop problems."
+  },
+  {
+    "id": "q_sa19",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The festival is an important RITUAL in the village.",
+    "options": [
+      "custom",
+      "problem",
+      "conflict",
+      "decision"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Ritual' and 'custom' both refer to a traditional practice or ceremony."
+  },
+  {
+    "id": "q_sa20",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: Globalisation has promoted cultural DIVERSITY.",
+    "options": [
+      "uniformity",
+      "richness",
+      "uniqueness",
+      "exchange"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Diversity' means variety. 'Uniformity' means sameness – the opposite."
+  },
+  {
+    "id": "q_sa21",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: The course provides COMPREHENSIVE training for young entrepreneurs.",
+    "options": [
+      "limited",
+      "complete",
+      "basic",
+      "irregular"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Comprehensive' means complete and including everything that is necessary."
+  },
+  {
+    "id": "q_sa22",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: The nuclear plant produces HAZARDOUS waste.",
+    "options": [
+      "dangerous",
+      "toxic",
+      "harmless",
+      "radioactive"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Hazardous' means dangerous. Its opposite is 'harmless'."
+  },
+  {
+    "id": "q_sa23",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: Sunlight is a PLENTIFUL source of energy.",
+    "options": [
+      "abundant",
+      "scarce",
+      "costly",
+      "rare"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Plentiful' and 'abundant' both mean existing in large quantities."
+  },
+  {
+    "id": "q_sa24",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: The patient's health began to DETERIORATE rapidly.",
+    "options": [
+      "worsen",
+      "improve",
+      "decline",
+      "collapse"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Deteriorate' means to become worse. Its opposite is 'improve'."
+  },
+  {
+    "id": "q_sa25",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: Regular exercise helps to ENHANCE your immune system.",
+    "options": [
+      "boost",
+      "reduce",
+      "damage",
+      "ignore"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Enhance' and 'boost' both mean to increase or improve the quality or strength of something."
+  },
+  {
+    "id": "q_sa26",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: She was RELUCTANT to admit her mistake.",
+    "options": [
+      "hesitant",
+      "willing",
+      "unwilling",
+      "afraid"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Reluctant' means unwilling. Its opposite is 'willing'."
+  },
+  {
+    "id": "q_sa27",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: Tourism has brought PROSPEROUS growth to the coastal city.",
+    "options": [
+      "wealthy",
+      "struggling",
+      "declining",
+      "remote"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Prosperous' means successful and rich; 'wealthy' is closest in meaning."
+  },
+  {
+    "id": "q_sa28",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: Biodiversity is VITAL for planetary health.",
+    "options": [
+      "crucial",
+      "essential",
+      "unimportant",
+      "fundamental"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Vital' means extremely important. Its opposite is 'unimportant'."
+  },
+  {
+    "id": "q_sa29",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word CLOSEST IN MEANING to the underlined word: Coral reefs are extremely FRAGILE marine ecosystems.",
+    "options": [
+      "delicate",
+      "tough",
+      "durable",
+      "resistant"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Fragile' and 'delicate' both mean easily damaged or harmed."
+  },
+  {
+    "id": "q_sa30",
+    "grade": 12,
+    "type": "synonym_antonym",
+    "stem": "Choose the word OPPOSITE IN MEANING to the underlined word: He took an extremely PESSIMISTIC view of the future.",
+    "options": [
+      "negative",
+      "gloomy",
+      "optimistic",
+      "cynical"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Pessimistic' means expecting bad things. Its opposite is 'optimistic'."
+  },
+  {
+    "id": "q_g01",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "If they _______ harder last year, they would have passed the university entrance exam.",
+    "options": [
+      "study",
+      "had studied",
+      "would study",
+      "studied"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Câu điều kiện loại 3 diễn tả điều kiện trái với quá khứ: If + S + had PII, S + would have PII."
+  },
+  {
+    "id": "q_g02",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The report _______ by the committee before the general meeting began.",
+    "options": [
+      "was published",
+      "has been published",
+      "had been published",
+      "is published"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Hành động báo cáo được công bố hoàn tất trước một thời điểm trong quá khứ -> quá khứ hoàn thành bị động."
+  },
+  {
+    "id": "q_g03",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Hardly _______ into the classroom when the fire alarm went off.",
+    "options": [
+      "had the teacher stepped",
+      "the teacher had stepped",
+      "did the teacher step",
+      "the teacher stepped"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Cấu trúc đảo ngữ: Hardly had + S + V(pII) + when + S + V(quá khứ đơn)."
+  },
+  {
+    "id": "q_g04",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "She suggested that everyone _______ their waste before putting it in the recycling bin.",
+    "options": [
+      "sorts",
+      "sorted",
+      "sort",
+      "is sorting"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Thể giả định (subjunctive) sau 'suggest that + S + (should) V(nguyên mẫu)'."
+  },
+  {
+    "id": "q_g05",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The scientist _______ research led to the breakthrough was awarded a medal.",
+    "options": [
+      "who",
+      "whom",
+      "whose",
+      "which"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đại từ quan hệ 'whose' chỉ sự sở hữu: whose research (nghiên cứu của nhà khoa học)."
+  },
+  {
+    "id": "q_g06",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Neither the teacher nor the students _______ happy with the exam schedule.",
+    "options": [
+      "was",
+      "were",
+      "is",
+      "be"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Cấu trúc 'Neither ... nor ...' hòa hợp chủ vị theo chủ ngữ gần nhất ('the students' số nhiều -> were)."
+  },
+  {
+    "id": "q_g07",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "She has lived in Hanoi _______ she graduated from high school in 2020.",
+    "options": [
+      "since",
+      "for",
+      "during",
+      "while"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Hiện tại hoàn thành đi với 'since + mốc thời gian trong quá khứ'."
+  },
+  {
+    "id": "q_g08",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Only after finishing her homework _______ to go out with her friends.",
+    "options": [
+      "she was allowed",
+      "was she allowed",
+      "did she allow",
+      "she allowed"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ với 'Only after + V-ing/N + trợ động từ + S + V'."
+  },
+  {
+    "id": "q_g09",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The boy admitted _______ the window while playing football.",
+    "options": [
+      "to break",
+      "breaking",
+      "broken",
+      "break"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'admit + V-ing' nghĩa là thừa nhận đã làm gì."
+  },
+  {
+    "id": "q_g10",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "_______ he was exhausted, he managed to cross the marathon finish line.",
+    "options": [
+      "Although",
+      "Because",
+      "Despite",
+      "Unless"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Although + mệnh đề' chỉ sự nhượng bộ (Mặc dù anh ấy kiệt sức...)."
+  },
+  {
+    "id": "q_g11",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "You had better _______ an umbrella with you in case it rains.",
+    "options": [
+      "to take",
+      "take",
+      "taking",
+      "taken"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Had better + V(nguyên thể không to)' mang nghĩa khuyên nên làm gì."
+  },
+  {
+    "id": "q_g12",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The more you practice speaking English, _______ confident you will become.",
+    "options": [
+      "more",
+      "the more",
+      "the most",
+      "most"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "So sánh kép: 'The + comparative ..., the + comparative ...'"
+  },
+  {
+    "id": "q_g13",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "By the time we arrive at the cinema, the movie _______.",
+    "options": [
+      "starts",
+      "will start",
+      "will have started",
+      "started"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Tương lai hoàn thành với 'By the time + hiện tại đơn, tương lai hoàn thành'."
+  },
+  {
+    "id": "q_g14",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The students look forward to _______ their graduation ceremony.",
+    "options": [
+      "attend",
+      "attending",
+      "attended",
+      "be attending"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'look forward to + V-ing' nghĩa là mong đợi, mong chờ điều gì."
+  },
+  {
+    "id": "q_g15",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "He would rather _______ at home tonight than go to the party.",
+    "options": [
+      "stay",
+      "staying",
+      "to stay",
+      "stayed"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'would rather + V(nguyên mẫu) + than + V(nguyên mẫu)'."
+  },
+  {
+    "id": "q_g16",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The bridge _______ connects the two islands was built in 2022.",
+    "options": [
+      "which",
+      "who",
+      "whom",
+      "where"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'which' làm chủ ngữ thay thế cho danh từ chỉ vật 'The bridge'."
+  },
+  {
+    "id": "q_g17",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Unless you _______ regular exercise, your health will not improve.",
+    "options": [
+      "do",
+      "will do",
+      "don't do",
+      "did"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Unless' = If not, mệnh đề sau Unless dùng thì hiện tại khẳng định."
+  },
+  {
+    "id": "q_g18",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "It was not until midnight _______ the thunderstorm finally stopped.",
+    "options": [
+      "when",
+      "that",
+      "which",
+      "then"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Cấu trúc nhấn mạnh: 'It is/was not until ... that ...'"
+  },
+  {
+    "id": "q_g19",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "They denied _______ the confidential documents to the competitor.",
+    "options": [
+      "to leak",
+      "leak",
+      "leaking",
+      "leaked"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'deny + V-ing' nghĩa là phủ nhận đã làm việc gì."
+  },
+  {
+    "id": "q_g20",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "I wish I _______ more time to prepare for the university entrance exam.",
+    "options": [
+      "have",
+      "had",
+      "will have",
+      "am having"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Câu ước ở hiện tại: 'S + wish + S + V(quá khứ đơn)'."
+  },
+  {
+    "id": "q_g21",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Never before _______ such an incredible display of fireworks.",
+    "options": [
+      "I have seen",
+      "have I seen",
+      "did I saw",
+      "I saw"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ với trạng từ phủ định 'Never before + have/has + S + PII'."
+  },
+  {
+    "id": "q_g22",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The doctor recommended that he _______ alcohol completely.",
+    "options": [
+      "avoids",
+      "avoided",
+      "avoid",
+      "is avoiding"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Cấu trúc bàng thái cách: 'recommend that + S + (should) V(bare)'."
+  },
+  {
+    "id": "q_g23",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The new shopping mall is said _______ millions of dollars.",
+    "options": [
+      "to cost",
+      "costing",
+      "cost",
+      "to be cost"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Thể bị động khách quan: 'is said to + V'."
+  },
+  {
+    "id": "q_g24",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "_______ having a high fever, he insisted on attending the final exam.",
+    "options": [
+      "Despite",
+      "Although",
+      "Because of",
+      "Since"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Despite + V-ing/Noun phrase' diễn tả sự tương phản."
+  },
+  {
+    "id": "q_g25",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "You must turn off all lights before _______ the classroom.",
+    "options": [
+      "leave",
+      "leaving",
+      "left",
+      "to leave"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Sau giới từ 'before' dùng danh động từ V-ing."
+  },
+  {
+    "id": "q_g26",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The book _______ by Nguyen Nhat Anh has sold thousands of copies.",
+    "options": [
+      "writing",
+      "written",
+      "wrote",
+      "was written"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Rút gọn mệnh đề quan hệ dạng bị động: 'which was written' -> 'written'."
+  },
+  {
+    "id": "q_g27",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "So difficult _______ that very few students could solve it.",
+    "options": [
+      "was the puzzle",
+      "the puzzle was",
+      "is the puzzle",
+      "the puzzle is"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ với 'So + tính từ + to be + S + that ...'"
+  },
+  {
+    "id": "q_g28",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "She made her younger brother _______ his own bedroom every morning.",
+    "options": [
+      "clean",
+      "cleaning",
+      "cleaned",
+      "to clean"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Cấu trúc 'make someone + V(bare)': bắt ai đó làm gì."
+  },
+  {
+    "id": "q_g29",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "If you mix red and blue, you _______ purple.",
+    "options": [
+      "get",
+      "would get",
+      "will be got",
+      "got"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Câu điều kiện loại 0 diễn tả sự thật hiển nhiên: If + hiện tại đơn, hiện tại đơn."
+  },
+  {
+    "id": "q_g30",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "He _______ to work every day, but now he takes the underground train.",
+    "options": [
+      "used to drive",
+      "is used to drive",
+      "uses to drive",
+      "was used to drive"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'used to + V(bare)' chỉ thói quen trong quá khứ không còn ở hiện tại."
+  },
+  {
+    "id": "q_g31",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "_______ tired after work, she decided to cook dinner at home.",
+    "options": [
+      "Although",
+      "Despite",
+      "Because of",
+      "Because"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Although + adj' (rút gọn của Although she was tired)."
+  },
+  {
+    "id": "q_g32",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "No sooner _______ the station than the train departed.",
+    "options": [
+      "we reached",
+      "had we reached",
+      "did we reach",
+      "we had reached"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ 'No sooner had + S + PII + than + S + Ved'."
+  },
+  {
+    "id": "q_g33",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The company expects its employees _______ professional at all times.",
+    "options": [
+      "be",
+      "being",
+      "to be",
+      "are"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'expect someone to do something'."
+  },
+  {
+    "id": "q_g34",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Had I known about the traffic jam, I _______ a different route.",
+    "options": [
+      "would take",
+      "will take",
+      "would have taken",
+      "had taken"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Đảo ngữ điều kiện loại 3: 'Had + S + PII, S + would have PII'."
+  },
+  {
+    "id": "q_g35",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The manager was very impressed by how well the team _______ the crisis.",
+    "options": [
+      "handled",
+      "handling",
+      "was handled",
+      "has handle"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Mệnh đề sau 'how well' ở thì quá khứ đơn theo trục thời gian của 'was impressed'."
+  },
+  {
+    "id": "q_g36",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Not only _______ fluent English, but he also speaks French and Spanish.",
+    "options": [
+      "he does speak",
+      "does he speak",
+      "he speaks",
+      "is he speaking"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ với 'Not only + trợ động từ + S + V ...'"
+  },
+  {
+    "id": "q_g37",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "She is considering _______ abroad for her master's degree.",
+    "options": [
+      "to study",
+      "studying",
+      "study",
+      "studied"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'consider + V-ing' nghĩa là cân nhắc việc làm gì."
+  },
+  {
+    "id": "q_g38",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The house _______ painted white belongs to my grandparents.",
+    "options": [
+      "is being",
+      "being",
+      "which",
+      "was"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Rút gọn mệnh đề quan hệ thể bị động đang tiếp diễn: 'which is being painted' -> 'being painted'."
+  },
+  {
+    "id": "q_g39",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "It is essential that every student _______ the safety regulations.",
+    "options": [
+      "obeys",
+      "obey",
+      "obeyed",
+      "is obeying"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Cấu trúc giả định 'It is essential that + S + V(nguyên thể)'."
+  },
+  {
+    "id": "q_g40",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Neither John nor his colleagues _______ aware of the changes.",
+    "options": [
+      "were",
+      "was",
+      "is",
+      "be"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Hòa hợp chủ vị: 'Neither ... nor ...' chia theo chủ ngữ 'his colleagues' (số nhiều) -> were."
+  },
+  {
+    "id": "q_g41",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Were he _______ the scholarship, he would study at Cambridge University.",
+    "options": [
+      "to win",
+      "win",
+      "won",
+      "winning"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ câu điều kiện loại 2: 'Were + S + to-V, S + would + V'."
+  },
+  {
+    "id": "q_g42",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "He stopped _______ last year because of breathing difficulties.",
+    "options": [
+      "to smoke",
+      "smoking",
+      "smoke",
+      "smoked"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'stop + V-ing': từ bỏ hẳn một thói quen; 'stop + to-V': dừng lại để làm việc gì."
+  },
+  {
+    "id": "q_g43",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The results _______ announced tomorrow morning at nine o'clock.",
+    "options": [
+      "will be",
+      "are",
+      "have been",
+      "were"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Thì tương lai đơn dạng bị động 'will be + PII' diễn tả sự việc sẽ xảy ra ngày mai."
+  },
+  {
+    "id": "q_g44",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The boy was accused of _______ money from his classmate's bag.",
+    "options": [
+      "stealing",
+      "steal",
+      "to steal",
+      "stolen"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'accuse someone of + V-ing': buộc tội ai việc gì."
+  },
+  {
+    "id": "q_g45",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Such _______ that traffic was paralyzed for hours.",
+    "options": [
+      "a heavy snow was it",
+      "was the heavy snow",
+      "heavy snow it was",
+      "was so heavy snow"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ với 'Such + be + cụm danh từ + that ...'"
+  },
+  {
+    "id": "q_g46",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "She would rather you _______ anyone about what happened yesterday.",
+    "options": [
+      "not tell",
+      "didn't tell",
+      "hadn't told",
+      "won't tell"
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "'would rather S + had PII' diễn tả mong muốn trái với quá khứ (yesterday)."
+  },
+  {
+    "id": "q_g47",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The solar panels _______ on the roof generate enough electricity for the school.",
+    "options": [
+      "installed",
+      "installing",
+      "were installed",
+      "install"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Rút gọn mệnh đề quan hệ: 'which were installed' -> 'installed'."
+  },
+  {
+    "id": "q_g48",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "I regret _______ you that your application was unsuccessful.",
+    "options": [
+      "informing",
+      "to inform",
+      "inform",
+      "informed"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'regret to inform': lấy làm tiếc phải thông báo tin buồn; 'regret + V-ing': hối hận vì đã làm gì."
+  },
+  {
+    "id": "q_g49",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "Scarcely _______ the door when the phone started ringing.",
+    "options": [
+      "had she unlocked",
+      "she had unlocked",
+      "did she unlock",
+      "she unlocked"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 3,
+    "explanation": "Đảo ngữ 'Scarcely had + S + PII + when + S + Ved'."
+  },
+  {
+    "id": "q_g50",
+    "grade": 12,
+    "type": "grammar",
+    "stem": "The more renewable energy we use, _______ our carbon footprint becomes.",
+    "options": [
+      "the smaller",
+      "smaller",
+      "smallest",
+      "the smallest"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "So sánh kép: 'The more ..., the smaller ...'"
+  },
+  {
+    "id": "q_c01",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Lan: 'Thank you very much for helping me with my presentation.' - Nam: '_______'",
+    "options": [
+      "You're welcome.",
+      "Never mind.",
+      "Of course not.",
+      "It's a pity."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đáp lại lời cảm ơn trang sự và thân thiện: 'You're welcome.'"
+  },
+  {
+    "id": "q_c02",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Peter: 'Would you like to join our environmental clean-up club?' - Mary: '_______'",
+    "options": [
+      "I'd love to, thanks!",
+      "Yes, I do.",
+      "No, I am not.",
+      "I don't think so."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đáp lại lời mời tham gia: 'I'd love to, thanks!' (Mình rất thích, cảm ơn bạn!)."
+  },
+  {
+    "id": "q_c03",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Teacher: 'Congratulations on winning the first prize in the English contest!' - Student: '_______'",
+    "options": [
+      "Thank you, teacher. It means a lot to me.",
+      "You're welcome.",
+      "No problem at all.",
+      "I don't care."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đáp lại lời chúc mừng của thầy cô một cách kính trọng và cảm kích."
+  },
+  {
+    "id": "q_c04",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Tom: 'Do you mind if I open the window for some fresh air?' - Jerry: '_______'",
+    "options": [
+      "No, not at all. Go ahead.",
+      "Yes, please do.",
+      "Yes, I don't mind.",
+      "No, I'd rather not."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'Do you mind...?' hỏi bạn có phiền không. Câu trả lời đồng ý là 'No, not at all' (Không phiền chút nào)."
+  },
+  {
+    "id": "q_c05",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Mark: 'What a beautiful painting you have created!' - Lisa: '_______'",
+    "options": [
+      "Thank you, that's very kind of you.",
+      "You're right, it's expensive.",
+      "I don't believe you.",
+      "Never mind."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đáp lại lời khen ngợi chân thành."
+  },
+  {
+    "id": "q_c06",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Customer: 'Could you show me where the fitting room is?' - Shop assistant: '_______'",
+    "options": [
+      "Certainly, right this way.",
+      "No, I am busy.",
+      "It's none of my business.",
+      "Why do you ask?"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đáp lại yêu cầu chỉ đường của khách hàng lịch sự."
+  },
+  {
+    "id": "q_c07",
+    "grade": 12,
+    "type": "communication",
+    "stem": "David: 'I think renewable energy will completely replace fossil fuels by 2050.' - Sarah: '_______'",
+    "options": [
+      "I couldn't agree more. Technology is advancing so fast.",
+      "You are completely wrong.",
+      "I don't like energy.",
+      "Neither do I."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Bày tỏ sự đồng tình hoàn toàn với một nhận định."
+  },
+  {
+    "id": "q_c08",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Interviewer: 'Why do you think you are suitable for this internship?' - Candidate: '_______'",
+    "options": [
+      "I have strong communication skills and passion for learning.",
+      "Because I need money.",
+      "You must hire me.",
+      "I don't know."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Trả lời phỏng vấn xin việc chuyên nghiệp."
+  },
+  {
+    "id": "q_c09",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Passenger: 'Excuse me, is this seat taken?' - Stranger: '_______'",
+    "options": [
+      "No, it's free. Please have a seat.",
+      "Yes, you can sit.",
+      "I don't care.",
+      "Why are you here?"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Trả lời lịch sự khi được hỏi ghế còn trống không."
+  },
+  {
+    "id": "q_c10",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Minh: 'How about organizing a book donation fair for rural children?' - Hoa: '_______'",
+    "options": [
+      "That sounds like a meaningful idea!",
+      "I hate books.",
+      "No, it's boring.",
+      "You do it yourself."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đồng tình nhiệt tình với một đề xuất thiện nguyện."
+  },
+  {
+    "id": "q_c11",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Waitress: 'Would you like some dessert with your coffee?' - Guest: '_______'",
+    "options": [
+      "No, thank you. Just the bill, please.",
+      "Yes, coffee is good.",
+      "I don't want coffee.",
+      "It is bad."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Từ chối dùng thêm món tráng miệng lịch sự."
+  },
+  {
+    "id": "q_c12",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Alice: 'I'm feeling really stressed about tomorrow's mock test.' - Bob: '_______'",
+    "options": [
+      "Take a deep breath and do your best; you've prepared well.",
+      "It's your own fault.",
+      "Tests are easy.",
+      "I am stressed too, go away."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Lời an ủi và động viên bạn bè trước kỳ thi."
+  },
+  {
+    "id": "q_c13",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Customer: 'May I pay with a credit card?' - Cashier: '_______'",
+    "options": [
+      "Yes, of course. Please tap your card here.",
+      "No, cards are useless.",
+      "Cash only, get lost.",
+      "I don't know."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Nhân viên thu ngân hướng dẫn thanh toán bằng thẻ."
+  },
+  {
+    "id": "q_c14",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Paul: 'I'm terribly sorry for breaking your favourite mug.' - Linda: '_______'",
+    "options": [
+      "Don't worry about it, accidents happen.",
+      "You must buy me ten mugs.",
+      "I will never forgive you.",
+      "It's terrible."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đáp lại lời xin lỗi nhã nhặn và thông cảm."
+  },
+  {
+    "id": "q_c15",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Student: 'Could you explain this grammar rule one more time, please?' - Teacher: '_______'",
+    "options": [
+      "Certainly. Let's look at another example together.",
+      "You should have listened earlier.",
+      "No, find it yourself.",
+      "I'm tired."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Thầy giáo phản hồi kiên nhẫn với thắc mắc của học sinh."
+  },
+  {
+    "id": "q_c16",
+    "grade": 12,
+    "type": "communication",
+    "stem": "John: 'Shall we take a taxi or walk to the museum?' - Emma: '_______'",
+    "options": [
+      "Let's walk. It's only a five-minute walk and the weather is lovely.",
+      "Yes, I like taxis.",
+      "No, I don't.",
+      "Museums are old."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đưa ra lựa chọn và giải thích lý do hợp lý."
+  },
+  {
+    "id": "q_c17",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Tourist: 'How far is it from here to Hoan Kiem Lake?' - Local: '_______'",
+    "options": [
+      "It's about a 10-minute walk from here.",
+      "It is very long.",
+      "You should not go there.",
+      "I live in Hanoi."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chỉ dẫn khoảng cách một cách rõ ràng và hữu ích."
+  },
+  {
+    "id": "q_c18",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Son: 'Mum, I passed the IELTS test with an 8.0 score!' - Mother: '_______'",
+    "options": [
+      "I'm so proud of you, darling! Well done!",
+      "Is that all?",
+      "You should study more.",
+      "I don't care."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Người mẹ bày tỏ sự tự hào trước thành tích xuất sắc của con."
+  },
+  {
+    "id": "q_c19",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Doctor: 'You need to drink at least two litres of water every day.' - Patient: '_______'",
+    "options": [
+      "I understand, doctor. I'll make sure to follow your advice.",
+      "No, water is boring.",
+      "Why should I?",
+      "You are wrong."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Bệnh nhân tiếp nhận lời khuyên của bác sĩ một cách cầu thị."
+  },
+  {
+    "id": "q_c20",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Friend A: 'I'm thinking of volunteering at the animal shelter this weekend.' - Friend B: '_______'",
+    "options": [
+      "Count me in! I'd love to help out too.",
+      "Don't do it, animals bite.",
+      "You have no life.",
+      "Whatever."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đáp lại mong muốn cùng tham gia hoạt động tình nguyện ('Count me in!')."
+  },
+  {
+    "id": "q_c21",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Colleague A: 'Do you need any assistance with compiling the survey data?' - Colleague B: '_______'",
+    "options": [
+      "That would be wonderful, thank you so much!",
+      "No, you don't know anything.",
+      "Why are you asking?",
+      "Go away."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chấp nhận lời đề nghị giúp đỡ từ đồng nghiệp."
+  },
+  {
+    "id": "q_c22",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Host: 'Make yourself at home! Can I get you some orange juice?' - Guest: '_______'",
+    "options": [
+      "That would be lovely, thank you.",
+      "No, this house is small.",
+      "I don't want to be here.",
+      "Juice is too sour."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Khách đáp lại sự hiếu khách của chủ nhà."
+  },
+  {
+    "id": "q_c23",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Sam: 'I think using public transport is the best way to reduce urban pollution.' - Ben: '_______'",
+    "options": [
+      "Exactly! It cuts down both emissions and traffic jams.",
+      "I hate buses.",
+      "Walking is bad.",
+      "No, cars are better."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đồng tình kèm theo luận điểm củng cố."
+  },
+  {
+    "id": "q_c24",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Student: 'Excuse me, could you tell me where the library is?' - Librarian: '_______'",
+    "options": [
+      "Turn left at the end of the corridor; it's right next to room 204.",
+      "Look at the map yourself.",
+      "I don't know.",
+      "It is closed forever."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chỉ đường cụ thể và lịch thiệp."
+  },
+  {
+    "id": "q_c25",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Friend: 'Would you prefer watching a movie or having dinner first?' - You: '_______'",
+    "options": [
+      "I'd rather have dinner first because I'm starving.",
+      "Yes, I prefer both.",
+      "No, neither.",
+      "Movies are loud."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Bày tỏ nguyện vọng cá nhân tự nhiên và giải thích lý do."
+  },
+  {
+    "id": "q_c26",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Customer: 'Is there any discount if I buy three shirts?' - Salesperson: '_______'",
+    "options": [
+      "Yes, you get a 15% discount on the total bill.",
+      "No discounts for you.",
+      "Why should I give you?",
+      "Buy elsewhere."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Người bán hàng tư vấn chính sách ưu đãi."
+  },
+  {
+    "id": "q_c27",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Classmate: 'Can I borrow your pencil for the drawing test?' - You: '_______'",
+    "options": [
+      "Sure, here you go. Keep it as long as you need.",
+      "No, buy your own.",
+      "Don't touch my stuff.",
+      "I lost it."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cho bạn bè mượn đồ dùng học tập vui vẻ."
+  },
+  {
+    "id": "q_c28",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Speaker: 'Thank you all for listening to my talk on global warming.' - Audience member: '_______'",
+    "options": [
+      "Thank you for a very informative presentation!",
+      "It was so boring.",
+      "You spoke too long.",
+      "I didn't listen."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Khán giả cảm ơn và khen ngợi bài diễn thuyết."
+  },
+  {
+    "id": "q_c29",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Neighbour: 'I apologize for the loud music last night.' - You: '_______'",
+    "options": [
+      "That's alright. Just please keep it down a bit next time.",
+      "I will call the police.",
+      "You are horrible.",
+      "I hate you."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Tha thứ cho hàng xóm một cách hòa nhã nhưng có nhắc nhở nhẹ nhàng."
+  },
+  {
+    "id": "q_c30",
+    "grade": 12,
+    "type": "communication",
+    "stem": "Friend: 'Have a safe flight and enjoy your holiday in Da Nang!' - You: '_______'",
+    "options": [
+      "Thanks! I'll bring you back some souvenirs.",
+      "Yes, planes are dangerous.",
+      "I don't care.",
+      "Bye."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Lời cảm ơn và hẹn mang quà khi đi du lịch về."
+  },
+  {
+    "id": "q_s01",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'QUIET ZONE - PLEASE SWITCH PHONES TO SILENT'. What does it mean?",
+    "options": [
+      "You must turn off your phone completely.",
+      "You should not make phone calls or produce loud sounds here.",
+      "Phones are not permitted inside this building.",
+      "You can play music if you use headphones."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Biển báo yêu cầu giữ trật tự và chuyển điện thoại sang chế độ im lặng."
+  },
+  {
+    "id": "q_s02",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'EMERGENCY EXIT ONLY - ALARM WILL SOUND IF OPENED'. What does it tell you?",
+    "options": [
+      "Anyone can use this door at any time.",
+      "This door can only be used in an emergency situation.",
+      "The alarm is broken and will not sound.",
+      "You must knock before opening this door."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cửa thoát hiểm chỉ được mở khi có tình huống khẩn cấp."
+  },
+  {
+    "id": "q_s03",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'NO PARKING BETWEEN 8 AM AND 6 PM ON WEEKDAYS'. When can you park here?",
+    "options": [
+      "On Monday at 2 PM.",
+      "On Friday at 10 AM.",
+      "On Saturday at any time.",
+      "On Wednesday at noon."
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Cấm đỗ xe vào ngày trong tuần từ 8h đến 18h -> cuối tuần (Saturday) được đỗ tự do."
+  },
+  {
+    "id": "q_s04",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'STUDENTS WITH A VALID ID CARD RECEIVE 20% OFF'. What is required to get the discount?",
+    "options": [
+      "Paying in cash.",
+      "Showing a student identity card.",
+      "Buying at least five items.",
+      "Visiting before 9 AM."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Học sinh cần xuất trình thẻ học sinh hợp lệ để được giảm 20%."
+  },
+  {
+    "id": "q_s05",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'KEEP OFF THE GRASS - NEW LAWN SEED PLANTED'. What should visitors do?",
+    "options": [
+      "Walk carefully on the grass.",
+      "Avoid walking on the grass.",
+      "Water the grass.",
+      "Sit on the lawn."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Keep off' nghĩa là không được bước lên thảm cỏ."
+  },
+  {
+    "id": "q_s06",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'CAUTION: WET FLOOR'. Why is this sign displayed?",
+    "options": [
+      "To warn people that the floor is slippery and they might fall.",
+      "To inform people that the floor is clean.",
+      "To ask people to wash the floor.",
+      "To prevent people from entering the room forever."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cảnh báo sàn nhà ướt dễ trơn trượt."
+  },
+  {
+    "id": "q_s07",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the label: 'STORE IN A COOL, DRY PLACE AWAY FROM DIRECT SUNLIGHT'. How should the medicine be kept?",
+    "options": [
+      "In the freezer.",
+      "In a warm and humid bathroom.",
+      "In a dry place without direct sunlight.",
+      "Under the hot sun."
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp."
+  },
+  {
+    "id": "q_s08",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'STAFF ONLY BEYOND THIS POINT'. What does this mean?",
+    "options": [
+      "Customers are welcome to enter.",
+      "Only employees are permitted to enter this area.",
+      "The area is closed for everyone.",
+      "You can enter if you are with a friend."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Khu vực chỉ dành riêng cho nhân viên, người ngoài không được vào."
+  },
+  {
+    "id": "q_s09",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign on a bus: 'PLEASE OFFER THIS SEAT TO ELDERLY OR DISABLED PASSENGERS'. What should you do?",
+    "options": [
+      "Keep the seat no matter who comes.",
+      "Give up this seat if an elderly or disabled person needs it.",
+      "Only sit here if you have a special ticket.",
+      "Stand at all times."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Ưu tiên nhường ghế cho người già và người khuyết tật."
+  },
+  {
+    "id": "q_s10",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'MAXIMUM OCCUPANCY: 8 PERSONS'. What does this elevator sign mean?",
+    "options": [
+      "The elevator must always carry 8 people.",
+      "No more than 8 people are allowed inside at the same time.",
+      "The elevator only works for 8 minutes.",
+      "Children under 8 cannot ride."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Sức chứa tối đa của thang máy là 8 người cùng lúc."
+  },
+  {
+    "id": "q_s11",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'OUT OF ORDER - TECHNICIAN HAS BEEN CALLED'. What does this indicate?",
+    "options": [
+      "The machine is working normally.",
+      "The machine is broken and being repaired.",
+      "You should order food here.",
+      "The machine is free of charge today."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Out of order' nghĩa là máy đang bị hỏng."
+  },
+  {
+    "id": "q_s12",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the road sign: 'SPEED LIMIT 40 KM/H NEAR SCHOOL ZONE'. What must drivers do?",
+    "options": [
+      "Drive at exactly 40 km/h at all times.",
+      "Not exceed 40 km/h when driving near the school.",
+      "Drive as fast as possible to avoid children.",
+      "Stop their cars completely."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Giới hạn tốc độ tối đa không quá 40 km/h gần khu vực trường học."
+  },
+  {
+    "id": "q_s13",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'NO FOOD OR DRINK PERMITTED IN THE COMPUTER LAB'. What is prohibited?",
+    "options": [
+      "Using computers.",
+      "Bringing snacks and drinks into the lab.",
+      "Studying with classmates.",
+      "Typing on keyboards."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cấm mang đồ ăn thức uống vào phòng máy tính."
+  },
+  {
+    "id": "q_s14",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the announcement: 'LIBRARY CLOSES AT 5 PM ON SATURDAYS'. What time can you stay until on Saturday?",
+    "options": [
+      "6 PM.",
+      "8 PM.",
+      "Until 5 PM.",
+      "All night."
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Thư viện đóng cửa lúc 17h chiều thứ Bảy."
+  },
+  {
+    "id": "q_s15",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'RETURN TRAYS HERE AFTER DINING'. Where is this sign most likely seen?",
+    "options": [
+      "At an airport security gate.",
+      "In a self-service canteen or food court.",
+      "In a library reading room.",
+      "At a petrol station."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Biển nhắc trả khay sau khi ăn thường thấy ở căng tin tự phục vụ."
+  },
+  {
+    "id": "q_s16",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'BUY 1 GET 1 FREE ON ALL ECO-FRIENDLY PRODUCTS TODAY'. What is the offer?",
+    "options": [
+      "You get a 50% discount on single items.",
+      "You get a second item free when you buy one.",
+      "You pay twice the regular price.",
+      "You must buy three items to get a gift."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chương trình khuyến mãi mua 1 tặng 1."
+  },
+  {
+    "id": "q_s17",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'PEDESTRIAN CROSSING AHEAD'. What should motorists expect?",
+    "options": [
+      "Animals on the road.",
+      "People walking across the street.",
+      "A dead end road.",
+      "A toll booth."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cảnh báo phía trước có vạch sang đường cho người đi bộ."
+  },
+  {
+    "id": "q_s18",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'NO PHOTOGRAPHY OR VIDEO RECORDING ALLOWED'. What are visitors forbidden from doing?",
+    "options": [
+      "Taking photos or filming.",
+      "Talking to museum guides.",
+      "Looking at the artworks.",
+      "Wearing sunglasses."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cấm chụp ảnh hoặc quay phim trong khu vực triển lãm."
+  },
+  {
+    "id": "q_s19",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign on a bottle: 'SHAKE WELL BEFORE USE'. What should you do before drinking/applying it?",
+    "options": [
+      "Heat the bottle in boiling water.",
+      "Agitate or shake the bottle thoroughly.",
+      "Leave the bottle upside down.",
+      "Freeze the bottle."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'Shake well' nghĩa là lắc kỹ trước khi sử dụng."
+  },
+  {
+    "id": "q_s20",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'LOST PROPERTY OFFICE - ROOM 102'. Where should you go if you lost your wallet?",
+    "options": [
+      "Room 102.",
+      "The canteen.",
+      "The computer lab.",
+      "The playground."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Văn phòng quản lý đồ thất lạc nằm ở phòng 102."
+  },
+  {
+    "id": "q_s21",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'HARD HAT REQUIRED BEYOND THIS POINT'. Where is this sign placed?",
+    "options": [
+      "At an amusement park.",
+      "At a construction site.",
+      "Inside a hospital ward.",
+      "In a supermarket."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Biển bắt buộc đội mũ bảo hộ lao động tại công trường xây dựng."
+  },
+  {
+    "id": "q_s22",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the recycling bin label: 'PLASTIC BOTTLES AND CANS ONLY'. What can you put in this bin?",
+    "options": [
+      "Leftover food and soup.",
+      "Empty aluminium beverage cans.",
+      "Paper books and cardboard.",
+      "Broken glassware."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Thùng chỉ dành riêng cho chai nhựa và lon kim loại."
+  },
+  {
+    "id": "q_s23",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'ALL VISITORS MUST REGISTER AT RECEPTION BEFORE ENTERING'. What must guests do first?",
+    "options": [
+      "Go directly to their meeting room.",
+      "Check in and register with the receptionist.",
+      "Call the police.",
+      "Leave their luggage outside."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Khách đến phải đăng ký tại bàn tiếp tân trước khi vào trong."
+  },
+  {
+    "id": "q_s24",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'WIFI PASSWORD AVAILABLE AT CASH REGISTER'. Where can customers find the Wi-Fi code?",
+    "options": [
+      "On the cafe's front door.",
+      "By asking the cashier at the pay desk.",
+      "In the toilet.",
+      "Under their chairs."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Hỏi nhân viên thu ngân tại quầy thanh toán để lấy mật khẩu Wi-Fi."
+  },
+  {
+    "id": "q_s25",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'NO SMOKING WITHIN 10 METRES OF THIS ENTRANCE'. Where is smoking prohibited?",
+    "options": [
+      "Everywhere in the city.",
+      "Within a 10-metre radius of the entrance door.",
+      "Only inside the building.",
+      "Only after 10 PM."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cấm hút thuốc trong bán kính 10 mét từ lối vào."
+  },
+  {
+    "id": "q_s26",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'REDUCED SPEED AHEAD - ROADWORKS IN PROGRESS'. Why should drivers slow down?",
+    "options": [
+      "The road is being repaired ahead.",
+      "There is a police checkpoint.",
+      "A concert is taking place.",
+      "The highway is closed permanently."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đang có công trình sửa chữa đường phía trước."
+  },
+  {
+    "id": "q_s27",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'PLEASE WASH YOUR HANDS BEFORE RETURNING TO WORK'. Who is this sign aimed at?",
+    "options": [
+      "Customers waiting in line.",
+      "Employees, especially kitchen and food staff.",
+      "Taxi drivers outside.",
+      "Children playing in the yard."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Nhắc nhở nhân viên rửa tay sạch trước khi quay lại làm việc."
+  },
+  {
+    "id": "q_s28",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'UNATTENDED LUGGAGE WILL BE REMOVED AND DESTROYED'. What does it warn?",
+    "options": [
+      "You can leave your bags anywhere for free.",
+      "Do not leave your bags alone in the terminal.",
+      "The airport provides free luggage storage.",
+      "Bags will be delivered to your hotel."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Cảnh báo an ninh sân bay: không được để hành lý mà không có người trông nom."
+  },
+  {
+    "id": "q_s29",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the sign: 'FREE ENTRY FOR CHILDREN UNDER 6 YEARS OLD'. How much does a 4-year-old child pay?",
+    "options": [
+      "Full adult price.",
+      "Half price.",
+      "Nothing, entry is free.",
+      "Double price."
+    ],
+    "correctIndex": 2,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Trẻ em dưới 6 tuổi được miễn phí vé vào cổng."
+  },
+  {
+    "id": "q_s30",
+    "grade": 12,
+    "type": "signs",
+    "stem": "Look at the notice: 'PLEASE WEAR A FACE MASK INSIDE THE CLINIC'. What is mandatory?",
+    "options": [
+      "Wearing face masks inside the healthcare facility.",
+      "Wearing gloves only.",
+      "Taking off shoes.",
+      "Staying silent forever."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Bắt buộc đeo khẩu trang bên trong phòng khám/bệnh viện."
+  },
+  {
+    "id": "q_arr01",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences to make a coherent email:\na. I am writing to ask for more information about the eco-tour.\nb. Dear Sir or Madam,\nc. I look forward to hearing from you soon.\nd. Could you please send me details about the departure date and fees?\ne. Yours sincerely, Nguyen Van A.",
+    "options": [
+      "b - a - d - c - e",
+      "a - b - c - d - e",
+      "b - d - a - c - e",
+      "e - b - a - d - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Bố cục chuẩn của thư trang trọng: Chào hỏi (b) -> Mục đích viết thư (a) -> Câu hỏi chi tiết (d) -> Kết thư (c) -> Ký tên (e)."
+  },
+  {
+    "id": "q_arr02",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the sentences to form a meaningful paragraph:\na. Firstly, reading regularly expands your vocabulary.\nb. In conclusion, developing a reading habit brings numerous benefits.\nc. Reading books is one of the most effective ways to acquire knowledge.\nd. Furthermore, it improves your critical thinking skills and focus.",
+    "options": [
+      "c - a - d - b",
+      "a - c - d - b",
+      "c - d - a - b",
+      "b - a - d - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Trật tự mạch lạc: Câu chủ đề (c) -> Luận điểm thứ nhất (a) -> Luận điểm tiếp theo (d) -> Câu kết luận (b)."
+  },
+  {
+    "id": "q_arr03",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the steps for preparing a presentation:\na. Next, rehearse your speech multiple times in front of a mirror.\nb. First, choose a compelling topic and research relevant data.\nc. Finally, deliver your presentation with confidence and engage with the audience.\nd. Then, design clear and visual slides summarizing key points.",
+    "options": [
+      "b - d - a - c",
+      "b - a - d - c",
+      "a - b - d - c",
+      "d - b - a - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Trình tự thời gian: First (b) -> Then (d) -> Next (a) -> Finally (c)."
+  },
+  {
+    "id": "q_arr04",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the letter to an editor:\na. To the Editor,\nb. Yours faithfully, Tran Thi B.\nc. I strongly believe our city needs more dedicated bicycle lanes.\nd. I am writing to express my concern regarding urban traffic congestion.\ne. This would not only reduce pollution but also encourage healthier lifestyles.",
+    "options": [
+      "a - d - c - e - b",
+      "a - c - e - d - b",
+      "d - a - c - e - b",
+      "a - e - c - d - b"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chào biên tập viên (a) -> Lý do viết thư (d) -> Quan điểm (c) -> Lợi ích giải thích (e) -> Ký tên (b)."
+  },
+  {
+    "id": "q_arr05",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the instructions for planting a tree:\na. Water the sapling thoroughly and mulch the surrounding soil.\nb. Dig a hole twice as wide as the root ball of the young tree.\nc. Place the tree upright in the hole and gently backfill with soil.\nd. Choose a sunny spot in your garden with well-drained soil.",
+    "options": [
+      "d - b - c - a",
+      "b - d - c - a",
+      "d - c - b - a",
+      "b - c - a - d"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Trình tự trồng cây: Chọn vị trí (d) -> Đào hố (b) -> Đặt cây và lấp đất (c) -> Tưới nước (a)."
+  },
+  {
+    "id": "q_arr06",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the invitation note:\na. Dear Emily,\nb. Hope to see you there! Best wishes, Sarah.\nc. We are celebrating Mark's 18th birthday this Saturday at 6 PM.\nd. The party will be held at Sunshine Restaurant downtown.\ne. Please let me know by Thursday if you can attend.",
+    "options": [
+      "a - c - d - e - b",
+      "a - d - c - e - b",
+      "c - d - a - e - b",
+      "a - e - c - d - b"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Lời chào (a) -> Lý do sự kiện (c) -> Địa điểm (d) -> Xác nhận tham dự (e) -> Tạm biệt (b)."
+  },
+  {
+    "id": "q_arr07",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the text about solar power:\na. Consequently, many households are installing rooftop solar panels.\nb. Solar energy is becoming increasingly affordable thanks to new technologies.\nc. In addition, it helps reduce reliance on fossil fuels and protects the environment.\nd. It transforms sunlight directly into electricity without creating emissions.",
+    "options": [
+      "b - d - c - a",
+      "d - b - c - a",
+      "b - a - c - d",
+      "a - b - c - d"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Giới thiệu xu hướng (b) -> Cơ chế hoạt động (d) -> Lợi ích phụ (c) -> Hệ quả hành động (a)."
+  },
+  {
+    "id": "q_arr08",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the application letter:\na. Dear Hiring Manager,\nb. I look forward to the opportunity to discuss my qualifications.\nc. I am writing to apply for the position of Graphic Designer.\nd. With three years of design experience, I am confident in my abilities.\ne. Sincerely, Le Van C.",
+    "options": [
+      "a - c - d - b - e",
+      "a - d - c - b - e",
+      "c - a - d - b - e",
+      "a - b - c - d - e"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Bố cục thư ứng tuyển: Lời chào (a) -> Vị trí ứng tuyển (c) -> Năng lực bản thân (d) -> Lời hẹn phỏng vấn (b) -> Ký tên (e)."
+  },
+  {
+    "id": "q_arr09",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the recipe steps for lemonade:\na. Add cold water and stir well until the sugar dissolves completely.\nb. Squeeze fresh lemons into a large pitcher.\nc. Finally, add ice cubes and a sprig of mint before serving.\nd. Add three tablespoons of organic honey or sugar.",
+    "options": [
+      "b - d - a - c",
+      "d - b - a - c",
+      "b - a - d - c",
+      "a - b - d - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Vắt chanh (b) -> Thêm đường/mật ong (d) -> Thêm nước khuấy tan (a) -> Cho đá và thưởng thức (c)."
+  },
+  {
+    "id": "q_arr10",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the paragraph on exercise:\na. Regular physical activity is essential for maintaining good health.\nb. For instance, it lowers the risk of cardiovascular disease.\nc. Furthermore, exercising releases endorphins which reduce stress.\nd. Therefore, doctors recommend at least thirty minutes of exercise daily.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Câu chủ đề (a) -> Ví dụ thể chất (b) -> Lợi ích tinh thần (c) -> Lời khuyên kết luận (d)."
+  },
+  {
+    "id": "q_arr11",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the formal complaint email:\na. Dear Customer Support,\nb. I am writing to express my disappointment with the laptop I ordered on October 5th.\nc. I would appreciate either a full refund or a replacement unit.\nd. When the parcel arrived, the screen was cracked and the keyboard was unresponsive.\ne. Sincerely, Pham Quoc D.",
+    "options": [
+      "a - b - d - c - e",
+      "a - d - b - c - e",
+      "b - a - d - c - e",
+      "a - c - d - b - e"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Lời chào (a) -> Mục đích khiếu nại (b) -> Mô tả lỗi hư hỏng (d) -> Yêu cầu hoàn tiền/đổi trả (c) -> Ký tên (e)."
+  },
+  {
+    "id": "q_arr12",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the steps for conducting an experiment:\na. Record observations and collect data meticulously throughout the process.\nb. Formulate a hypothesis based on your initial research question.\nc. Analyze the collected data and draw logical conclusions.\nd. Design an experiment with clear control and experimental variables.",
+    "options": [
+      "b - d - a - c",
+      "d - b - a - c",
+      "b - a - d - c",
+      "a - b - d - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Đặt giả thuyết (b) -> Thiết kế thí nghiệm (d) -> Ghi chép dữ liệu (a) -> Phân tích và kết luận (c)."
+  },
+  {
+    "id": "q_arr13",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the text about urbanization:\na. Many rural residents migrate to metropolitan areas searching for better jobs.\nb. As a result, major cities face severe housing shortages and traffic congestion.\nc. Governments must invest in sustainable infrastructure to tackle these urban challenges.\nd. Rapid urbanization has reshaped the landscape of developing countries.",
+    "options": [
+      "d - a - b - c",
+      "a - d - b - c",
+      "d - b - a - c",
+      "b - a - d - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Bối cảnh chung (d) -> Nguyên nhân dòng người di cư (a) -> Hệ quả quá tải đô thị (b) -> Giải pháp chính sách (c)."
+  },
+  {
+    "id": "q_arr14",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the notification to club members:\na. Hi everyone,\nb. Please remember to bring your eco-bags and gloves.\nc. Our beach clean-up campaign will start at 7 AM this Sunday.\nd. See you all at My Khe beach! Cheers, Team Leader.\ne. We will meet in front of the main rescue tower.",
+    "options": [
+      "a - c - e - b - d",
+      "a - b - c - e - d",
+      "c - e - a - b - d",
+      "a - e - c - b - d"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chào mọi người (a) -> Thời gian bắt đầu (c) -> Điểm hẹn (e) -> Vật dụng cần mang (b) -> Lời chào tạm biệt (d)."
+  },
+  {
+    "id": "q_arr15",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the narrative text:\na. As she opened the mysterious envelope, her hands trembled with excitement.\nb. Inside was an acceptance letter from Oxford University with a full scholarship.\nc. She immediately called her parents to share the wonderful news.\nd. It was a rainy Tuesday afternoon when the mail carrier knocked on her door.",
+    "options": [
+      "d - a - b - c",
+      "a - b - d - c",
+      "d - b - a - c",
+      "b - d - a - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Bối cảnh ban đầu (d) -> Hành động mở phong bì (a) -> Nội dung thư báo đỗ (b) -> Gọi điện chia sẻ niềm vui (c)."
+  },
+  {
+    "id": "q_arr16",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the paragraph on plastic waste:\na. Plastic pollution has become a grave threat to marine ecosystems.\nb. Millions of tons of plastic enter the oceans every year.\nc. Marine animals often mistake plastic debris for food, leading to fatalities.\nd. To combat this, nations worldwide must ban single-use plastics.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Thực trạng ô nhiễm nhựa (a) -> Số liệu lượng rác thải (b) -> Tác hại đến sinh vật biển (c) -> Giải pháp cấm đồ nhựa dùng một lần (d)."
+  },
+  {
+    "id": "q_arr17",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the booking confirmation note:\na. Dear Mr. Johnson,\nb. Your reservation for a deluxe double room from Nov 10 to Nov 14 is confirmed.\nc. We look forward to welcoming you to Grand Palm Hotel.\nd. Check-in time is from 2 PM and complimentary breakfast is included.\ne. Best regards, Hotel Management.",
+    "options": [
+      "a - b - d - c - e",
+      "a - d - b - c - e",
+      "b - a - d - c - e",
+      "a - c - b - d - e"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chào khách (a) -> Xác nhận đặt phòng (b) -> Chi tiết giờ nhận phòng và ăn sáng (d) -> Lời đón tiếp (c) -> Ký tên (e)."
+  },
+  {
+    "id": "q_arr18",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the steps for peer review:\na. Share your written feedback respectfully with your partner.\nb. Read your classmate's essay carefully to understand the central argument.\nc. Discuss suggestions together to refine and improve the final draft.\nd. Highlight strong points and note down constructive suggestions for improvement.",
+    "options": [
+      "b - d - a - c",
+      "d - b - a - c",
+      "b - a - d - c",
+      "a - b - d - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Đọc bài bạn (b) -> Đánh dấu ưu điểm và góp ý (d) -> Trao đổi nhận xét (a) -> Thảo luận hoàn thiện bản thảo (c)."
+  },
+  {
+    "id": "q_arr19",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the argument on artificial intelligence:\na. Artificial Intelligence is transforming various sectors, especially healthcare.\nb. AI algorithms can diagnose medical conditions from scans with high accuracy.\nc. However, ethical concerns regarding data privacy and bias must be addressed.\nd. In conclusion, balancing innovation with regulation is crucial for AI's future.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Giới thiệu tác động của AI (a) -> Dẫn chứng trong y tế (b) -> Thách thức đạo đức (c) -> Kết luận cân bằng đổi mới và quản lý (d)."
+  },
+  {
+    "id": "q_arr20",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the instructions for emergency evacuation:\na. When the alarm sounds, remain calm and stop what you are doing.\nb. Follow the illuminated exit signs to the nearest emergency stairway.\nc. Gather at the designated assembly area in the courtyard.\nd. Never use the elevators during a fire evacuation.",
+    "options": [
+      "a - b - d - c",
+      "a - d - b - c",
+      "b - a - d - c",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Giữ bình tĩnh khi chuông reo (a) -> Đi theo biển thoát hiểm (b) -> Lưu ý tuyệt đối không dùng thang máy (d) -> Tập trung tại điểm chỉ định (c)."
+  },
+  {
+    "id": "q_arr21",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the thank-you note:\na. Dear Grandma,\nb. I will treasure it always and wear it on special occasions.\nc. Love, Mai.\nd. Thank you so much for the beautiful handmade sweater you knitted for me.\ne. It fits me perfectly and keeps me warm during chilly winter days.",
+    "options": [
+      "a - d - e - b - c",
+      "a - e - d - b - c",
+      "d - a - e - b - c",
+      "a - b - d - e - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Lời chào bà (a) -> Cảm ơn món quà áo len (d) -> Khen áo vừa vặn và ấm áp (e) -> Trân trọng món quà (b) -> Ký tên (c)."
+  },
+  {
+    "id": "q_arr22",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the process of language acquisition:\na. Immersing yourself in authentic English content is the key to fluency.\nb. Start by listening to podcasts and watching films with English subtitles.\nc. Gradually transition to reading articles and speaking with native speakers.\nd. With consistent daily practice, your confidence will soar.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Nguyên tắc tiếp thu ngôn ngữ (a) -> Bước khởi đầu với nghe và xem phim (b) -> Chuyển dần sang đọc và nói (c) -> Kết quả khi kiên trì (d)."
+  },
+  {
+    "id": "q_arr23",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the university application essay intro:\na. Growing up in a coastal town, I witnessed firsthand the destruction caused by typhoons.\nb. This experience ignited my passion for environmental engineering.\nc. I aspire to design resilient infrastructure that protects vulnerable communities.\nd. Studying at your esteemed university is the next vital step toward achieving this dream.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "c - a - b - d"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Câu chuyện tuổi thơ (a) -> Khơi dậy đam mê (b) -> Khát vọng nghề nghiệp (c) -> Lý do chọn trường đại học (d)."
+  },
+  {
+    "id": "q_arr24",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the museum visit guide:\na. Visitors should first purchase their admission tickets at the main entrance.\nb. Audio guides in multiple languages are available at the information desk.\nc. Explore the ancient history gallery on the ground floor before heading upstairs.\nd. Please remember that touching exhibits is strictly prohibited.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "c - a - b - d"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Mua vé vào cửa (a) -> Nhận thiết bị thuyết minh (b) -> Tham quan theo lộ trình (c) -> Quy định không chạm vào hiện vật (d)."
+  },
+  {
+    "id": "q_arr25",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the text on healthy sleep:\na. Sufficient sleep is vital for cognitive function and memory consolidation.\nb. Teenagers need between eight and ten hours of quality sleep each night.\nc. Avoiding blue light from screens before bedtime can improve sleep quality.\nd. In contrast, chronic sleep deprivation leads to fatigue and poor academic performance.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Tầm quan trọng của giấc ngủ (a) -> Thời lượng ngủ khuyến nghị cho lứa tuổi vị thành niên (b) -> Biện pháp tránh ánh sáng xanh (c) -> Hệ quả thiếu ngủ (d)."
+  },
+  {
+    "id": "q_arr26",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the project meeting reminder:\na. Hi team members,\nb. The meeting will focus on reviewing sprint deliverables and assigning final tasks.\nc. Please arrive punctually with your updated progress reports.\nd. Our weekly progress meeting is scheduled for 3 PM tomorrow in room 301.\ne. Best regards, Project Manager.",
+    "options": [
+      "a - d - b - c - e",
+      "a - b - d - c - e",
+      "d - b - a - c - e",
+      "a - c - d - b - e"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chào các thành viên (a) -> Lịch hẹn giờ và địa điểm (d) -> Nội dung trọng tâm cuộc họp (b) -> Yêu cầu chuẩn bị báo cáo (c) -> Ký tên (e)."
+  },
+  {
+    "id": "q_arr27",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the science report snippet:\na. We hypothesized that plants exposed to natural light would grow faster than those under artificial light.\nb. Over four weeks, we measured the height of twenty seedlings daily.\nc. The results clearly supported our hypothesis with a 35% difference in growth rate.\nd. This finding emphasizes the superior photosynthetic efficiency of natural solar radiation.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "c - a - b - d"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Giả thuyết (a) -> Quy trình thu thập số liệu (b) -> Kết quả thực nghiệm (c) -> Ý nghĩa khoa học rút ra (d)."
+  },
+  {
+    "id": "q_arr28",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the eco-travel tip:\na. Ecotourism encourages travellers to explore nature responsibly.\nb. When visiting fragile ecosystems, always stick to designated footpaths.\nc. Support local artisans by purchasing handmade souvenirs rather than imported goods.\nd. By travelling mindfully, you leave a positive impact on both nature and local communities.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Khái niệm du lịch sinh thái (a) -> Lời khuyên đi đúng đường mòn (b) -> Ủng hộ kinh tế địa phương (c) -> Tác động tích cực tổng kết (d)."
+  },
+  {
+    "id": "q_arr29",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the scholarship interview advice:\na. Research the institution thoroughly and anticipate common interview questions.\nb. Arrive at least fifteen minutes early dressed in neat, professional attire.\nc. Maintain polite eye contact and articulate your answers clearly during the interview.\nd. Finally, send a brief thank-you email to the committee within twenty-four hours.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "c - a - b - d"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chuẩn bị trước phỏng vấn (a) -> Đến sớm và trang phục chỉnh tề (b) -> Tác phong trong buổi phỏng vấn (c) -> Thư cảm ơn sau phỏng vấn (d)."
+  },
+  {
+    "id": "q_arr30",
+    "grade": 12,
+    "type": "arrange",
+    "stem": "Arrange the essay conclusion on lifelong learning:\na. To sum up, education does not end when one receives a university diploma.\nb. Technological advances require workers to continuously update their skillset.\nc. Embracing lifelong learning ensures personal adaptability and career longevity.\nd. Therefore, cultivating curiosity should be every individual's ongoing pursuit.",
+    "options": [
+      "a - b - c - d",
+      "b - a - c - d",
+      "a - c - b - d",
+      "d - a - b - c"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Câu chuyển ý kết luận (a) -> Yêu cầu của thời đại công nghệ (b) -> Lợi ích học tập suốt đời (c) -> Lời kêu gọi hành động (d)."
+  },
+  {
+    "id": "q_clz01",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Green living involves making choices that reduce environmental ______ (1).'",
+    "options": [
+      "impact",
+      "affection",
+      "benefit",
+      "expansion"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'environmental impact' nghĩa là tác động đến môi trường."
+  },
+  {
+    "id": "q_clz02",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Many families are now switching to ______ (2) energy sources like wind and solar.'",
+    "options": [
+      "renewable",
+      "disposable",
+      "temporary",
+      "harmful"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'renewable energy sources' là các nguồn năng lượng tái tạo."
+  },
+  {
+    "id": "q_clz03",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'In addition, reducing single-use plastic can prevent ______ (3) pollution in oceans.'",
+    "options": [
+      "severe",
+      "tiny",
+      "mild",
+      "artificial"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'severe pollution' là ô nhiễm nghiêm trọng."
+  },
+  {
+    "id": "q_clz04",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Urbanisation has created numerous job opportunities, ______ (4) it also brings challenges.'",
+    "options": [
+      "but",
+      "so",
+      "or",
+      "because"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Liên từ chỉ sự tương phản giữa cơ hội và thách thức."
+  },
+  {
+    "id": "q_clz05",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Many workers ______ (5) long distances from the suburbs to the city center.'",
+    "options": [
+      "commute",
+      "wander",
+      "stroll",
+      "march"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'commute' nghĩa là đi lại hàng ngày giữa nhà và nơi làm việc."
+  },
+  {
+    "id": "q_clz06",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Cities must invest in affordable ______ (6) to accommodate growing populations.'",
+    "options": [
+      "housing",
+      "cuisine",
+      "garments",
+      "monuments"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'affordable housing' nghĩa là nhà ở giá phải chăng."
+  },
+  {
+    "id": "q_clz07",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Artificial intelligence is ______ (7) revolutionizing healthcare and industry.'",
+    "options": [
+      "rapidly",
+      "rarely",
+      "slowly",
+      "hardly"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'rapidly revolutionizing' nghĩa là đang cách mạng hóa một cách nhanh chóng."
+  },
+  {
+    "id": "q_clz08",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Doctors use smart software to detect diseases with higher ______ (8).'",
+    "options": [
+      "accuracy",
+      "hesitation",
+      "failure",
+      "delay"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'accuracy' nghĩa là độ chính xác."
+  },
+  {
+    "id": "q_clz09",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'However, data privacy remains a critical ______ (9) that must be solved.'",
+    "options": [
+      "concern",
+      "advantage",
+      "pleasure",
+      "solution"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'critical concern' là mối quan ngại lớn, then chốt."
+  },
+  {
+    "id": "q_clz10",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Higher education provides young adults with knowledge and practical ______ (10).'",
+    "options": [
+      "skills",
+      "obstacles",
+      "penalties",
+      "illnesses"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'practical skills' là các kỹ năng thực tế."
+  },
+  {
+    "id": "q_clz11",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'University graduates often find it easier to secure ______ (11) employment.'",
+    "options": [
+      "stable",
+      "risky",
+      "chaotic",
+      "hazardous"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'stable employment' là việc làm ổn định."
+  },
+  {
+    "id": "q_clz12",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Lifelong learning enables individuals to adapt to changing job ______ (12).'",
+    "options": [
+      "markets",
+      "decorations",
+      "weather",
+      "superstitions"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'job markets' nghĩa là thị trường lao động."
+  },
+  {
+    "id": "q_clz13",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Maintaining a balanced diet is ______ (13) for long-term health.'",
+    "options": [
+      "crucial",
+      "optional",
+      "irrelevant",
+      "harmful"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'crucial' đồng nghĩa với vital, essential - rất quan trọng."
+  },
+  {
+    "id": "q_clz14",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Eating plenty of fresh vegetables helps strengthen the ______ (14) system.'",
+    "options": [
+      "immune",
+      "traffic",
+      "solar",
+      "financial"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'immune system' là hệ miễn dịch của cơ thể."
+  },
+  {
+    "id": "q_clz15",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Doctors advise reducing sugar consumption to avoid chronic ______ (15).'",
+    "options": [
+      "diseases",
+      "rewards",
+      "triumphs",
+      "medicines"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'chronic diseases' nghĩa là các bệnh mạn tính."
+  },
+  {
+    "id": "q_clz16",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Traditional festivals play a significant role in preserving cultural ______ (16).'",
+    "options": [
+      "heritage",
+      "pollution",
+      "congestion",
+      "inflation"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'cultural heritage' là di sản văn hóa."
+  },
+  {
+    "id": "q_clz17",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'They offer an opportunity for families to reunite and celebrate ancient ______ (17).'",
+    "options": [
+      "rituals",
+      "tariffs",
+      "subsidies",
+      "slums"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'ancient rituals' nghĩa là các nghi thức cổ xưa."
+  },
+  {
+    "id": "q_clz18",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Community solidarity is ______ (18) through these communal gatherings.'",
+    "options": [
+      "strengthened",
+      "weakened",
+      "destroyed",
+      "neglected"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'strengthened' nghĩa là được củng cố, tăng cường."
+  },
+  {
+    "id": "q_clz19",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Global trade fosters economic growth by opening new export ______ (19).'",
+    "options": [
+      "markets",
+      "obstacles",
+      "landfills",
+      "shortages"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'export markets' nghĩa là các thị trường xuất khẩu."
+  },
+  {
+    "id": "q_clz20",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Countries that trade actively tend to experience higher rates of GDP ______ (20).'",
+    "options": [
+      "growth",
+      "loss",
+      "decline",
+      "drought"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'GDP growth' là tăng trưởng tổng sản phẩm quốc nội."
+  },
+  {
+    "id": "q_clz21",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'However, small businesses may struggle to ______ (21) with giant multinational firms.'",
+    "options": [
+      "compete",
+      "collaborate",
+      "surrender",
+      "unite"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'compete with' nghĩa là cạnh tranh với."
+  },
+  {
+    "id": "q_clz22",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Sustainable tourism minimizes environmental damage while ______ (22) local culture.'",
+    "options": [
+      "respecting",
+      "disregarding",
+      "destroying",
+      "polluting"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'respecting local culture' nghĩa là tôn trọng văn hóa bản địa."
+  },
+  {
+    "id": "q_clz23",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Travellers are encouraged to support small community-based ______ (23).'",
+    "options": [
+      "enterprises",
+      "landfills",
+      "pollutants",
+      "deficits"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'community-based enterprises' là các doanh nghiệp dựa vào cộng đồng."
+  },
+  {
+    "id": "q_clz24",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'In this way, tourism revenue directly ______ (24) the local inhabitants.'",
+    "options": [
+      "benefits",
+      "harms",
+      "frightens",
+      "confuses"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'benefits' nghĩa là mang lại lợi ích cho."
+  },
+  {
+    "id": "q_clz25",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Deforestation is one of the primary drivers of biodiversity ______ (25).'",
+    "options": [
+      "loss",
+      "gain",
+      "safety",
+      "stability"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'biodiversity loss' là sự suy giảm, mất mát đa dạng sinh học."
+  },
+  {
+    "id": "q_clz26",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'When natural habitats are destroyed, thousands of animal species face ______ (26).'",
+    "options": [
+      "extinction",
+      "prosperity",
+      "rejuvenation",
+      "multiplication"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'face extinction' nghĩa là đối mặt với nguy cơ tuyệt chủng."
+  },
+  {
+    "id": "q_clz27",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Reforestation campaigns are essential to ______ (27) natural balance.'",
+    "options": [
+      "restore",
+      "eliminate",
+      "ignore",
+      "damage"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'restore' nghĩa là khôi phục lại."
+  },
+  {
+    "id": "q_clz28",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Youth entrepreneurship is widely regarded as an engine of ______ (28).'",
+    "options": [
+      "innovation",
+      "idleness",
+      "bankruptcy",
+      "depression"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'engine of innovation' là động lực của sự đổi mới sáng tạo."
+  },
+  {
+    "id": "q_clz29",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Startups often create novel products that solve ______ (29) societal problems.'",
+    "options": [
+      "pressing",
+      "fictional",
+      "invisible",
+      "pleasant"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'pressing problems' là những vấn đề cấp bách."
+  },
+  {
+    "id": "q_clz30",
+    "grade": 12,
+    "type": "cloze",
+    "stem": "Read the text and choose the correct word: 'Government incubators provide young founders with valuable ______ (30) and funding.'",
+    "options": [
+      "mentorship",
+      "punishment",
+      "opposition",
+      "obstacles"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'mentorship' nghĩa là sự cố vấn, hướng dẫn tận tình."
+  },
+  {
+    "id": "q_rd01",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Marie Curie was the first woman to win a Nobel Prize and the only person to win in two different scientific fields: Physics and Chemistry.' What is Marie Curie famous for?",
+    "options": [
+      "Winning Nobel Prizes in both Physics and Chemistry.",
+      "Inventing the electric light bulb.",
+      "Writing famous historical novels.",
+      "Exploring the Amazon rainforest."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Đoạn văn nêu rõ bà đạt giải Nobel ở cả hai lĩnh vực Vật lý và Hóa học."
+  },
+  {
+    "id": "q_rd02",
+    "grade": 12,
+    "type": "reading",
+    "stem": "According to the passage, what made Marie Curie's Nobel achievement unique?",
+    "options": [
+      "She was the youngest person to win.",
+      "She won Nobel Prizes in two different scientific fields.",
+      "She won all prizes in the same year.",
+      "She refused the prize money."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'the only person to win in two different scientific fields'."
+  },
+  {
+    "id": "q_rd03",
+    "grade": 12,
+    "type": "reading",
+    "stem": "In the passage, the word 'scientific' is closest in meaning to:",
+    "options": [
+      "relating to science and research",
+      "connected to creative arts",
+      "concerning business finance",
+      "related to physical sport"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'scientific' thuộc về khoa học."
+  },
+  {
+    "id": "q_rd04",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Urban vertical farming involves growing crops in stacked layers inside controlled building environments. It uses 95% less water than traditional agriculture.' What is a key advantage of vertical farming?",
+    "options": [
+      "It requires massive tracts of outdoor land.",
+      "It uses significantly less water than conventional farming.",
+      "It only operates during sunny summer days.",
+      "It depends heavily on pesticide chemicals."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chi tiết: 'uses 95% less water than traditional agriculture'."
+  },
+  {
+    "id": "q_rd05",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Where are vertical farm crops grown according to the text?",
+    "options": [
+      "In outdoor river valleys.",
+      "In stacked layers inside controlled indoor environments.",
+      "On the roofs of traditional barns.",
+      "Deep underground without any light."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'in stacked layers inside controlled building environments'."
+  },
+  {
+    "id": "q_rd06",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'agriculture' in the passage refers to:",
+    "options": [
+      "farming and food production",
+      "software manufacturing",
+      "international aviation",
+      "automobile assembly"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'agriculture' là ngành nông nghiệp."
+  },
+  {
+    "id": "q_rd07",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Electric vehicles (EVs) produce zero direct exhaust emissions. When charged using solar or wind electricity, their lifetime carbon footprint is drastically smaller than fossil-fueled cars.' Why are EVs beneficial when charged with renewables?",
+    "options": [
+      "They emit more smoke.",
+      "Their lifetime carbon footprint is drastically reduced.",
+      "They cannot travel long distances.",
+      "They are powered by diesel engines."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chi tiết: 'lifetime carbon footprint is drastically smaller'."
+  },
+  {
+    "id": "q_rd08",
+    "grade": 12,
+    "type": "reading",
+    "stem": "What kind of emissions do electric vehicles produce directly from their exhaust?",
+    "options": [
+      "Toxic methane gas.",
+      "Zero direct exhaust emissions.",
+      "High levels of carbon dioxide.",
+      "Sulfur dioxide."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'EVs produce zero direct exhaust emissions'."
+  },
+  {
+    "id": "q_rd09",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'drastically' in the passage is closest in meaning to:",
+    "options": [
+      "slightly",
+      "substantially and dramatically",
+      "rarely",
+      "slowly"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'drastically' đồng nghĩa với substantially (một cách đáng kể, mạnh mẽ)."
+  },
+  {
+    "id": "q_rd10",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'The human brain undergoes significant rewiring during adolescence. This developmental period explains teenagers' heightened propensity for risk-taking and social connection.' Why do adolescents often take risks according to scientists?",
+    "options": [
+      "Due to brain rewiring during developmental stages.",
+      "Because they have completed all education.",
+      "Because they lack physical energy.",
+      "Because of strict parental rules."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chi tiết: 'brain undergoes significant rewiring during adolescence'."
+  },
+  {
+    "id": "q_rd11",
+    "grade": 12,
+    "type": "reading",
+    "stem": "What does the passage say teenagers have a heightened propensity for?",
+    "options": [
+      "Risk-taking and social connection.",
+      "Sleeping during examinations.",
+      "Living in complete isolation.",
+      "Forgetting childhood memories."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'heightened propensity for risk-taking and social connection'."
+  },
+  {
+    "id": "q_rd12",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'adolescence' in the passage refers to:",
+    "options": [
+      "the teenage period of life",
+      "early infancy",
+      "elderly retirement",
+      "midlife adulthood"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'adolescence' là giai đoạn tuổi thiếu niên."
+  },
+  {
+    "id": "q_rd13",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Mangrove forests protect coastal communities from storm surges and erosion. Their dense root systems trap sediment and absorb destructive wave energy.' How do mangroves protect shorelines?",
+    "options": [
+      "By trapping sediment and absorbing wave energy.",
+      "By clearing coastal rocks.",
+      "By increasing tidal flooding.",
+      "By producing hurricanes."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'root systems trap sediment and absorb destructive wave energy'."
+  },
+  {
+    "id": "q_rd14",
+    "grade": 12,
+    "type": "reading",
+    "stem": "What do mangrove root systems trap according to the passage?",
+    "options": [
+      "Sediment.",
+      "Plastic boats.",
+      "Storm winds.",
+      "Deep sea coral."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'trap sediment'."
+  },
+  {
+    "id": "q_rd15",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'destructive' in the passage is closest in meaning to:",
+    "options": [
+      "helpful",
+      "damaging and harmful",
+      "peaceful",
+      "constructive"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'destructive' nghĩa là có tính tàn phá, hủy hoại."
+  },
+  {
+    "id": "q_rd16",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Remote working has gained widespread popularity since 2020. It eliminates long commutes and allows flexible schedules, though maintaining team communication requires deliberate effort.' What is one major benefit of remote working?",
+    "options": [
+      "Longer office hours.",
+      "Eliminating daily commutes and offering schedule flexibility.",
+      "Working without any computer equipment.",
+      "Cancelling all holidays."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'eliminates long commutes and allows flexible schedules'."
+  },
+  {
+    "id": "q_rd17",
+    "grade": 12,
+    "type": "reading",
+    "stem": "What is mentioned as a challenge of remote working?",
+    "options": [
+      "Maintaining effective team communication.",
+      "Paying higher transport fares.",
+      "Waking up earlier every day.",
+      "Travelling internationally."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chi tiết: 'maintaining team communication requires deliberate effort'."
+  },
+  {
+    "id": "q_rd18",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'deliberate' in the passage is closest in meaning to:",
+    "options": [
+      "accidental",
+      "conscious and intentional",
+      "careless",
+      "spontaneous"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'deliberate' nghĩa là có chủ đích, có ý thức rõ ràng."
+  },
+  {
+    "id": "q_rd19",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'The Great Barrier Reef is the world's largest coral reef system. Rising ocean temperatures cause coral bleaching, which threatens marine life dependent on the reef.' What causes coral bleaching?",
+    "options": [
+      "Cold water currents.",
+      "Rising sea temperatures.",
+      "Excessive tourism ships.",
+      "Heavy snowfall."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'Rising ocean temperatures cause coral bleaching'."
+  },
+  {
+    "id": "q_rd20",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Why is coral bleaching considered a serious threat?",
+    "options": [
+      "It makes the reef too colourful.",
+      "It threatens marine life dependent on the reef.",
+      "It increases tourism revenue.",
+      "It cools down the ocean water."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'threatens marine life dependent on the reef'."
+  },
+  {
+    "id": "q_rd21",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'bleaching' in this context refers to:",
+    "options": [
+      "coral turning white and dying due to stress",
+      "painting coral artificially",
+      "cleaning coral with detergent",
+      "growing new coral species"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u1",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Hiện tượng tẩy trắng san hô (coral bleaching)."
+  },
+  {
+    "id": "q_rd22",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Alexander Fleming discovered penicillin in 1928 by accident when mould contaminated his petri dishes. This miracle drug revolutionized the treatment of bacterial infections worldwide.' How was penicillin discovered?",
+    "options": [
+      "Through a deliberate twenty-year plan.",
+      "Accidentally when mould contaminated petri dishes.",
+      "By boiling natural sea herbs.",
+      "Through computer simulations."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u2",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'discovered penicillin in 1928 by accident'."
+  },
+  {
+    "id": "q_rd23",
+    "grade": 12,
+    "type": "reading",
+    "stem": "What kind of infections does penicillin treat according to the text?",
+    "options": [
+      "Viral flu infections.",
+      "Bacterial infections.",
+      "Genetic disorders.",
+      "Bone fractures."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u3",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'treatment of bacterial infections worldwide'."
+  },
+  {
+    "id": "q_rd24",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'revolutionized' in the passage means:",
+    "options": [
+      "fundamentally transformed and improved",
+      "destroyed completely",
+      "delayed for decades",
+      "prevented from succeeding"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u4",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'revolutionized' nghĩa là tạo nên cuộc cách mạng, biến đổi tận gốc rễ."
+  },
+  {
+    "id": "q_rd25",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'The circular economy aims to eliminate waste through continual reuse, repair, and recycling. In contrast to the traditional take-make-dispose model, materials remain in use as long as possible.' What is the goal of the circular economy?",
+    "options": [
+      "To produce more disposable goods.",
+      "To eliminate waste through reuse and recycling.",
+      "To burn all waste in incinerators.",
+      "To stop all manufacturing."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u5",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "Chi tiết: 'aims to eliminate waste through continual reuse, repair, and recycling'."
+  },
+  {
+    "id": "q_rd26",
+    "grade": 12,
+    "type": "reading",
+    "stem": "How does the circular economy differ from the traditional economic model?",
+    "options": [
+      "It keeps materials in use for as long as possible.",
+      "It throws away products after single use.",
+      "It uses more non-recyclable plastics.",
+      "It avoids using recycled packaging."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u6",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'materials remain in use as long as possible'."
+  },
+  {
+    "id": "q_rd27",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'eliminate' in the passage is closest in meaning to:",
+    "options": [
+      "remove and eradicate",
+      "produce and multiply",
+      "preserve",
+      "cherish"
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u7",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "'eliminate' nghĩa là loại bỏ triệt để."
+  },
+  {
+    "id": "q_rd28",
+    "grade": 12,
+    "type": "reading",
+    "stem": "Read the passage: 'Hoi An Ancient Town is an exceptionally well-preserved example of a Southeast Asian trading port dating from the 15th to the 19th century. Its buildings reflect a unique fusion of indigenous and foreign architectural styles.' What makes Hoi An's architecture unique?",
+    "options": [
+      "It consists solely of modern skyscrapers.",
+      "It combines indigenous and foreign architectural influences.",
+      "It was built entirely out of imported steel.",
+      "It was designed by modern European architects in 2010."
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u8",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'unique fusion of indigenous and foreign architectural styles'."
+  },
+  {
+    "id": "q_rd29",
+    "grade": 12,
+    "type": "reading",
+    "stem": "During which centuries was Hoi An active as a prominent trading port?",
+    "options": [
+      "From the 15th to the 19th century.",
+      "From the 1st to the 5th century.",
+      "Only in the 21st century.",
+      "Between 1975 and 1990."
+    ],
+    "correctIndex": 0,
+    "topicId": "topic_12_u9",
+    "passageId": null,
+    "difficulty": 1,
+    "explanation": "Chi tiết: 'dating from the 15th to the 19th century'."
+  },
+  {
+    "id": "q_rd30",
+    "grade": 12,
+    "type": "reading",
+    "stem": "The word 'fusion' in the passage is closest in meaning to:",
+    "options": [
+      "separation",
+      "blend and combination",
+      "conflict",
+      "destruction"
+    ],
+    "correctIndex": 1,
+    "topicId": "topic_12_u10",
+    "passageId": null,
+    "difficulty": 2,
+    "explanation": "'fusion' nghĩa là sự kết hợp, giao thoa hài hòa."
   }
 ]
