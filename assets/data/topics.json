@@ -1,20 +1,12 @@
 [
-  {
-    "id": "topic_12_unit1",
-    "grade": 12,
-    "title": "Life Stories & Success",
-    "order": 1
-  },
-  {
-    "id": "topic_12_unit2",
-    "grade": 12,
-    "title": "Urbanisation & Development",
-    "order": 2
-  },
-  {
-    "id": "topic_12_unit3",
-    "grade": 12,
-    "title": "The Green Movement",
-    "order": 3
-  }
+  { "id": "topic_12_u1", "grade": 12, "title": "Life Stories & Success", "order": 1 },
+  { "id": "topic_12_u2", "grade": 12, "title": "Urbanisation & Development", "order": 2 },
+  { "id": "topic_12_u3", "grade": 12, "title": "The Green Movement", "order": 3 },
+  { "id": "topic_12_u4", "grade": 12, "title": "Technology & Innovation", "order": 4 },
+  { "id": "topic_12_u5", "grade": 12, "title": "Global Warming & Climate", "order": 5 },
+  { "id": "topic_12_u6", "grade": 12, "title": "Education & Learning", "order": 6 },
+  { "id": "topic_12_u7", "grade": 12, "title": "Health & Medicine", "order": 7 },
+  { "id": "topic_12_u8", "grade": 12, "title": "Culture & Society", "order": 8 },
+  { "id": "topic_12_u9", "grade": 12, "title": "Economy & Business", "order": 9 },
+  { "id": "topic_12_u10","grade": 12, "title": "Travel & Tourism",        "order": 10}
 ]
