@@ -3,11 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-<<<<<<< HEAD
   connectivity_plus
-=======
   flutter_tts
->>>>>>> 62b1c0d8493bae5c8c8d2e59637a73223ba2d991
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

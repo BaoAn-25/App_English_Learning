@@ -10,6 +10,19 @@ import 'notification_service.dart';
 /// Tuân thủ nguyên tắc Offline-first: ghi dữ liệu cục bộ vào SQLite trước qua AppRepository,
 /// sau đó kích hoạt đồng bộ nền khi có mạng.
 class SettingsController extends ChangeNotifier {
+  bool _disposed = false;
+
+  // Các thao tác dữ liệu có thể hoàn tất sau khi màn hình đã đóng.
+  void _notifyIfActive() {
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   final AppRepository _repository;
   final NotificationService _notificationService;
 
@@ -99,7 +112,7 @@ class SettingsController extends ChangeNotifier {
     } catch (_) {
       // Dùng giá trị mặc định nếu có lỗi đọc
     } finally {
-      notifyListeners();
+      _notifyIfActive();
     }
   }
 
@@ -113,7 +126,7 @@ class SettingsController extends ChangeNotifier {
     _grade = grade;
     _targetScore = targetScore;
     _hasPendingSync = true;
-    notifyListeners();
+    _notifyIfActive();
 
     // 1. Lưu cục bộ an toàn
     await _repository.setSetting('user_name', _name);
@@ -130,7 +143,7 @@ class SettingsController extends ChangeNotifier {
     if (_dailyGoal == goal) return;
     _dailyGoal = goal;
     _hasPendingSync = true;
-    notifyListeners();
+    _notifyIfActive();
 
     // Ghi cục bộ trước
     await _repository.setSetting('daily_goal', _dailyGoal.toString());
@@ -142,7 +155,7 @@ class SettingsController extends ChangeNotifier {
   /// Bật / tắt thông báo nhắc học hàng ngày
   Future<void> toggleReminder(bool enabled) async {
     _reminderEnabled = enabled;
-    notifyListeners();
+    _notifyIfActive();
 
     await _repository.setSetting('reminder_enabled', enabled ? 'true' : 'false');
 
@@ -159,7 +172,7 @@ class SettingsController extends ChangeNotifier {
   /// Thay đổi giờ nhắc học
   Future<void> setReminderTime(TimeOfDay time) async {
     _reminderTime = time;
-    notifyListeners();
+    _notifyIfActive();
 
     await _repository.setSetting('reminder_hour', time.hour.toString());
     await _repository.setSetting('reminder_minute', time.minute.toString());
@@ -174,12 +187,12 @@ class SettingsController extends ChangeNotifier {
     final isOnline = await _isNetworkAvailable();
     if (!isOnline) {
       _syncState = SyncState.offline;
-      notifyListeners();
+      _notifyIfActive();
       return;
     }
 
     _syncState = SyncState.syncing;
-    notifyListeners();
+    _notifyIfActive();
 
     try {
       // Mô phỏng / Gọi đồng bộ API (sau này ApiClient sẽ được cắm vào đây)
@@ -194,7 +207,7 @@ class SettingsController extends ChangeNotifier {
     } catch (_) {
       _syncState = SyncState.error;
     } finally {
-      notifyListeners();
+      _notifyIfActive();
     }
   }
 
@@ -202,12 +215,12 @@ class SettingsController extends ChangeNotifier {
     final isOnline = await _isNetworkAvailable();
     if (!isOnline) {
       _syncState = SyncState.offline;
-      notifyListeners();
+      _notifyIfActive();
       return;
     }
 
     _syncState = SyncState.syncing;
-    notifyListeners();
+    _notifyIfActive();
 
     try {
       // Đồng bộ ngầm không block UI
@@ -221,7 +234,7 @@ class SettingsController extends ChangeNotifier {
     } catch (_) {
       _syncState = SyncState.error;
     } finally {
-      notifyListeners();
+      _notifyIfActive();
     }
   }
 
