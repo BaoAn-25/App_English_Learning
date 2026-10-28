@@ -44,13 +44,20 @@ class SqliteBridge {
         );
   }
 
-  static Future<SqliteBridge> start() async {
+  static Future<SqliteBridge> start({
+    String? databaseDirectory,
+    Future<void> Function(MethodCall)? beforeCall,
+  }) async {
     final bridge = SqliteBridge._(
-      await Process.start('python3', ['test/support/sqlite_bridge.py']),
+      await Process.start('python3', [
+        'test/support/sqlite_bridge.py',
+        ?databaseDirectory,
+      ]),
     );
     databaseFactory = databaseFactorySqflitePlugin;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(_channel, (call) {
+        .setMockMethodCallHandler(_channel, (call) async {
+          if (beforeCall != null) await beforeCall(call);
           final id = bridge._nextId++;
           final result = Completer<Object?>();
           bridge._pending[id] = result;

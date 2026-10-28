@@ -4,14 +4,19 @@ import sqlite3
 import sys
 
 connections = {}
+database_directory = sys.argv[1] if len(sys.argv) > 1 else None
+next_identifier = 0
 
 
 def execute(method, args):
+    global next_identifier
     if method == "getDatabasesPath":
-        return ":memory:"
+        return database_directory or ":memory:"
     if method == "openDatabase":
-        identifier = len(connections) + 1
-        connections[identifier] = sqlite3.connect(":memory:", isolation_level=None)
+        next_identifier += 1
+        identifier = next_identifier
+        path = args["path"] if database_directory else ":memory:"
+        connections[identifier] = sqlite3.connect(path, isolation_level=None)
         return identifier
     if method == "closeDatabase":
         connections.pop(args["id"]).close()
