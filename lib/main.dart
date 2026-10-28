@@ -1,45 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'data/app_database.dart';
 import 'data/app_repository.dart';
-import 'data/asset_seeder.dart';
-import 'data/question_sync_service.dart';
-import 'navigation/main_shell.dart';
+import 'navigation/app_startup.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/theme/theme_controller.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Mở database cục bộ SQLite
-  final appDb = AppDatabase.instance;
-  await appDb.database;
-
-  // Nạp dữ liệu mẫu từ assets nếu bảng còn rỗng
-  await AssetSeeder.seedIfEmpty(dbInstance: appDb);
-
-  final appRepository = AppRepository(db: appDb);
-
-  final insertedCount = await QuestionSyncService.syncQuestions(appRepository);
-
-  debugPrint('Đồng bộ câu hỏi: thêm $insertedCount câu mới');
-
   runApp(
-<<<<<<< HEAD
     MultiProvider(
       providers: [
-        Provider<AppRepository>(
-          create: (_) => AppRepository(db: appDb),
-        ),
-        ChangeNotifierProvider<ThemeController>(
-          create: (_) => ThemeController(),
-        ),
+        Provider<AppRepository>(create: (_) => AppRepository()),
+        ChangeNotifierProvider<ThemeController>(create: (_) => ThemeController()),
       ],
-=======
-    Provider<AppRepository>(
-      create: (_) => appRepository,
->>>>>>> 62b1c0d8493bae5c8c8d2e59637a73223ba2d991
       child: const ThptEnglishApp(),
     ),
   );
@@ -50,15 +25,13 @@ class ThptEnglishApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeController = Provider.of<ThemeController>(context);
-
     return MaterialApp(
       title: 'Luyện Thi THPT Tiếng Anh',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeController.themeMode,
-      home: const MainShell(),
+      themeMode: context.watch<ThemeController>().themeMode,
+      home: const AppStartup(),
     );
   }
 }

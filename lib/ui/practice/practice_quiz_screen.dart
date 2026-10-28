@@ -68,7 +68,7 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
   }
 
   void selectAnswer(int optionIndex) {
-    if (submitted) return;
+    if (submitted || isSaving) return;
 
     setState(() {
       selectedAnswers[currentIndex] = optionIndex;
@@ -369,7 +369,7 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
                           isSelected: isSelected,
                           isSubmitted: submitted,
                           isCorrect: isCorrect,
-                          onTap: submitted
+                          onTap: submitted || isSaving
                               ? null
                               : () => selectAnswer(originalIndex),
                         );

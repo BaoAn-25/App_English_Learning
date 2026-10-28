@@ -212,6 +212,52 @@ class AppDatabase {
   }
 
   // --- Topics ---
+  static const _legacyTopicIds = {
+    'topic_12_unit1': 'topic_12_u1',
+    'topic_12_unit2': 'topic_12_u2',
+    'topic_12_unit3': 'topic_12_u3',
+  };
+
+  // Chỉ gộp khi đọc các cặp ID mẫu đã biết có cùng thông tin chủ đề.
+  Map<String, String> _topicAliases(List<Topic> topics) {
+    final byId = {for (final topic in topics) topic.id: topic};
+    final aliases = <String, String>{};
+    for (final pair in _legacyTopicIds.entries) {
+      final old = byId[pair.key];
+      final current = byId[pair.value];
+      if (old != null &&
+          current != null &&
+          old.grade == current.grade &&
+          old.title == current.title &&
+          old.order == current.order) {
+        aliases[pair.key] = pair.value;
+      }
+    }
+    return aliases;
+  }
+
+  List<Topic> _visibleTopics(List<Map<String, Object?>> maps) {
+    final topics = maps.map(Topic.fromMap).toList();
+    final aliases = _topicAliases(topics);
+    return topics.where((topic) => !aliases.containsKey(topic.id)).toList();
+  }
+
+  Future<List<String>> _topicIdsForRead(Database db, String topicId) async {
+    for (final pair in _legacyTopicIds.entries) {
+      if (topicId != pair.key && topicId != pair.value) continue;
+      final rows = await db.query(
+        'topics',
+        where: 'id IN (?, ?)',
+        whereArgs: [pair.key, pair.value],
+      );
+      if (_topicAliases(rows.map(Topic.fromMap).toList()).containsKey(pair.key)) {
+        return [pair.key, pair.value];
+      }
+      break;
+    }
+    return [topicId];
+  }
+
   Future<void> insertTopics(List<Topic> topics) async {
     final db = await database;
     final batch = db.batch();
@@ -228,7 +274,7 @@ class AppDatabase {
   Future<List<Topic>> getAllTopics() async {
     final db = await database;
     final maps = await db.query('topics', orderBy: '"order" ASC');
-    return maps.map(Topic.fromMap).toList();
+    return _visibleTopics(maps);
   }
 
   Future<List<Topic>> getTopicsByGrade(int grade) async {
@@ -239,7 +285,7 @@ class AppDatabase {
       whereArgs: [grade],
       orderBy: '"order" ASC',
     );
-    return maps.map(Topic.fromMap).toList();
+    return _visibleTopics(maps);
   }
 
   // --- Words ---
@@ -274,10 +320,11 @@ class AppDatabase {
 
   Future<List<Word>> getWordsByTopicId(String topicId) async {
     final db = await database;
+    final ids = await _topicIdsForRead(db, topicId);
     final maps = await db.query(
       'words',
-      where: 'topicId = ?',
-      whereArgs: [topicId],
+      where: 'topicId IN (${List.filled(ids.length, '?').join(', ')})',
+      whereArgs: ids,
     );
     return maps.map(Word.fromMap).toList();
   }
@@ -527,10 +574,11 @@ class AppDatabase {
 
   Future<List<Question>> getQuestionsByTopicId(String topicId) async {
     final db = await database;
+    final ids = await _topicIdsForRead(db, topicId);
     final maps = await db.query(
       'questions',
-      where: 'topicId = ?',
-      whereArgs: [topicId],
+      where: 'topicId IN (${List.filled(ids.length, '?').join(', ')})',
+      whereArgs: ids,
     );
     return maps.map(Question.fromMap).toList();
   }
@@ -609,33 +657,35 @@ class AppDatabase {
 
   Future<void> upsertWrongBookEntry(WrongBookEntry entry) async {
     final db = await database;
-    final existing = await db.query(
-      'wrong_book',
-      where: 'questionId = ?',
-      whereArgs: [entry.questionId],
-      limit: 1,
-    );
-
-    if (existing.isEmpty) {
-      await db.insert(
+    await db.transaction((txn) async {
+      final existing = await txn.query(
         'wrong_book',
-        entry.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    } else {
-      final currentCount = (existing.first['wrongCount'] as num).toInt();
-      final addedCount = entry.wrongCount > 0 ? entry.wrongCount : 1;
-      await db.update(
-        'wrong_book',
-        {
-          'wrongCount': currentCount + addedCount,
-          'lastWrongAt': entry.lastWrongAt,
-          'nextReviewAt': entry.nextReviewAt,
-        },
         where: 'questionId = ?',
         whereArgs: [entry.questionId],
+        limit: 1,
       );
-    }
+
+      if (existing.isEmpty) {
+        await txn.insert(
+          'wrong_book',
+          entry.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } else {
+        final currentCount = (existing.first['wrongCount'] as num).toInt();
+        final addedCount = entry.wrongCount > 0 ? entry.wrongCount : 1;
+        await txn.update(
+          'wrong_book',
+          {
+            'wrongCount': currentCount + addedCount,
+            'lastWrongAt': entry.lastWrongAt,
+            'nextReviewAt': entry.nextReviewAt,
+          },
+          where: 'questionId = ?',
+          whereArgs: [entry.questionId],
+        );
+      }
+    });
   }
 
   Future<List<WrongBookEntry>> getDueWrongBookEntries(
@@ -673,34 +723,35 @@ class AppDatabase {
 
   Future<void> upsertDailyStat(DailyStat stat) async {
     final db = await database;
-    final existing = await db.query(
-      'daily_stats',
-      where: 'date = ?',
-      whereArgs: [stat.date],
-      limit: 1,
-    );
-
-    if (existing.isEmpty) {
-      await db.insert(
+    await db.transaction((txn) async {
+      final existing = await txn.query(
         'daily_stats',
-        stat.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    } else {
-      final row = existing.first;
-      await db.update(
-        'daily_stats',
-        {
-          'xp': (row['xp'] as num).toInt() + stat.xp,
-          'questionsDone':
-              (row['questionsDone'] as num).toInt() + stat.questionsDone,
-          'correct': (row['correct'] as num).toInt() + stat.correct,
-          'minutes': (row['minutes'] as num).toInt() + stat.minutes,
-        },
         where: 'date = ?',
         whereArgs: [stat.date],
+        limit: 1,
       );
-    }
+
+      if (existing.isEmpty) {
+        await txn.insert(
+          'daily_stats',
+          stat.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } else {
+        final row = existing.first;
+        await txn.update(
+          'daily_stats',
+          {
+            'xp': (row['xp'] as num).toInt() + stat.xp,
+            'questionsDone': (row['questionsDone'] as num).toInt() + stat.questionsDone,
+            'correct': (row['correct'] as num).toInt() + stat.correct,
+            'minutes': (row['minutes'] as num).toInt() + stat.minutes,
+          },
+          where: 'date = ?',
+          whereArgs: [stat.date],
+        );
+      }
+    });
   }
 
   Future<List<DailyStat>> getDailyStatsInRange(
@@ -717,12 +768,34 @@ class AppDatabase {
     return maps.map(DailyStat.fromMap).toList();
   }
 
+  /// Lưu toàn bộ kết quả hoặc không lưu gì nếu có lỗi.
+  /// Giữ cùng giao diện với luồng luyện tập/thi thử của nhóm.
   Future<void> savePracticeResult({
     required Attempt attempt,
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
   }) async {
+    final date = DateTime.tryParse(dailyStat.date);
+    if (attempt.id != null ||
+        attempt.mode.trim().isEmpty ||
+        attempt.startedAt < 0 ||
+        attempt.durationSec < 0 ||
+        attempt.total <= 0 ||
+        attempt.score < 0 ||
+        attempt.score > attempt.total) {
+      throw ArgumentError('Lượt làm bài không hợp lệ.');
+    }
+    if (date == null ||
+        !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dailyStat.date) ||
+        date.toIso8601String().substring(0, 10) != dailyStat.date ||
+        dailyStat.xp < 0 ||
+        dailyStat.minutes < 0 ||
+        dailyStat.questionsDone != attempt.total ||
+        dailyStat.correct != attempt.score) {
+      throw ArgumentError('Thống kê ngày không khớp kết quả bài làm.');
+    }
+    final wrongBook = List<WrongBookEntry>.of(wrongEntries);
     final db = await database;
 
     await db.transaction((txn) async {
@@ -730,7 +803,51 @@ class AppDatabase {
       final attemptId = await txn.insert('attempts', attempt.toMap());
 
       // 2. Lưu từng đáp án.
-      final answers = buildAnswers(attemptId);
+      final answers = List<AttemptAnswer>.of(buildAnswers(attemptId));
+      if (answers.length != attempt.total ||
+          answers.map((answer) => answer.questionId).toSet().length !=
+              answers.length ||
+          answers.any((answer) => answer.attemptId != attemptId) ||
+          answers.where((answer) => answer.isCorrect).length != attempt.score) {
+        throw ArgumentError('Danh sách đáp án không khớp lượt làm bài.');
+      }
+      for (final answer in answers) {
+        final rows = await txn.query(
+          'questions',
+          where: 'id = ?',
+          whereArgs: [answer.questionId],
+          limit: 1,
+        );
+        if (rows.isEmpty) throw ArgumentError('Câu hỏi không tồn tại.');
+        final question = Question.fromMap(rows.single);
+        if (question.correctIndex < 0 ||
+            question.correctIndex >= question.options.length) {
+          throw StateError('Đáp án của câu hỏi trong ngân hàng không hợp lệ.');
+        }
+        if (answer.chosenIndex < -1 ||
+            answer.chosenIndex >= question.options.length ||
+            answer.isCorrect != (answer.chosenIndex == question.correctIndex)) {
+          throw ArgumentError(
+            'Lựa chọn hoặc kết quả chấm câu hỏi không hợp lệ.',
+          );
+        }
+      }
+      final wrongIds = answers
+          .where((answer) => !answer.isCorrect)
+          .map((answer) => answer.questionId)
+          .toSet();
+      if (wrongBook.length != wrongIds.length ||
+          wrongBook.map((entry) => entry.questionId).toSet().length !=
+              wrongBook.length ||
+          wrongBook.any(
+            (entry) =>
+                !wrongIds.contains(entry.questionId) ||
+                entry.wrongCount != 1 ||
+                entry.lastWrongAt < 0 ||
+                entry.nextReviewAt < entry.lastWrongAt,
+          )) {
+        throw ArgumentError('Sổ câu sai không khớp các đáp án sai.');
+      }
 
       final batch = txn.batch();
       for (final answer in answers) {
@@ -738,54 +855,51 @@ class AppDatabase {
       }
       await batch.commit(noResult: true);
 
-      // 3. Cộng dồn số lần trả lời sai.
-      for (final entry in wrongEntries) {
-        await txn.rawInsert(
-          '''
-          INSERT INTO wrong_book (
-            questionId, wrongCount, lastWrongAt, nextReviewAt
-          )
-          VALUES (?, ?, ?, ?)
-          ON CONFLICT(questionId) DO UPDATE SET
-            wrongCount = wrongCount + excluded.wrongCount,
-            lastWrongAt = excluded.lastWrongAt,
-            nextReviewAt = excluded.nextReviewAt
-        ''',
+      // UPDATE rồi INSERT trong cùng transaction để hỗ trợ cả SQLite cũ.
+      for (final entry in wrongBook) {
+        final updated = await txn.rawUpdate(
+          'UPDATE wrong_book SET wrongCount = wrongCount + ?, '
+          'lastWrongAt = ?, nextReviewAt = ? WHERE questionId = ?',
           [
-            entry.questionId,
             entry.wrongCount,
             entry.lastWrongAt,
             entry.nextReviewAt,
+            entry.questionId,
           ],
         );
+        if (updated == 0) await txn.insert('wrong_book', entry.toMap());
       }
-
-      // 4. Cộng dồn thống kê trong ngày.
-      await txn.rawInsert(
-        '''
-        INSERT INTO daily_stats (
-          date, xp, questionsDone, correct, minutes
-        )
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(date) DO UPDATE SET
-          xp = xp + excluded.xp,
-          questionsDone = questionsDone + excluded.questionsDone,
-          correct = correct + excluded.correct,
-          minutes = minutes + excluded.minutes
-      ''',
+      final updated = await txn.rawUpdate(
+        'UPDATE daily_stats SET xp = xp + ?, questionsDone = questionsDone + ?, '
+        'correct = correct + ?, minutes = minutes + ? WHERE date = ?',
         [
-          dailyStat.date,
           dailyStat.xp,
           dailyStat.questionsDone,
           dailyStat.correct,
           dailyStat.minutes,
+          dailyStat.date,
         ],
       );
+      if (updated == 0) await txn.insert('daily_stats', dailyStat.toMap());
     });
   }
 
   // --- Helper kiểm tra bảng rỗng để seed dữ liệu ---
   Future<bool> isTableEmpty(String tableName) async {
+    const tables = {
+      'topics',
+      'words',
+      'questions',
+      'attempts',
+      'attempt_answers',
+      'wrong_book',
+      'daily_stats',
+      'app_settings',
+      'word_progress',
+    };
+    if (!tables.contains(tableName)) {
+      throw ArgumentError.value(tableName, 'tableName', 'Unknown application table');
+    }
     final db = await database;
     final count = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM $tableName'),

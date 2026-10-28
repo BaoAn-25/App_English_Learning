@@ -8,6 +8,19 @@ import 'stats_calculator.dart';
 /// ViewModel quản lý dữ liệu cho màn hình Thống kê tiến độ.
 /// Trả dữ liệu tức thì từ SQLite trên máy, cập nhật ngầm từ API khi online.
 class StatsController extends ChangeNotifier {
+  bool _disposed = false;
+
+  // Các thao tác dữ liệu có thể hoàn tất sau khi màn hình đã đóng.
+  void _notifyIfActive() {
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   final AppRepository _repository;
 
   StatsController({required AppRepository repo}) : _repository = repo {
@@ -28,14 +41,14 @@ class StatsController extends ChangeNotifier {
   Future<void> setRangeDays(int days) async {
     if (_rangeDays == days) return;
     _rangeDays = days;
-    notifyListeners();
+    _notifyIfActive();
     await loadStats();
   }
 
   /// Tải dữ liệu từ SQLite cục bộ qua AppRepository
   Future<void> loadStats() async {
     _isLoading = true;
-    notifyListeners();
+    _notifyIfActive();
 
     try {
       final stats = await _repository.getAllDailyStats();
@@ -56,7 +69,7 @@ class StatsController extends ChangeNotifier {
       // Dữ liệu an toàn
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _notifyIfActive();
     }
   }
 
@@ -70,7 +83,7 @@ class StatsController extends ChangeNotifier {
     }
 
     _syncState = SyncState.syncing;
-    notifyListeners();
+    _notifyIfActive();
 
     try {
       // Mô phỏng / Gọi API sync ngầm
@@ -80,7 +93,7 @@ class StatsController extends ChangeNotifier {
     } catch (_) {
       _syncState = SyncState.error;
     } finally {
-      notifyListeners();
+      _notifyIfActive();
     }
   }
 
