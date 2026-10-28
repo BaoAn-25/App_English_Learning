@@ -26,20 +26,13 @@ void main() async {
   debugPrint('Đồng bộ câu hỏi: thêm $insertedCount câu mới');
 
   runApp(
-<<<<<<< HEAD
     MultiProvider(
       providers: [
-        Provider<AppRepository>(
-          create: (_) => AppRepository(db: appDb),
-        ),
+        Provider<AppRepository>(create: (_) => appRepository),
         ChangeNotifierProvider<ThemeController>(
           create: (_) => ThemeController(),
         ),
       ],
-=======
-    Provider<AppRepository>(
-      create: (_) => appRepository,
->>>>>>> 62b1c0d8493bae5c8c8d2e59637a73223ba2d991
       child: const ThptEnglishApp(),
     ),
   );
