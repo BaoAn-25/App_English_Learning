@@ -33,6 +33,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
   int _currentIndex = 0;
   bool _showBack = false;
   bool _hasAnswered = false;
+  bool _busy = false;
 
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
@@ -57,12 +58,10 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(1.5, 0),
-    ).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeInCubic),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: Offset.zero, end: const Offset(1.5, 0)).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeInCubic),
+        );
   }
 
   @override
@@ -73,29 +72,67 @@ class _FlashcardScreenState extends State<FlashcardScreen>
   }
 
   // ── Lật thẻ ─────────────────────────────────────────────────────────────
-  Future<void> _flip() async {
-    if (_showBack) {
-      await _flipController.reverse();
-    } else {
-      await _flipController.forward();
-      // Đánh dấu đã xem từ (mounted check trước khi dùng context)
-      if (!_hasAnswered && mounted) {
-        await context.read<VocabProvider>().markWordSeen(_deck[_currentIndex].id);
-      }
-    }
-    if (mounted) setState(() => _showBack = !_showBack);
+  void _saveError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Chưa lưu được tiến độ. Vui lòng thử lại.')),
+    );
   }
 
-  // ── Đánh dấu đúng / sai ─────────────────────────────────────────────────
-  Future<void> _answer(bool correct) async {
-    _hasAnswered = true;
-    final provider = context.read<VocabProvider>();
-    if (correct) {
-      await provider.markWordCorrect(_deck[_currentIndex].id);
-    } else {
-      await provider.markWordWrong(_deck[_currentIndex].id);
+  Future<void> _flip() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      if (_showBack) {
+        await _flipController.reverse().orCancel;
+      } else {
+        if (!_hasAnswered) {
+          await context.read<VocabProvider>().markWordSeen(
+            _deck[_currentIndex].id,
+          );
+        }
+        if (!mounted) return;
+        await _flipController.forward().orCancel;
+      }
+      if (mounted) setState(() => _showBack = !_showBack);
+    } catch (_) {
+      _saveError();
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
-    await _nextCard();
+  }
+
+  Future<void> _answer(bool correct) async {
+    if (_busy || _hasAnswered) return;
+    setState(() => _busy = true);
+    try {
+      final provider = context.read<VocabProvider>();
+      final id = _deck[_currentIndex].id;
+      if (correct) {
+        await provider.markWordCorrect(id);
+      } else {
+        await provider.markWordWrong(id);
+      }
+      if (!mounted) return;
+      _hasAnswered = true;
+      await _nextCard();
+    } catch (_) {
+      _saveError();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _skipCard() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await _nextCard();
+    } on TickerCanceled {
+      // The route was closed while its transition was running.
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _nextCard() async {
@@ -104,7 +141,8 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       return;
     }
     // Animate slide out
-    await _slideController.forward();
+    await _slideController.forward().orCancel;
+    if (!mounted) return;
     setState(() {
       _currentIndex++;
       _showBack = false;
@@ -173,9 +211,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
     if (_deck.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.topicTitle)),
-        body: const Center(
-          child: Text('Chưa có thẻ từ vựng nào.'),
-        ),
+        body: const Center(child: Text('Chưa có thẻ từ vựng nào.')),
       );
     }
 
@@ -197,10 +233,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             ),
             Text(
               '${_currentIndex + 1}/${_deck.length}',
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.outline,
-              ),
+              style: TextStyle(fontSize: 12, color: colorScheme.outline),
             ),
           ],
         ),
@@ -225,7 +258,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             // ── Thẻ flashcard ─────────────────────────────────────────
             Expanded(
               child: GestureDetector(
-                onTap: _flip,
+                onTap: _busy ? null : _flip,
                 child: SlideTransition(
                   position: _slideAnimation,
                   child: AnimatedBuilder(
@@ -236,16 +269,16 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                         alignment: Alignment.center,
                         transform: Matrix4.identity()
                           ..setEntry(3, 2, 0.001)
-                          ..rotateY(
-                            math.pi * _flipAnimation.value,
-                          ),
+                          ..rotateY(math.pi * _flipAnimation.value),
                         child: isShowingFront
                             ? _CardFront(word: word, provider: provider)
                             : Transform(
                                 alignment: Alignment.center,
-                                transform: Matrix4.identity()
-                                  ..rotateY(math.pi),
-                                child: _CardBack(word: word, provider: provider),
+                                transform: Matrix4.identity()..rotateY(math.pi),
+                                child: _CardBack(
+                                  word: word,
+                                  provider: provider,
+                                ),
                               ),
                       );
                     },
@@ -261,13 +294,15 @@ class _FlashcardScreenState extends State<FlashcardScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.touch_app_rounded,
-                      size: 16, color: colorScheme.outline),
+                  Icon(
+                    Icons.touch_app_rounded,
+                    size: 16,
+                    color: colorScheme.outline,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Chạm để xem nghĩa',
-                    style: TextStyle(
-                        fontSize: 13, color: colorScheme.outline),
+                    style: TextStyle(fontSize: 13, color: colorScheme.outline),
                   ),
                 ],
               ),
@@ -284,7 +319,9 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                       label: 'Chưa nhớ',
                       icon: Icons.close_rounded,
                       color: const Color(0xFFEF5350),
-                      onPressed: () => _answer(false),
+                      onPressed: _busy || _hasAnswered
+                          ? null
+                          : () => _answer(false),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -293,7 +330,9 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                       label: 'Đã nhớ',
                       icon: Icons.check_rounded,
                       color: const Color(0xFF66BB6A),
-                      onPressed: () => _answer(true),
+                      onPressed: _busy || _hasAnswered
+                          ? null
+                          : () => _answer(true),
                     ),
                   ),
                 ],
@@ -303,7 +342,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
 
             // ── Nút bỏ qua ────────────────────────────────────────────
             TextButton(
-              onPressed: _nextCard,
+              onPressed: _busy ? null : _skipCard,
               child: Text(
                 _currentIndex < _deck.length - 1 ? 'Bỏ qua →' : 'Hoàn thành',
                 style: TextStyle(color: colorScheme.outline),
@@ -332,10 +371,7 @@ class _CardFront extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withAlpha(180),
-          ],
+          colors: [colorScheme.primary, colorScheme.primary.withAlpha(180)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -392,13 +428,18 @@ class _CardFront extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.volume_up_rounded,
-                      color: Colors.white, size: 20),
+                  const Icon(
+                    Icons.volume_up_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Phát âm',
                     style: TextStyle(
-                        color: Colors.white.withAlpha(230), fontSize: 14),
+                      color: Colors.white.withAlpha(230),
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -494,8 +535,11 @@ class _CardBack extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.volume_up_rounded,
-                      color: colorScheme.onPrimaryContainer, size: 18),
+                  Icon(
+                    Icons.volume_up_rounded,
+                    color: colorScheme.onPrimaryContainer,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     word.english,
@@ -519,7 +563,7 @@ class _AnswerButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const _AnswerButton({
     required this.label,
@@ -537,9 +581,7 @@ class _AnswerButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         elevation: 2,
       ),
     );

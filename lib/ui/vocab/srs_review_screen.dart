@@ -21,7 +21,9 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDueWords();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadDueWords();
+    });
   }
 
   Future<void> _loadDueWords() async {
@@ -64,16 +66,16 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _dueWords.isEmpty
-              ? _EmptyState()
-              : _ReviewContent(
-                  dueWords: _dueWords,
-                  onComplete: (reviewed, correct) {
-                    setState(() {
-                      _reviewed = reviewed;
-                    });
-                    _showSummary(reviewed, correct);
-                  },
-                ),
+          ? _EmptyState()
+          : _ReviewContent(
+              dueWords: _dueWords,
+              onComplete: (reviewed, correct) {
+                setState(() {
+                  _reviewed = reviewed;
+                });
+                _showSummary(reviewed, correct);
+              },
+            ),
     );
   }
 
@@ -87,7 +89,7 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
           children: [
             Icon(Icons.emoji_events_rounded, color: Colors.amber),
             SizedBox(width: 8),
-            Text('Kết quả ôn tập'),
+            Expanded(child: Text('Kết quả ôn tập')),
           ],
         ),
         content: Column(
@@ -101,14 +103,12 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                _SummaryChip(count: correct, label: 'Nhớ', color: Colors.green),
                 _SummaryChip(
-                    count: correct,
-                    label: 'Nhớ',
-                    color: Colors.green),
-                _SummaryChip(
-                    count: reviewed - correct,
-                    label: 'Chưa nhớ',
-                    color: Colors.red),
+                  count: reviewed - correct,
+                  label: 'Chưa nhớ',
+                  color: Colors.red,
+                ),
               ],
             ),
           ],
@@ -131,8 +131,11 @@ class _SummaryChip extends StatelessWidget {
   final int count;
   final String label;
   final Color color;
-  const _SummaryChip(
-      {required this.count, required this.label, required this.color});
+  const _SummaryChip({
+    required this.count,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +144,10 @@ class _SummaryChip extends StatelessWidget {
         Text(
           '$count',
           style: TextStyle(
-              fontSize: 28, fontWeight: FontWeight.bold, color: color),
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
         Text(label, style: TextStyle(color: color)),
       ],
@@ -168,10 +174,9 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Không có từ nào cần ôn!',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -201,10 +206,7 @@ class _ReviewContent extends StatefulWidget {
   final List<Word> dueWords;
   final void Function(int reviewed, int correct) onComplete;
 
-  const _ReviewContent({
-    required this.dueWords,
-    required this.onComplete,
-  });
+  const _ReviewContent({required this.dueWords, required this.onComplete});
 
   @override
   State<_ReviewContent> createState() => _ReviewContentState();
@@ -214,28 +216,45 @@ class _ReviewContentState extends State<_ReviewContent> {
   int _index = 0;
   int _correct = 0;
   bool _showAnswer = false;
+  bool _saving = false;
+  bool _completed = false;
 
   Word get _current => widget.dueWords[_index];
 
   void _reveal() => setState(() => _showAnswer = true);
 
   Future<void> _answer(bool isCorrect) async {
-    final provider = context.read<VocabProvider>();
-    if (isCorrect) {
-      await provider.markWordCorrect(_current.id);
-      _correct++;
-    } else {
-      await provider.markWordWrong(_current.id);
-    }
-
-    final reviewed = _index + 1;
-    widget.onComplete(reviewed, _correct);
-
-    if (_index < widget.dueWords.length - 1) {
-      setState(() {
-        _index++;
-        _showAnswer = false;
-      });
+    if (_saving || _completed) return;
+    setState(() => _saving = true);
+    try {
+      final provider = context.read<VocabProvider>();
+      final id = _current.id;
+      if (isCorrect) {
+        await provider.markWordCorrect(id);
+      } else {
+        await provider.markWordWrong(id);
+      }
+      if (!mounted) return;
+      if (isCorrect) _correct++;
+      final reviewed = _index + 1;
+      _completed = reviewed == widget.dueWords.length;
+      widget.onComplete(reviewed, _correct);
+      if (!_completed) {
+        setState(() {
+          _index++;
+          _showAnswer = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chưa lưu được tiến độ. Vui lòng thử lại.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -257,8 +276,7 @@ class _ReviewContentState extends State<_ReviewContent> {
               value: progress,
               minHeight: 6,
               backgroundColor: colorScheme.surfaceContainerHighest,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ),
           const SizedBox(height: 24),
@@ -292,7 +310,9 @@ class _ReviewContentState extends State<_ReviewContent> {
                   // Label
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primary.withAlpha(30),
                       borderRadius: BorderRadius.circular(20),
@@ -334,10 +354,14 @@ class _ReviewContentState extends State<_ReviewContent> {
                   // Nút phát âm
                   OutlinedButton.icon(
                     onPressed: () => provider.speak(_current.english),
-                    icon: Icon(Icons.volume_up_rounded,
-                        color: colorScheme.primary),
-                    label: Text('Phát âm',
-                        style: TextStyle(color: colorScheme.primary)),
+                    icon: Icon(
+                      Icons.volume_up_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    label: Text(
+                      'Phát âm',
+                      style: TextStyle(color: colorScheme.primary),
+                    ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: colorScheme.primary),
                     ),
@@ -387,10 +411,7 @@ class _ReviewContentState extends State<_ReviewContent> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  'Xem nghĩa',
-                  style: TextStyle(fontSize: 16),
-                ),
+                child: const Text('Xem nghĩa', style: TextStyle(fontSize: 16)),
               ),
             )
           else
@@ -398,32 +419,40 @@ class _ReviewContentState extends State<_ReviewContent> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _answer(false),
-                    icon: const Icon(Icons.close_rounded,
-                        color: Colors.white),
-                    label: const Text('Chưa nhớ',
-                        style: TextStyle(color: Colors.white)),
+                    onPressed: _saving || _completed
+                        ? null
+                        : () => _answer(false),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white),
+                    label: const Text(
+                      'Chưa nhớ',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF5350),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _answer(true),
-                    icon: const Icon(Icons.check_rounded,
-                        color: Colors.white),
-                    label: const Text('Đã nhớ',
-                        style: TextStyle(color: Colors.white)),
+                    onPressed: _saving || _completed
+                        ? null
+                        : () => _answer(true),
+                    icon: const Icon(Icons.check_rounded, color: Colors.white),
+                    label: const Text(
+                      'Đã nhớ',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF66BB6A),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
