@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import 'models/attempt.dart';
+import 'models/mock_exam_draft.dart';
 import 'models/attempt_answer.dart';
 import 'models/daily_stat.dart';
 import 'models/question.dart';
@@ -33,7 +34,7 @@ class QuestionSyncResult {
 
 class AppDatabase {
   static const String _databaseName = 'thpt_english.db';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
 
   AppDatabase._internal();
   static final AppDatabase instance = AppDatabase._internal();
@@ -160,6 +161,7 @@ class AppDatabase {
 
     // 9. Word Progress (SRS)
     await _createWordProgressTable(db);
+    await _createExamTables(db);
 
     // Cài đặt mặc định ban đầu
     final batch = db.batch();
@@ -181,10 +183,20 @@ class AppDatabase {
     ''');
   }
 
+  Future<void> _createExamTables(Database db) async {
+    await db.execute(
+      'CREATE TABLE exam_drafts (slot INTEGER PRIMARY KEY CHECK (slot = 1), payload TEXT NOT NULL)',
+    );
+    await db.execute(
+      'CREATE TABLE exam_completions (draftId TEXT PRIMARY KEY, attemptId INTEGER NOT NULL)',
+    );
+  }
+
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createWordProgressTable(db);
     }
+    if (oldVersion < 3) await _createExamTables(db);
   }
 
   // --- App Settings ---
@@ -250,7 +262,9 @@ class AppDatabase {
         where: 'id IN (?, ?)',
         whereArgs: [pair.key, pair.value],
       );
-      if (_topicAliases(rows.map(Topic.fromMap).toList()).containsKey(pair.key)) {
+      if (_topicAliases(
+        rows.map(Topic.fromMap).toList(),
+      ).containsKey(pair.key)) {
         return [pair.key, pair.value];
       }
       break;
@@ -426,11 +440,31 @@ class AppDatabase {
         for (final row in wrongRows) row['questionId'] as String,
       };
 
+      MockExamDraft? activeDraft;
+      try {
+        activeDraft = await _readExamDraft(txn);
+      } on CorruptExamDraftException {
+        // Keep startup usable so the user can explicitly discard the bad draft.
+        // Do not change questions or acknowledge this sync version until recovery.
+        return QuestionSyncResult(
+          insertedCount: 0,
+          updatedCount: 0,
+          skippedCount: questions.length,
+        );
+      }
+      final activeQuestionIds =
+          activeDraft?.questions.map((q) => q.id).toSet() ?? <String>{};
+
       int insertedCount = 0;
       int updatedCount = 0;
       int skippedCount = 0;
 
       for (final q in questions) {
+        // Drafts compare the full question snapshot, including explanation/difficulty.
+        if (activeQuestionIds.contains(q.id)) {
+          skippedCount++;
+          continue;
+        }
         final existing = existingMap[q.id];
 
         if (existing == null) {
@@ -504,14 +538,10 @@ class AppDatabase {
 
       // 4. Chỉ ghi nhận phiên bản mới khi toàn bộ transaction thành công
       if (targetVersion != null && targetVersion.isNotEmpty) {
-        await txn.insert(
-          'app_settings',
-          {
-            'key': 'questions_sync_version',
-            'value': targetVersion,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await txn.insert('app_settings', {
+          'key': 'questions_sync_version',
+          'value': targetVersion,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       return QuestionSyncResult(
@@ -743,7 +773,8 @@ class AppDatabase {
           'daily_stats',
           {
             'xp': (row['xp'] as num).toInt() + stat.xp,
-            'questionsDone': (row['questionsDone'] as num).toInt() + stat.questionsDone,
+            'questionsDone':
+                (row['questionsDone'] as num).toInt() + stat.questionsDone,
             'correct': (row['correct'] as num).toInt() + stat.correct,
             'minutes': (row['minutes'] as num).toInt() + stat.minutes,
           },
@@ -776,6 +807,25 @@ class AppDatabase {
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
   }) async {
+    final db = await database;
+    await db.transaction(
+      (txn) => _savePracticeResult(
+        txn,
+        attempt: attempt,
+        buildAnswers: buildAnswers,
+        wrongEntries: wrongEntries,
+        dailyStat: dailyStat,
+      ),
+    );
+  }
+
+  Future<int> _savePracticeResult(
+    Transaction txn, {
+    required Attempt attempt,
+    required List<AttemptAnswer> Function(int attemptId) buildAnswers,
+    required List<WrongBookEntry> wrongEntries,
+    required DailyStat dailyStat,
+  }) async {
     final date = DateTime.tryParse(dailyStat.date);
     if (attempt.id != null ||
         attempt.mode.trim().isEmpty ||
@@ -796,91 +846,297 @@ class AppDatabase {
       throw ArgumentError('Thống kê ngày không khớp kết quả bài làm.');
     }
     final wrongBook = List<WrongBookEntry>.of(wrongEntries);
-    final db = await database;
+    // 1. Lưu lượt làm bài.
+    final attemptId = await txn.insert('attempts', attempt.toMap());
 
-    await db.transaction((txn) async {
-      // 1. Lưu lượt làm bài.
-      final attemptId = await txn.insert('attempts', attempt.toMap());
-
-      // 2. Lưu từng đáp án.
-      final answers = List<AttemptAnswer>.of(buildAnswers(attemptId));
-      if (answers.length != attempt.total ||
-          answers.map((answer) => answer.questionId).toSet().length !=
-              answers.length ||
-          answers.any((answer) => answer.attemptId != attemptId) ||
-          answers.where((answer) => answer.isCorrect).length != attempt.score) {
-        throw ArgumentError('Danh sách đáp án không khớp lượt làm bài.');
+    // 2. Lưu từng đáp án.
+    final answers = List<AttemptAnswer>.of(buildAnswers(attemptId));
+    if (answers.length != attempt.total ||
+        answers.map((answer) => answer.questionId).toSet().length !=
+            answers.length ||
+        answers.any((answer) => answer.attemptId != attemptId) ||
+        answers.where((answer) => answer.isCorrect).length != attempt.score) {
+      throw ArgumentError('Danh sách đáp án không khớp lượt làm bài.');
+    }
+    for (final answer in answers) {
+      final rows = await txn.query(
+        'questions',
+        where: 'id = ?',
+        whereArgs: [answer.questionId],
+        limit: 1,
+      );
+      if (rows.isEmpty) throw ArgumentError('Câu hỏi không tồn tại.');
+      final question = Question.fromMap(rows.single);
+      if (question.correctIndex < 0 ||
+          question.correctIndex >= question.options.length) {
+        throw StateError('Đáp án của câu hỏi trong ngân hàng không hợp lệ.');
       }
-      for (final answer in answers) {
-        final rows = await txn.query(
-          'questions',
-          where: 'id = ?',
-          whereArgs: [answer.questionId],
-          limit: 1,
+      if (answer.chosenIndex < -1 ||
+          answer.chosenIndex >= question.options.length ||
+          answer.isCorrect != (answer.chosenIndex == question.correctIndex)) {
+        throw ArgumentError('Lựa chọn hoặc kết quả chấm câu hỏi không hợp lệ.');
+      }
+    }
+    final wrongIds = answers
+        .where((answer) => !answer.isCorrect)
+        .map((answer) => answer.questionId)
+        .toSet();
+    if (wrongBook.length != wrongIds.length ||
+        wrongBook.map((entry) => entry.questionId).toSet().length !=
+            wrongBook.length ||
+        wrongBook.any(
+          (entry) =>
+              !wrongIds.contains(entry.questionId) ||
+              entry.wrongCount != 1 ||
+              entry.lastWrongAt < 0 ||
+              entry.nextReviewAt < entry.lastWrongAt,
+        )) {
+      throw ArgumentError('Sổ câu sai không khớp các đáp án sai.');
+    }
+
+    final batch = txn.batch();
+    for (final answer in answers) {
+      batch.insert('attempt_answers', answer.toMap());
+    }
+    await batch.commit(noResult: true);
+
+    // UPDATE rồi INSERT trong cùng transaction để hỗ trợ cả SQLite cũ.
+    for (final entry in wrongBook) {
+      final updated = await txn.rawUpdate(
+        'UPDATE wrong_book SET wrongCount = wrongCount + ?, '
+        'lastWrongAt = ?, nextReviewAt = ? WHERE questionId = ?',
+        [
+          entry.wrongCount,
+          entry.lastWrongAt,
+          entry.nextReviewAt,
+          entry.questionId,
+        ],
+      );
+      if (updated == 0) await txn.insert('wrong_book', entry.toMap());
+    }
+    final updated = await txn.rawUpdate(
+      'UPDATE daily_stats SET xp = xp + ?, questionsDone = questionsDone + ?, '
+      'correct = correct + ?, minutes = minutes + ? WHERE date = ?',
+      [
+        dailyStat.xp,
+        dailyStat.questionsDone,
+        dailyStat.correct,
+        dailyStat.minutes,
+        dailyStat.date,
+      ],
+    );
+    if (updated == 0) await txn.insert('daily_stats', dailyStat.toMap());
+    return attemptId;
+  }
+
+  Future<MockExamDraft?> _readExamDraft(DatabaseExecutor db) async {
+    final rows = await db.query('exam_drafts');
+    return rows.isEmpty
+        ? null
+        : _parseExamDraft(rows.single['payload'] as String);
+  }
+
+  MockExamDraft _parseExamDraft(String payload) {
+    try {
+      return MockExamDraft.fromJson(payload);
+    } on FormatException {
+      throw CorruptExamDraftException(payload);
+    } on TypeError {
+      throw CorruptExamDraftException(payload);
+    }
+  }
+
+  Future<void> discardCorruptExamDraft(String expectedPayload) async {
+    try {
+      _parseExamDraft(expectedPayload);
+    } on CorruptExamDraftException {
+      final db = await database;
+      await db.delete(
+        'exam_drafts',
+        where: 'slot = 1 AND payload = ?',
+        whereArgs: [expectedPayload],
+      );
+      return;
+    }
+    throw StateError('Bản nháp hợp lệ phải được bỏ theo ID.');
+  }
+
+  Future<MockExamDraft?> getExamDraft() async => _readExamDraft(await database);
+
+  Future<void> _checkExamQuestions(
+    DatabaseExecutor db,
+    MockExamDraft draft,
+  ) async {
+    for (final question in draft.questions) {
+      final rows = await db.query(
+        'questions',
+        where: 'id = ?',
+        whereArgs: [question.id],
+      );
+      if (rows.length != 1 ||
+          jsonEncode(Question.fromMap(rows.single).toMap()) !=
+              jsonEncode(question.toMap())) {
+        throw StateError(
+          'Nội dung đề đã thay đổi. Không thể tiếp tục bài thi này.',
         );
-        if (rows.isEmpty) throw ArgumentError('Câu hỏi không tồn tại.');
-        final question = Question.fromMap(rows.single);
-        if (question.correctIndex < 0 ||
-            question.correctIndex >= question.options.length) {
-          throw StateError('Đáp án của câu hỏi trong ngân hàng không hợp lệ.');
-        }
-        if (answer.chosenIndex < -1 ||
-            answer.chosenIndex >= question.options.length ||
-            answer.isCorrect != (answer.chosenIndex == question.correctIndex)) {
-          throw ArgumentError(
-            'Lựa chọn hoặc kết quả chấm câu hỏi không hợp lệ.',
+      }
+    }
+  }
+
+  Future<MockExamDraft> validateExamDraft(String id) async {
+    final db = await database;
+    return db.transaction((txn) async {
+      final draft = await _readExamDraft(txn);
+      if (draft == null || draft.id != id) {
+        throw StateError('Bài thi không còn tồn tại.');
+      }
+      await _checkExamQuestions(txn, draft);
+      return draft;
+    });
+  }
+
+  Future<void> createExamDraft(MockExamDraft draft) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      if (await _readExamDraft(txn) != null ||
+          (await txn.query(
+            'exam_completions',
+            where: 'draftId = ?',
+            whereArgs: [draft.id],
+          )).isNotEmpty) {
+        throw StateError('Không thể thay thế bài thi đang có.');
+      }
+      if (draft.revision != 0 ||
+          draft.answers.any((a) => a != null) ||
+          draft.flagged.isNotEmpty ||
+          draft.currentIndex != 0) {
+        throw ArgumentError('Bài thi mới không hợp lệ.');
+      }
+      await _checkExamQuestions(txn, draft);
+      await txn.insert('exam_drafts', {'slot': 1, 'payload': draft.toJson()});
+    });
+  }
+
+  Future<MockExamDraft> updateExamDraft(
+    MockExamDraft draft, {
+    DateTime? now,
+  }) async {
+    final db = await database;
+    return db.transaction((txn) async {
+      final current = await _readExamDraft(txn);
+      if (current == null ||
+          current.id != draft.id ||
+          current.revision != draft.revision ||
+          current.expired(now ?? DateTime.now())) {
+        throw StateError('Bài thi đã hết giờ hoặc đã thay đổi.');
+      }
+      if (current.startedAt != draft.startedAt ||
+          current.deadline != draft.deadline ||
+          jsonEncode(current.questions.map((q) => q.toMap()).toList()) !=
+              jsonEncode(draft.questions.map((q) => q.toMap()).toList()) ||
+          jsonEncode(current.optionOrder) != jsonEncode(draft.optionOrder)) {
+        throw ArgumentError('Không thể đổi đề hoặc thời gian đang thi.');
+      }
+      final saved = draft.copyWith(revision: current.revision + 1);
+      await txn.update('exam_drafts', {
+        'payload': saved.toJson(),
+      }, where: 'slot = 1');
+      return saved;
+    });
+  }
+
+  Future<void> discardExamDraft(String id) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final current = await _readExamDraft(txn);
+      if (current != null && current.id == id) {
+        await txn.delete('exam_drafts', where: 'slot = 1');
+      }
+    });
+  }
+
+  Future<Attempt> completeExamDraft(String id, {DateTime? now}) async {
+    final db = await database;
+    return db.transaction((txn) async {
+      final receipt = await txn.query(
+        'exam_completions',
+        where: 'draftId = ?',
+        whereArgs: [id],
+      );
+      if (receipt.isNotEmpty) {
+        final rows = await txn.query(
+          'attempts',
+          where: 'id = ?',
+          whereArgs: [receipt.single['attemptId']],
+        );
+        if (rows.isEmpty) throw StateError('Không tìm thấy kết quả đã lưu.');
+        return Attempt.fromMap(rows.single);
+      }
+      final draft = await _readExamDraft(txn);
+      if (draft == null || draft.id != id) {
+        throw StateError('Bài thi không còn tồn tại.');
+      }
+      await _checkExamQuestions(txn, draft);
+      final finishMs = (now ?? DateTime.now()).millisecondsSinceEpoch.clamp(
+        draft.startedAt,
+        draft.deadline,
+      );
+      final finish = DateTime.fromMillisecondsSinceEpoch(finishMs);
+      final duration = (finishMs - draft.startedAt) ~/ 1000;
+      var score = 0;
+      final wrong = <WrongBookEntry>[];
+      for (var i = 0; i < draft.questions.length; i++) {
+        if (draft.answers[i] == draft.questions[i].correctIndex) {
+          score++;
+        } else {
+          wrong.add(
+            WrongBookEntry(
+              questionId: draft.questions[i].id,
+              wrongCount: 1,
+              lastWrongAt: finishMs,
+              nextReviewAt: finish
+                  .add(const Duration(days: 1))
+                  .millisecondsSinceEpoch,
+            ),
           );
         }
       }
-      final wrongIds = answers
-          .where((answer) => !answer.isCorrect)
-          .map((answer) => answer.questionId)
-          .toSet();
-      if (wrongBook.length != wrongIds.length ||
-          wrongBook.map((entry) => entry.questionId).toSet().length !=
-              wrongBook.length ||
-          wrongBook.any(
-            (entry) =>
-                !wrongIds.contains(entry.questionId) ||
-                entry.wrongCount != 1 ||
-                entry.lastWrongAt < 0 ||
-                entry.nextReviewAt < entry.lastWrongAt,
-          )) {
-        throw ArgumentError('Sổ câu sai không khớp các đáp án sai.');
-      }
-
-      final batch = txn.batch();
-      for (final answer in answers) {
-        batch.insert('attempt_answers', answer.toMap());
-      }
-      await batch.commit(noResult: true);
-
-      // UPDATE rồi INSERT trong cùng transaction để hỗ trợ cả SQLite cũ.
-      for (final entry in wrongBook) {
-        final updated = await txn.rawUpdate(
-          'UPDATE wrong_book SET wrongCount = wrongCount + ?, '
-          'lastWrongAt = ?, nextReviewAt = ? WHERE questionId = ?',
-          [
-            entry.wrongCount,
-            entry.lastWrongAt,
-            entry.nextReviewAt,
-            entry.questionId,
-          ],
-        );
-        if (updated == 0) await txn.insert('wrong_book', entry.toMap());
-      }
-      final updated = await txn.rawUpdate(
-        'UPDATE daily_stats SET xp = xp + ?, questionsDone = questionsDone + ?, '
-        'correct = correct + ?, minutes = minutes + ? WHERE date = ?',
-        [
-          dailyStat.xp,
-          dailyStat.questionsDone,
-          dailyStat.correct,
-          dailyStat.minutes,
-          dailyStat.date,
-        ],
+      final attempt = Attempt(
+        mode: 'mock_exam',
+        startedAt: draft.startedAt,
+        durationSec: duration,
+        score: score,
+        total: draft.questions.length,
       );
-      if (updated == 0) await txn.insert('daily_stats', dailyStat.toMap());
+      final date =
+          '${finish.year.toString().padLeft(4, '0')}-${finish.month.toString().padLeft(2, '0')}-${finish.day.toString().padLeft(2, '0')}';
+      final attemptId = await _savePracticeResult(
+        txn,
+        attempt: attempt,
+        buildAnswers: (attemptId) => List.generate(
+          draft.questions.length,
+          (i) => AttemptAnswer(
+            attemptId: attemptId,
+            questionId: draft.questions[i].id,
+            chosenIndex: draft.answers[i] ?? -1,
+            isCorrect: draft.answers[i] == draft.questions[i].correctIndex,
+          ),
+        ),
+        wrongEntries: wrong,
+        dailyStat: DailyStat(
+          date: date,
+          xp: score * 10,
+          questionsDone: draft.questions.length,
+          correct: score,
+          minutes: (duration / 60).ceil(),
+        ),
+      );
+      await txn.insert('exam_completions', {
+        'draftId': id,
+        'attemptId': attemptId,
+      });
+      await txn.delete('exam_drafts', where: 'slot = 1');
+      return Attempt.fromMap({...attempt.toMap(), 'id': attemptId});
     });
   }
 
@@ -898,7 +1154,11 @@ class AppDatabase {
       'word_progress',
     };
     if (!tables.contains(tableName)) {
-      throw ArgumentError.value(tableName, 'tableName', 'Unknown application table');
+      throw ArgumentError.value(
+        tableName,
+        'tableName',
+        'Unknown application table',
+      );
     }
     final db = await database;
     final count = Sqflite.firstIntValue(

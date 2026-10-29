@@ -77,6 +77,10 @@ Các phần sau đã có trên `feature/tai`, được đẩy lên [PR #3](https
 **Phần còn lại:** kiểm thử nâng cấp và plugin trên thiết bị thật. Giữ nguyên ID từ vựng và tiến độ; chưa hợp nhất các từ trùng nội dung nhưng khác ID. Màn hình Trang chủ, Thống kê và Cá nhân/Cài đặt thuộc phần An, không tính là chức năng Tài đã hoàn thành trong PR này.
 
 
+## Kiểm thử SQLite phần Tài — 29/10/2026
+
+Bổ sung kiểm thử mở database đồng thời, thử lại sau lỗi và nâng cấp v1 → v2 bảo toàn dữ liệu. Dùng schema v1 lịch sử và SQLite trên tệp tạm; không thay đổi mã sản phẩm hoặc thêm dependency. Xem [phạm vi, cách chạy và giới hạn kiểm chứng](docs/database-regression.md). Nhánh `feature/tai-db-regression` và PR vào `main` theo quyết định riêng cho nhiệm vụ này; không tạo `develop`.
+
 ## Lưu kết quả bài làm
 
 `AppRepository.savePracticeResult` lưu lượt làm, đáp án, sổ câu sai và thống kê ngày trong một giao dịch, kiểm tra dữ liệu trước khi ghi và rollback khi lỗi. Xem [hướng dẫn tích hợp và kiểm chứng](docs/save-practice-result.md).
@@ -87,3 +91,11 @@ Bộ test dữ liệu dùng SQLite trong bộ nhớ qua Python 3 có sẵn (`sql
 ## Khởi động có thể thử lại
 
 Ứng dụng hiển thị trạng thái nạp dữ liệu trước khi mở các tab. Khi lỗi có nút **Thử lại**, không tự xóa database. Dữ liệu mẫu được nạp trong một transaction để tránh nạp dở dang. Xem [luồng khởi động và kiểm chứng](docs/startup.md).
+
+## Tiếp tục bài thi đang làm dở — 29/10/2026
+
+Nhánh `feature/tai-resume-mock-exam` bổ sung một bản nháp thi thử cục bộ: giữ thứ tự câu hỏi/đáp án, câu đã chọn, cờ và vị trí đang xem. Mở lại mục Thi thử để tiếp tục; thời gian vẫn chạy khi đóng ứng dụng. Hết giờ thì khóa đáp án và hoàn tất khi mở lại bài. Lưu lỗi có nút thử lại; bỏ bài cần xác nhận.
+
+SQLite v3 giữ dữ liệu cũ khi nâng cấp từ v1/v2. Hoàn tất bài, cộng điểm, lưu biên nhận và xóa bản nháp trong cùng giao dịch; gọi lại không cộng điểm trùng. Bản nháp lỗi chỉ được bỏ sau xác nhận, không xóa lịch sử học tập. Tài bổ sung tầng dữ liệu và tích hợp vào hai màn thi thử hiện có của Viễn.
+
+Nhánh này kế thừa kiểm thử của PR #5; PR gửi vào `main`, leader quyết định merge. Chưa kiểm thử tính năng mới trên điện thoại; đồng hồ offline không chống được việc chỉnh giờ thiết bị. Xem [phạm vi và cách kiểm chứng](docs/plans/resume-mock-exam.md).
