@@ -20,6 +20,14 @@ class VocabProvider extends ChangeNotifier {
 
   // ── Trạng thái chủ đề ─────────────────────────────────────────────────────
   List<Topic> _topics = [];
+  Map<String, Set<String>> _topicWordIds = {};
+  Set<String> _visibleWordIds = {};
+  int get totalWordCount => _visibleWordIds.length;
+  int wordCountForTopic(String topicId) => _topicWordIds[topicId]?.length ?? 0;
+  int get dueWordCount => _visibleWordIds.where((id) {
+    final progress = _progressMap[id];
+    return progress != null && progress.isLearned && progress.isDue;
+  }).length;
   List<Topic> get topics => _topics;
 
   // ── Trạng thái từ theo chủ đề ─────────────────────────────────────────────
@@ -68,8 +76,17 @@ class VocabProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      _topics = await _repo.getTopicsByGrade(12);
+      final topics = await _repo.getTopicsByGrade(12);
+      final topicWordIds = <String, Set<String>>{};
+      for (final topic in topics) {
+        // Repository resolves legacy topic aliases; never infer membership from IDs.
+        final words = await _repo.getWordsByTopicId(topic.id);
+        topicWordIds[topic.id] = words.map((word) => word.id).toSet();
+      }
       final allProgress = await _repo.getAllWordProgress();
+      _topics = topics;
+      _topicWordIds = topicWordIds;
+      _visibleWordIds = topicWordIds.values.expand((ids) => ids).toSet();
       _progressMap = {for (final p in allProgress) p.wordId: p};
     } catch (e) {
       debugPrint('VocabProvider.loadTopics error: $e');
@@ -137,20 +154,17 @@ class VocabProvider extends ChangeNotifier {
   }
 
   // ── Helpers thống kê ──────────────────────────────────────────────────────
-  int learnedCountForTopic(String topicId) {
-    final topicWords = _words.isNotEmpty && _selectedTopicId == topicId
-        ? _words
-        : <Word>[];
-    return topicWords
-        .where((w) => _progressMap[w.id]?.isLearned == true)
-        .length;
-  }
+  int learnedCountForTopic(String topicId) =>
+      (_topicWordIds[topicId] ?? <String>{})
+          .where((id) => _progressMap[id]?.isLearned == true)
+          .length;
 
   int totalLearnedCount() =>
-      _progressMap.values.where((p) => p.isLearned).length;
+      _visibleWordIds.where((id) => _progressMap[id]?.isLearned == true).length;
 
-  int masteredCount() =>
-      _progressMap.values.where((p) => p.isMastered).length;
+  int masteredCount() => _visibleWordIds
+      .where((id) => _progressMap[id]?.isMastered == true)
+      .length;
 
   WordProgress progressOf(String wordId) =>
       _progressMap[wordId] ?? WordProgress.newWord(wordId);
