@@ -1,5 +1,6 @@
 import 'app_database.dart';
 import 'models/attempt.dart';
+import 'models/mock_exam_draft.dart';
 import 'models/attempt_answer.dart';
 import 'models/daily_stat.dart';
 import 'models/question.dart';
@@ -38,6 +39,7 @@ class AppRepository {
   Future<int> insertMissingQuestions(List<Question> questions) {
     return _db.insertMissingQuestions(questions);
   }
+
   Future<QuestionSyncResult> syncQuestionsSafe(
     List<Question> questions, {
     String? targetVersion,
@@ -95,6 +97,19 @@ class AppRepository {
   Future<void> upsertWordProgress(WordProgress progress) =>
       _db.upsertWordProgress(progress);
   Future<List<WordProgress>> getDueWordProgress() => _db.getDueWordProgress();
+
+  Future<MockExamDraft?> getExamDraft() => _db.getExamDraft();
+  Future<MockExamDraft> validateExamDraft(String id) =>
+      _db.validateExamDraft(id);
+  Future<void> createExamDraft(MockExamDraft draft) =>
+      _db.createExamDraft(draft);
+  Future<MockExamDraft> updateExamDraft(MockExamDraft draft, {DateTime? now}) =>
+      _db.updateExamDraft(draft, now: now);
+  Future<void> discardCorruptExamDraft(String expectedPayload) =>
+      _db.discardCorruptExamDraft(expectedPayload);
+  Future<void> discardExamDraft(String id) => _db.discardExamDraft(id);
+  Future<Attempt> completeExamDraft(String id, {DateTime? now}) =>
+      _db.completeExamDraft(id, now: now);
 
   Future<void> savePracticeResult({
     required Attempt attempt,

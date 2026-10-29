@@ -47,7 +47,7 @@ void main() {
       addTearDown(db.close);
       expect(databases.every((value) => identical(value, db)), isTrue);
       expect(opens, 2); // One failed open and one shared successful open.
-      expect(await db.getVersion(), 2);
+      expect(await db.getVersion(), 3);
       expect(await app.getSetting('daily_goal'), '20');
       await app.setSetting('daily_goal', '35');
       expect(await app.database, same(db));

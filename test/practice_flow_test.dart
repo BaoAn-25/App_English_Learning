@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:thpt_english/data/app_repository.dart';
+import 'package:thpt_english/data/models/mock_exam_draft.dart';
 import 'package:thpt_english/data/models/attempt.dart';
 import 'package:thpt_english/data/models/attempt_answer.dart';
 import 'package:thpt_english/data/models/daily_stat.dart';
@@ -14,6 +15,11 @@ import 'package:thpt_english/ui/practice/practice_review_screen.dart';
 
 /// Repository giả: ghi lại dữ liệu lưu để kiểm tra luồng làm bài end-to-end.
 class RecordingRepository extends AppRepository {
+  @override
+  Future<MockExamDraft?> getExamDraft() async => null;
+  @override
+  Future<void> createExamDraft(MockExamDraft draft) async {}
+
   final List<Question> bank;
   RecordingRepository(this.bank);
 

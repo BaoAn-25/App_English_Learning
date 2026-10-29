@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:thpt_english/data/app_repository.dart';
+import 'package:thpt_english/data/models/mock_exam_draft.dart';
 import 'package:thpt_english/data/models/question.dart';
 import 'package:thpt_english/ui/practice/mock_exam_quiz_screen.dart';
 import 'package:thpt_english/ui/practice/mock_exam_screen.dart';
 import 'package:thpt_english/ui/practice/practice_quiz_screen.dart';
 
 class FakeAppRepository extends AppRepository {
+  @override
+  Future<MockExamDraft?> getExamDraft() async => null;
+  @override
+  Future<void> createExamDraft(MockExamDraft draft) async {}
+
   final List<Question> fakeQuestions;
   FakeAppRepository(this.fakeQuestions);
 

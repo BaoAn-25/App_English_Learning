@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/app_repository.dart';
 import '../../data/models/attempt.dart';
+import '../../data/models/mock_exam_draft.dart';
 import '../../data/models/attempt_answer.dart';
 import '../../data/models/daily_stat.dart';
 import '../../data/models/question.dart';
@@ -21,6 +22,7 @@ import 'widgets/quiz_option_card.dart';
 class MockExamQuizScreen extends StatefulWidget {
   final List<Question> questions;
   final int durationMinutes;
+  final MockExamDraft? draft;
 
   /// Đồng hồ hệ thống (có thể thay thế khi kiểm thử đếm ngược).
   final DateTime Function()? clock;
@@ -33,6 +35,7 @@ class MockExamQuizScreen extends StatefulWidget {
     required this.questions,
     required this.durationMinutes,
     this.clock,
+    this.draft,
     this.optionMappings,
   });
 
@@ -52,6 +55,69 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   final Set<int> flaggedIndices = <int>{};
 
   Timer? timer;
+  MockExamDraft? _draft;
+  MockExamDraft? _failedSave;
+  bool _savingDraft = false;
+  bool get _editingBlocked =>
+      submitted ||
+      isSaving ||
+      _savingDraft ||
+      (_draft?.expired(_now()) ?? false);
+
+  void _applyDraft(MockExamDraft draft) {
+    _draft = draft;
+    selectedAnswers.setAll(0, draft.answers);
+    flaggedIndices
+      ..clear()
+      ..addAll(draft.flagged);
+    currentIndex = draft.currentIndex;
+  }
+
+  Future<void> _changeProgress({
+    List<int?>? answers,
+    List<int>? flagged,
+    int? index,
+  }) async {
+    if (_editingBlocked) return;
+    final draft = _draft;
+    if (draft == null) {
+      setState(() {
+        if (answers != null) selectedAnswers.setAll(0, answers);
+        if (flagged != null) {
+          flaggedIndices
+            ..clear()
+            ..addAll(flagged);
+        }
+        if (index != null) currentIndex = index;
+      });
+      return;
+    }
+    await _persistDraft(
+      draft.copyWith(answers: answers, flagged: flagged, currentIndex: index),
+    );
+  }
+
+  Future<void> _persistDraft(MockExamDraft candidate) async {
+    if (_editingBlocked) return;
+    setState(() {
+      _savingDraft = true;
+      _failedSave = null;
+    });
+    try {
+      final saved = await context.read<AppRepository>().updateExamDraft(
+        candidate,
+        now: _now(),
+      );
+      if (mounted) setState(() => _applyDraft(saved));
+    } catch (_) {
+      if (mounted) setState(() => _failedSave = candidate);
+    } finally {
+      if (mounted) {
+        setState(() => _savingDraft = false);
+        updateTimer();
+      }
+    }
+  }
 
   DateTime _now() => (widget.clock ?? DateTime.now)();
 
@@ -68,17 +134,36 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   void initState() {
     super.initState();
 
-    selectedAnswers = List<int?>.filled(widget.questions.length, null);
+    _draft = widget.draft;
+    selectedAnswers = List<int?>.of(
+      _draft?.answers ?? List<int?>.filled(widget.questions.length, null),
+    );
+    if (_draft != null) {
+      flaggedIndices.addAll(_draft!.flagged);
+      currentIndex = _draft!.currentIndex;
+    }
 
-    startedAt = _now();
+    startedAt = _draft == null
+        ? _now()
+        : DateTime.fromMillisecondsSinceEpoch(_draft!.startedAt);
 
-    deadline = startedAt.add(Duration(minutes: widget.durationMinutes));
+    deadline = _draft == null
+        ? startedAt.add(Duration(minutes: widget.durationMinutes))
+        : DateTime.fromMillisecondsSinceEpoch(_draft!.deadline);
 
-    remainingSeconds = widget.durationMinutes * 60;
+    remainingSeconds = deadline
+        .difference(_now())
+        .inSeconds
+        .clamp(0, widget.durationMinutes * 60);
 
     timer = Timer.periodic(const Duration(seconds: 1), (_) => updateTimer());
 
-    optionMappings = widget.optionMappings ??
+    if (_draft != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => updateTimer());
+    }
+    optionMappings =
+        _draft?.optionOrder.map(QuestionOptionMapping.new).toList() ??
+        widget.optionMappings ??
         List.generate(
           widget.questions.length,
           (i) => QuestionOptionMapping.shuffled(
@@ -88,7 +173,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   }
 
   void updateTimer() {
-    if (!mounted || submitted || isSaving) return;
+    if (!mounted || submitted || isSaving || _savingDraft) return;
 
     final seconds = deadline.difference(_now()).inSeconds;
 
@@ -138,57 +223,42 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   }
 
   void selectAnswer(int index) {
-    if (submitted || isSaving) return;
-
-    setState(() {
-      selectedAnswers[currentIndex] = index;
-    });
+    if (_editingBlocked) return;
+    final answers = List<int?>.of(selectedAnswers)..[currentIndex] = index;
+    _changeProgress(answers: answers);
   }
 
   void toggleFlag(int index) {
-    if (submitted || isSaving) return;
-
-    setState(() {
-      if (flaggedIndices.contains(index)) {
-        flaggedIndices.remove(index);
-      } else {
-        flaggedIndices.add(index);
-      }
-    });
+    if (_editingBlocked) return;
+    final flags = Set<int>.of(flaggedIndices);
+    if (!flags.add(index)) flags.remove(index);
+    _changeProgress(flagged: flags.toList()..sort());
   }
 
   bool isFlagged(int index) => flaggedIndices.contains(index);
 
   void nextQuestion() {
-    if (currentIndex >= widget.questions.length - 1) {
-      return;
+    if (currentIndex < widget.questions.length - 1) {
+      _changeProgress(index: currentIndex + 1);
     }
-
-    setState(() {
-      currentIndex++;
-    });
   }
 
   void previousQuestion() {
-    if (currentIndex <= 0) return;
-
-    setState(() {
-      currentIndex--;
-    });
+    if (currentIndex > 0) _changeProgress(index: currentIndex - 1);
   }
 
   Future<void> confirmExitExam() async {
-    if (isSaving || submitted) return;
+    if (isSaving || submitted || _savingDraft) return;
 
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Thoát bài thi?'),
-          content: const Text(
-            'Nếu thoát bây giờ, các đáp án đã chọn '
-            'sẽ không được lưu. Bạn có chắc chắn '
-            'muốn thoát không?',
+          content: Text(
+            _draft != null
+                ? 'Các thay đổi đã lưu sẽ được giữ lại. Đồng hồ vẫn chạy khi bạn thoát.'
+                : 'Nếu thoát bây giờ, các đáp án đã chọn sẽ không được lưu. Bạn có chắc chắn muốn thoát không?',
           ),
           actions: [
             TextButton(
@@ -208,7 +278,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
       },
     );
 
-    if (!mounted || isSaving || submitted) return;
+    if (!mounted || isSaving || submitted || _savingDraft) return;
 
     if (shouldExit == true) {
       timer?.cancel();
@@ -217,7 +287,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   }
 
   Future<void> confirmSubmit() async {
-    if (submitted || isSaving || isSubmitDialogOpen) return;
+    if (submitted || isSaving || _savingDraft || isSubmitDialogOpen) return;
 
     isSubmitDialogOpen = true;
 
@@ -319,7 +389,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
 
     isSubmitDialogOpen = false;
 
-    if (!mounted || submitted || isSaving) return;
+    if (!mounted || submitted || isSaving || _savingDraft) return;
 
     if (shouldSubmit == true) {
       await saveExamResult();
@@ -327,7 +397,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   }
 
   Future<void> saveExamResult() async {
-    if (submitted || isSaving) return;
+    if (submitted || isSaving || _savingDraft) return;
 
     timer?.cancel();
 
@@ -337,6 +407,21 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
 
     try {
       final repository = context.read<AppRepository>();
+      if (_draft != null) {
+        final result = await repository.completeExamDraft(
+          _draft!.id,
+          now: _now(),
+        );
+        if (!mounted) return;
+        setState(() {
+          savedAttempt = result;
+          usedSeconds = result.durationSec;
+          submitted = true;
+          isSaving = false;
+          _failedSave = null;
+        });
+        return;
+      }
       final finishedAt = _now();
 
       final elapsedSeconds = finishedAt.difference(startedAt).inSeconds;
@@ -430,9 +515,15 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
         isSaving = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không thể lưu bài thi: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _draft == null
+                ? 'Không thể lưu bài thi. Vui lòng thử lại.'
+                : 'Chưa lưu được kết quả. Bài đã lưu vẫn được giữ; hãy thử nộp lại.',
+          ),
+        ),
+      );
     }
   }
 
@@ -452,24 +543,22 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
         return;
       }
 
-      final quizQuestions =
-          ExamBuilderService().buildPracticeSet(questions, count: 10);
+      final quizQuestions = ExamBuilderService().buildPracticeSet(
+        questions,
+        count: 10,
+      );
 
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PracticeQuizScreen(
-            title: typeTitle,
-            questions: quizQuestions,
-          ),
+          builder: (_) =>
+              PracticeQuizScreen(title: typeTitle, questions: quizQuestions),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không thể bắt đầu luyện tập: $e'),
-        ),
+        SnackBar(content: Text('Không thể bắt đầu luyện tập: $e')),
       );
     }
   }
@@ -804,6 +893,36 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
         ),
         body: Column(
           children: [
+            if (_draft != null)
+              Semantics(
+                liveRegion: true,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  child: _failedSave != null && !_draft!.expired(_now())
+                      ? Row(
+                          key: const ValueKey('draft-save-error'),
+                          children: [
+                            const Expanded(
+                              child: Text('Thay đổi chưa được lưu.'),
+                            ),
+                            TextButton(
+                              onPressed: _savingDraft
+                                  ? null
+                                  : () => _persistDraft(_failedSave!),
+                              child: const Text('Thử lưu lại'),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          _savingDraft
+                              ? 'Đang lưu thay đổi…'
+                              : 'Đã lưu trên thiết bị. Đồng hồ vẫn chạy khi thoát.',
+                        ),
+                ),
+              ),
             // Header phụ: Số câu, Nút cắm cờ và Danh sách câu hỏi
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -841,7 +960,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                     flex: 4,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
-                      onTap: isSaving ? null : () => toggleFlag(currentIndex),
+                      onTap: _editingBlocked
+                          ? null
+                          : () => toggleFlag(currentIndex),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         padding: const EdgeInsets.symmetric(
@@ -851,12 +972,16 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                         decoration: BoxDecoration(
                           color: isFlagged(currentIndex)
                               ? Colors.orange.withValues(alpha: 0.15)
-                              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                              : colorScheme.surfaceContainerHighest.withValues(
+                                  alpha: 0.5,
+                                ),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: isFlagged(currentIndex)
                                 ? Colors.orange.shade700
-                                : colorScheme.outlineVariant.withValues(alpha: 0.6),
+                                : colorScheme.outlineVariant.withValues(
+                                    alpha: 0.6,
+                                  ),
                             width: isFlagged(currentIndex) ? 1.2 : 1.0,
                           ),
                         ),
@@ -877,7 +1002,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  isFlagged(currentIndex) ? 'Đã cắm cờ' : 'Cắm cờ',
+                                  isFlagged(currentIndex)
+                                      ? 'Đã cắm cờ'
+                                      : 'Cắm cờ',
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     fontWeight: isFlagged(currentIndex)
                                         ? FontWeight.bold
@@ -912,7 +1039,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                           color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -962,7 +1091,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                       return Column(
                         mainAxisSize: MainAxisSize.min,
                         children: List.generate(mapping.length, (slotIndex) {
-                          final originalIndex = mapping.originalIndexAt(slotIndex);
+                          final originalIndex = mapping.originalIndexAt(
+                            slotIndex,
+                          );
                           final isSelected =
                               selectedAnswers[currentIndex] == originalIndex;
 
@@ -971,7 +1102,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                             text: question.options[originalIndex],
                             isSelected: isSelected,
                             isSubmitted: false,
-                            onTap: isSaving
+                            onTap: _editingBlocked
                                 ? null
                                 : () => selectAnswer(originalIndex),
                           );
@@ -1193,7 +1324,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
   }
 
   void _showQuestionGrid() {
-    if (submitted || isSaving) return;
+    if (submitted || isSaving || _savingDraft) return;
 
     QuestionFilterType activeFilter = QuestionFilterType.all;
 
@@ -1214,14 +1345,16 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
             List<int> filteredIndices;
             switch (activeFilter) {
               case QuestionFilterType.unanswered:
-                filteredIndices = List.generate(totalQuestions, (i) => i)
-                    .where((i) => selectedAnswers[i] == null)
-                    .toList();
+                filteredIndices = List.generate(
+                  totalQuestions,
+                  (i) => i,
+                ).where((i) => selectedAnswers[i] == null).toList();
                 break;
               case QuestionFilterType.flagged:
-                filteredIndices = List.generate(totalQuestions, (i) => i)
-                    .where((i) => flaggedIndices.contains(i))
-                    .toList();
+                filteredIndices = List.generate(
+                  totalQuestions,
+                  (i) => i,
+                ).where((i) => flaggedIndices.contains(i)).toList();
                 break;
               case QuestionFilterType.all:
                 filteredIndices = List.generate(totalQuestions, (i) => i);
@@ -1234,8 +1367,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
               ),
               decoration: BoxDecoration(
                 color: colorScheme.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.15),
@@ -1302,7 +1436,8 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                             child: _buildFilterChip(
                               context: sheetContext,
                               label: 'Tất cả ($totalQuestions)',
-                              isSelected: activeFilter == QuestionFilterType.all,
+                              isSelected:
+                                  activeFilter == QuestionFilterType.all,
                               icon: Icons.list_alt_rounded,
                               onTap: () {
                                 setModalState(() {
@@ -1335,8 +1470,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                               isSelected:
                                   activeFilter == QuestionFilterType.flagged,
                               icon: Icons.flag_rounded,
-                              badgeColor:
-                                  flaggedCount > 0 ? Colors.amber.shade800 : null,
+                              badgeColor: flaggedCount > 0
+                                  ? Colors.amber.shade800
+                                  : null,
                               onTap: () {
                                 setModalState(() {
                                   activeFilter = QuestionFilterType.flagged;
@@ -1401,19 +1537,20 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                               padding: const EdgeInsets.fromLTRB(16, 6, 16, 20),
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 5,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                                childAspectRatio: 1.0,
-                              ),
+                                    crossAxisCount: 5,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                    childAspectRatio: 1.0,
+                                  ),
                               itemCount: filteredIndices.length,
                               itemBuilder: (context, idx) {
                                 final realIndex = filteredIndices[idx];
                                 final isAnswered =
                                     selectedAnswers[realIndex] != null;
                                 final isCurrent = realIndex == currentIndex;
-                                final isFlag =
-                                    flaggedIndices.contains(realIndex);
+                                final isFlag = flaggedIndices.contains(
+                                  realIndex,
+                                );
 
                                 return _buildGridQuestionItem(
                                   context: sheetContext,
@@ -1423,9 +1560,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                                   isFlagged: isFlag,
                                   onTap: () {
                                     Navigator.pop(sheetContext);
-                                    setState(() {
-                                      currentIndex = realIndex;
-                                    });
+                                    _changeProgress(index: realIndex);
                                   },
                                 );
                               },
@@ -1520,14 +1655,17 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
             width: 12,
             height: 12,
             decoration: BoxDecoration(
-              color: color ??
-                  (isCurrent ? colorScheme.primaryContainer : Colors.transparent),
+              color:
+                  color ??
+                  (isCurrent
+                      ? colorScheme.primaryContainer
+                      : Colors.transparent),
               shape: BoxShape.circle,
               border: isCurrent
                   ? Border.all(color: colorScheme.primary, width: 2)
                   : (borderColor != null
-                      ? Border.all(color: borderColor, width: 1.2)
-                      : null),
+                        ? Border.all(color: borderColor, width: 1.2)
+                        : null),
             ),
           ),
         const SizedBox(width: 4),
@@ -1563,10 +1701,7 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
     } else {
       bgColor = colorScheme.surface;
       textColor = colorScheme.onSurface;
-      border = Border.all(
-        color: colorScheme.outlineVariant,
-        width: 1.2,
-      );
+      border = Border.all(color: colorScheme.outlineVariant, width: 1.2);
     }
 
     if (isCurrent) {
@@ -1612,8 +1747,9 @@ class _MockExamQuizScreenState extends State<MockExamQuizScreen> {
                 child: Icon(
                   Icons.flag_rounded,
                   size: 13,
-                  color:
-                      isAnswered ? Colors.amber.shade200 : Colors.amber.shade900,
+                  color: isAnswered
+                      ? Colors.amber.shade200
+                      : Colors.amber.shade900,
                 ),
               ),
           ],

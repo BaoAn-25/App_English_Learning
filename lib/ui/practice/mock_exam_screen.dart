@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/app_repository.dart';
 import '../../data/models/question.dart';
+import '../../data/models/mock_exam_draft.dart';
 import 'mock_exam_history_screen.dart';
 import 'mock_exam_quiz_screen.dart';
 import 'services/exam_builder_service.dart';
@@ -33,7 +34,116 @@ class _MockExamMode {
 }
 
 class _MockExamScreenState extends State<MockExamScreen> {
-  late Future<List<Question>> questionsFuture;
+  late Future<(List<Question>, MockExamDraft?)> questionsFuture;
+  bool _busy = false;
+
+  Future<(List<Question>, MockExamDraft?)> _load() async {
+    final repo = context.read<AppRepository>();
+    final draft = await repo.getExamDraft();
+    final questions = await repo.getQuestionsByGrade(12);
+    return (questions, draft);
+  }
+
+  void _reload() {
+    if (mounted) {
+      final next = _load();
+      setState(() {
+        questionsFuture = next;
+      });
+    }
+  }
+
+  Future<void> _openExam({
+    MockExamDraft? resume,
+    List<Question>? questions,
+    int? minutes,
+  }) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final repo = context.read<AppRepository>();
+      final draft = resume == null
+          ? MockExamDraft.start(
+              questions: questions!,
+              durationMinutes: minutes!,
+              now: DateTime.now(),
+            )
+          : await repo.validateExamDraft(resume.id);
+      if (resume == null) await repo.createExamDraft(draft);
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MockExamQuizScreen(
+            questions: draft.questions,
+            durationMinutes: draft.durationMinutes,
+            draft: draft,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              resume == null
+                  ? 'Không thể bắt đầu bài thi. Vui lòng thử lại.'
+                  : 'Không thể khôi phục bài thi. Hãy thử lại; nếu đề đã thay đổi, bạn có thể bỏ bài để thi mới.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+        _reload();
+      }
+    }
+  }
+
+  Future<void> _discard({MockExamDraft? draft, String? corruptPayload}) async {
+    if (_busy) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Bỏ bài đang làm?'),
+        content: const Text(
+          'Đáp án của bài này sẽ bị xóa. Kết quả các bài đã nộp được giữ nguyên.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Giữ bài'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Bỏ bài'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || _busy) return;
+    setState(() => _busy = true);
+    try {
+      final repo = context.read<AppRepository>();
+      if (corruptPayload != null) {
+        await repo.discardCorruptExamDraft(corruptPayload);
+      } else {
+        await repo.discardExamDraft(draft!.id);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chưa bỏ được bài. Vui lòng thử lại.')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+        _reload();
+      }
+    }
+  }
 
   static const List<_MockExamMode> examModes = [
     _MockExamMode(
@@ -69,7 +179,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   @override
   void initState() {
     super.initState();
-    questionsFuture = context.read<AppRepository>().getQuestionsByGrade(12);
+    questionsFuture = _load();
   }
 
   @override
@@ -79,7 +189,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Thi thử THPT')),
-      body: FutureBuilder<List<Question>>(
+      body: FutureBuilder<(List<Question>, MockExamDraft?)>(
         future: questionsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -88,11 +198,31 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Không thể tải câu hỏi: ${snapshot.error}'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Không thể tải bài thi. Dữ liệu đã lưu được giữ nguyên.',
+                  ),
+                  TextButton(onPressed: _reload, child: const Text('Thử lại')),
+                  if (snapshot.error is CorruptExamDraftException)
+                    TextButton(
+                      onPressed: _busy
+                          ? null
+                          : () => _discard(
+                              corruptPayload:
+                                  (snapshot.error as CorruptExamDraftException)
+                                      .payload,
+                            ),
+                      child: const Text('Bỏ bản nháp lỗi'),
+                    ),
+                ],
+              ),
             );
           }
 
-          final questions = snapshot.data ?? [];
+          final questions = snapshot.data?.$1 ?? <Question>[];
+          final draft = snapshot.data?.$2;
           final currentMode = selectedMode;
           final canStart = questions.length >= currentMode.questionCount;
 
@@ -101,6 +231,38 @@ class _MockExamScreenState extends State<MockExamScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (draft != null)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Bài thi đang làm dở',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${draft.answers.where((a) => a != null).length}/${draft.questions.length} câu đã trả lời. Thời gian vẫn chạy khi thoát.',
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: _busy
+                                ? null
+                                : () => _openExam(resume: draft),
+                            child: const Text('Tiếp tục bài thi'),
+                          ),
+                          TextButton(
+                            onPressed: _busy
+                                ? null
+                                : () => _discard(draft: draft),
+                            child: const Text('Bỏ bài để thi mới'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 // Biểu tượng Hero học thuật
                 Center(
                   child: Container(
@@ -418,7 +580,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
                       const SizedBox(height: 6),
                       _buildRuleRow(
                         context,
-                        'Nếu thoát giữa chừng, bài làm hiện tại sẽ không được lưu.',
+                        'Bài đang làm được lưu trên thiết bị. Thoát ứng dụng không dừng đồng hồ.',
                       ),
                     ],
                   ),
@@ -458,25 +620,16 @@ class _MockExamScreenState extends State<MockExamScreen> {
                 ],
 
                 FilledButton.icon(
-                  onPressed: canStart
-                      ? () {
-                          final selectedQuestions = ExamBuilderService()
+                  onPressed: canStart && draft == null && !_busy
+                      ? () => _openExam(
+                          questions: ExamBuilderService()
                               .buildMockExam(
                                 questions,
                                 count: currentMode.questionCount,
                               )
-                              .questions;
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MockExamQuizScreen(
-                                questions: selectedQuestions,
-                                durationMinutes: currentMode.durationMinutes,
-                              ),
-                            ),
-                          );
-                        }
+                              .questions,
+                          minutes: currentMode.durationMinutes,
+                        )
                       : null,
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: Text(

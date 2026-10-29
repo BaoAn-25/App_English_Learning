@@ -79,7 +79,7 @@ void main() {
 
       // This invokes production _onUpgrade, not a copied migration callback.
       final upgraded = await AppDatabase.instance.database;
-      expect(await upgraded.getVersion(), 2);
+      expect(await upgraded.getVersion(), 3);
       for (final table in tables) {
         expect(
           await upgraded.query(table),
@@ -108,9 +108,9 @@ void main() {
       expect(nextAttempt, greaterThan(7));
       await upgraded.close();
 
-      final reopened = await openDatabase(path, version: 2);
+      final reopened = await openDatabase(path, version: 3);
       addTearDown(reopened.close);
-      expect(await reopened.getVersion(), 2);
+      expect(await reopened.getVersion(), 3);
       expect(
         (await reopened.query('word_progress')).single['nextReviewAt'],
         500,
