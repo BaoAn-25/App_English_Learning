@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 import '../../data/models/topic.dart';
 import 'srs_review_screen.dart';
 import 'vocab_provider.dart';
+import 'vocab_load_error.dart';
 import 'word_list_screen.dart';
 
-/// Màn hình danh sách 10 chủ đề từ vựng
+/// Màn hình danh sách chủ đề từ vựng
 class TopicListScreen extends StatelessWidget {
   const TopicListScreen({super.key});
 
@@ -36,7 +37,10 @@ class TopicListScreen extends StatelessWidget {
                       color: colorScheme.onSurface,
                     ),
                   ),
-                  background: _HeaderBackground(colorScheme: colorScheme),
+                  background: _HeaderBackground(
+                    colorScheme: colorScheme,
+                    wordCount: provider.totalWordCount,
+                  ),
                 ),
                 actions: [
                   _SrsReviewButton(provider: provider),
@@ -45,16 +49,14 @@ class TopicListScreen extends StatelessWidget {
               ),
 
               // ── Thống kê tổng quan ────────────────────────────────────
-              SliverToBoxAdapter(
-                child: _StatsRow(provider: provider),
-              ),
+              SliverToBoxAdapter(child: _StatsRow(provider: provider)),
 
               // ── Tiêu đề section ───────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
                   child: Text(
-                    '10 Chủ Đề THPT Lớp 12',
+                    '${provider.topics.length} Chủ Đề THPT Lớp 12',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: colorScheme.onSurface,
@@ -64,9 +66,13 @@ class TopicListScreen extends StatelessWidget {
               ),
 
               // ── Loading ───────────────────────────────────────────────
-              if (provider.isLoading)
+              if (provider.isLoadingTopics)
                 const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
+                )
+              else if (provider.topicsLoadFailed)
+                SliverFillRemaining(
+                  child: VocabLoadError(onRetry: provider.loadTopics),
                 )
               else if (provider.topics.isEmpty)
                 SliverFillRemaining(
@@ -82,17 +88,14 @@ class TopicListScreen extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final topic = provider.topics[index];
-                        return _TopicCard(
-                          topic: topic,
-                          index: index,
-                          progressMap: provider.progressMap,
-                        );
-                      },
-                      childCount: provider.topics.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final topic = provider.topics[index];
+                      return _TopicCard(
+                        topic: topic,
+                        index: index,
+                        progressMap: provider.progressMap,
+                      );
+                    }, childCount: provider.topics.length),
                   ),
                 ),
             ],
@@ -106,7 +109,8 @@ class TopicListScreen extends StatelessWidget {
 // ── Header với gradient ────────────────────────────────────────────────────
 class _HeaderBackground extends StatelessWidget {
   final ColorScheme colorScheme;
-  const _HeaderBackground({required this.colorScheme});
+  final int wordCount;
+  const _HeaderBackground({required this.colorScheme, required this.wordCount});
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +145,7 @@ class _HeaderBackground extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '200 Từ Vựng Tiếng Anh',
+                    '$wordCount Từ Vựng Tiếng Anh',
                     style: TextStyle(
                       fontSize: 16,
                       color: colorScheme.primary,
@@ -167,9 +171,7 @@ class _SrsReviewButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dueCount = provider.progressMap.values
-        .where((p) => p.isDue && p.isLearned)
-        .length;
+    final dueCount = provider.dueWordCount;
 
     return Badge(
       isLabelVisible: dueCount > 0,
@@ -198,12 +200,10 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const total = 200;
+    final total = provider.totalWordCount;
     final learned = provider.totalLearnedCount();
     final mastered = provider.masteredCount();
-    final dueCount = provider.progressMap.values
-        .where((p) => p.isDue && p.isLearned)
-        .length;
+    final dueCount = provider.dueWordCount;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -422,8 +422,11 @@ class _TopicCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(Icons.chevron_right_rounded,
-                    color: color.withAlpha(180), size: 22),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: color.withAlpha(180),
+                  size: 22,
+                ),
               ],
             ),
           ),
@@ -442,17 +445,11 @@ class _TopicProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<VocabProvider>();
-    const wordsPerTopic = 20;
-
-    // Đếm đã học trong chủ đề này
-    int learned = 0;
-    final unit = topicId.split('_').last; // ví dụ: "u1", "u2", "u10"
-    for (final entry in provider.progressMap.values) {
-      if (entry.isLearned && entry.wordId.startsWith('w_${unit}_')) {
-        learned++;
-      }
-    }
-    final progress = (learned / wordsPerTopic).clamp(0.0, 1.0);
+    final wordsPerTopic = provider.wordCountForTopic(topicId);
+    final learned = provider.learnedCountForTopic(topicId);
+    final progress = wordsPerTopic == 0
+        ? 0.0
+        : (learned / wordsPerTopic).clamp(0.0, 1.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,10 +466,7 @@ class _TopicProgressBar extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           '$learned/$wordsPerTopic từ đã học',
-          style: TextStyle(
-            fontSize: 11,
-            color: color.withAlpha(200),
-          ),
+          style: TextStyle(fontSize: 11, color: color.withAlpha(200)),
         ),
       ],
     );
