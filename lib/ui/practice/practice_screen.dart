@@ -1,3 +1,4 @@
+import '../textbook/book_practice_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -194,6 +195,57 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   _adaptiveKey.currentState?.reload();
                 }
               },
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          const SizedBox(height: 10),
+
+          // Card Ôn tập theo Sách
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+              ),
+            ),
+            color: colorScheme.surface,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 6,
+              ),
+              leading: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.menu_book_rounded,
+                  color: Colors.teal.shade900,
+                  size: 24,
+                ),
+              ),
+              title: Text(
+                'Ôn tập theo SGK 12',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                'Luyện từ vựng bám sát 10 Unit Global Success 12',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BookPracticeScreen()),
+              ),
             ),
           ),
           const SizedBox(height: 24),

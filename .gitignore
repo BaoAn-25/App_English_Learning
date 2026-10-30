@@ -54,3 +54,7 @@ app.*.map.json
 /android/app/release
 # Widget Preview related
 .widget_preview/
+
+# Temporary extracted assets and scripts
+output/
+tmp-*

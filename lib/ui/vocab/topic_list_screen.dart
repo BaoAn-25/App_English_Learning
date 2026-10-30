@@ -1,3 +1,7 @@
+import '../home/home_screen.dart';
+import '../textbook/textbook_hub_screen.dart';
+import '../textbook/textbook_hub_screen.dart';
+import '../textbook/textbook_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -39,6 +43,14 @@ class TopicListScreen extends StatelessWidget {
                   background: _HeaderBackground(colorScheme: colorScheme),
                 ),
                 actions: [
+                  IconButton(
+                    icon: const Icon(Icons.menu_book_rounded),
+                    tooltip: 'Đọc Sách Giáo Khoa 12',
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TextbookScreen()),
+                    ),
+                  ),
                   _SrsReviewButton(provider: provider),
                   const SizedBox(width: 8),
                 ],
@@ -48,13 +60,65 @@ class TopicListScreen extends StatelessWidget {
               SliverToBoxAdapter(
                 child: _StatsRow(provider: provider),
               ),
+              // ── Banner mở Sách Giáo Khoa 12 ─────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  child: Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: colorScheme.primary.withAlpha(80),
+                        width: 1.2,
+                      ),
+                    ),
+                    color: colorScheme.primaryContainer.withAlpha(60),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      leading: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.auto_stories_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      title: const Text(
+                        'Sách Giáo Khoa Tiếng Anh 12',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: const Text(
+                        'Đọc trọn bộ 159 trang Global Success, vở ghi bài & tra cứu OCR',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TextbookHubScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
 
               // ── Tiêu đề section ───────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
                   child: Text(
-                    '10 Chủ Đề THPT Lớp 12',
+                    'Glossary · 10 Unit Global Success 12',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: colorScheme.onSurface,

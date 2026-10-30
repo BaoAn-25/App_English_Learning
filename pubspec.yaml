@@ -61,6 +61,7 @@ flutter:
   # Khai báo thư mục nạp dữ liệu mẫu
   assets:
     - assets/data/
+    - assets/textbook/
     - assets/fonts/
 
   fonts:

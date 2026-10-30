@@ -1,3 +1,4 @@
+import '../textbook/word_source_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -64,16 +65,16 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _dueWords.isEmpty
-              ? _EmptyState()
-              : _ReviewContent(
-                  dueWords: _dueWords,
-                  onComplete: (reviewed, correct) {
-                    setState(() {
-                      _reviewed = reviewed;
-                    });
-                    _showSummary(reviewed, correct);
-                  },
-                ),
+          ? _EmptyState()
+          : _ReviewContent(
+              dueWords: _dueWords,
+              onComplete: (reviewed, correct) {
+                setState(() {
+                  _reviewed = reviewed;
+                });
+                _showSummary(reviewed, correct);
+              },
+            ),
     );
   }
 
@@ -101,14 +102,12 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                _SummaryChip(count: correct, label: 'Nhớ', color: Colors.green),
                 _SummaryChip(
-                    count: correct,
-                    label: 'Nhớ',
-                    color: Colors.green),
-                _SummaryChip(
-                    count: reviewed - correct,
-                    label: 'Chưa nhớ',
-                    color: Colors.red),
+                  count: reviewed - correct,
+                  label: 'Chưa nhớ',
+                  color: Colors.red,
+                ),
               ],
             ),
           ],
@@ -131,8 +130,11 @@ class _SummaryChip extends StatelessWidget {
   final int count;
   final String label;
   final Color color;
-  const _SummaryChip(
-      {required this.count, required this.label, required this.color});
+  const _SummaryChip({
+    required this.count,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +143,10 @@ class _SummaryChip extends StatelessWidget {
         Text(
           '$count',
           style: TextStyle(
-              fontSize: 28, fontWeight: FontWeight.bold, color: color),
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
         Text(label, style: TextStyle(color: color)),
       ],
@@ -168,10 +173,9 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Không có từ nào cần ôn!',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -201,10 +205,7 @@ class _ReviewContent extends StatefulWidget {
   final List<Word> dueWords;
   final void Function(int reviewed, int correct) onComplete;
 
-  const _ReviewContent({
-    required this.dueWords,
-    required this.onComplete,
-  });
+  const _ReviewContent({required this.dueWords, required this.onComplete});
 
   @override
   State<_ReviewContent> createState() => _ReviewContentState();
@@ -257,8 +258,7 @@ class _ReviewContentState extends State<_ReviewContent> {
               value: progress,
               minHeight: 6,
               backgroundColor: colorScheme.surfaceContainerHighest,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ),
           const SizedBox(height: 24),
@@ -292,7 +292,9 @@ class _ReviewContentState extends State<_ReviewContent> {
                   // Label
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primary.withAlpha(30),
                       borderRadius: BorderRadius.circular(20),
@@ -334,10 +336,14 @@ class _ReviewContentState extends State<_ReviewContent> {
                   // Nút phát âm
                   OutlinedButton.icon(
                     onPressed: () => provider.speak(_current.english),
-                    icon: Icon(Icons.volume_up_rounded,
-                        color: colorScheme.primary),
-                    label: Text('Phát âm',
-                        style: TextStyle(color: colorScheme.primary)),
+                    icon: Icon(
+                      Icons.volume_up_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    label: Text(
+                      'Phát âm',
+                      style: TextStyle(color: colorScheme.primary),
+                    ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: colorScheme.primary),
                     ),
@@ -358,15 +364,19 @@ class _ReviewContentState extends State<_ReviewContent> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      _current.example,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                        color: colorScheme.onPrimaryContainer.withAlpha(180),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                    _current.id.startsWith('gs12_')
+                        ? WordSourceButton(wordId: _current.id)
+                        : Text(
+                            _current.example,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                              color: colorScheme.onPrimaryContainer.withAlpha(
+                                180,
+                              ),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                   ],
                 ],
               ),
@@ -387,10 +397,7 @@ class _ReviewContentState extends State<_ReviewContent> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  'Xem nghĩa',
-                  style: TextStyle(fontSize: 16),
-                ),
+                child: const Text('Xem nghĩa', style: TextStyle(fontSize: 16)),
               ),
             )
           else
@@ -399,15 +406,17 @@ class _ReviewContentState extends State<_ReviewContent> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _answer(false),
-                    icon: const Icon(Icons.close_rounded,
-                        color: Colors.white),
-                    label: const Text('Chưa nhớ',
-                        style: TextStyle(color: Colors.white)),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white),
+                    label: const Text(
+                      'Chưa nhớ',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF5350),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
@@ -415,15 +424,17 @@ class _ReviewContentState extends State<_ReviewContent> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _answer(true),
-                    icon: const Icon(Icons.check_rounded,
-                        color: Colors.white),
-                    label: const Text('Đã nhớ',
-                        style: TextStyle(color: Colors.white)),
+                    icon: const Icon(Icons.check_rounded, color: Colors.white),
+                    label: const Text(
+                      'Đã nhớ',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF66BB6A),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),

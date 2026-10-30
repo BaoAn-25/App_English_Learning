@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../ui/home/study_hub_screen.dart';
 import '../ui/practice/practice_screen.dart';
 import '../ui/settings/settings_screen.dart';
 import '../ui/stats/stats_screen.dart';
-import '../ui/vocab/vocab_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -16,7 +16,7 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [
-    VocabScreen(),
+    StudyHubScreen(),
     PracticeScreen(),
     StatsScreen(),
     SettingsScreen(),
