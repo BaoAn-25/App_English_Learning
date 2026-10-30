@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/topic.dart';
 import 'srs_review_screen.dart';
 import 'vocab_provider.dart';
+import 'vocab_load_error.dart';
 import 'word_list_screen.dart';
 
 /// Màn hình danh sách chủ đề từ vựng
@@ -65,9 +66,13 @@ class TopicListScreen extends StatelessWidget {
               ),
 
               // ── Loading ───────────────────────────────────────────────
-              if (provider.isLoading)
+              if (provider.isLoadingTopics)
                 const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
+                )
+              else if (provider.topicsLoadFailed)
+                SliverFillRemaining(
+                  child: VocabLoadError(onRetry: provider.loadTopics),
                 )
               else if (provider.topics.isEmpty)
                 SliverFillRemaining(

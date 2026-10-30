@@ -54,8 +54,17 @@ class VocabProvider extends ChangeNotifier {
   bool _isSpeaking = false;
   bool get isSpeaking => _isSpeaking;
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  bool _loadingTopics = false;
+  bool _loadingWords = false;
+  bool _loadingDue = false;
+  Future<void>? _dueLoad;
+  bool get isLoadingTopics => _loadingTopics;
+  bool get isLoadingWords => _loadingWords;
+  bool get isLoading => _loadingTopics || _loadingWords || _loadingDue;
+  bool topicsLoadFailed = false;
+  bool wordsLoadFailed = false;
+  bool dueLoadFailed = false;
+  int _wordsRequest = 0;
 
   // ── Khởi tạo TTS ──────────────────────────────────────────────────────────
   void _initTts() {
@@ -78,7 +87,9 @@ class VocabProvider extends ChangeNotifier {
 
   // ── Load dữ liệu ──────────────────────────────────────────────────────────
   Future<void> loadTopics() async {
-    _isLoading = true;
+    if (_loadingTopics || _disposed) return;
+    _loadingTopics = true;
+    topicsLoadFailed = false;
     _notifyIfActive();
     try {
       final topics = await _repo.getTopicsByGrade(12);
@@ -93,42 +104,54 @@ class VocabProvider extends ChangeNotifier {
       _topicWordIds = topicWordIds;
       _visibleWordIds = topicWordIds.values.expand((ids) => ids).toSet();
       _progressMap = {for (final p in allProgress) p.wordId: p};
-    } catch (e) {
-      debugPrint('VocabProvider.loadTopics error: $e');
+    } catch (_) {
+      topicsLoadFailed = true;
     } finally {
-      _isLoading = false;
+      _loadingTopics = false;
       _notifyIfActive();
     }
   }
 
   Future<void> loadWordsByTopic(String topicId) async {
-    _isLoading = true;
+    if (_disposed) return;
+    final request = ++_wordsRequest;
+    _loadingWords = true;
+    wordsLoadFailed = false;
     _selectedTopicId = topicId;
+    _words = [];
     _notifyIfActive();
     try {
-      _words = await _repo.getWordsByTopicId(topicId);
-    } catch (e) {
-      debugPrint('VocabProvider.loadWordsByTopic error: $e');
+      final words = await _repo.getWordsByTopicId(topicId);
+      if (request == _wordsRequest) _words = words;
+    } catch (_) {
+      if (request == _wordsRequest) wordsLoadFailed = true;
     } finally {
-      _isLoading = false;
-      _notifyIfActive();
+      if (request == _wordsRequest) {
+        _loadingWords = false;
+        _notifyIfActive();
+      }
     }
   }
 
-  Future<void> loadDueWords() async {
-    _isLoading = true;
+  Future<void> loadDueWords() {
+    if (_disposed) return Future.value();
+    return _dueLoad ??= _fetchDueWords().whenComplete(() => _dueLoad = null);
+  }
+
+  Future<void> _fetchDueWords() async {
+    _loadingDue = true;
+    dueLoadFailed = false;
+    _dueWords = [];
     _notifyIfActive();
     try {
       final dueProgress = await _repo.getDueWordProgress();
       final dueIds = dueProgress.map((p) => p.wordId).toSet();
-
-      // Lấy tất cả words đã có progress và lọc theo due
       final allWords = await _repo.getAllWords();
       _dueWords = allWords.where((w) => dueIds.contains(w.id)).toList();
-    } catch (e) {
-      debugPrint('VocabProvider.loadDueWords error: $e');
+    } catch (_) {
+      dueLoadFailed = true;
     } finally {
-      _isLoading = false;
+      _loadingDue = false;
       _notifyIfActive();
     }
   }

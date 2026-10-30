@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/models/word.dart';
 import 'vocab_provider.dart';
+import 'vocab_load_error.dart';
 
 /// Màn hình Ôn luyện ngắt quãng (Spaced Repetition System)
 /// Hiện các từ đến hạn ôn và phân loại đúng/sai
@@ -16,6 +17,7 @@ class SrsReviewScreen extends StatefulWidget {
 class _SrsReviewScreenState extends State<SrsReviewScreen> {
   List<Word> _dueWords = [];
   bool _loading = true;
+  bool _loadFailed = false;
   int _reviewed = 0;
 
   @override
@@ -27,12 +29,17 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
   }
 
   Future<void> _loadDueWords() async {
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
     final provider = context.read<VocabProvider>();
     await provider.loadDueWords();
     if (mounted) {
       setState(() {
         _dueWords = List.from(provider.dueWords)..shuffle();
         _loading = false;
+        _loadFailed = provider.dueLoadFailed;
       });
     }
   }
@@ -65,6 +72,8 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : _loadFailed
+          ? VocabLoadError(onRetry: _loadDueWords)
           : _dueWords.isEmpty
           ? _EmptyState()
           : _ReviewContent(
