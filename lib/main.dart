@@ -29,7 +29,7 @@ class ThptEnglishApp extends StatelessWidget {
       title: 'Luyện Thi THPT Tiếng Anh',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      darkTheme: AppTheme.lightTheme,
       themeMode: context.watch<ThemeController>().themeMode,
       home: const AppStartup(),
     );
