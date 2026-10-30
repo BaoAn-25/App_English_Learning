@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Prep12',
+                    'English 12',
                     style: TextStyle(
                       fontFamily: 'BeVietnamPro',
                       fontWeight: FontWeight.w900,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Logo chuẩn của ứng dụng English 12 / Prep12.
 /// Tông màu Xanh Navy (#0F172A) & Vàng Kim (#F59E0B) đồng bộ tuyệt đối với giao diện chính.
-/// Thiết kế huy hiệu hình tròn: Vòng chữ ENGLISH 12, Mũ cử nhân và Sách mở tri thức.
+/// Hiển thị hình ảnh huy hiệu học thuật: Vòng chữ ENGLISH 12, Mũ cử nhân và Sách mở tri thức.
 class PrepLogo extends StatelessWidget {
   final double size;
   final bool showText;
@@ -23,74 +23,23 @@ class PrepLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A), // Nền xanh Navy sang trọng đồng bộ giao diện
-        borderRadius: BorderRadius.circular(size * 0.24),
-        border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3), width: 1.2),
+        borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.2),
-            offset: const Offset(0, 3),
-            blurRadius: 6,
-          ),
-          // Duolingo 3D bottom bevel
-          const BoxShadow(
-            color: Color(0xFF1E293B),
-            offset: Offset(0, 2.5),
-            spreadRadius: 0,
+            color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
           ),
         ],
       ),
-      child: Center(
-        child: Container(
-          width: size * 0.86,
-          height: size * 0.86,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFF1E293B),
-            border: Border.all(color: const Color(0xFFFBBF24), width: 1.5),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Nền vàng hào quang ở giữa
-              Container(
-                width: size * 0.58,
-                height: size * 0.58,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFFEF3C7),
-                ),
-              ),
-              // Sách mở
-              Positioned(
-                bottom: size * 0.16,
-                child: Icon(
-                  Icons.menu_book_rounded,
-                  size: size * 0.44,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-              // Mũ cử nhân
-              Positioned(
-                top: size * 0.16,
-                child: Icon(
-                  Icons.school_rounded,
-                  size: size * 0.36,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-              // Chấm ngôi sao vàng
-              Positioned(
-                top: size * 0.10,
-                right: size * 0.16,
-                child: Icon(
-                  Icons.star_rounded,
-                  size: size * 0.16,
-                  color: const Color(0xFFF59E0B),
-                ),
-              ),
-            ],
-          ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.22),
+        child: Image.asset(
+          'assets/images/app_logo.png',
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => _buildFallback(size),
         ),
       ),
     );
@@ -129,6 +78,25 @@ class PrepLogo extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildFallback(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(size * 0.22),
+        border: Border.all(color: const Color(0xFFFBBF24), width: 1.5),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.school_rounded,
+          size: size * 0.55,
+          color: const Color(0xFFFBBF24),
+        ),
+      ),
     );
   }
 }
