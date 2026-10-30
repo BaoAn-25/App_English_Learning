@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../data/app_repository.dart';
 import '../theme/components/sync_status_badge.dart';
 import 'notification_service.dart';
+import 'profile_validation.dart';
 
 /// ViewModel / Controller quản lý phần Cài đặt & Cá nhân.
 /// Tuân thủ nguyên tắc Offline-first: ghi dữ liệu cục bộ vào SQLite trước qua AppRepository,
@@ -29,8 +30,8 @@ class SettingsController extends ChangeNotifier {
   SettingsController({
     required AppRepository repo,
     NotificationService? notificationService,
-  })  : _repository = repo,
-        _notificationService = notificationService ?? NotificationService() {
+  }) : _repository = repo,
+       _notificationService = notificationService ?? NotificationService() {
     loadSettings();
   }
 
@@ -69,17 +70,19 @@ class SettingsController extends ChangeNotifier {
   Future<void> loadSettings() async {
     try {
       final savedName = await _repository.getSetting('user_name');
-      if (savedName != null && savedName.isNotEmpty) {
-        _name = savedName;
+      if (savedName != null && ProfileValidation.nameError(savedName) == null) {
+        _name = savedName.trim();
       }
 
       final savedGrade = await _repository.getSetting('grade');
       if (savedGrade != null) {
-        _grade = int.tryParse(savedGrade) ?? 12;
+        final grade = int.tryParse(savedGrade);
+        if (grade != null && grade >= 1 && grade <= 12) _grade = grade;
       }
 
       final savedTarget = await _repository.getSetting('target_score');
-      if (savedTarget != null) {
+      if (savedTarget != null &&
+          ProfileValidation.scoreError(savedTarget) == null) {
         _targetScore = double.tryParse(savedTarget) ?? 8.5;
       }
 
@@ -122,17 +125,22 @@ class SettingsController extends ChangeNotifier {
     required int grade,
     required double targetScore,
   }) async {
-    _name = name;
+    if (ProfileValidation.nameError(name) != null ||
+        ProfileValidation.scoreError(targetScore.toString()) != null ||
+        grade < 1 ||
+        grade > 12) {
+      throw ArgumentError('Thông tin hồ sơ không hợp lệ.');
+    }
+    final normalizedName = name.trim();
+    await _repository.setSetting('user_name', normalizedName);
+    await _repository.setSetting('grade', grade.toString());
+    await _repository.setSetting('target_score', targetScore.toString());
+    await _repository.setSetting('has_pending_sync', 'true');
+    _name = normalizedName;
     _grade = grade;
     _targetScore = targetScore;
     _hasPendingSync = true;
     _notifyIfActive();
-
-    // 1. Lưu cục bộ an toàn
-    await _repository.setSetting('user_name', _name);
-    await _repository.setSetting('grade', _grade.toString());
-    await _repository.setSetting('target_score', _targetScore.toString());
-    await _repository.setSetting('has_pending_sync', 'true');
 
     // 2. Kích hoạt đồng bộ nền nếu có mạng
     await _syncInBackground();
@@ -157,7 +165,10 @@ class SettingsController extends ChangeNotifier {
     _reminderEnabled = enabled;
     _notifyIfActive();
 
-    await _repository.setSetting('reminder_enabled', enabled ? 'true' : 'false');
+    await _repository.setSetting(
+      'reminder_enabled',
+      enabled ? 'true' : 'false',
+    );
 
     if (enabled) {
       final granted = await _notificationService.requestPermission();
@@ -202,7 +213,10 @@ class SettingsController extends ChangeNotifier {
       _hasPendingSync = false;
       _syncState = SyncState.synced;
 
-      await _repository.setSetting('last_synced_at', _lastSyncedAt!.toIso8601String());
+      await _repository.setSetting(
+        'last_synced_at',
+        _lastSyncedAt!.toIso8601String(),
+      );
       await _repository.setSetting('has_pending_sync', 'false');
     } catch (_) {
       _syncState = SyncState.error;
@@ -229,7 +243,10 @@ class SettingsController extends ChangeNotifier {
       _hasPendingSync = false;
       _syncState = SyncState.synced;
 
-      await _repository.setSetting('last_synced_at', _lastSyncedAt!.toIso8601String());
+      await _repository.setSetting(
+        'last_synced_at',
+        _lastSyncedAt!.toIso8601String(),
+      );
       await _repository.setSetting('has_pending_sync', 'false');
     } catch (_) {
       _syncState = SyncState.error;

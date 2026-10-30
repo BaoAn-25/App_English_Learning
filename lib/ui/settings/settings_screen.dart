@@ -10,6 +10,7 @@ import '../theme/components/section_header.dart';
 import '../theme/components/sync_status_badge.dart';
 import '../theme/theme_controller.dart';
 import 'settings_controller.dart';
+import 'edit_profile_dialog.dart';
 
 /// Màn hình Cá nhân & Cài đặt.
 /// Xuất widget công khai để MainShell gắn vào NavigationBar.
@@ -18,11 +19,7 @@ class SettingsScreen extends StatelessWidget {
   final AppRepository? repository;
   final VoidCallback? onLogout;
 
-  const SettingsScreen({
-    super.key,
-    this.repository,
-    this.onLogout,
-  });
+  const SettingsScreen({super.key, this.repository, this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +33,7 @@ class SettingsScreen extends StatelessWidget {
     return ChangeNotifierProvider<SettingsController>(
       create: (_) => SettingsController(repo: repo),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.settingsTitle),
-        ),
+        appBar: AppBar(title: const Text(AppStrings.settingsTitle)),
         body: Consumer<SettingsController>(
           builder: (context, controller, child) {
             return ListView(
@@ -79,7 +74,10 @@ class SettingsScreen extends StatelessWidget {
   }
 
   // --- Khối 1: Hồ sơ học sinh ---
-  Widget _buildProfileCard(BuildContext context, SettingsController controller) {
+  Widget _buildProfileCard(
+    BuildContext context,
+    SettingsController controller,
+  ) {
     final theme = Theme.of(context);
 
     return AppCard(
@@ -134,7 +132,10 @@ class SettingsScreen extends StatelessWidget {
   }
 
   // --- Khối 2: Mục tiêu câu/ngày ---
-  Widget _buildDailyGoalCard(BuildContext context, SettingsController controller) {
+  Widget _buildDailyGoalCard(
+    BuildContext context,
+    SettingsController controller,
+  ) {
     const goals = [10, 20, 30];
 
     return AppCard(
@@ -161,9 +162,13 @@ class SettingsScreen extends StatelessWidget {
                         color: isSelected
                             ? AppTokens.primary
                             : Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusMedium,
+                        ),
                         border: Border.all(
-                          color: isSelected ? AppTokens.primary : const Color(0xFFE2E8F0),
+                          color: isSelected
+                              ? AppTokens.primary
+                              : const Color(0xFFE2E8F0),
                           width: 1.5,
                         ),
                       ),
@@ -174,7 +179,9 @@ class SettingsScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : AppTokens.textMain,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppTokens.textMain,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -182,7 +189,9 @@ class SettingsScreen extends StatelessWidget {
                             AppStrings.questionsDoneUnit,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isSelected ? Colors.white70 : const Color(0xFF64748B),
+                              color: isSelected
+                                  ? Colors.white70
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                         ],
@@ -199,7 +208,10 @@ class SettingsScreen extends StatelessWidget {
   }
 
   // --- Khối 3: Nhắc nhở học tập ---
-  Widget _buildReminderCard(BuildContext context, SettingsController controller) {
+  Widget _buildReminderCard(
+    BuildContext context,
+    SettingsController controller,
+  ) {
     final theme = Theme.of(context);
     final formattedTime =
         '${controller.reminderTime.hour.toString().padLeft(2, '0')}:${controller.reminderTime.minute.toString().padLeft(2, '0')}';
@@ -209,7 +221,11 @@ class SettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.alarm_rounded, color: AppTokens.primary, size: 22),
+              const Icon(
+                Icons.alarm_rounded,
+                color: AppTokens.primary,
+                size: 22,
+              ),
               const SizedBox(width: AppTokens.space12),
               Expanded(
                 child: Column(
@@ -217,11 +233,17 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     const Text(
                       AppStrings.enableDailyReminder,
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
                     ),
                     Text(
                       'Nhắc duy trì streak mỗi ngày',
-                      style: TextStyle(fontSize: 12, color: theme.colorScheme.outline),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -252,13 +274,21 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     const Text(
                       AppStrings.reminderTime,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTokens.primary.withAlpha(20),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusSmall,
+                        ),
                       ),
                       child: Text(
                         formattedTime,
@@ -297,17 +327,26 @@ class SettingsScreen extends StatelessWidget {
               ButtonSegment<ThemeMode>(
                 value: ThemeMode.system,
                 icon: Icon(Icons.settings_brightness, size: 18),
-                label: Text(AppStrings.themeSystem, style: TextStyle(fontSize: 12)),
+                label: Text(
+                  AppStrings.themeSystem,
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
               ButtonSegment<ThemeMode>(
                 value: ThemeMode.light,
                 icon: Icon(Icons.light_mode, size: 18),
-                label: Text(AppStrings.themeLight, style: TextStyle(fontSize: 12)),
+                label: Text(
+                  AppStrings.themeLight,
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
               ButtonSegment<ThemeMode>(
                 value: ThemeMode.dark,
                 icon: Icon(Icons.dark_mode, size: 18),
-                label: Text(AppStrings.themeDark, style: TextStyle(fontSize: 12)),
+                label: Text(
+                  AppStrings.themeDark,
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
             ],
             selected: {themeController.themeMode},
@@ -383,60 +422,13 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, SettingsController controller) {
-    final nameCtrl = TextEditingController(text: controller.name);
-    final targetCtrl = TextEditingController(text: controller.targetScore.toString());
-
-    showDialog(
+  void _showEditProfileDialog(
+    BuildContext context,
+    SettingsController controller,
+  ) {
+    showDialog<void>(
       context: context,
-      builder: (dialogCtx) {
-        return AlertDialog(
-          title: const Text('Chỉnh sửa hồ sơ'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: AppStrings.fullName,
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: targetCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: AppStrings.targetScore,
-                  hintText: 'Ví dụ: 8.5',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text(AppStrings.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newName = nameCtrl.text.trim();
-                final newTarget = double.tryParse(targetCtrl.text.trim()) ?? controller.targetScore;
-                if (newName.isNotEmpty) {
-                  controller.updateProfile(
-                    name: newName,
-                    grade: 12,
-                    targetScore: newTarget,
-                  );
-                }
-                Navigator.pop(dialogCtx);
-              },
-              child: const Text(AppStrings.save),
-            ),
-          ],
-        );
-      },
+      builder: (_) => EditProfileDialog(controller: controller),
     );
   }
 
@@ -453,14 +445,19 @@ class SettingsScreen extends StatelessWidget {
               child: const Text(AppStrings.cancel),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppTokens.errorRed),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTokens.errorRed,
+              ),
               onPressed: () {
                 Navigator.pop(dialogCtx);
                 if (onLogout != null) {
                   onLogout!();
                 }
               },
-              child: const Text(AppStrings.logout, style: TextStyle(color: Colors.white)),
+              child: const Text(
+                AppStrings.logout,
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
