@@ -654,7 +654,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Gia sư AI Prep12 sẵn sàng giải đáp thắc mắc bài tập của bạn!'),
+                  content: Text('Gia sư AI English 12 sẵn sàng giải đáp thắc mắc bài tập của bạn!'),
                   duration: Duration(seconds: 2),
                 ),
               );

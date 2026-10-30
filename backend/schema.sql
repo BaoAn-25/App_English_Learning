@@ -1,5 +1,5 @@
 -- ====================================================================
--- SCHEMA POSTGRESQL CHO ỨNG DỤNG PREP12 (NEON DATABASE)
+-- SCHEMA POSTGRESQL CHO ỨNG DỤNG ENGLISH 12 (NEON DATABASE)
 -- ====================================================================
 
 -- 1. Bảng Người dùng (Tài khoản)
@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(64) PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
-    display_name VARCHAR(120) NOT NULL DEFAULT 'Học sinh Prep12',
+    display_name VARCHAR(120) NOT NULL DEFAULT 'Học sinh English 12',
     avatar_url TEXT,
     auth_provider VARCHAR(32) NOT NULL DEFAULT 'email', -- 'email', 'google', 'guest'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

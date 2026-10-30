@@ -1,7 +1,7 @@
 {
-  "name": "prep12-backend",
+  "name": "english12-backend",
   "version": "1.0.0",
-  "description": "Backend Web API for Prep12 THPT English Learning App",
+  "description": "Backend Web API for English 12 THPT Learning App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

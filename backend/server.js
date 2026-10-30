@@ -34,7 +34,7 @@ async function initializeDatabase() {
         id VARCHAR(64) PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255),
-        display_name VARCHAR(120) NOT NULL DEFAULT 'Học sinh Prep12',
+        display_name VARCHAR(120) NOT NULL DEFAULT 'Học sinh English 12',
         avatar_url TEXT,
         auth_provider VARCHAR(32) NOT NULL DEFAULT 'email',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -74,7 +74,7 @@ async function initializeDatabase() {
       );
     `);
     client.release();
-    console.log('✅ Khởi tạo Schema Database Prep12 hoàn tất.');
+    console.log('✅ Khởi tạo Schema Database English 12 hoàn tất.');
   } catch (err) {
     console.error('❌ Lỗi kết nối Neon Database:', err.message);
   }
@@ -86,7 +86,7 @@ async function initializeDatabase() {
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
-    app: 'Prep12 - Luyện Thi THPT Tiếng Anh',
+    app: 'English 12 - Luyện Thi THPT',
     version: '1.0.0',
     database: process.env.DATABASE_URL ? 'Neon Postgres Connected' : 'No DB Configured',
     timestamp: new Date().toISOString(),
@@ -329,7 +329,7 @@ app.post('/api/exams/submit', async (req, res) => {
 
 // Khởi chạy server
 app.listen(port, async () => {
-  console.log(`🚀 Prep12 Backend API đang chạy tại cổng http://localhost:${port}`);
+  console.log(`🚀 English 12 Backend API đang chạy tại cổng http://localhost:${port}`);
   await initializeDatabase();
 });
 

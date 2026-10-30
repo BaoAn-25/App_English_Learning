@@ -100,7 +100,7 @@ class _OnboardingTargetScreenState extends State<OnboardingTargetScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Prep12 sẽ phân bổ các bài học từ cơ bản đến nâng cao giúp bạn đạt được mục tiêu này.',
+                'English 12 sẽ phân bổ các bài học từ cơ bản đến nâng cao giúp bạn đạt được mục tiêu này.',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 13,

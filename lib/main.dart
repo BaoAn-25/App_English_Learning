@@ -26,7 +26,7 @@ class ThptEnglishApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Luyện Thi THPT Tiếng Anh',
+      title: 'English 12',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.lightTheme,

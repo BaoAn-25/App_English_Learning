@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Logo chuẩn của ứng dụng English 12 / Prep12.
+/// Logo chuẩn của ứng dụng English 12.
 /// Tông màu Xanh Navy (#0F172A) & Vàng Kim (#F59E0B) đồng bộ tuyệt đối với giao diện chính.
 /// Hiển thị hình ảnh huy hiệu học thuật: Vòng chữ ENGLISH 12, Mũ cử nhân và Sách mở tri thức.
 class PrepLogo extends StatelessWidget {

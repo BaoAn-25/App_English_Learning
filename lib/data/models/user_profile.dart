@@ -16,8 +16,8 @@ class UserProfile {
 
   const UserProfile({
     this.id = 'guest_user',
-    this.displayName = 'Học sinh Prep12',
-    this.email = 'student@prep12.app',
+    this.displayName = 'Học sinh English 12',
+    this.email = 'student@english12.app',
     this.avatarUrl = '',
     this.targetScore = 8.0,
     this.examDate = '2026-06-27',
@@ -87,7 +87,7 @@ class UserProfile {
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       id: map['id'] as String? ?? 'guest_user',
-      displayName: map['displayName'] as String? ?? 'Học sinh Prep12',
+      displayName: map['displayName'] as String? ?? 'Học sinh English 12',
       email: map['email'] as String? ?? '',
       avatarUrl: map['avatarUrl'] as String? ?? '',
       targetScore: (map['targetScore'] as num?)?.toDouble() ?? 8.0,

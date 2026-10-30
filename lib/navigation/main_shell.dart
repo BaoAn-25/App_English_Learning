@@ -6,7 +6,7 @@ import '../ui/review/review_screen.dart';
 import '../ui/settings/settings_screen.dart';
 import '../ui/textbook/textbook_hub_screen.dart';
 
-/// MainShell: Khung điều hướng 5 Tab chính của ứng dụng Prep12
+/// MainShell: Khung điều hướng 5 Tab chính của ứng dụng English 12
 /// Theo đúng chuẩn Wireframe: [Hôm nay] | [Sách] | [Luyện đề] | [Ôn tập] | [Tôi]
 class MainShell extends StatefulWidget {
   final int initialIndex;

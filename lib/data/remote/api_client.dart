@@ -9,7 +9,7 @@ class ApiClient {
   final HttpClient _httpClient;
 
   ApiClient({
-    this.baseUrl = 'https://prep12-backend.onrender.com/api',
+    this.baseUrl = 'https://english12-backend.onrender.com/api',
     this.tokenProvider,
   }) : _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 5);
 

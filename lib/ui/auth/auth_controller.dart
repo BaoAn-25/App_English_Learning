@@ -64,7 +64,7 @@ class AuthController extends ChangeNotifier {
 
     _user = _user.copyWith(
       id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-      displayName: name.isNotEmpty ? name : 'Học sinh Prep12',
+      displayName: name.isNotEmpty ? name : 'Học sinh English 12',
       email: email,
       isLoggedIn: true,
       authProvider: 'email',

@@ -100,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Tạo tài khoản Prep12',
+                'Tạo tài khoản English 12',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 26,
@@ -262,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const Expanded(
                     child: Text(
-                      'Tôi đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư của Prep12.',
+                      'Tôi đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư của English 12.',
                       style: TextStyle(fontSize: 12, color: Color(0xFF475569)),
                     ),
                   ),

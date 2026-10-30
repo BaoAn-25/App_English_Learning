@@ -67,7 +67,7 @@ class PlanReadyScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Prep12 đã điều chỉnh bài học theo mục tiêu và thời gian của bạn.',
+                'English 12 đã điều chỉnh bài học theo mục tiêu và thời gian của bạn.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',

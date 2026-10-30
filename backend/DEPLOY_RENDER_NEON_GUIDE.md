@@ -1,6 +1,6 @@
-# HƯỚNG DẪN TRIỂN KHAI BACKEND PREP12 TRÊN NEON DATABASE & RENDER.COM
+# HƯỚNG DẪN TRIỂN KHAI BACKEND ENGLISH 12 TRÊN NEON DATABASE & RENDER.COM
 
-Tài liệu này hướng dẫn bạn cấu hình hoàn chỉnh hệ thống Backend Serverless cho ứng dụng **Prep12 - Luyện Thi THPT Tiếng Anh** bằng cách kết nối **Neon PostgreSQL** và **Render Web Service** (hoàn toàn miễn phí, nhanh chóng và bảo mật cao).
+Tài liệu này hướng dẫn bạn cấu hình hoàn chỉnh hệ thống Backend Serverless cho ứng dụng **English 12 - Luyện Thi THPT** bằng cách kết nối **Neon PostgreSQL** và **Render Web Service** (hoàn toàn miễn phí, nhanh chóng và bảo mật cao).
 
 ---
 
@@ -9,7 +9,7 @@ Tài liệu này hướng dẫn bạn cấu hình hoàn chỉnh hệ thống Bac
 ```
 +-------------------+        HTTPS / JSON        +--------------------------+
 |  Flutter Mobile   |  ----------------------->  |     Render Web API       |
-|    (Prep12 App)   |  <-----------------------  |   (Node.js + Express)    |
+|   (English 12 App)|  <-----------------------  |   (Node.js + Express)    |
 +-------------------+                            +--------------------------+
                                                                |
                                                                | SSL Connection
@@ -26,7 +26,7 @@ Tài liệu này hướng dẫn bạn cấu hình hoàn chỉnh hệ thống Bac
 
 1. Truy cập [https://neon.tech](https://neon.tech) và chọn **Sign in** bằng tài khoản GitHub hoặc Google.
 2. Tại trang tổng quan, nhấn nút **"Create Project"**:
-   - **Project name**: `prep12-database`
+   - **Project name**: `english12-database`
    - **Postgres version**: `16` (mặc định)
    - **Region**: Chọn `Asia Pacific (Singapore) - ap-southeast-1` để có tốc độ kết nối nhanh nhất từ Việt Nam.
 3. Sau khi tạo xong, Neon sẽ hiển thị hộp thoại chứa **Connection Details**:
@@ -53,7 +53,7 @@ Tài liệu này hướng dẫn bạn cấu hình hoàn chỉnh hệ thống Bac
 3. Trên thanh điều hướng Dashboard, bấm **"New +"** -> Chọn **"Web Service"**.
 4. Chọn repository GitHub chứa dự án của bạn.
 5. Điền các trường thông số cấu hình:
-   - **Name**: `prep12-backend` (hoặc tên tùy chọn)
+   - **Name**: `english12-backend` (hoặc tên tùy chọn)
    - **Region**: `Singapore (Southeast Asia)`
    - **Branch**: `main` (hoặc nhánh chứa code của bạn)
    - **Root Directory**: `backend` *(Rất quan trọng: vì code backend nằm trong thư mục `backend/`)*
@@ -68,24 +68,24 @@ Tài liệu này hướng dẫn bạn cấu hình hoàn chỉnh hệ thống Bac
 8. Render sẽ tiến hành build và khởi chạy server trong khoảng 1 - 2 phút. Khi thấy dòng:
    ```text
    ==> Your service is live 🎉
-   🚀 Prep12 Backend API đang chạy tại cổng http://localhost:3000
+   🚀 English 12 Backend API đang chạy tại cổng http://localhost:3000
    ✅ Đã kết nối thành công tới Neon PostgreSQL Database!
    ```
    Bạn copy đường link dịch vụ do Render cấp ở trên cùng bên trái, có dạng:
-   `https://prep12-backend-xxxx.onrender.com`
+   `https://english12-backend-xxxx.onrender.com`
 
 ---
 
 ## BƯỚC 3: KIỂM TRA API HOẠT ĐỘNG
 
 Mở trình duyệt hoặc Postman, truy cập:
-`https://prep12-backend-xxxx.onrender.com/`
+`https://english12-backend-xxxx.onrender.com/`
 
 Kết quả trả về JSON thành công:
 ```json
 {
   "status": "online",
-  "app": "Prep12 - Luyện Thi THPT Tiếng Anh",
+  "app": "English 12 - Luyện Thi THPT",
   "version": "1.0.0",
   "database": "Neon Postgres Connected",
   "timestamp": "2026-10-30T16:40:00.000Z"
@@ -105,7 +105,7 @@ class ApiClient {
 
   const ApiClient({
     // Thay đường link bên dưới bằng URL Render của bạn:
-    this.baseUrl = 'https://prep12-backend-xxxx.onrender.com/api',
+    this.baseUrl = 'https://english12-backend-xxxx.onrender.com/api',
     this.tokenProvider,
   });
 }

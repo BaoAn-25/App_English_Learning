@@ -100,7 +100,7 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Prep12 sẽ phân chia số lượng bài học vừa vặn, đều đặn đến ngày thi để không bị quá tải.',
+                'English 12 sẽ phân chia số lượng bài học vừa vặn, đều đặn đến ngày thi để không bị quá tải.',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 13,
