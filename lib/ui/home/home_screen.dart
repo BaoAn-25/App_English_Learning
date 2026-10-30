@@ -11,6 +11,7 @@ import '../textbook/reading_study_screen.dart';
 import '../textbook/unit_detail_screen.dart';
 import '../theme/components/app_button.dart';
 import '../theme/components/sync_status_badge.dart';
+import '../theme/components/prep_logo.dart';
 import 'home_controller.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -55,19 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
           elevation: 0.5,
           title: Row(
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Center(
-                  child: Icon(Icons.school_rounded, color: Colors.white, size: 20),
-                ),
-              ),
+              const PrepLogo(size: 34, showText: false),
               const SizedBox(width: 10),
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

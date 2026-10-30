@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/splash_screen.dart';
 import '../textbook/textbook_hub_screen.dart';
+import '../theme/components/prep_logo.dart';
 import '../vocab/vocab_screen.dart';
 import 'home_screen.dart';
 
@@ -27,24 +28,12 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: Icon(Icons.school_rounded, color: Colors.white, size: 18),
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'Prep12',
+            PrepLogo(size: 34, showText: false),
+            SizedBox(width: 10),
+            Text(
+              'English 12',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w900,
@@ -155,4 +144,3 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
     );
   }
 }
-

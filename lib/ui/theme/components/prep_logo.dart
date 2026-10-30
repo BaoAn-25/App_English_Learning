@@ -11,7 +11,7 @@ class PrepLogo extends StatelessWidget {
     this.size = 56,
     this.showText = true,
     this.textColor,
-    this.appName = 'Prep12',
+    this.appName = 'English 12',
   });
 
   @override
@@ -20,55 +20,64 @@ class PrepLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(size * 0.28),
+        color: const Color(0xFFF97316), // Nền cam ấm theo ảnh logo
+        borderRadius: BorderRadius.circular(size * 0.24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1D4ED8).withValues(alpha: 0.35),
+            color: const Color(0xFFEA580C).withValues(alpha: 0.35),
             offset: const Offset(0, 4),
-            blurRadius: 10,
+            blurRadius: 8,
           ),
           // Duolingo 3D bottom bevel
           BoxShadow(
-            color: const Color(0xFF172554).withValues(alpha: 0.4),
+            color: const Color(0xFFC2410C).withValues(alpha: 0.4),
             offset: const Offset(0, 3),
             spreadRadius: 0,
           ),
         ],
-        border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
       ),
-      child: Center(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Biểu tượng sách mở sáng tạo
-            Icon(
-              Icons.menu_book_rounded,
-              size: size * 0.54,
-              color: Colors.white,
-            ),
-            // Ngôi sao tri thức vàng ở góc
-            Positioned(
-              top: size * 0.16,
-              right: size * 0.16,
-              child: Container(
-                padding: EdgeInsets.all(size * 0.04),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFC107),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.star_rounded,
-                  size: size * 0.22,
-                  color: const Color(0xFF78350F),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.24),
+        child: Image.asset(
+          'assets/images/app_logo.png',
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback vẽ vector huy hiệu khi asset chưa kịp nạp trong test
+            return Container(
+              color: const Color(0xFFF97316),
+              child: Center(
+                child: Container(
+                  width: size * 0.82,
+                  height: size * 0.82,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B), // Navy blue
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFFEF3C7), width: 1.5),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.menu_book_rounded,
+                        size: size * 0.45,
+                        color: const Color(0xFFFEF3C7),
+                      ),
+                      Positioned(
+                        top: size * 0.12,
+                        child: Icon(
+                          Icons.school_rounded,
+                          size: size * 0.35,
+                          color: const Color(0xFFFDE68A),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -80,7 +89,7 @@ class PrepLogo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         iconBox,
-        SizedBox(width: size * 0.25),
+        SizedBox(width: size * 0.22),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -89,19 +98,19 @@ class PrepLogo extends StatelessWidget {
               appName,
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
-                fontWeight: FontWeight.w800,
-                fontSize: size * 0.52,
+                fontWeight: FontWeight.w900,
+                fontSize: size * 0.46,
                 letterSpacing: -0.5,
-                color: textColor ?? const Color(0xFF1E293B),
+                color: textColor ?? const Color(0xFF0F172A),
               ),
             ),
             Text(
               'Luyện Thi THPT',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
-                fontWeight: FontWeight.w600,
-                fontSize: size * 0.24,
-                color: (textColor ?? const Color(0xFF64748B)).withValues(alpha: 0.85),
+                fontWeight: FontWeight.w700,
+                fontSize: size * 0.23,
+                color: (textColor ?? const Color(0xFF64748B)).withValues(alpha: 0.9),
               ),
             ),
           ],
@@ -110,4 +119,3 @@ class PrepLogo extends StatelessWidget {
     );
   }
 }
-
