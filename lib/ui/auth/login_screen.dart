@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../../navigation/main_shell.dart';
 import '../theme/components/app_button.dart';
@@ -32,6 +33,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
     if (ok) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_completed_onboarding', true);
+      if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const MainShell()),

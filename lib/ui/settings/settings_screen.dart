@@ -1,3 +1,6 @@
+import '../auth/welcome_screen.dart';
+import '../auth/auth_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -413,6 +416,16 @@ class SettingsScreen extends StatelessWidget {
                 Navigator.pop(dialogCtx);
                 if (onLogout != null) {
                   onLogout!();
+                } else {
+                  SharedPreferences.getInstance().then((prefs) {
+                    prefs.setBool('has_completed_onboarding', false);
+                  });
+                  AuthController.instance.logout();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                    (route) => false,
+                  );
                 }
               },
               child: const Text(AppStrings.logout, style: TextStyle(color: Colors.white)),

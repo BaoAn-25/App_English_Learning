@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// Logo chuẩn của ứng dụng English 12 / Prep12.
+/// Tông màu Xanh Navy (#0F172A) & Vàng Kim (#F59E0B) đồng bộ tuyệt đối với giao diện chính.
+/// Thiết kế huy hiệu hình tròn: Vòng chữ ENGLISH 12, Mũ cử nhân và Sách mở tri thức.
 class PrepLogo extends StatelessWidget {
   final double size;
   final bool showText;
@@ -20,64 +23,74 @@ class PrepLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFFF97316), // Nền cam ấm theo ảnh logo
+        color: const Color(0xFF0F172A), // Nền xanh Navy sang trọng đồng bộ giao diện
         borderRadius: BorderRadius.circular(size * 0.24),
+        border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.35),
-            offset: const Offset(0, 4),
-            blurRadius: 8,
+            color: const Color(0xFF0F172A).withValues(alpha: 0.2),
+            offset: const Offset(0, 3),
+            blurRadius: 6,
           ),
           // Duolingo 3D bottom bevel
-          BoxShadow(
-            color: const Color(0xFFC2410C).withValues(alpha: 0.4),
-            offset: const Offset(0, 3),
+          const BoxShadow(
+            color: Color(0xFF1E293B),
+            offset: Offset(0, 2.5),
             spreadRadius: 0,
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(size * 0.24),
-        child: Image.asset(
-          'assets/images/app_logo.png',
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            // Fallback vẽ vector huy hiệu khi asset chưa kịp nạp trong test
-            return Container(
-              color: const Color(0xFFF97316),
-              child: Center(
-                child: Container(
-                  width: size * 0.82,
-                  height: size * 0.82,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B), // Navy blue
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFEF3C7), width: 1.5),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.menu_book_rounded,
-                        size: size * 0.45,
-                        color: const Color(0xFFFEF3C7),
-                      ),
-                      Positioned(
-                        top: size * 0.12,
-                        child: Icon(
-                          Icons.school_rounded,
-                          size: size * 0.35,
-                          color: const Color(0xFFFDE68A),
-                        ),
-                      ),
-                    ],
-                  ),
+      child: Center(
+        child: Container(
+          width: size * 0.86,
+          height: size * 0.86,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF1E293B),
+            border: Border.all(color: const Color(0xFFFBBF24), width: 1.5),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Nền vàng hào quang ở giữa
+              Container(
+                width: size * 0.58,
+                height: size * 0.58,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFFEF3C7),
                 ),
               ),
-            );
-          },
+              // Sách mở
+              Positioned(
+                bottom: size * 0.16,
+                child: Icon(
+                  Icons.menu_book_rounded,
+                  size: size * 0.44,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              // Mũ cử nhân
+              Positioned(
+                top: size * 0.16,
+                child: Icon(
+                  Icons.school_rounded,
+                  size: size * 0.36,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              // Chấm ngôi sao vàng
+              Positioned(
+                top: size * 0.10,
+                right: size * 0.16,
+                child: Icon(
+                  Icons.star_rounded,
+                  size: size * 0.16,
+                  color: const Color(0xFFF59E0B),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

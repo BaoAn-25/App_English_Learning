@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../navigation/main_shell.dart';
 import '../auth/register_screen.dart';
 import '../theme/components/app_button.dart';
@@ -171,12 +172,16 @@ class PlanReadyScreen extends StatelessWidget {
                 isFullWidth: true,
                 variant: AppButtonVariant.primary,
                 height: 52,
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MainShell()),
-                    (route) => false,
-                  );
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('has_completed_onboarding', true);
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MainShell()),
+                      (route) => false,
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 8),
@@ -292,4 +297,3 @@ class PlanReadyScreen extends StatelessWidget {
     );
   }
 }
-

@@ -15,7 +15,7 @@ class FakeAppRepository extends Fake implements AppRepository {
 }
 
 void main() {
-  testWidgets('Smoke test: kiem tra MainShell va chuyen doi 4 tab', (WidgetTester tester) async {
+  testWidgets('Smoke test: kiem tra MainShell va chuyen doi 5 tab', (WidgetTester tester) async {
     // Khoi dong MainShell trong MaterialApp voi FakeAppRepository khong phu thuoc SQLite
     await tester.pumpWidget(
       Provider<AppRepository>.value(
@@ -26,14 +26,15 @@ void main() {
       ),
     );
 
-    // Kiem tra hien thi 4 muc tren NavigationBar
-    expect(find.text('Học'), findsWidgets);
+    // Kiem tra hien thi 5 muc tren NavigationBar theo dung wireframe
+    expect(find.text('Hôm nay'), findsWidgets);
+    expect(find.text('Sách'), findsWidgets);
     expect(find.text('Luyện đề'), findsWidgets);
-    expect(find.text('Thống kê'), findsWidgets);
-    expect(find.text('Cá nhân'), findsWidgets);
+    expect(find.text('Ôn tập'), findsWidgets);
+    expect(find.text('Tôi'), findsWidgets);
 
-    // Ban dau tab 'Học' dang duoc chon (man hinh Tu Vung)
-    expect(find.text('Từ Vựng'), findsWidgets);
+    // Ban dau tab 'Hôm nay' dang duoc chon
+    expect(find.text('Hôm nay học gì?'), findsOneWidget);
 
     // Chuyen sang tab 'Luyện đề'
     await tester.tap(find.text('Luyện đề').first);
@@ -41,5 +42,10 @@ void main() {
 
     // Kiem tra man hinh Luyen de xuat hien
     expect(find.text('Luyện Theo Dạng Bài'), findsOneWidget);
+
+    // Chuyen sang tab 'Sách'
+    await tester.tap(find.text('Sách').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Sách giáo khoa'), findsOneWidget);
   });
 }
