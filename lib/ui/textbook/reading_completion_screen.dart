@@ -6,13 +6,17 @@ class ReadingCompletionScreen extends StatelessWidget {
   final int correctCount;
   final int totalQuestions;
   final int xpEarned;
+  final int currentStreak;
+  final int newWordsCount;
 
   const ReadingCompletionScreen({
     super.key,
-    this.unitNumber = 3,
-    this.correctCount = 5,
-    this.totalQuestions = 6,
-    this.xpEarned = 50,
+    required this.unitNumber,
+    required this.correctCount,
+    required this.totalQuestions,
+    required this.xpEarned,
+    this.currentStreak = 0,
+    this.newWordsCount = 0,
   });
 
   @override
@@ -68,7 +72,7 @@ class ReadingCompletionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Bạn đúng $correctCount/$totalQuestions câu. Một câu sai đã được lưu vào Sổ câu sai để ôn lại.',
+                'Bạn đã hoàn thành bài luyện tập đọc hiểu với kết quả $correctCount/$totalQuestions câu đúng.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontFamily: 'BeVietnamPro',
@@ -79,12 +83,12 @@ class ReadingCompletionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // 3 Stats Duolingo
+              // 3 Stats
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildStatCard(
-                    badge: '+$xpEarned',
+                    badge: xpEarned > 0 ? '+$xpEarned' : '0',
                     label: 'XP',
                     color: const Color(0xFF2563EB),
                     bgColor: const Color(0xFFEFF6FF),
@@ -98,7 +102,7 @@ class ReadingCompletionScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   _buildStatCard(
-                    badge: '4 ngày',
+                    badge: currentStreak > 0 ? '$currentStreak ngày' : '0 ngày',
                     label: 'Streak 🔥',
                     color: const Color(0xFFEA580C),
                     bgColor: const Color(0xFFFFEDD5),
@@ -107,52 +111,53 @@ class ReadingCompletionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Banner thông báo từ mới
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x06000000),
-                      offset: Offset(0, 2),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.collections_bookmark_rounded, color: Color(0xFF2563EB), size: 24),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Đã thêm 7 từ mới vào sổ từ',
-                            style: TextStyle(
-                              fontFamily: 'BeVietnamPro',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Lần ôn đầu tiên sẽ nhắc vào ngày mai.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
+              // Banner thông báo từ mới (nếu có lưu từ thật)
+              if (newWordsCount > 0)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x06000000),
+                        offset: Offset(0, 2),
+                        blurRadius: 8,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.collections_bookmark_rounded, color: Color(0xFF2563EB), size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Đã lưu $newWordsCount từ mới vào sổ từ',
+                              style: const TextStyle(
+                                fontFamily: 'BeVietnamPro',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Các từ này sẽ được nhắc ôn tập theo lịch SRS.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
               const Spacer(flex: 3),
 

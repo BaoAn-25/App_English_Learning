@@ -25,6 +25,7 @@ class _MockRepo implements AppRepository {
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) async {
     lastAttempt = attempt;
   }

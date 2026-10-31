@@ -35,6 +35,7 @@ class RecordingRepository extends AppRepository {
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) async {
     saveCalls++;
     savedAttempt = Attempt(
@@ -52,7 +53,7 @@ class RecordingRepository extends AppRepository {
   }
 
   @override
-  Future<List<Attempt>> getAllAttempts() async =>
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) async =>
       savedAttempt == null ? [] : [savedAttempt!];
 
   @override

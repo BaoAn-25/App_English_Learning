@@ -13,8 +13,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailCtrl = TextEditingController(text: 'student@english12.app');
-  final _passwordCtrl = TextEditingController(text: '123456');
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
 
   @override
@@ -66,6 +66,13 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(builder: (_) => const MainShell()),
         (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.errorMessage ?? 'Tính năng chưa khả dụng'),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
       );
     }
   }
@@ -186,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Liên kết đặt lại mật khẩu đã được gửi đến email của bạn.'),
+                        content: Text('Tính năng đặt lại mật khẩu qua email chưa khả dụng.'),
                       ),
                     );
                   },

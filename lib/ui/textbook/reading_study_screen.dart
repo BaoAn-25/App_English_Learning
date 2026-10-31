@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:provider/provider.dart';
+import '../../data/app_repository.dart';
+import '../../data/models/word_progress.dart';
 import '../theme/components/app_button.dart';
-import 'reading_completion_screen.dart';
 
 class ReadingStudyScreen extends StatefulWidget {
   final int unitNumber;
@@ -78,13 +80,48 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
 
   Map<String, String>? _selectedWordData;
   bool _isSaved = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    // Khởi tạo từ điển mở sẵn từ 'environment' giống như trong Wireframe mẫu ảnh 2
+    // Khởi tạo từ điển mở sẵn từ 'environment'
     _selectedWordData = _dictionary['environment'];
     _initTts();
+    _checkSavedState('environment');
+  }
+
+  Future<void> _checkSavedState(String rawWord) async {
+    final clean = rawWord.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+    try {
+      AppRepository repo;
+      try {
+        repo = context.read<AppRepository>();
+      } catch (_) {
+        repo = AppRepository();
+      }
+      final allWords = await repo.getAllWords();
+      final matchedWord = allWords.where(
+        (w) => w.english.trim().toLowerCase() == clean,
+      ).firstOrNull;
+
+      if (matchedWord != null) {
+        final progress = await repo.getWordProgress(matchedWord.id);
+        if (mounted) {
+          setState(() {
+            _isSaved = progress != null;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isSaved = false;
+          });
+        }
+      }
+    } catch (_) {
+      // Giữ an toàn
+    }
   }
 
   void _initTts() {
@@ -115,6 +152,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
         _isSaved = false;
       });
     }
+    _checkSavedState(clean);
   }
 
   void _showFontSizeDialog() {
@@ -163,7 +201,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
   }
 
   Widget _buildQuizSheet(BuildContext ctx) {
-    int selectedAnswer = 1;
+    int? selectedAnswer;
     return StatefulBuilder(
       builder: (context, setSheetState) {
         return Container(
@@ -176,10 +214,10 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Câu 1/6 · Đọc hiểu SGK',
+                    'Câu hỏi luyện tập đọc hiểu (1 câu minh họa)',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                      fontSize: 15,
                       color: Color(0xFF2563EB),
                     ),
                   ),
@@ -238,20 +276,47 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
               }),
               const Spacer(),
               AppButton(
-                label: 'Kiểm tra & Hoàn thành',
+                label: 'Kiểm tra câu trả lời',
                 isFullWidth: true,
                 variant: AppButtonVariant.primary,
                 onPressed: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReadingCompletionScreen(
-                        unitNumber: widget.unitNumber,
-                        correctCount: 5,
-                        totalQuestions: 6,
-                        xpEarned: 50,
+                  if (selectedAnswer == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng chọn một đáp án trước khi kiểm tra.'),
+                        duration: Duration(seconds: 2),
                       ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(ctx);
+                  final bool isCorrect = selectedAnswer == 1; // 'Green habits and protecting the environment'
+                  if (!mounted) return;
+                  showDialog(
+                    context: context,
+                    builder: (dCtx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: Row(
+                        children: [
+                          Icon(
+                            isCorrect ? Icons.check_circle_rounded : Icons.highlight_off_rounded,
+                            color: isCorrect ? const Color(0xFF16A34A) : const Color(0xFFEF4444),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(isCorrect ? 'Chính xác!' : 'Chưa chính xác'),
+                        ],
+                      ),
+                      content: Text(
+                        isCorrect
+                            ? 'Đáp án đúng là B: Green habits and protecting the environment.\n\nLưu ý: Đây là câu hỏi đọc hiểu luyện tập minh họa và chưa được tính vào điểm số/tiến độ chính thức.'
+                            : 'Đáp án đúng là B: Green habits and protecting the environment.\n\nLưu ý: Đây là câu hỏi đọc hiểu luyện tập minh họa và chưa được tính vào điểm số/tiến độ chính thức.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dCtx),
+                          child: const Text('Đóng'),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -373,7 +438,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
               ),
             ),
 
-            // Nút "Làm 6 câu hỏi đọc hiểu" cố định dưới đáy
+            // Nút "Làm câu hỏi đọc hiểu" cố định dưới đáy
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: const BoxDecoration(
@@ -381,7 +446,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
                 border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
               ),
               child: AppButton(
-                label: 'Làm 6 câu hỏi đọc hiểu',
+                label: 'Làm câu hỏi đọc hiểu minh họa',
                 isFullWidth: true,
                 variant: AppButtonVariant.primary,
                 height: 52,
@@ -488,16 +553,66 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
                   variant: _isSaved ? AppButtonVariant.success : AppButtonVariant.primary,
                   height: 44,
                   icon: _isSaved ? Icons.check_rounded : Icons.bookmark_add_rounded,
-                  onPressed: () {
+                  onPressed: _isSaving ? null : () async {
                     setState(() {
-                      _isSaved = true;
+                      _isSaving = true;
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Đã thêm từ "$word" vào sổ từ vựng ôn tập SRS!'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
+                    try {
+                      AppRepository repo;
+                      try {
+                        repo = context.read<AppRepository>();
+                      } catch (_) {
+                        repo = AppRepository();
+                      }
+                      final allWords = await repo.getAllWords();
+                      final matchedWord = allWords.where(
+                        (w) => w.english.trim().toLowerCase() == word.trim().toLowerCase(),
+                      ).firstOrNull;
+
+                      if (matchedWord == null) {
+                        if (!mounted) return;
+                        setState(() {
+                          _isSaving = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Từ "$word" chưa có trong danh mục từ vựng SGK của hệ thống.'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final existingProgress = await repo.getWordProgress(matchedWord.id);
+                      if (existingProgress == null) {
+                        // Chỉ tạo tiến độ mới khi chưa có
+                        await repo.upsertWordProgress(WordProgress.newWord(matchedWord.id));
+                      }
+                      // Nếu đã có tiến độ, giữ nguyên lịch ôn và số lần ôn
+
+                      if (!mounted) return;
+                      setState(() {
+                        _isSaved = true;
+                        _isSaving = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Đã lưu từ "$word" vào CSDL ôn tập SRS thành công!'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    } catch (_) {
+                      if (!mounted) return;
+                      setState(() {
+                        _isSaving = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Không thể lưu từ "$word" lúc này. Vui lòng thử lại.'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                 ),
               ),

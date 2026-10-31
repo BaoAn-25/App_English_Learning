@@ -18,56 +18,55 @@ class UnitDetailScreen extends StatefulWidget {
 }
 
 class _UnitDetailScreenState extends State<UnitDetailScreen> {
-  bool _isDownloaded = true;
-
-  // Danh sách các phần bài học (ĐÃ LOẠI BỎ LISTENING theo đúng yêu cầu)
+  // Danh sách các phần bài học chuẩn theo cấu trúc SGK 12
+  // Khởi tạo trạng thái thực tế: chưa học phần nào
   final List<Map<String, dynamic>> _sections = [
     {
       'id': 1,
       'title': 'Getting Started',
       'subtitle': 'Khởi động & Làm quen chủ đề',
-      'status': 'completed', // completed | in_progress | locked | not_started
+      'status': 'not_started', // completed | in_progress | locked | not_started
       'icon': Icons.flag_rounded,
     },
     {
       'id': 2,
       'title': 'Language',
       'subtitle': 'Từ vựng & Ngữ pháp trọng tâm',
-      'status': 'completed',
+      'status': 'not_started',
       'icon': Icons.menu_book_rounded,
     },
     {
       'id': 3,
       'title': 'Pronunciation',
       'subtitle': 'Ngữ điệu và phát âm chuẩn',
-      'status': 'completed',
+      'status': 'not_started',
       'icon': Icons.record_voice_over_rounded,
     },
     {
       'id': 4,
       'title': 'Reading',
-      'subtitle': 'Bài đọc · 6 câu hỏi · 8 phút',
-      'status': 'in_progress',
+      'subtitle': 'Bài đọc · Tra từ điển · Luyện tập đọc hiểu',
+      'status': 'not_started',
       'icon': Icons.auto_stories_rounded,
     },
     {
       'id': 5,
       'title': 'Speaking',
-      'subtitle': 'Luyện nói theo tình huống',
+      'subtitle': 'Luyện nói theo tình huống (Chưa sẵn sàng)',
       'status': 'not_started',
       'icon': Icons.chat_bubble_outline_rounded,
     },
     {
       'id': 6,
       'title': 'Writing',
-      'subtitle': 'Luyện viết có gia sư AI sửa lỗi',
+      'subtitle': 'Luyện viết có gia sư AI sửa lỗi (Chưa sẵn sàng)',
       'status': 'not_started',
       'icon': Icons.edit_note_rounded,
     },
     {
       'id': 7,
       'title': 'Looking Back & Project',
-      'subtitle': 'Ôn tập toàn diện Unit & Dự án',
+      'subtitle': 'Ôn tập toàn diện Unit & Dự án (Chưa sẵn sàng)',
       'status': 'not_started',
       'icon': Icons.assignment_outlined,
     },
@@ -109,27 +108,24 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
         actions: [
           TextButton.icon(
             onPressed: () {
-              setState(() {
-                _isDownloaded = !_isDownloaded;
-              });
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(_isDownloaded ? 'Đã tải nội dung Unit về máy offline' : 'Đã xoá bản tải offline'),
-                  duration: const Duration(seconds: 1),
+                const SnackBar(
+                  content: Text('Nội dung sách giáo khoa Global Success 12 đã được tích hợp sẵn ngoại tuyến trong ứng dụng.'),
+                  duration: Duration(seconds: 2),
                 ),
               );
             },
-            icon: Icon(
-              _isDownloaded ? Icons.cloud_done_rounded : Icons.download_rounded,
+            icon: const Icon(
+              Icons.check_circle_outline_rounded,
               size: 18,
-              color: _isDownloaded ? const Color(0xFF16A34A) : const Color(0xFF2563EB),
+              color: Color(0xFF16A34A),
             ),
-            label: Text(
-              _isDownloaded ? 'Đã tải về' : 'Tải về',
+            label: const Text(
+              'Có sẵn ngoại tuyến',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: _isDownloaded ? const Color(0xFF16A34A) : const Color(0xFF2563EB),
+                color: Color(0xFF16A34A),
               ),
             ),
           ),
@@ -208,8 +204,8 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Đang mở phần ${sec['title']}'),
-                            duration: const Duration(seconds: 1),
+                            content: Text('Phần ${sec['title']} chưa sẵn sàng nội dung ở bước này.'),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       }

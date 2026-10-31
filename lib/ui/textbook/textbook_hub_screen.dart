@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/textbook_repository.dart';
 import 'textbook_screen.dart';
 import 'unit_detail_screen.dart';
 
@@ -10,106 +11,126 @@ class TextbookHubScreen extends StatefulWidget {
 }
 
 class _TextbookHubScreenState extends State<TextbookHubScreen> {
-  int _selectedFilter = 0; // 0: Tất cả, 1: Đang học, 2: Đã tải về
+  int _selectedFilter = 0; // 0: Tất cả, 1: Đã đọc trang, 2: Có sẵn ngoại tuyến
+  final TextbookRepository _textbookRepo = TextbookRepository();
+  Set<int> _completedPages = {};
 
   final List<Map<String, dynamic>> _units = [
     {
       'number': 1,
       'title': 'Life Stories We Admire',
       'vietnamese': 'Những câu chuyện cuộc đời đáng ngưỡng mộ',
-      'status': 'completed', // completed | in_progress | not_started
-      'sectionsDone': 8,
-      'totalSections': 8,
-      'isDownloaded': true,
+      'startPage': 8,
+      'endPage': 19,
     },
     {
       'number': 2,
       'title': 'A Diversity of Cultures',
       'vietnamese': 'Sự đa dạng của các nền văn hóa',
-      'status': 'completed',
-      'sectionsDone': 8,
-      'totalSections': 8,
-      'isDownloaded': true,
+      'startPage': 20,
+      'endPage': 31,
     },
     {
       'number': 3,
       'title': 'Green Living',
       'vietnamese': 'Lối sống xanh & Bảo vệ môi trường',
-      'status': 'in_progress',
-      'sectionsDone': 2,
-      'totalSections': 8,
-      'isDownloaded': true,
+      'startPage': 32,
+      'endPage': 43,
     },
     {
       'number': 4,
       'title': 'Urbanisation',
       'vietnamese': 'Đô thị hóa & Sự phát triển thành phố',
-      'status': 'not_started',
-      'sectionsDone': 0,
-      'totalSections': 8,
-      'isDownloaded': false,
+      'startPage': 48,
+      'endPage': 59,
     },
     {
       'number': 5,
       'title': 'The World of Work',
       'vietnamese': 'Thế giới việc làm & Nghề nghiệp tương lai',
-      'status': 'not_started',
-      'sectionsDone': 0,
-      'totalSections': 8,
-      'isDownloaded': false,
+      'startPage': 60,
+      'endPage': 71,
     },
     {
       'number': 6,
       'title': 'Artificial Intelligence',
       'vietnamese': 'Trí tuệ nhân tạo trong đời sống',
-      'status': 'not_started',
-      'sectionsDone': 0,
-      'totalSections': 8,
-      'isDownloaded': false,
+      'startPage': 76,
+      'endPage': 87,
     },
     {
       'number': 7,
       'title': 'The World of Mass Media',
       'vietnamese': 'Thế giới truyền thông đại chúng',
-      'status': 'not_started',
-      'sectionsDone': 0,
-      'totalSections': 8,
-      'isDownloaded': false,
+      'startPage': 88,
+      'endPage': 99,
     },
     {
       'number': 8,
       'title': 'Wildlife Conservation',
       'vietnamese': 'Bảo tồn động thực vật hoang dã',
-      'status': 'not_started',
-      'sectionsDone': 0,
-      'totalSections': 8,
-      'isDownloaded': false,
+      'startPage': 100,
+      'endPage': 111,
     },
     {
       'number': 9,
       'title': 'Career Paths',
       'vietnamese': 'Con đường sự nghiệp',
-      'status': 'not_started',
-      'sectionsDone': 0,
-      'totalSections': 8,
-      'isDownloaded': false,
+      'startPage': 116,
+      'endPage': 127,
     },
     {
       'number': 10,
       'title': 'Lifelong Learning',
       'vietnamese': 'Học tập suốt đời',
-      'status': 'not_started',
-      'sectionsDone': 0,
-      'totalSections': 8,
-      'isDownloaded': false,
+      'startPage': 128,
+      'endPage': 139,
     },
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadReadingProgress();
+  }
+
+  Future<void> _loadReadingProgress() async {
+    try {
+      final pages = await _textbookRepo.completedPages();
+      if (mounted) {
+        setState(() {
+          _completedPages = pages;
+        });
+      }
+    } catch (_) {
+      // Giữ trạng thái rỗng an toàn nếu có lỗi đọc
+    }
+  }
+
+  int _getReadPagesForUnit(Map<String, dynamic> unit) {
+    final start = unit['startPage'] as int;
+    final end = unit['endPage'] as int;
+    return _completedPages.where((p) => p >= start && p <= end).length;
+  }
+
+  int _getTotalPagesForUnit(Map<String, dynamic> unit) {
+    final start = unit['startPage'] as int;
+    final end = unit['endPage'] as int;
+    return end - start + 1;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final unitsStarted = _units.where((u) => _getReadPagesForUnit(u) > 0).length;
+    final totalReadPages = _completedPages.where((p) => p >= 8 && p <= 139).length;
+    const totalCurriculumPages = 120;
+    final double progressValue = totalReadPages / totalCurriculumPages;
+    final int progressPercent = (progressValue * 100).toInt();
+
     final filteredUnits = _units.where((u) {
-      if (_selectedFilter == 1) return u['status'] == 'in_progress';
-      if (_selectedFilter == 2) return u['isDownloaded'] == true;
+      if (_selectedFilter == 1) {
+        return _getReadPagesForUnit(u) > 0;
+      }
       return true;
     }).toList();
 
@@ -130,7 +151,10 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
         actions: [
           IconButton(
             tooltip: 'Đọc nguyên bản sách PDF 159 trang',
-            icon: const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFF2563EB)),
+            icon: const Icon(
+              Icons.picture_as_pdf_rounded,
+              color: Color(0xFF2563EB),
+            ),
             onPressed: () {
               Navigator.push(
                 context,
@@ -221,9 +245,11 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                             ),
                           ),
                           const SizedBox(height: 3),
-                          const Text(
-                            '2 trên 10 Unit hoàn thành · 22%',
-                            style: TextStyle(
+                          Text(
+                            totalReadPages == 0
+                                ? 'Chưa học trang nào · 0%'
+                                : '$totalReadPages/$totalCurriculumPages trang đã đọc · $progressPercent%',
+                            style: const TextStyle(
                               fontSize: 12,
                               color: Colors.white70,
                             ),
@@ -231,11 +257,11 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                           const SizedBox(height: 8),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
-                            child: const LinearProgressIndicator(
-                              value: 0.22,
+                            child: LinearProgressIndicator(
+                              value: progressValue.clamp(0.0, 1.0),
                               minHeight: 6,
                               backgroundColor: Colors.white24,
-                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFC53D)),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFC53D)),
                             ),
                           ),
                         ],
@@ -246,16 +272,18 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
               ),
             ),
 
-            // Tabs bộ lọc
-            Padding(
+            // Tabs bộ lọc (Hỗ trợ cuộn ngang để tránh tràn màn hình trên các thiết bị hẹp)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   _buildFilterTab(0, 'Tất cả (${_units.length})'),
                   const SizedBox(width: 8),
-                  _buildFilterTab(1, 'Đang học (1)'),
+                  _buildFilterTab(1, 'Đang học ($unitsStarted)'),
                   const SizedBox(width: 8),
-                  _buildFilterTab(2, 'Đã tải về (3)'),
+                  _buildFilterTab(2, 'Có sẵn ngoại tuyến (${_units.length})'),
                 ],
               ),
             ),
@@ -264,7 +292,10 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
             // Danh sách các Unit
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: filteredUnits.length,
                 separatorBuilder: (ctx, i) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
@@ -291,7 +322,9 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
           color: isSelected ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? const Color(0xFF0F172A)
+                : const Color(0xFFE2E8F0),
           ),
         ),
         child: Text(
@@ -310,13 +343,11 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
     final int number = unit['number'] as int;
     final String title = unit['title'] as String;
     final String vietnamese = unit['vietnamese'] as String;
-    final String status = unit['status'] as String;
-    final int sectionsDone = unit['sectionsDone'] as int;
-    final int totalSections = unit['totalSections'] as int;
-    // isDownloaded: ${unit['isDownloaded']}
+    final int readPages = _getReadPagesForUnit(unit);
+    final int totalPages = _getTotalPagesForUnit(unit);
 
-    final bool isCompleted = status == 'completed';
-    final bool isInProgress = status == 'in_progress';
+    final bool isCompleted = readPages == totalPages && totalPages > 0;
+    final bool isInProgress = readPages > 0 && !isCompleted;
 
     Color numberBg;
     Color numberColor;
@@ -332,8 +363,12 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Text(
-          'Ôn lại',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+          'Đọc lại',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF475569),
+          ),
         ),
       );
     } else if (isInProgress) {
@@ -345,21 +380,26 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
           color: const Color(0xFF2563EB),
           borderRadius: BorderRadius.circular(10),
           boxShadow: const [
-            BoxShadow(
-              color: Color(0xFF1D4ED8),
-              offset: Offset(0, 2),
-            ),
+            BoxShadow(color: Color(0xFF1D4ED8), offset: Offset(0, 2)),
           ],
         ),
         child: const Text(
-          'Học tiếp',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+          'Đọc tiếp',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
         ),
       );
     } else {
       numberBg = const Color(0xFFF1F5F9);
       numberColor = const Color(0xFF64748B);
-      actionWidget = const Icon(Icons.download_rounded, size: 20, color: Color(0xFF94A3B8));
+      actionWidget = const Icon(
+        Icons.arrow_forward_ios_rounded,
+        size: 16,
+        color: Color(0xFF94A3B8),
+      );
     }
 
     return Container(
@@ -367,7 +407,9 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isInProgress ? const Color(0xFF93C5FD) : const Color(0xFFE2E8F0),
+          color: isInProgress
+              ? const Color(0xFF93C5FD)
+              : const Color(0xFFE2E8F0),
           width: isInProgress ? 1.6 : 1.0,
         ),
         boxShadow: const [
@@ -432,12 +474,16 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w800,
                           fontSize: 14.5,
-                          color: isInProgress ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
+                          color: isInProgress
+                              ? const Color(0xFF1D4ED8)
+                              : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$sectionsDone/$totalSections phần · $vietnamese',
+                        readPages == 0
+                            ? 'Chưa đọc trang nào · Chưa theo dõi theo phần học'
+                            : 'Đã đọc $readPages/$totalPages trang · Chưa theo dõi theo phần học',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

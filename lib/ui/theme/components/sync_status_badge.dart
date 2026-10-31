@@ -48,8 +48,8 @@ class SyncStatusBadge extends StatelessWidget {
         break;
       case SyncState.offline:
         bg = const Color(0xFFF1F5F9);
-        fg = const Color(0xFF64748B);
-        icon = Icons.cloud_off_rounded;
+        fg = const Color(0xFF475569);
+        icon = Icons.save_alt_rounded;
         text = AppStrings.syncStatusOffline;
         break;
       case SyncState.error:

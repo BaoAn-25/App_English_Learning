@@ -78,6 +78,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         MaterialPageRoute(builder: (_) => const MainShell()),
         (route) => false,
       );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.errorMessage ?? 'Tính năng chưa khả dụng'),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
     }
   }
 

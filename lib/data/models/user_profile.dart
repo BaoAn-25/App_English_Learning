@@ -14,20 +14,22 @@ class UserProfile {
   final int xp;
   final String authProvider; // 'guest' | 'email' | 'google'
 
+  bool get isGuest => authProvider == 'guest' || !isLoggedIn;
+
   const UserProfile({
     this.id = 'guest_user',
-    this.displayName = 'Học sinh English 12',
-    this.email = 'student@english12.app',
+    this.displayName = 'Khách',
+    this.email = '',
     this.avatarUrl = '',
     this.targetScore = 8.0,
-    this.examDate = '2026-06-27',
+    this.examDate = '',
     this.dailyMinutes = 20,
-    this.reminderEnabled = true,
+    this.reminderEnabled = false,
     this.reminderTime = '20:00',
-    this.favoriteTopics = const ['Công nghệ', 'Môi trường', 'Khoa học'],
+    this.favoriteTopics = const [],
     this.isLoggedIn = false,
-    this.streakDays = 3,
-    this.xp = 120,
+    this.streakDays = 0,
+    this.xp = 0,
     this.authProvider = 'guest',
   });
 
@@ -87,11 +89,11 @@ class UserProfile {
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       id: map['id'] as String? ?? 'guest_user',
-      displayName: map['displayName'] as String? ?? 'Học sinh English 12',
+      displayName: map['displayName'] as String? ?? 'Khách',
       email: map['email'] as String? ?? '',
       avatarUrl: map['avatarUrl'] as String? ?? '',
       targetScore: (map['targetScore'] as num?)?.toDouble() ?? 8.0,
-      examDate: map['examDate'] as String? ?? '2026-06-27',
+      examDate: map['examDate'] as String? ?? '',
       dailyMinutes: (map['dailyMinutes'] as num?)?.toInt() ?? 20,
       reminderEnabled: (map['reminderEnabled'] == 1 || map['reminderEnabled'] == true),
       reminderTime: map['reminderTime'] as String? ?? '20:00',
@@ -100,8 +102,8 @@ class UserProfile {
           .where((e) => e.trim().isNotEmpty)
           .toList(),
       isLoggedIn: (map['isLoggedIn'] == 1 || map['isLoggedIn'] == true),
-      streakDays: (map['streakDays'] as num?)?.toInt() ?? 3,
-      xp: (map['xp'] as num?)?.toInt() ?? 120,
+      streakDays: (map['streakDays'] as num?)?.toInt() ?? 0,
+      xp: (map['xp'] as num?)?.toInt() ?? 0,
       authProvider: map['authProvider'] as String? ?? 'guest',
     );
   }

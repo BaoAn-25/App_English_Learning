@@ -7,7 +7,8 @@ import '../auth/auth_controller.dart';
 import '../auth/register_screen.dart';
 import '../auth/welcome_screen.dart';
 import '../onboarding/onboarding_target_screen.dart';
-import '../textbook/reading_study_screen.dart';
+import '../practice/practice_quiz_screen.dart';
+import '../practice/practice_screen.dart';
 import '../textbook/unit_detail_screen.dart';
 import '../theme/components/app_button.dart';
 import '../theme/components/sync_status_badge.dart';
@@ -31,11 +32,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Trạng thái nhiệm vụ hôm nay
-  bool _task1Done = true;
-  bool _task2Done = false;
-  bool _task3Done = false;
-
   @override
   Widget build(BuildContext context) {
     AppRepository repo;
@@ -126,20 +122,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // 2. Banner nhắc lưu tài khoản (nếu chưa đăng nhập)
                   if (!auth.isAuthenticated) ...[
-                    _buildGuestBanner(context),
+                    _buildGuestBanner(context, controller.streak),
                     const SizedBox(height: 14),
                   ],
 
                   // 3. Card Đếm ngược kỳ thi THPT & Mục tiêu
-                  _buildCountdownCard(context, auth),
+                  _buildCountdownCard(context, controller, auth),
                   const SizedBox(height: 14),
 
-                  // 4. Card Tiếp tục học (Unit 3 - Reading)
-                  _buildContinueLearningCard(context),
+                  // 4. Card Tiếp tục học
+                  _buildContinueLearningCard(context, controller),
                   const SizedBox(height: 18),
 
                   // 5. Checklist Nhiệm vụ hôm nay
-                  _buildDailyTasksCard(context),
+                  _buildDailyTasksCard(context, controller),
                   const SizedBox(height: 18),
 
                   // 6. Phím tắt nhanh
@@ -244,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // --- 2. Banner nhắc nhở tạo tài khoản ---
-  Widget _buildGuestBanner(BuildContext context) {
+  Widget _buildGuestBanner(BuildContext context, int streak) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -254,21 +250,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Giữ streak 3 ngày của bạn!',
-                  style: TextStyle(
+                  streak > 0
+                      ? 'Duy trì chuỗi $streak ngày học!'
+                      : 'Bắt đầu hành trình học tập!',
+                  style: const TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,
                     color: Color(0xFF1E40AF),
                   ),
                 ),
-                SizedBox(height: 2),
-                Text(
+                const SizedBox(height: 2),
+                const Text(
                   'Tạo tài khoản để không mất tiến độ.',
                   style: TextStyle(fontSize: 11.5, color: Color(0xFF3B82F6)),
                 ),
@@ -300,7 +298,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // --- 3. Card Đếm ngược kỳ thi THPT ---
-  Widget _buildCountdownCard(BuildContext context, AuthController auth) {
+  Widget _buildCountdownCard(BuildContext context, HomeController controller, AuthController auth) {
+    // Tính số ngày đếm ngược từ examDate thực tế nếu có
+    final rawExamDate = controller.examDate.isNotEmpty ? controller.examDate : auth.user.examDate;
+    int? daysRemaining;
+    bool isExpired = false;
+
+    if (rawExamDate.isNotEmpty) {
+      final parsedDate = DateTime.tryParse(rawExamDate);
+      if (parsedDate != null) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final target = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+        final diff = target.difference(today).inDays;
+        if (diff < 0) {
+          isExpired = true;
+        } else {
+          daysRemaining = diff;
+        }
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -350,24 +368,28 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Row(
+          Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '238',
-                style: TextStyle(
+                daysRemaining != null
+                    ? '$daysRemaining'
+                    : (isExpired ? 'Đã qua' : 'Chưa đặt'),
+                style: const TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w900,
-                  fontSize: 38,
+                  fontSize: 34,
                   color: Colors.white,
                   letterSpacing: -1,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
-                'ngày nữa',
-                style: TextStyle(
+                daysRemaining != null
+                    ? 'ngày nữa'
+                    : (isExpired ? 'ngày thi' : 'ngày thi'),
+                style: const TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -407,13 +429,90 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 4. Card Tiếp tục học: Unit 3 - Reading ---
-  Widget _buildContinueLearningCard(BuildContext context) {
+  // --- 4. Card Tiếp tục học (dựa trên LearningSession thật, không mở mặc định Reading Unit 3) ---
+  Widget _buildContinueLearningCard(BuildContext context, HomeController controller) {
+    final session = controller.learningSession;
+
+    if (session == null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PracticeScreen()),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.school_outlined, color: Color(0xFF64748B), size: 24),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Bắt đầu học',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Chưa có bài học dở',
+                          style: TextStyle(
+                            fontFamily: 'BeVietnamPro',
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Chọn một dạng bài luyện tập để bắt đầu',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 16),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final isInProgress = !session.isCompleted;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isInProgress ? const Color(0xFF93C5FD) : const Color(0xFFE2E8F0),
+        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06000000),
@@ -427,11 +526,40 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(18),
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ReadingStudyScreen()),
-            );
+          onTap: () async {
+            final repo = Provider.of<AppRepository>(context, listen: false);
+            if (isInProgress) {
+              final questions = await repo.getQuestionsByIds(session.questionIds);
+              if (context.mounted && questions.isNotEmpty) {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PracticeQuizScreen(
+                      title: session.lessonTitle,
+                      questions: questions,
+                      lessonId: session.lessonId,
+                      initialIndex: session.currentQuestionIndex,
+                      initialAnswers: session.selectedAnswers,
+                      nextLessonTitle: session.nextLessonTitle,
+                    ),
+                  ),
+                );
+                if (context.mounted) {
+                  controller.refresh();
+                }
+                return;
+              }
+            }
+
+            if (context.mounted) {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PracticeScreen()),
+              );
+              if (context.mounted) {
+                controller.refresh();
+              }
+            }
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -441,40 +569,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: isInProgress ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Center(
-                    child: Icon(Icons.menu_book_rounded, color: Color(0xFF2563EB), size: 26),
+                  child: Center(
+                    child: Icon(
+                      isInProgress ? Icons.play_arrow_rounded : Icons.check_circle_outline_rounded,
+                      color: isInProgress ? const Color(0xFF2563EB) : const Color(0xFF16A34A),
+                      size: 26,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Tiếp tục học',
+                        isInProgress ? 'Tiếp tục bài đang làm dở' : 'Bài đã hoàn thành gần đây',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
+                          color: isInProgress ? const Color(0xFF2563EB) : const Color(0xFF16A34A),
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        'Unit 3 · Reading',
-                        style: TextStyle(
+                        session.lessonTitle,
+                        style: const TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w800,
                           fontSize: 16,
                           color: Color(0xFF0F172A),
                         ),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
-                        'Green Habits for a Better Future',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        isInProgress
+                            ? 'Câu ${session.currentQuestionIndex + 1}/${session.totalQuestions} • Chạm để làm tiếp'
+                            : 'Đúng ${session.score}/${session.totalQuestions} câu • Gợi ý: ${session.nextLessonTitle ?? 'Luyện tập thêm'}',
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                       ),
                     ],
                   ),
@@ -488,9 +622,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 5. Checklist Nhiệm vụ hôm nay ---
-  Widget _buildDailyTasksCard(BuildContext context) {
-    int doneCount = (_task1Done ? 1 : 0) + (_task2Done ? 1 : 0) + (_task3Done ? 1 : 0);
+  // --- 5. Checklist Nhiệm vụ hôm nay dựa trên dữ liệu thật ---
+  Widget _buildDailyTasksCard(BuildContext context, HomeController controller) {
+    final dueWords = controller.dueWordsCount;
+    final dueWrongs = controller.dueWrongQuestionsCount;
+    final hasDailyActivity = controller.todayQuestionsDone > 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -524,15 +660,15 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: doneCount == 3 ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '$doneCount/3 hoàn thành',
-                  style: TextStyle(
+                  'Mục tiêu: ${controller.todayQuestionsDone}/${controller.dailyGoal} câu',
+                  style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
-                    color: doneCount == 3 ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                    color: Color(0xFF64748B),
                   ),
                 ),
               ),
@@ -540,36 +676,38 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Task 1
+          // Task 1: Ôn từ vựng
           _buildTaskItem(
-            title: 'Ôn 12 từ đến hạn',
-            time: 'Hoàn thành',
-            isDone: _task1Done,
-            onChanged: (val) => setState(() => _task1Done = val ?? false),
+            title: dueWords > 0
+                ? 'Ôn $dueWords từ vựng đến hạn'
+                : 'Chưa có từ vựng nào đến hạn ôn',
+            time: dueWords > 0 ? 'Cần ôn' : 'Trống',
+            isDone: false,
+            onChanged: (_) {},
           ),
           const Divider(height: 16),
 
-          // Task 2
+          // Task 2: Câu sai
           _buildTaskItem(
-            title: 'Đọc phần Reading của Unit 3',
-            time: '8 phút',
-            isDone: _task2Done,
-            onChanged: (val) => setState(() => _task2Done = val ?? false),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ReadingStudyScreen()),
-              );
-            },
+            title: dueWrongs > 0
+                ? 'Ôn $dueWrongs câu sai trong sổ tay'
+                : 'Sổ câu sai trống',
+            time: dueWrongs > 0 ? 'Cần ôn' : 'Trống',
+            isDone: false,
+            onChanged: (_) {},
           ),
           const Divider(height: 16),
 
-          // Task 3
+          // Task 3: Luyện tập ngày
           _buildTaskItem(
-            title: '10 câu ngữ pháp (dạng bạn hay sai)',
-            time: '6 phút',
-            isDone: _task3Done,
-            onChanged: (val) => setState(() => _task3Done = val ?? false),
+            title: hasDailyActivity
+                ? 'Đã luyện ${controller.todayQuestionsDone} câu hôm nay'
+                : 'Luyện tập đạt mục tiêu ngày (${controller.dailyGoal} câu)',
+            time: controller.isDailyGoalCompleted
+                ? 'Hoàn thành'
+                : (hasDailyActivity ? 'Đang học' : 'Chưa bắt đầu'),
+            isDone: controller.isDailyGoalCompleted && hasDailyActivity,
+            onChanged: (_) {},
           ),
         ],
       ),

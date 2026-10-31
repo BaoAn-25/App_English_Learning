@@ -34,14 +34,14 @@ class _FakeAdaptiveRepo implements AppRepository {
   Future<List<Question>> getAllQuestions() async => questions;
 
   @override
-  Future<List<Attempt>> getAllAttempts() async => List.from(attempts);
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) async => List.from(attempts);
 
   @override
   Future<List<AttemptAnswer>> getAllAttemptAnswers() async =>
       List.from(answers);
 
   @override
-  Future<List<WrongBookEntry>> getAllWrongBookEntries() async =>
+  Future<List<WrongBookEntry>> getAllWrongBookEntries({String? ownerId}) async =>
       List.from(wrongEntries);
 
   @override
@@ -50,6 +50,7 @@ class _FakeAdaptiveRepo implements AppRepository {
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) async {
     saveCount++;
     savedAttempt = attempt;

@@ -1,5 +1,7 @@
 import '../auth/welcome_screen.dart';
 import '../auth/auth_controller.dart';
+import '../auth/login_screen.dart';
+import '../auth/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -43,14 +45,19 @@ class SettingsScreen extends StatelessWidget {
         ),
         body: Consumer<SettingsController>(
           builder: (context, controller, child) {
+            final auth = AuthController.instance;
+
             return ListView(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppTokens.space16,
                 vertical: AppTokens.space8,
               ),
               children: [
-                // 1. Hồ sơ cá nhân
-                _buildProfileCard(context, controller),
+                // 1. Hồ sơ cá nhân (Khách hoặc Đã đăng nhập)
+                if (!auth.isAuthenticated)
+                  _buildGuestProfileCard(context)
+                else
+                  _buildProfileCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
                 // 2. Mục tiêu luyện tập hàng ngày
@@ -61,13 +68,12 @@ class SettingsScreen extends StatelessWidget {
                 _buildReminderCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
-
-                // 5. Trạng thái đồng bộ đám mây (Offline-first)
+                // 5. Trạng thái đồng bộ / Lưu trữ
                 _buildSyncCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
-                // 6. Thông tin ứng dụng & Đăng xuất
-                _buildAppInfoAndLogout(context),
+                // 6. Thông tin ứng dụng & Đăng xuất (chỉ hiện đăng xuất khi đã đăng nhập)
+                _buildAppInfoAndLogout(context, isAuthenticated: auth.isAuthenticated),
                 const SizedBox(height: AppTokens.space32),
               ],
             );
@@ -77,7 +83,94 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // --- Khối 1: Hồ sơ học sinh ---
+  // --- Khối 1A: Hồ sơ dành riêng cho Khách học thử ---
+  Widget _buildGuestProfileCard(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppTokens.primary.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  size: 28,
+                  color: AppTokens.primary,
+                ),
+              ),
+              const SizedBox(width: AppTokens.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bạn đang học thử',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        color: AppTokens.textMain,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Kết quả đang lưu trên thiết bị này.',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: theme.colorScheme.outline,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTokens.space16),
+          AppButton(
+            label: 'Tạo tài khoản',
+            variant: AppButtonVariant.primary,
+            isFullWidth: true,
+            icon: Icons.person_add_rounded,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+              );
+            },
+          ),
+          const SizedBox(height: AppTokens.space8),
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text(
+                'Đã có tài khoản? Đăng nhập',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppTokens.primary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Khối 1B: Hồ sơ học sinh đã đăng nhập ---
   Widget _buildProfileCard(BuildContext context, SettingsController controller) {
     final theme = Theme.of(context);
 
@@ -301,17 +394,23 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppTokens.space4),
           Text(
-            '${AppStrings.lastSyncedAt} ${controller.formattedLastSynced}',
+            controller.formattedLastSynced,
             style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: AppTokens.space12),
           AppButton(
-            label: AppStrings.syncNow,
-            icon: Icons.refresh_rounded,
-            isLoading: controller.syncState == SyncState.syncing,
+            label: 'Đồng bộ đám mây (Chưa khả dụng)',
+            icon: Icons.cloud_off_rounded,
+            isLoading: false,
             variant: AppButtonVariant.outlined,
             isFullWidth: true,
-            onPressed: () => controller.syncNow(),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Dữ liệu đang được lưu an toàn trên thiết bị. Dịch vụ đồng bộ đám mây chưa khả dụng ở bước này.'),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -319,7 +418,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   // --- Khối 6: Thông tin & Đăng xuất ---
-  Widget _buildAppInfoAndLogout(BuildContext context) {
+  Widget _buildAppInfoAndLogout(BuildContext context, {required bool isAuthenticated}) {
     final theme = Theme.of(context);
 
     return Column(
@@ -328,15 +427,22 @@ class SettingsScreen extends StatelessWidget {
           AppStrings.appVersion,
           style: TextStyle(fontSize: 12, color: theme.colorScheme.outline),
         ),
-        const SizedBox(height: AppTokens.space16),
-        AppButton(
-          label: AppStrings.logout,
-          icon: Icons.logout_rounded,
-          variant: AppButtonVariant.text,
-          onPressed: () {
-            _showLogoutConfirmDialog(context);
-          },
+        const SizedBox(height: AppTokens.space8),
+        Text(
+          'Dữ liệu học tập được bảo vệ trên thiết bị này.',
+          style: TextStyle(fontSize: 11, color: theme.colorScheme.outline),
         ),
+        if (isAuthenticated) ...[
+          const SizedBox(height: AppTokens.space16),
+          AppButton(
+            label: AppStrings.logout,
+            icon: Icons.logout_rounded,
+            variant: AppButtonVariant.text,
+            onPressed: () {
+              _showLogoutConfirmDialog(context);
+            },
+          ),
+        ],
       ],
     );
   }

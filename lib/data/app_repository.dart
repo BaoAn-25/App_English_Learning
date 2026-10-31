@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'app_database.dart';
 import 'models/attempt.dart';
 import 'models/attempt_answer.dart';
 import 'models/daily_stat.dart';
+import 'models/learning_session.dart';
 import 'models/question.dart';
 import 'models/topic.dart';
 import 'models/word.dart';
@@ -13,6 +16,59 @@ class AppRepository {
   final AppDatabase _db;
 
   AppRepository({AppDatabase? db}) : _db = db ?? AppDatabase.instance;
+
+  // --- Quản lý phiên khách (Guest Session) & Quyền sở hữu (Ownership) ---
+  Future<String> getOrCreateGuestSessionId() async {
+    final existing = await getSetting('current_guest_session_id');
+    if (existing != null && existing.trim().isNotEmpty) {
+      return existing;
+    }
+    final newId = 'guest_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(99999).toString().padLeft(5, '0')}';
+    await setSetting('current_guest_session_id', newId);
+    return newId;
+  }
+
+  Future<String> resetGuestSessionId() async {
+    final newId = 'guest_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(99999).toString().padLeft(5, '0')}';
+    await setSetting('current_guest_session_id', newId);
+    return newId;
+  }
+
+  Future<TransferResult> transferGuestData({
+    required String fromGuestId,
+    required String toUserId,
+  }) {
+    return _db.transferGuestData(fromGuestId: fromGuestId, toUserId: toUserId);
+  }
+
+  Future<List<String>> getEntityKeysByOwner(String ownerId, String entityType) =>
+      _db.getEntityKeysByOwner(ownerId: ownerId, entityType: entityType);
+
+  // --- Quản lý bài đang học dở & trạng thái tiếp tục học (Learning Session) ---
+  Future<void> saveLearningSession(LearningSession session) async {
+    await setSetting('learning_session_${session.ownerId}', session.toJson());
+    // Lưu title bài học gần nhất để đồng bộ hiển thị tương thích
+    await setSetting('last_studied_unit', session.lessonTitle);
+  }
+
+  Future<LearningSession?> getLearningSession(String ownerId) async {
+    final raw = await getSetting('learning_session_$ownerId');
+    if (raw == null || raw.trim().isEmpty) return null;
+    try {
+      return LearningSession.fromJson(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearLearningSession(String ownerId) async {
+    final db = await _db.database;
+    await db.delete(
+      'app_settings',
+      where: 'key = ?',
+      whereArgs: ['learning_session_$ownerId'],
+    );
+  }
 
   // --- Cài đặt (App Settings) ---
   Future<String?> getSetting(String key) => _db.getSetting(key);
@@ -46,6 +102,8 @@ class AppRepository {
   }
 
   Future<List<Question>> getAllQuestions() => _db.getAllQuestions();
+  Future<List<Question>> getQuestionsByIds(List<String> ids) =>
+      _db.getQuestionsByIds(ids);
   Future<List<Question>> getQuestionsByGrade(int grade) =>
       _db.getQuestionsByGrade(grade);
   Future<List<Question>> getQuestionsByType(String type) =>
@@ -54,10 +112,12 @@ class AppRepository {
       _db.getQuestionsByTopicId(topicId);
 
   // --- Lượt làm bài (Attempts) ---
-  Future<int> insertAttempt(Attempt attempt) => _db.insertAttempt(attempt);
-  Future<List<Attempt>> getAllAttempts() => _db.getAllAttempts();
-  Future<List<Attempt>> getAttempts({int? limit}) =>
-      _db.getAttempts(limit: limit);
+  Future<int> insertAttempt(Attempt attempt, {String? ownerId}) =>
+      _db.insertAttempt(attempt, ownerId: ownerId);
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) =>
+      _db.getAllAttempts(ownerId: ownerId);
+  Future<List<Attempt>> getAttempts({String? ownerId, int? limit}) =>
+      _db.getAttempts(ownerId: ownerId, limit: limit);
 
   // --- Chi tiết câu trả lời (Attempt Answers) ---
   Future<void> insertAttemptAnswers(List<AttemptAnswer> answers) =>
@@ -70,8 +130,8 @@ class AppRepository {
   // --- Sổ câu sai (Wrong Book) ---
   Future<void> insertWrongBookEntries(List<WrongBookEntry> entries) =>
       _db.insertWrongBookEntries(entries);
-  Future<List<WrongBookEntry>> getAllWrongBookEntries() =>
-      _db.getAllWrongBookEntries();
+  Future<List<WrongBookEntry>> getAllWrongBookEntries({String? ownerId}) =>
+      _db.getAllWrongBookEntries(ownerId: ownerId);
   Future<void> upsertWrongBookEntry(WrongBookEntry entry) =>
       _db.upsertWrongBookEntry(entry);
   Future<List<WrongBookEntry>> getDueWrongBookEntries(
@@ -91,9 +151,10 @@ class AppRepository {
   // --- Tiến độ từ vựng (Word Progress / SRS) ---
   Future<WordProgress?> getWordProgress(String wordId) =>
       _db.getWordProgress(wordId);
-  Future<List<WordProgress>> getAllWordProgress() => _db.getAllWordProgress();
-  Future<void> upsertWordProgress(WordProgress progress) =>
-      _db.upsertWordProgress(progress);
+  Future<List<WordProgress>> getAllWordProgress({String? ownerId}) =>
+      _db.getAllWordProgress(ownerId: ownerId);
+  Future<void> upsertWordProgress(WordProgress progress, {String? ownerId}) =>
+      _db.upsertWordProgress(progress, ownerId: ownerId);
   Future<List<WordProgress>> getDueWordProgress() => _db.getDueWordProgress();
 
   Future<void> savePracticeResult({
@@ -101,12 +162,14 @@ class AppRepository {
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) {
     return _db.savePracticeResult(
       attempt: attempt,
       buildAnswers: buildAnswers,
       wrongEntries: wrongEntries,
       dailyStat: dailyStat,
+      ownerId: ownerId,
     );
   }
 }

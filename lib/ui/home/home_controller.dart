@@ -1,8 +1,8 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/app_repository.dart';
+import '../../data/models/learning_session.dart';
 import '../../data/models/topic.dart';
 import '../theme/components/sync_status_badge.dart';
 import 'streak_calculator.dart';
@@ -46,6 +46,12 @@ class HomeController extends ChangeNotifier {
   List<TopicProgressItem> _roadmapTopics = [];
   SyncState _syncState = SyncState.synced;
 
+  String _examDate = '';
+  int _dueWordsCount = 0;
+  int _dueWrongQuestionsCount = 0;
+  String? _lastStudiedUnitTitle;
+  LearningSession? _learningSession;
+
   // Getters
   bool get isLoading => _isLoading;
   int get streak => _streak;
@@ -56,6 +62,11 @@ class HomeController extends ChangeNotifier {
   int get dailyGoal => _dailyGoal;
   List<TopicProgressItem> get roadmapTopics => _roadmapTopics;
   SyncState get syncState => _syncState;
+  String get examDate => _examDate;
+  int get dueWordsCount => _dueWordsCount;
+  int get dueWrongQuestionsCount => _dueWrongQuestionsCount;
+  String? get lastStudiedUnitTitle => _lastStudiedUnitTitle;
+  LearningSession? get learningSession => _learningSession;
 
   double get todayProgressRatio =>
       _dailyGoal > 0 ? (_todayQuestionsDone / _dailyGoal).clamp(0.0, 1.0) : 0.0;
@@ -63,15 +74,31 @@ class HomeController extends ChangeNotifier {
   bool get isDailyGoalCompleted => _todayQuestionsDone >= _dailyGoal;
 
   /// Đọc dữ liệu cục bộ từ AppRepository
-  Future<void> loadHomeData() async {
+  Future<void> loadHomeData([String? ownerId]) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 1. Lấy cài đặt mục tiêu ngày
+      // 1. Lấy cài đặt mục tiêu ngày và ngày thi
       final goalStr = await _repository.getSetting('daily_goal');
       if (goalStr != null) {
         _dailyGoal = int.tryParse(goalStr) ?? 20;
+      }
+      _examDate = await _repository.getSetting('exam_date') ?? '';
+
+      // Đếm từ vựng và câu sai đến hạn ôn tập thực tế
+      final dueWords = await _repository.getDueWordProgress();
+      _dueWordsCount = dueWords.length;
+      final dueWrong = await _repository.getDueWrongBookEntries(DateTime.now().millisecondsSinceEpoch);
+      _dueWrongQuestionsCount = dueWrong.length;
+
+      // Lấy phiên học dở / hoàn thành của chủ sở hữu hiện tại
+      final effectiveOwnerId = ownerId ?? await _repository.getOrCreateGuestSessionId();
+      _learningSession = await _repository.getLearningSession(effectiveOwnerId);
+      if (_learningSession != null) {
+        _lastStudiedUnitTitle = _learningSession!.lessonTitle;
+      } else {
+        _lastStudiedUnitTitle = await _repository.getSetting('last_studied_unit');
       }
 
       // 2. Lấy thống kê ngày từ SQLite
@@ -90,24 +117,30 @@ class HomeController extends ChangeNotifier {
       final rawTopics = await _repository.getTopicsByGrade(12);
       rawTopics.sort((a, b) => a.order.compareTo(b.order));
 
-      // Lấy lịch sử làm bài để tính tiến độ mở khóa lộ trình
-      final attempts = await _repository.getAllAttempts();
-      final completedAttemptCount = attempts.length;
+      // Lấy câu trả lời thực tế để tính số câu đã làm theo từng topicId
+      final allAnswers = await _repository.getAllAttemptAnswers();
+      final answeredQuestionIds = allAnswers.map((a) => a.questionId).toSet();
 
       final items = <TopicProgressItem>[];
       for (int i = 0; i < rawTopics.length; i++) {
         final topic = rawTopics[i];
-        // Bài đầu tiên luôn mở khóa. Bài thứ i mở khóa khi người dùng đã có bài tập trước đó
-        final bool isUnlocked = (i == 0) || (i <= completedAttemptCount);
-        final bool isCompleted = i < completedAttemptCount;
+        final topicQuestions = await _repository.getQuestionsByTopicId(topic.id);
+        final totalQuestions = topicQuestions.isEmpty ? 10 : topicQuestions.length;
+        final completedQuestions = topicQuestions
+            .where((q) => answeredQuestionIds.contains(q.id))
+            .length;
+
+        final bool isCompleted = completedQuestions > 0 && completedQuestions >= totalQuestions;
+        // Chủ đề đầu tiên luôn mở khóa. Chủ đề tiếp theo mở khi chủ đề trước có học hoặc có tiến độ thực tế
+        final bool isUnlocked = (i == 0) || (items.isNotEmpty && (items[i - 1].completedQuestions > 0));
 
         items.add(
           TopicProgressItem(
             topic: topic,
             isUnlocked: isUnlocked,
             isCompleted: isCompleted,
-            completedQuestions: isCompleted ? 10 : (isUnlocked ? 3 : 0),
-            totalQuestions: 10,
+            completedQuestions: completedQuestions,
+            totalQuestions: totalQuestions,
           ),
         );
       }
@@ -125,39 +158,13 @@ class HomeController extends ChangeNotifier {
 
   /// Làm mới dữ liệu (khi người dùng vuốt refresh hoặc có kết nối mạng)
   Future<void> refresh() async {
-    final online = await _isNetworkAvailable();
-    if (!online) {
-      _syncState = SyncState.offline;
-      await loadHomeData();
-      return;
-    }
-
-    _syncState = SyncState.syncing;
+    await loadHomeData();
+    _syncState = SyncState.offline;
     notifyListeners();
-
-    try {
-      // Mô phỏng làm mới từ API ngầm
-      await Future.delayed(const Duration(milliseconds: 600));
-      await loadHomeData();
-      _syncState = SyncState.synced;
-    } catch (_) {
-      _syncState = SyncState.error;
-    } finally {
-      notifyListeners();
-    }
-  }
-
-  Future<bool> _isNetworkAvailable() async {
-    try {
-      final connectivityResult = await Connectivity().checkConnectivity();
-      return !connectivityResult.contains(ConnectivityResult.none);
-    } catch (_) {
-      return false;
-    }
   }
 
   Future<void> _checkConnectivity() async {
-    final online = await _isNetworkAvailable();
-    _syncState = online ? SyncState.synced : SyncState.offline;
+    // Dữ liệu đọc từ SQLite cục bộ, đồng bộ tài khoản chưa triển khai
+    _syncState = SyncState.offline;
   }
 }

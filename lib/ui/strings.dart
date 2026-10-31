@@ -23,7 +23,7 @@ class AppStrings {
   // Offline & Sync Status
   static const syncStatusSyncing = 'Đang đồng bộ...';
   static const syncStatusSynced = 'Đã đồng bộ';
-  static const syncStatusOffline = 'Đang ngoại tuyến (Offline)';
+  static const syncStatusOffline = 'Lưu trên thiết bị';
   static const syncStatusError = 'Lỗi đồng bộ';
   static const syncNow = 'Đồng bộ ngay';
   static const lastSyncedAt = 'Đồng bộ lần cuối:';

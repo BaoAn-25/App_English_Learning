@@ -1,4 +1,3 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/app_repository.dart';
@@ -73,41 +72,15 @@ class StatsController extends ChangeNotifier {
     }
   }
 
-  /// Kích hoạt làm mới dữ liệu từ API nền
+  /// Kích hoạt làm mới dữ liệu
   Future<void> refresh() async {
-    final online = await _isNetworkAvailable();
-    if (!online) {
-      _syncState = SyncState.offline;
-      await loadStats();
-      return;
-    }
-
-    _syncState = SyncState.syncing;
+    await loadStats();
+    _syncState = SyncState.offline;
     _notifyIfActive();
-
-    try {
-      // Mô phỏng / Gọi API sync ngầm
-      await Future.delayed(const Duration(milliseconds: 600));
-      await loadStats();
-      _syncState = SyncState.synced;
-    } catch (_) {
-      _syncState = SyncState.error;
-    } finally {
-      _notifyIfActive();
-    }
-  }
-
-  Future<bool> _isNetworkAvailable() async {
-    try {
-      final connectivityResult = await Connectivity().checkConnectivity();
-      return !connectivityResult.contains(ConnectivityResult.none);
-    } catch (_) {
-      return false;
-    }
   }
 
   Future<void> _checkConnectivity() async {
-    final online = await _isNetworkAvailable();
-    _syncState = online ? SyncState.synced : SyncState.offline;
+    // Dữ liệu đọc từ SQLite cục bộ, đồng bộ tài khoản chưa khả dụng
+    _syncState = SyncState.offline;
   }
 }

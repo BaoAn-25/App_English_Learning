@@ -41,14 +41,14 @@ class _FeedbackLoopFakeRepo implements AppRepository {
   Future<List<Question>> getAllQuestions() async => List.from(questions);
 
   @override
-  Future<List<Attempt>> getAllAttempts() async => List.from(attempts);
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) async => List.from(attempts);
 
   @override
   Future<List<AttemptAnswer>> getAllAttemptAnswers() async =>
       List.from(answers);
 
   @override
-  Future<List<WrongBookEntry>> getAllWrongBookEntries() async =>
+  Future<List<WrongBookEntry>> getAllWrongBookEntries({String? ownerId}) async =>
       List.from(wrongEntries);
 
   @override
@@ -57,6 +57,7 @@ class _FeedbackLoopFakeRepo implements AppRepository {
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) async {
     saveCount++;
     final assignedId = attempts.length + 1;

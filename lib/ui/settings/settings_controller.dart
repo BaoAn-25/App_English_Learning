@@ -1,6 +1,4 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../data/app_repository.dart';
 import '../theme/components/sync_status_badge.dart';
@@ -35,17 +33,17 @@ class SettingsController extends ChangeNotifier {
   }
 
   // Trạng thái hồ sơ & cài đặt
-  String _name = 'Học sinh lớp 12';
+  String _name = 'Khách';
   int _grade = 12;
-  double _targetScore = 8.5;
+  double _targetScore = 8.0;
   int _dailyGoal = 20;
 
   // Trạng thái thông báo
   bool _reminderEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
 
-  // Trạng thái đồng bộ
-  SyncState _syncState = SyncState.synced;
+  // Trạng thái đồng bộ (Offline-first: lưu trên thiết bị)
+  SyncState _syncState = SyncState.offline;
   DateTime? _lastSyncedAt;
   bool _hasPendingSync = false;
 
@@ -61,8 +59,7 @@ class SettingsController extends ChangeNotifier {
   bool get hasPendingSync => _hasPendingSync;
 
   String get formattedLastSynced {
-    if (_lastSyncedAt == null) return 'Chưa đồng bộ';
-    return DateFormat('HH:mm - dd/MM/yyyy').format(_lastSyncedAt!);
+    return 'Lưu trên thiết bị (Đồng bộ đám mây chưa khả dụng)';
   }
 
   /// Tải dữ liệu cài đặt từ SQLite (AppRepository)
@@ -184,77 +181,19 @@ class SettingsController extends ChangeNotifier {
 
   /// Kích hoạt đồng bộ chủ động từ nút "Đồng bộ ngay"
   Future<void> syncNow() async {
-    final isOnline = await _isNetworkAvailable();
-    if (!isOnline) {
-      _syncState = SyncState.offline;
-      _notifyIfActive();
-      return;
-    }
-
-    _syncState = SyncState.syncing;
+    // Chưa có dịch vụ backend đồng bộ thật sự cho từng tài khoản ở bước này.
+    // Dữ liệu hiện được lưu toàn bộ an toàn trên thiết bị (SQLite).
+    _syncState = SyncState.offline;
     _notifyIfActive();
-
-    try {
-      // Mô phỏng / Gọi đồng bộ API (sau này ApiClient sẽ được cắm vào đây)
-      await Future.delayed(const Duration(milliseconds: 1200));
-
-      _lastSyncedAt = DateTime.now();
-      _hasPendingSync = false;
-      _syncState = SyncState.synced;
-
-      await _repository.setSetting('last_synced_at', _lastSyncedAt!.toIso8601String());
-      await _repository.setSetting('has_pending_sync', 'false');
-    } catch (_) {
-      _syncState = SyncState.error;
-    } finally {
-      _notifyIfActive();
-    }
   }
 
   Future<void> _syncInBackground() async {
-    final isOnline = await _isNetworkAvailable();
-    if (!isOnline) {
-      _syncState = SyncState.offline;
-      _notifyIfActive();
-      return;
-    }
-
-    _syncState = SyncState.syncing;
+    _syncState = SyncState.offline;
     _notifyIfActive();
-
-    try {
-      // Đồng bộ ngầm không block UI
-      await Future.delayed(const Duration(milliseconds: 800));
-      _lastSyncedAt = DateTime.now();
-      _hasPendingSync = false;
-      _syncState = SyncState.synced;
-
-      await _repository.setSetting('last_synced_at', _lastSyncedAt!.toIso8601String());
-      await _repository.setSetting('has_pending_sync', 'false');
-    } catch (_) {
-      _syncState = SyncState.error;
-    } finally {
-      _notifyIfActive();
-    }
-  }
-
-  Future<bool> _isNetworkAvailable() async {
-    try {
-      final connectivityResult = await Connectivity().checkConnectivity();
-      return !connectivityResult.contains(ConnectivityResult.none);
-    } catch (_) {
-      return false;
-    }
   }
 
   Future<void> _checkConnectivity() async {
-    final online = await _isNetworkAvailable();
-    if (!online) {
-      _syncState = SyncState.offline;
-    } else if (_hasPendingSync) {
-      _syncState = SyncState.syncing;
-    } else {
-      _syncState = SyncState.synced;
-    }
+    // Vì chưa có đồng bộ backend thực tế cho user, giữ trạng thái lưu trên thiết bị
+    _syncState = SyncState.offline;
   }
 }

@@ -14,7 +14,7 @@ class StartupRepository extends Fake implements AppRepository {
   @override
   Future<List<Topic>> getTopicsByGrade(int grade) async => [];
   @override
-  Future<List<WordProgress>> getAllWordProgress() async => [];
+  Future<List<WordProgress>> getAllWordProgress({String? ownerId}) async => [];
 }
 
 Widget startup(Future<void> Function() initialize) =>

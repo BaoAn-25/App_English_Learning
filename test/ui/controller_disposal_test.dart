@@ -25,7 +25,7 @@ class DelayedRepository extends AppRepository {
   }
 
   @override
-  Future<List<Attempt>> getAllAttempts() async => [];
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) async => [];
   @override
   Future<List<AttemptAnswer>> getAllAttemptAnswers() async => [];
   @override

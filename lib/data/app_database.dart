@@ -31,9 +31,43 @@ class QuestionSyncResult {
       'QuestionSyncResult(inserted: $insertedCount, updated: $updatedCount, skipped: $skippedCount)';
 }
 
+/// Kết quả chuyển giao dữ liệu từ phiên khách sang tài khoản đã xác thực
+class TransferResult {
+  final int transferredAttempts;
+  final int transferredWrongs;
+  final int transferredWords;
+  final int transferredStats;
+  final bool success;
+  final String? message;
+
+  const TransferResult({
+    this.transferredAttempts = 0,
+    this.transferredWrongs = 0,
+    this.transferredWords = 0,
+    this.transferredStats = 0,
+    this.success = true,
+    this.message,
+  });
+
+  int get totalTransferred =>
+      transferredAttempts + transferredWrongs + transferredWords + transferredStats;
+
+  factory TransferResult.empty() => const TransferResult(
+        transferredAttempts: 0,
+        transferredWrongs: 0,
+        transferredWords: 0,
+        transferredStats: 0,
+        success: true,
+      );
+
+  @override
+  String toString() =>
+      'TransferResult(attempts: $transferredAttempts, wrongs: $transferredWrongs, words: $transferredWords, stats: $transferredStats, success: $success)';
+}
+
 class AppDatabase {
   static const String _databaseName = 'thpt_english.db';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
 
   AppDatabase._internal();
   static final AppDatabase instance = AppDatabase._internal();
@@ -161,6 +195,9 @@ class AppDatabase {
     // 9. Word Progress (SRS)
     await _createWordProgressTable(db);
 
+    // 10. Data Ownership (tách biệt dữ liệu khách & tài khoản)
+    await _createDataOwnershipTable(db);
+
     // Cài đặt mặc định ban đầu
     final batch = db.batch();
     batch.insert('app_settings', {'key': 'daily_goal', 'value': '20'});
@@ -181,9 +218,25 @@ class AppDatabase {
     ''');
   }
 
+  Future<void> _createDataOwnershipTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS data_ownership (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entityType TEXT NOT NULL,
+        entityKey TEXT NOT NULL,
+        ownerId TEXT NOT NULL,
+        createdAt INTEGER NOT NULL,
+        UNIQUE(entityType, entityKey, ownerId)
+      )
+    ''');
+  }
+
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createWordProgressTable(db);
+    }
+    if (oldVersion < 3) {
+      await _createDataOwnershipTable(db);
     }
   }
 
@@ -552,6 +605,19 @@ class AppDatabase {
     return maps.map(Question.fromMap).toList();
   }
 
+  Future<List<Question>> getQuestionsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final db = await database;
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final maps = await db.query(
+      'questions',
+      where: 'id IN ($placeholders)',
+      whereArgs: ids,
+    );
+    final questionMap = {for (final m in maps) m['id'] as String: Question.fromMap(m)};
+    return ids.map((id) => questionMap[id]).whereType<Question>().toList();
+  }
+
   Future<List<Question>> getQuestionsByGrade(int grade) async {
     final db = await database;
     final maps = await db.query(
@@ -584,21 +650,55 @@ class AppDatabase {
   }
 
   // --- Attempts ---
-  Future<int> insertAttempt(Attempt attempt) async {
+  Future<int> insertAttempt(Attempt attempt, {String? ownerId}) async {
     final db = await database;
-    return await db.insert('attempts', attempt.toMap());
+    final attemptId = await db.insert('attempts', attempt.toMap());
+    if (ownerId != null && ownerId.trim().isNotEmpty) {
+      await recordOwnership(
+        entityType: 'attempt',
+        entityKey: attemptId.toString(),
+        ownerId: ownerId,
+      );
+    }
+    return attemptId;
   }
 
-  Future<List<Attempt>> getAllAttempts() async {
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) async {
     final db = await database;
-    final maps = await db.query('attempts');
+    if (ownerId == null) {
+      final maps = await db.query('attempts');
+      return maps.map(Attempt.fromMap).toList();
+    }
+    final keys = await getEntityKeysByOwner(entityType: 'attempt', ownerId: ownerId);
+    if (keys.isEmpty) return [];
+    final ids = keys.map(int.tryParse).whereType<int>().toList();
+    if (ids.isEmpty) return [];
+    final maps = await db.query(
+      'attempts',
+      where: 'id IN (${List.filled(ids.length, '?').join(', ')})',
+      whereArgs: ids,
+    );
     return maps.map(Attempt.fromMap).toList();
   }
 
-  Future<List<Attempt>> getAttempts({int? limit}) async {
+  Future<List<Attempt>> getAttempts({String? ownerId, int? limit}) async {
     final db = await database;
+    if (ownerId == null) {
+      final maps = await db.query(
+        'attempts',
+        orderBy: 'startedAt DESC',
+        limit: limit,
+      );
+      return maps.map(Attempt.fromMap).toList();
+    }
+    final keys = await getEntityKeysByOwner(entityType: 'attempt', ownerId: ownerId);
+    if (keys.isEmpty) return [];
+    final ids = keys.map(int.tryParse).whereType<int>().toList();
+    if (ids.isEmpty) return [];
     final maps = await db.query(
       'attempts',
+      where: 'id IN (${List.filled(ids.length, '?').join(', ')})',
+      whereArgs: ids,
       orderBy: 'startedAt DESC',
       limit: limit,
     );
@@ -649,9 +749,19 @@ class AppDatabase {
     await batch.commit(noResult: true);
   }
 
-  Future<List<WrongBookEntry>> getAllWrongBookEntries() async {
+  Future<List<WrongBookEntry>> getAllWrongBookEntries({String? ownerId}) async {
     final db = await database;
-    final maps = await db.query('wrong_book');
+    if (ownerId == null) {
+      final maps = await db.query('wrong_book');
+      return maps.map(WrongBookEntry.fromMap).toList();
+    }
+    final keys = await getEntityKeysByOwner(entityType: 'wrong_book', ownerId: ownerId);
+    if (keys.isEmpty) return [];
+    final maps = await db.query(
+      'wrong_book',
+      where: 'questionId IN (${List.filled(keys.length, '?').join(', ')})',
+      whereArgs: keys,
+    );
     return maps.map(WrongBookEntry.fromMap).toList();
   }
 
@@ -775,6 +885,7 @@ class AppDatabase {
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) async {
     final date = DateTime.tryParse(dailyStat.date);
     if (attempt.id != null ||
@@ -881,6 +992,43 @@ class AppDatabase {
         ],
       );
       if (updated == 0) await txn.insert('daily_stats', dailyStat.toMap());
+
+      // Ghi nhận quyền sở hữu dữ liệu nếu có ownerId
+      if (ownerId != null && ownerId.trim().isNotEmpty) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        await txn.insert(
+          'data_ownership',
+          {
+            'entityType': 'attempt',
+            'entityKey': attemptId.toString(),
+            'ownerId': ownerId,
+            'createdAt': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+        for (final entry in wrongBook) {
+          await txn.insert(
+            'data_ownership',
+            {
+              'entityType': 'wrong_book',
+              'entityKey': entry.questionId,
+              'ownerId': ownerId,
+              'createdAt': now,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await txn.insert(
+          'data_ownership',
+          {
+            'entityType': 'daily_stat',
+            'entityKey': dailyStat.date,
+            'ownerId': ownerId,
+            'createdAt': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
     });
   }
 
@@ -896,6 +1044,7 @@ class AppDatabase {
       'daily_stats',
       'app_settings',
       'word_progress',
+      'data_ownership',
     };
     if (!tables.contains(tableName)) {
       throw ArgumentError.value(tableName, 'tableName', 'Unknown application table');
@@ -920,29 +1069,216 @@ class AppDatabase {
     return WordProgress.fromMap(maps.first);
   }
 
-  Future<List<WordProgress>> getAllWordProgress() async {
+  Future<List<WordProgress>> getAllWordProgress({String? ownerId}) async {
     final db = await database;
-    final maps = await db.query('word_progress');
+    if (ownerId == null) {
+      final maps = await db.query('word_progress');
+      return maps.map(WordProgress.fromMap).toList();
+    }
+    final keys = await getEntityKeysByOwner(entityType: 'word_progress', ownerId: ownerId);
+    if (keys.isEmpty) return [];
+    final maps = await db.query(
+      'word_progress',
+      where: 'wordId IN (${List.filled(keys.length, '?').join(', ')})',
+      whereArgs: keys,
+    );
     return maps.map(WordProgress.fromMap).toList();
   }
 
-  Future<void> upsertWordProgress(WordProgress progress) async {
+  Future<void> upsertWordProgress(WordProgress progress, {String? ownerId}) async {
     final db = await database;
-    await db.insert(
-      'word_progress',
-      progress.toMap(),
+    await db.transaction((txn) async {
+      await txn.insert(
+        'word_progress',
+        progress.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      if (ownerId != null && ownerId.trim().isNotEmpty) {
+        await txn.insert(
+          'data_ownership',
+          {
+            'entityType': 'word_progress',
+            'entityKey': progress.wordId,
+            'ownerId': ownerId,
+            'createdAt': DateTime.now().millisecondsSinceEpoch,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+  }
+
+  // --- Data Ownership & Guest Data Transfer ---
+  Future<void> recordOwnership({
+    required String entityType,
+    required String entityKey,
+    required String ownerId,
+    int? createdAt,
+    DatabaseExecutor? txn,
+  }) async {
+    final executor = txn ?? await database;
+    await executor.insert(
+      'data_ownership',
+      {
+        'entityType': entityType,
+        'entityKey': entityKey,
+        'ownerId': ownerId,
+        'createdAt': createdAt ?? DateTime.now().millisecondsSinceEpoch,
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<List<String>> getEntityKeysByOwner({
+    required String entityType,
+    required String ownerId,
+    DatabaseExecutor? txn,
+  }) async {
+    final executor = txn ?? await database;
+    final rows = await executor.query(
+      'data_ownership',
+      columns: ['entityKey'],
+      where: 'entityType = ? AND ownerId = ?',
+      whereArgs: [entityType, ownerId],
+    );
+    return rows.map((r) => r['entityKey'] as String).toList();
+  }
+
+  Future<bool> hasOwnership({
+    required String entityType,
+    required String entityKey,
+    required String ownerId,
+    DatabaseExecutor? txn,
+  }) async {
+    final executor = txn ?? await database;
+    final rows = await executor.query(
+      'data_ownership',
+      columns: ['id'],
+      where: 'entityType = ? AND entityKey = ? AND ownerId = ?',
+      whereArgs: [entityType, entityKey, ownerId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  /// Chuyển toàn bộ dữ liệu thuộc phiên khách [fromGuestId] sang tài khoản mới [toUserId].
+  /// Hoàn toàn atomic qua Transaction. Nếu có lỗi, rollback 100% không mất dữ liệu khách.
+  /// Idempotent: chạy nhiều lần không nhân đôi điểm hoặc bản ghi.
+  /// Tuyệt đối KHÔNG gán các bản ghi unowned (không có trong data_ownership).
+  Future<TransferResult> transferGuestData({
+    required String fromGuestId,
+    required String toUserId,
+  }) async {
+    if (fromGuestId == toUserId || fromGuestId.isEmpty || toUserId.isEmpty) {
+      return TransferResult.empty();
+    }
+    final db = await database;
+    return await db.transaction((txn) async {
+      final rows = await txn.query(
+        'data_ownership',
+        where: 'ownerId = ?',
+        whereArgs: [fromGuestId],
+      );
+
+      if (rows.isEmpty) {
+        return TransferResult.empty();
+      }
+
+      int transferredAttempts = 0;
+      int transferredWrongs = 0;
+      int transferredWords = 0;
+      int transferredStats = 0;
+
+      for (final row in rows) {
+        final id = row['id'] as int;
+        final entityType = row['entityType'] as String;
+        final entityKey = row['entityKey'] as String;
+
+        // Kiểm tra xem tài khoản đích đã có ánh xạ cho thực thể này chưa
+        final existing = await txn.query(
+          'data_ownership',
+          where: 'entityType = ? AND entityKey = ? AND ownerId = ?',
+          whereArgs: [entityType, entityKey, toUserId],
+          limit: 1,
+        );
+
+        if (existing.isNotEmpty) {
+          // Tránh nhân đôi: xoá ánh xạ khách cũ nếu tài khoản đích đã có
+          await txn.delete(
+            'data_ownership',
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+        } else {
+          // Gắn chủ sở hữu mới sang tài khoản thật
+          await txn.update(
+            'data_ownership',
+            {'ownerId': toUserId},
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+
+          switch (entityType) {
+            case 'attempt':
+              transferredAttempts++;
+              break;
+            case 'wrong_book':
+              transferredWrongs++;
+              break;
+            case 'word_progress':
+              transferredWords++;
+              break;
+            case 'daily_stat':
+              transferredStats++;
+              break;
+          }
+        }
+      }
+
+      // Chuyển giao phiên học dở nếu có
+      final sessionRow = await txn.query(
+        'app_settings',
+        where: 'key = ?',
+        whereArgs: ['learning_session_$fromGuestId'],
+        limit: 1,
+      );
+      if (sessionRow.isNotEmpty) {
+        final sessionVal = sessionRow.first['value'] as String;
+        await txn.insert(
+          'app_settings',
+          {'key': 'learning_session_$toUserId', 'value': sessionVal},
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+        await txn.delete(
+          'app_settings',
+          where: 'key = ?',
+          whereArgs: ['learning_session_$fromGuestId'],
+        );
+      }
+
+      return TransferResult(
+        transferredAttempts: transferredAttempts,
+        transferredWrongs: transferredWrongs,
+        transferredWords: transferredWords,
+        transferredStats: transferredStats,
+        success: true,
+      );
+    });
   }
 
   Future<List<WordProgress>> getDueWordProgress() async {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
-    final maps = await db.query(
-      'word_progress',
-      where: 'nextReviewAt <= ?',
-      whereArgs: [now],
-      orderBy: 'nextReviewAt ASC',
+    // Chỉ lấy những từ đến hạn ôn mà có tồn tại trong danh mục từ vựng (bảng words)
+    // Loại trừ các bản ghi mồ côi (orphan records) khỏi danh sách và số lượng đến hạn
+    final maps = await db.rawQuery(
+      '''
+      SELECT wp.* FROM word_progress wp
+      INNER JOIN words w ON wp.wordId = w.id
+      WHERE wp.nextReviewAt <= ?
+      ORDER BY wp.nextReviewAt ASC
+      ''',
+      [now],
     );
     return maps.map(WordProgress.fromMap).toList();
   }
