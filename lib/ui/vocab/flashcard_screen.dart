@@ -1,3 +1,4 @@
+import '../textbook/word_source_button.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -57,12 +58,10 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(1.5, 0),
-    ).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeInCubic),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: Offset.zero, end: const Offset(1.5, 0)).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeInCubic),
+        );
   }
 
   @override
@@ -80,7 +79,9 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       await _flipController.forward();
       // Đánh dấu đã xem từ (mounted check trước khi dùng context)
       if (!_hasAnswered && mounted) {
-        await context.read<VocabProvider>().markWordSeen(_deck[_currentIndex].id);
+        await context.read<VocabProvider>().markWordSeen(
+          _deck[_currentIndex].id,
+        );
       }
     }
     if (mounted) setState(() => _showBack = !_showBack);
@@ -173,9 +174,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
     if (_deck.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.topicTitle)),
-        body: const Center(
-          child: Text('Chưa có thẻ từ vựng nào.'),
-        ),
+        body: const Center(child: Text('Chưa có thẻ từ vựng nào.')),
       );
     }
 
@@ -197,10 +196,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             ),
             Text(
               '${_currentIndex + 1}/${_deck.length}',
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.outline,
-              ),
+              style: TextStyle(fontSize: 12, color: colorScheme.outline),
             ),
           ],
         ),
@@ -236,16 +232,16 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                         alignment: Alignment.center,
                         transform: Matrix4.identity()
                           ..setEntry(3, 2, 0.001)
-                          ..rotateY(
-                            math.pi * _flipAnimation.value,
-                          ),
+                          ..rotateY(math.pi * _flipAnimation.value),
                         child: isShowingFront
                             ? _CardFront(word: word, provider: provider)
                             : Transform(
                                 alignment: Alignment.center,
-                                transform: Matrix4.identity()
-                                  ..rotateY(math.pi),
-                                child: _CardBack(word: word, provider: provider),
+                                transform: Matrix4.identity()..rotateY(math.pi),
+                                child: _CardBack(
+                                  word: word,
+                                  provider: provider,
+                                ),
                               ),
                       );
                     },
@@ -261,13 +257,15 @@ class _FlashcardScreenState extends State<FlashcardScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.touch_app_rounded,
-                      size: 16, color: colorScheme.outline),
+                  Icon(
+                    Icons.touch_app_rounded,
+                    size: 16,
+                    color: colorScheme.outline,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Chạm để xem nghĩa',
-                    style: TextStyle(
-                        fontSize: 13, color: colorScheme.outline),
+                    style: TextStyle(fontSize: 13, color: colorScheme.outline),
                   ),
                 ],
               ),
@@ -332,10 +330,7 @@ class _CardFront extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withAlpha(180),
-          ],
+          colors: [colorScheme.primary, colorScheme.primary.withAlpha(180)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -392,13 +387,18 @@ class _CardFront extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.volume_up_rounded,
-                      color: Colors.white, size: 20),
+                  const Icon(
+                    Icons.volume_up_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Phát âm',
                     style: TextStyle(
-                        color: Colors.white.withAlpha(230), fontSize: 14),
+                      color: Colors.white.withAlpha(230),
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -463,7 +463,7 @@ class _CardBack extends StatelessWidget {
           const Divider(),
           const SizedBox(height: 16),
           Text(
-            'Ví dụ',
+            word.id.startsWith('gs12_') ? 'NGUỒN GLOSSARY' : 'Ví dụ',
             style: TextStyle(
               fontSize: 12,
               color: colorScheme.outline,
@@ -471,15 +471,17 @@ class _CardBack extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            word.example,
-            style: TextStyle(
-              fontSize: 15,
-              fontStyle: FontStyle.italic,
-              color: colorScheme.onSurface.withAlpha(200),
-            ),
-            textAlign: TextAlign.center,
-          ),
+          word.id.startsWith('gs12_')
+              ? WordSourceButton(wordId: word.id)
+              : Text(
+                  word.example,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic,
+                    color: colorScheme.onSurface.withAlpha(200),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
           const SizedBox(height: 20),
           // Nút phát âm
           InkWell(
@@ -494,8 +496,11 @@ class _CardBack extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.volume_up_rounded,
-                      color: colorScheme.onPrimaryContainer, size: 18),
+                  Icon(
+                    Icons.volume_up_rounded,
+                    color: colorScheme.onPrimaryContainer,
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     word.english,
@@ -537,9 +542,7 @@ class _AnswerButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         elevation: 2,
       ),
     );

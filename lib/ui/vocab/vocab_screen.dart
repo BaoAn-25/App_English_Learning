@@ -7,7 +7,8 @@ import 'vocab_provider.dart';
 
 /// Entry point của module Vocab – cung cấp VocabProvider và điều hướng đến TopicListScreen
 class VocabScreen extends StatelessWidget {
-  const VocabScreen({super.key});
+  final bool showAppBar;
+  const VocabScreen({super.key, this.showAppBar = false});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,7 @@ class VocabScreen extends StatelessWidget {
 
     return ChangeNotifierProvider(
       create: (ctx) => VocabProvider(repo)..loadTopics(),
-      child: const TopicListScreen(),
+      child: TopicListScreen(showAppBar: showAppBar),
     );
   }
 }

@@ -1,8 +1,10 @@
-"""Test-only sqflite transport backed by real Python standard-library SQLite."""
+import io
 import json
 import sqlite3
 import sys
 
+sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', errors='replace')
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 connections = {}
 
 

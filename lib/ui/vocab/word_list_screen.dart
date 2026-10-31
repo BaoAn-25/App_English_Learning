@@ -1,3 +1,4 @@
+import '../textbook/word_source_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -97,20 +98,17 @@ class WordListScreen extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final word = words[index];
-                        final progress = provider.progressOf(word.id);
-                        return _WordCard(
-                          word: word,
-                          index: index,
-                          isLearned: progress.isLearned,
-                          isMastered: progress.isMastered,
-                          onSpeak: () => provider.speak(word.english),
-                        );
-                      },
-                      childCount: words.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final word = words[index];
+                      final progress = provider.progressOf(word.id);
+                      return _WordCard(
+                        word: word,
+                        index: index,
+                        isLearned: progress.isLearned,
+                        isMastered: progress.isMastered,
+                        onSpeak: () => provider.speak(word.english),
+                      );
+                    }, childCount: words.length),
                   ),
                 ),
             ],
@@ -165,10 +163,7 @@ class _TopicHeader extends StatelessWidget {
           const Spacer(),
           Text(
             '20 từ',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ],
       ),
@@ -206,8 +201,10 @@ class _TopicProgressSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('$learned/$total từ đã học',
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                '$learned/$total từ đã học',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -217,12 +214,16 @@ class _TopicProgressSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.star_rounded,
-                        size: 14, color: Colors.amber),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.amber,
+                    ),
                     const SizedBox(width: 4),
-                    Text('$mastered thành thạo',
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.amber)),
+                    Text(
+                      '$mastered thành thạo',
+                      style: const TextStyle(fontSize: 12, color: Colors.amber),
+                    ),
                   ],
                 ),
               ),
@@ -246,18 +247,18 @@ class _TopicProgressSection extends StatelessWidget {
                   onPressed: words.isEmpty
                       ? null
                       : () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChangeNotifierProvider.value(
-                                value: provider,
-                                child: FlashcardScreen(
-                                  words: words,
-                                  topicTitle: topic.title,
-                                  topic: topic,
-                                ),
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChangeNotifierProvider.value(
+                              value: provider,
+                              child: FlashcardScreen(
+                                words: words,
+                                topicTitle: topic.title,
+                                topic: topic,
                               ),
                             ),
                           ),
+                        ),
                   icon: const Icon(Icons.style_rounded, size: 18),
                   label: const Text('Flashcard'),
                 ),
@@ -448,18 +449,23 @@ class _WordCardState extends State<_WordCard> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.format_quote_rounded,
-                            size: 16, color: colorScheme.primary),
+                        Icon(
+                          Icons.format_quote_rounded,
+                          size: 16,
+                          color: colorScheme.primary,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: Text(
-                            widget.word.example,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic,
-                              color: colorScheme.onSurface.withAlpha(200),
-                            ),
-                          ),
+                          child: widget.word.id.startsWith('gs12_')
+                              ? WordSourceButton(wordId: widget.word.id)
+                              : Text(
+                                  widget.word.example,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontStyle: FontStyle.italic,
+                                    color: colorScheme.onSurface.withAlpha(200),
+                                  ),
+                                ),
                         ),
                       ],
                     ),

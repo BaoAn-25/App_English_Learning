@@ -1,3 +1,6 @@
+import '../auth/welcome_screen.dart';
+import '../auth/auth_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,7 +11,6 @@ import '../theme/components/app_button.dart';
 import '../theme/components/app_card.dart';
 import '../theme/components/section_header.dart';
 import '../theme/components/sync_status_badge.dart';
-import '../theme/theme_controller.dart';
 import 'settings_controller.dart';
 
 /// Màn hình Cá nhân & Cài đặt.
@@ -59,9 +61,6 @@ class SettingsScreen extends StatelessWidget {
                 _buildReminderCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
-                // 4. Giao diện (Sáng / Tối / Hệ thống)
-                _buildThemeCard(context),
-                const SizedBox(height: AppTokens.space16),
 
                 // 5. Trạng thái đồng bộ đám mây (Offline-first)
                 _buildSyncCard(context, controller),
@@ -278,47 +277,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // --- Khối 4: Chế độ giao diện ---
-  Widget _buildThemeCard(BuildContext context) {
-    final themeController = Provider.of<ThemeController?>(context);
-    if (themeController == null) return const SizedBox.shrink();
-
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionHeader(
-            title: AppStrings.appearanceSection,
-            icon: Icons.palette_outlined,
-          ),
-          const SizedBox(height: AppTokens.space8),
-          SegmentedButton<ThemeMode>(
-            segments: const [
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.system,
-                icon: Icon(Icons.settings_brightness, size: 18),
-                label: Text(AppStrings.themeSystem, style: TextStyle(fontSize: 12)),
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.light,
-                icon: Icon(Icons.light_mode, size: 18),
-                label: Text(AppStrings.themeLight, style: TextStyle(fontSize: 12)),
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.dark,
-                icon: Icon(Icons.dark_mode, size: 18),
-                label: Text(AppStrings.themeDark, style: TextStyle(fontSize: 12)),
-              ),
-            ],
-            selected: {themeController.themeMode},
-            onSelectionChanged: (Set<ThemeMode> newSelection) {
-              themeController.setThemeMode(newSelection.first);
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   // --- Khối 5: Trạng thái đồng bộ ---
   Widget _buildSyncCard(BuildContext context, SettingsController controller) {
@@ -458,6 +416,16 @@ class SettingsScreen extends StatelessWidget {
                 Navigator.pop(dialogCtx);
                 if (onLogout != null) {
                   onLogout!();
+                } else {
+                  SharedPreferences.getInstance().then((prefs) {
+                    prefs.setBool('has_completed_onboarding', false);
+                  });
+                  AuthController.instance.logout();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                    (route) => false,
+                  );
                 }
               },
               child: const Text(AppStrings.logout, style: TextStyle(color: Colors.white)),

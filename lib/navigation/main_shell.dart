@@ -1,26 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../ui/home/home_screen.dart';
 import '../ui/practice/practice_screen.dart';
+import '../ui/review/review_screen.dart';
 import '../ui/settings/settings_screen.dart';
-import '../ui/stats/stats_screen.dart';
-import '../ui/vocab/vocab_screen.dart';
+import '../ui/textbook/textbook_hub_screen.dart';
 
+/// MainShell: Khung điều hướng 5 Tab chính của ứng dụng English 12
+/// Theo đúng chuẩn Wireframe: [Hôm nay] | [Sách] | [Luyện đề] | [Ôn tập] | [Tôi]
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final int initialIndex;
+
+  const MainShell({super.key, this.initialIndex = 0});
 
   @override
   State<MainShell> createState() => _MainShellState();
 }
 
 class _MainShellState extends State<MainShell> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   final List<Widget> _screens = const [
-    VocabScreen(),
+    HomeScreen(),
+    TextbookHubScreen(),
     PracticeScreen(),
-    StatsScreen(),
+    ReviewScreen(),
     SettingsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,26 +48,34 @@ class _MainShellState extends State<MainShell> {
             _currentIndex = index;
           });
         },
+        backgroundColor: Colors.white,
+        elevation: 3,
+        indicatorColor: const Color(0xFFEFF6FF),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            selectedIcon: Icon(Icons.school),
-            label: 'Học',
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded, color: Color(0xFF2563EB)),
+            label: 'Hôm nay',
           ),
           NavigationDestination(
-            icon: Icon(Icons.quiz_outlined),
-            selectedIcon: Icon(Icons.quiz),
+            icon: Icon(Icons.auto_stories_outlined),
+            selectedIcon: Icon(Icons.auto_stories_rounded, color: Color(0xFF2563EB)),
+            label: 'Sách',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.track_changes_rounded),
+            selectedIcon: Icon(Icons.track_changes_rounded, color: Color(0xFF2563EB)),
             label: 'Luyện đề',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Thống kê',
+            icon: Icon(Icons.style_outlined),
+            selectedIcon: Icon(Icons.style_rounded, color: Color(0xFF2563EB)),
+            label: 'Ôn tập',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Cá nhân',
+            selectedIcon: Icon(Icons.person_rounded, color: Color(0xFF2563EB)),
+            label: 'Tôi',
           ),
         ],
       ),
