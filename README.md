@@ -49,8 +49,8 @@ Tài và An đã đổi vai trò. Phân công dưới đây là phân công hi�
 
 | Thành viên | Thư mục phụ trách | Trách nhiệm chính |
 | :--- | :--- | :--- |
-| **Tài** | `lib/data/`<br>`lib/navigation/` | Model, SQLite `AppDatabase`, `AssetSeeder`, `AppRepository`; lưu/đồng bộ dữ liệu, kiểm thử tầng dữ liệu; luồng khởi động `AppStartup` và khung điều hướng `MainShell` |
-| **An** | `lib/ui/theme/`<br>`lib/ui/home/`<br>`lib/ui/stats/`<br>`lib/ui/settings/` | Hệ thống giao diện theme Material 3, màn hình Trang chủ (Streak, XP, mục tiêu ngày), màn hình Thống kê tiến độ, màn hình Cá nhân & Cài đặt |
+| **Tài** | `lib/data/` | Quản lý CSDL SQLite (`AppDatabase`, các câu lệnh SQL, bảng biểu dữ liệu, `AssetSeeder`) |
+| **An** | `lib/ui/`<br>`lib/navigation/` | Thiết kế UX/UI toàn diện, hệ thống Design System & Theme Material 3, khung điều hướng `MainShell`, luồng khởi động `AppStartup`, màn hình Trang chủ (Streak, XP, mục tiêu ngày), Thống kê tiến độ, Cá nhân & Cài đặt |
 | **Lượng** | `lib/ui/vocab/` | Màn hình Học từ vựng, danh sách từ vựng theo chủ đề (Topic, Word) |
 | **Viễn** | `lib/ui/practice/`<br>`lib/ui/mock/` | Màn hình Luyện tập theo dạng câu hỏi (Question), màn hình Thi thử 50 câu 60 phút (Attempt, AttemptAnswer) |
 | **Chung** | `assets/data/` | Dữ liệu JSON mẫu (topics, words, questions) |
