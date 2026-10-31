@@ -10,7 +10,8 @@ import 'word_list_screen.dart';
 
 /// Màn hình danh sách 10 chủ đề từ vựng
 class TopicListScreen extends StatelessWidget {
-  const TopicListScreen({super.key});
+  final bool showAppBar;
+  const TopicListScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
@@ -23,36 +24,95 @@ class TopicListScreen extends StatelessWidget {
         builder: (context, provider, _) {
           return CustomScrollView(
             slivers: [
-              // ── App Bar ────────────────────────────────────────────────
-              SliverAppBar(
-                expandedHeight: 160,
-                floating: false,
-                pinned: true,
-                backgroundColor: colorScheme.surface,
-                flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.fromLTRB(20, 0, 16, 14),
-                  title: Text(
-                    'Từ Vựng',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+              // ── App Bar (Ẩn khi nhúng trong TabBar của ReviewScreen) ──
+              if (showAppBar)
+                SliverAppBar(
+                  expandedHeight: 160,
+                  floating: false,
+                  pinned: true,
+                  backgroundColor: colorScheme.surface,
+                  flexibleSpace: FlexibleSpaceBar(
+                    titlePadding: const EdgeInsets.fromLTRB(20, 0, 16, 14),
+                    title: Text(
+                      'Từ Vựng',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    background: _HeaderBackground(colorScheme: colorScheme),
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.menu_book_rounded),
+                      tooltip: 'Đọc Sách Giáo Khoa 12',
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TextbookScreen()),
+                      ),
+                    ),
+                    _SrsReviewButton(provider: provider),
+                    const SizedBox(width: 8),
+                  ],
+                )
+              else
+                // Banner header gọn gàng khi hiển thị bên trong Tab
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.primaryContainer.withAlpha(200),
+                          colorScheme.secondaryContainer.withAlpha(120),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.school_rounded, size: 36, color: colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Luyện Thi THPT',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                '200 Từ Vựng Tiếng Anh 12',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.menu_book_rounded),
+                          tooltip: 'Sách GK 12',
+                          color: colorScheme.primary,
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const TextbookScreen()),
+                          ),
+                        ),
+                        _SrsReviewButton(provider: provider),
+                      ],
                     ),
                   ),
-                  background: _HeaderBackground(colorScheme: colorScheme),
                 ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.menu_book_rounded),
-                    tooltip: 'Đọc Sách Giáo Khoa 12',
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const TextbookScreen()),
-                    ),
-                  ),
-                  _SrsReviewButton(provider: provider),
-                  const SizedBox(width: 8),
-                ],
-              ),
 
               // ── Thống kê tổng quan ────────────────────────────────────
               SliverToBoxAdapter(

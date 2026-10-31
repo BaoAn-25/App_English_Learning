@@ -19,11 +19,13 @@ import 'stats_controller.dart';
 class StatsScreen extends StatelessWidget {
   final AppRepository? repository;
   final ValueChanged<String>? onPracticeType;
+  final bool showAppBar;
 
   const StatsScreen({
     super.key,
     this.repository,
     this.onPracticeType,
+    this.showAppBar = false,
   });
 
   @override
@@ -38,23 +40,25 @@ class StatsScreen extends StatelessWidget {
     return ChangeNotifierProvider<StatsController>(
       create: (_) => StatsController(repo: repo),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.statsTitle),
-          actions: [
-            Consumer<StatsController>(
-              builder: (context, controller, child) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
-                  child: SyncStatusBadge(
-                    state: controller.syncState,
-                    compact: true,
-                    onRetry: () => controller.refresh(),
+        appBar: showAppBar
+            ? AppBar(
+                title: const Text(AppStrings.statsTitle),
+                actions: [
+                  Consumer<StatsController>(
+                    builder: (context, controller, child) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: SyncStatusBadge(
+                          state: controller.syncState,
+                          compact: true,
+                          onRetry: () => controller.refresh(),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ],
-        ),
+                ],
+              )
+            : null,
         body: Consumer<StatsController>(
           builder: (context, controller, child) {
             if (controller.isLoading) {
