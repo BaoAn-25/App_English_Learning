@@ -8,12 +8,14 @@ class PlanReadyScreen extends StatelessWidget {
   final double targetScore;
   final int dailyMinutes;
   final bool reminderEnabled;
+  final String reminderTime;
 
   const PlanReadyScreen({
     super.key,
     required this.targetScore,
     required this.dailyMinutes,
     required this.reminderEnabled,
+    this.reminderTime = '20:00',
   });
 
   @override
@@ -105,7 +107,7 @@ class PlanReadyScreen extends StatelessWidget {
                     ),
                     Container(width: 1, height: 32, color: Colors.white24),
                     _buildSummaryItem(
-                      badge: reminderEnabled ? '20:00' : 'Tắt',
+                      badge: reminderEnabled ? reminderTime : 'Tắt',
                       label: 'Nhắc học',
                     ),
                   ],

@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../data/textbook_repository.dart';
+import '../../data/trial_policy.dart';
+import '../auth/auth_controller.dart';
+import '../auth/login_screen.dart';
+import '../auth/register_screen.dart';
+import '../theme/app_tokens.dart';
 import 'reading_study_screen.dart';
+import 'textbook_screen.dart';
 
 class UnitDetailScreen extends StatefulWidget {
   final int unitNumber;
@@ -8,9 +15,9 @@ class UnitDetailScreen extends StatefulWidget {
 
   const UnitDetailScreen({
     super.key,
-    this.unitNumber = 3,
-    this.unitTitle = 'Green Living',
-    this.unitTopic = 'Green Habits for a Better Future',
+    this.unitNumber = 1,
+    this.unitTitle = 'Life Stories We Admire',
+    this.unitTopic = 'Steve Jobs: Life and Achievements',
   });
 
   @override
@@ -19,19 +26,20 @@ class UnitDetailScreen extends StatefulWidget {
 
 class _UnitDetailScreenState extends State<UnitDetailScreen> {
   // Danh sách các phần bài học chuẩn theo cấu trúc SGK 12
-  // Khởi tạo trạng thái thực tế: chưa học phần nào
   final List<Map<String, dynamic>> _sections = [
     {
       'id': 1,
       'title': 'Getting Started',
       'subtitle': 'Khởi động & Làm quen chủ đề',
-      'status': 'not_started', // completed | in_progress | locked | not_started
+      'pageOffset': 0, // Bắt đầu unit
+      'status': 'not_started',
       'icon': Icons.flag_rounded,
     },
     {
       'id': 2,
       'title': 'Language',
       'subtitle': 'Từ vựng & Ngữ pháp trọng tâm',
+      'pageOffset': 1,
       'status': 'not_started',
       'icon': Icons.menu_book_rounded,
     },
@@ -39,6 +47,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
       'id': 3,
       'title': 'Pronunciation',
       'subtitle': 'Ngữ điệu và phát âm chuẩn',
+      'pageOffset': 1,
       'status': 'not_started',
       'icon': Icons.record_voice_over_rounded,
     },
@@ -46,31 +55,214 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
       'id': 4,
       'title': 'Reading',
       'subtitle': 'Bài đọc · Tra từ điển · Luyện tập đọc hiểu',
+      'pageOffset': 3,
       'status': 'not_started',
       'icon': Icons.auto_stories_rounded,
     },
     {
       'id': 5,
       'title': 'Speaking',
-      'subtitle': 'Luyện nói theo tình huống (Chưa sẵn sàng)',
+      'subtitle': 'Luyện nói theo tình huống SGK',
+      'pageOffset': 5,
       'status': 'not_started',
       'icon': Icons.chat_bubble_outline_rounded,
     },
     {
       'id': 6,
-      'title': 'Writing',
-      'subtitle': 'Luyện viết có gia sư AI sửa lỗi (Chưa sẵn sàng)',
+      'title': 'Listening & Writing',
+      'subtitle': 'Luyện nghe & kỹ năng viết SGK',
+      'pageOffset': 6,
       'status': 'not_started',
       'icon': Icons.edit_note_rounded,
     },
     {
       'id': 7,
       'title': 'Looking Back & Project',
-      'subtitle': 'Ôn tập toàn diện Unit & Dự án (Chưa sẵn sàng)',
+      'subtitle': 'Ôn tập toàn diện Unit & Dự án',
+      'pageOffset': 10,
       'status': 'not_started',
       'icon': Icons.assignment_outlined,
     },
   ];
+
+  int _getUnitStartPage() {
+    // Ước lượng hoặc tính theo mục lục 10 Unit chuẩn SGK
+    // Unit 1: 8..19, Unit 2: 20..31, Unit 3: 32..43, Unit 4: 48..59, Unit 5: 60..71...
+    switch (widget.unitNumber) {
+      case 1:
+        return 8;
+      case 2:
+        return 20;
+      case 3:
+        return 32;
+      case 4:
+        return 48;
+      case 5:
+        return 60;
+      case 6:
+        return 76;
+      case 7:
+        return 88;
+      case 8:
+        return 100;
+      case 9:
+        return 116;
+      case 10:
+        return 128;
+      default:
+        return 8;
+    }
+  }
+
+  Future<void> _openTextbookPage(int targetPage) async {
+    try {
+      final repo = TextbookRepository();
+      final book = await repo.load();
+      if (!mounted) return;
+      final start = _getUnitStartPage();
+      final end = start + 11;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TextbookReader(
+            book: book,
+            initialPage: targetPage,
+            start: start,
+            end: end,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể tải dữ liệu trang sách. Vui lòng thử lại.')),
+      );
+    }
+  }
+
+  void _handleSectionTap(Map<String, dynamic> sec) {
+    final title = sec['title'] as String;
+    final bool isTrial = TrialPolicy.isTrialContent(
+      unitNumber: widget.unitNumber,
+      sectionTitle: title,
+    );
+
+    // Nếu là nội dung trong phạm vi học thử (Unit 1 Reading)
+    if (isTrial) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ReadingStudyScreen(
+            unitNumber: widget.unitNumber,
+            unitTitle: widget.unitTitle,
+            articleTitle: widget.unitNumber == 1
+                ? TrialPolicy.trialArticleTitle
+                : widget.unitTopic,
+          ),
+        ),
+      );
+      return;
+    }
+
+    final isGuest = AuthController.instance.user.isGuest;
+    final int targetPage = _getUnitStartPage() + (sec['pageOffset'] as int);
+
+    if (isGuest) {
+      // Khách bấm vào nội dung ngoài phạm vi thử: giải thích lợi ích tài khoản
+      showDialog(
+        context: context,
+        builder: (dCtx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: const [
+              Icon(Icons.lock_outline_rounded, color: AppTokens.primary),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Nội dung dành cho Học viên',
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Phần "$title" thuộc phạm vi chương trình chính thức. ${TrialPolicy.accountBenefitsExplanation}',
+                style: const TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontSize: 13.5,
+                  height: 1.45,
+                  color: AppTokens.textMain,
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Bạn vẫn có thể xem trước trang sách nguyên bản dưới đây hoặc đăng ký tài khoản miễn phí để học tương tác.',
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontSize: 12.5,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dCtx);
+                _openTextbookPage(targetPage);
+              },
+              child: const Text('Xem trang SGK gốc'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dCtx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text('Đăng nhập'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dCtx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                );
+              },
+              child: const Text('Tạo tài khoản'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Học viên đã đăng nhập
+      if (title == 'Reading') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ReadingStudyScreen(
+              unitNumber: widget.unitNumber,
+              unitTitle: widget.unitTitle,
+              articleTitle: widget.unitTopic,
+            ),
+          ),
+        );
+      } else {
+        _openTextbookPage(targetPage);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +349,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 13.5,
-                          color: Color(0xFF2563EB),
+                          color: AppTokens.primary,
                         ),
                       ),
                     ],
@@ -169,7 +361,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                       value: progressRatio,
                       minHeight: 8,
                       backgroundColor: const Color(0xFFE2E8F0),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppTokens.primary),
                     ),
                   ),
                 ],
@@ -185,31 +377,9 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                 separatorBuilder: (ctx, i) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final sec = _sections[index];
-                  final bool isReading = sec['title'] == 'Reading';
-
                   return _buildSectionCard(
                     section: sec,
-                    onTap: () {
-                      if (isReading) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ReadingStudyScreen(
-                              unitNumber: widget.unitNumber,
-                              unitTitle: widget.unitTitle,
-                              articleTitle: widget.unitTopic,
-                            ),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Phần ${sec['title']} chưa sẵn sàng nội dung ở bước này.'),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
+                    onTap: () => _handleSectionTap(sec),
                   );
                 },
               ),
@@ -227,6 +397,10 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     final status = section['status'] as String;
     final bool isCompleted = status == 'completed';
     final bool isInProgress = status == 'in_progress';
+    final bool isTrial = TrialPolicy.isTrialContent(
+      unitNumber: widget.unitNumber,
+      sectionTitle: section['title'] as String,
+    );
 
     Color iconBg;
     Color iconColor;
@@ -234,25 +408,25 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
 
     if (isCompleted) {
       iconBg = const Color(0xFFDCFCE7);
-      iconColor = const Color(0xFF16A34A);
+      iconColor = AppTokens.successGreen;
       trailing = const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 20),
+          Icon(Icons.check_circle_rounded, color: AppTokens.successGreen, size: 20),
           SizedBox(width: 4),
           Text(
             'Hoàn thành',
-            style: TextStyle(color: Color(0xFF16A34A), fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(color: AppTokens.successGreen, fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ],
       );
     } else if (isInProgress) {
       iconBg = const Color(0xFFEFF6FF);
-      iconColor = const Color(0xFF2563EB);
+      iconColor = AppTokens.primary;
       trailing = Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF2563EB),
+          color: AppTokens.primary,
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
@@ -266,6 +440,25 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
           style: TextStyle(
             color: Colors.white,
             fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    } else if (isTrial) {
+      iconBg = const Color(0xFFFEF3C7);
+      iconColor = const Color(0xFFD97706);
+      trailing = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFEF3C7),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFFDE68A)),
+        ),
+        child: const Text(
+          'Học thử',
+          style: TextStyle(
+            color: Color(0xFFB45309),
+            fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -287,7 +480,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
         boxShadow: [
           BoxShadow(
             color: isInProgress
-                ? const Color(0xFF2563EB).withValues(alpha: 0.08)
+                ? AppTokens.primary.withValues(alpha: 0.08)
                 : const Color(0x04000000),
             offset: const Offset(0, 2),
             blurRadius: 4,

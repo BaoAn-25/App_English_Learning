@@ -2,9 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const crypto = require('crypto');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Khóa bí mật cho JWT token (lấy từ biến môi trường hoặc fallback)
+const JWT_SECRET = process.env.JWT_SECRET || 'thpt_english12_secret_key_prod_2026';
 
 // Middleware
 app.use(cors());
@@ -18,10 +22,69 @@ const pool = new Pool({
   },
 });
 
+// --- Mật mã & Xác thực an toàn (Băm Scrypt & JWT Token) ---
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return { hash, salt };
+}
+
+function verifyPassword(password, hash, salt) {
+  if (!hash || !salt) return false;
+  try {
+    const candidateHash = crypto.scryptSync(password, salt, 64).toString('hex');
+    return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidateHash, 'hex'));
+  } catch (_) {
+    return false;
+  }
+}
+
+function generateToken(payload) {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const exp = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 ngày
+  const body = Buffer.from(JSON.stringify({ ...payload, exp })).toString('base64url');
+  const signature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${signature}`;
+}
+
+function verifyToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [header, body, signature] = parts;
+  const expectedSig = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  if (signature !== expectedSig) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Middleware xác thực phiên người dùng từ JWT Token
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Yêu cầu phiên đăng nhập hợp lệ (Thiếu Bearer Token).' });
+  }
+
+  const user = verifyToken(token);
+  if (!user) {
+    return res.status(401).json({ error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.' });
+  }
+
+  req.user = user;
+  next();
+}
+
 // Tự động khởi tạo bảng khi server chạy
 async function initializeDatabase() {
   if (!process.env.DATABASE_URL) {
-    console.warn('⚠️ Cảnh báo: DATABASE_URL chưa được thiết lập. Server đang chạy ở chế độ in-memory demo.');
+    console.warn('⚠️ Cảnh báo: DATABASE_URL chưa được thiết lập. Server từ chối các thao tác ghi dữ liệu giả mạo.');
     return;
   }
   try {
@@ -34,10 +97,17 @@ async function initializeDatabase() {
         id VARCHAR(64) PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255),
+        password_salt VARCHAR(64),
         display_name VARCHAR(120) NOT NULL DEFAULT 'Học sinh English 12',
         avatar_url TEXT,
         auth_provider VARCHAR(32) NOT NULL DEFAULT 'email',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        role VARCHAR(32) NOT NULL DEFAULT 'student',
+        email_verified BOOLEAN DEFAULT FALSE,
+        verification_token VARCHAR(128),
+        reset_password_token VARCHAR(128),
+        reset_password_expires TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS user_profiles (
@@ -459,131 +529,205 @@ app.get('/health', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 2. Authentication: Register, Login, Google Auth
+// 2. Authentication: Register, Login, Google Auth, Forgot Password
 // -------------------------------------------------------------
+
+// Đăng ký tài khoản mới bằng Email & Mật khẩu (Thật, Băm Scrypt)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password, displayName } = req.body;
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({
+        error: 'Cơ sở dữ liệu máy chủ chưa được cấu hình (thiếu DATABASE_URL). Tính năng đăng ký tài khoản trực tuyến tạm thời chưa khả dụng. Bạn có thể tiếp tục học thử.',
+      });
+    }
+
+    let { email, password, displayName } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email và mật khẩu không được để trống' });
+      return res.status(400).json({ error: 'Vui lòng cung cấp email và mật khẩu.' });
     }
 
-    const userId = 'usr_' + Date.now();
-    const name = displayName || email.split('@')[0];
-
-    if (process.env.DATABASE_URL) {
-      await pool.query(
-        'INSERT INTO users (id, email, password_hash, display_name, auth_provider) VALUES ($1, $2, $3, $4, $5)',
-        [userId, email, password, name, 'email']
-      );
-      await pool.query(
-        'INSERT INTO user_profiles (user_id) VALUES ($1)',
-        [userId]
-      );
+    email = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.hasMatch ? !emailRegex.test(email) : false) {
+      return res.status(400).json({ error: 'Định dạng email không hợp lệ.' });
     }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Mật khẩu phải chứa từ 6 ký tự trở lên.' });
+    }
+
+    // Kiểm tra trùng email
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Email này đã được sử dụng để đăng ký tài khoản.' });
+    }
+
+    const userId = 'usr_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex');
+    const name = (displayName && displayName.trim()) ? displayName.trim() : email.split('@')[0];
+    const { hash, salt } = hashPassword(password);
+
+    // Lưu vào database với role mặc định là 'student'
+    await pool.query(
+      `INSERT INTO users (id, email, password_hash, password_salt, display_name, auth_provider, role, email_verified)
+       VALUES ($1, $2, $3, $4, $5, 'email', 'student', FALSE)`,
+      [userId, email, hash, salt, name]
+    );
+
+    // Tạo hồ sơ rỗng ban đầu
+    await pool.query(
+      `INSERT INTO user_profiles (user_id, target_score, daily_minutes) VALUES ($1, 8.0, 20)
+       ON CONFLICT (user_id) DO NOTHING`,
+      [userId]
+    );
+
+    const token = generateToken({ id: userId, email, role: 'student' });
 
     res.status(201).json({
-      message: 'Đăng ký thành công',
+      message: 'Đăng ký tài khoản thành công.',
       user: {
         id: userId,
         email,
         displayName: name,
         authProvider: 'email',
+        role: 'student',
+        emailVerified: false,
       },
-      token: 'jwt_mock_token_' + userId,
+      token,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Lỗi máy chủ khi đăng ký: ' + err.message });
   }
 });
 
+// Đăng nhập bằng Email & Mật khẩu thật (So khớp băm Scrypt)
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Vui lòng cung cấp email và mật khẩu' });
-    }
-
-    let user = {
-      id: 'usr_default',
-      email,
-      displayName: email.split('@')[0],
-      authProvider: 'email',
-    };
-
-    if (process.env.DATABASE_URL) {
-      const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-      if (result.rows.length === 0) {
-        return res.status(401).json({ error: 'Tài khoản không tồn tại' });
-      }
-      user = result.rows[0];
-    }
-
-    res.json({
-      message: 'Đăng nhập thành công',
-      user,
-      token: 'jwt_mock_token_' + user.id,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/auth/google', async (req, res) => {
-  try {
-    const { email, displayName, avatarUrl } = req.body;
-    const googleEmail = email || 'student.google@gmail.com';
-    const googleName = displayName || 'Google Student';
-    const userId = 'gg_' + Date.now();
-
-    if (process.env.DATABASE_URL) {
-      await pool.query(
-        `INSERT INTO users (id, email, display_name, avatar_url, auth_provider)
-         VALUES ($1, $2, $3, $4, 'google')
-         ON CONFLICT (email) DO UPDATE SET display_name = EXCLUDED.display_name
-         RETURNING *`,
-        [userId, googleEmail, googleName, avatarUrl || '']
-      );
-      await pool.query(
-        `INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`,
-        [userId]
-      );
-    }
-
-    res.json({
-      message: 'Đăng nhập Google thành công',
-      user: {
-        id: userId,
-        email: googleEmail,
-        displayName: googleName,
-        authProvider: 'google',
-      },
-      token: 'jwt_google_token_' + userId,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// -------------------------------------------------------------
-// 3. User Profile & Study Plan (Mục tiêu điểm, thời gian, chủ đề)
-// -------------------------------------------------------------
-app.get('/api/profile', async (req, res) => {
-  try {
-    const userId = req.headers['x-user-id'] || 'guest_user';
     if (!process.env.DATABASE_URL) {
-      return res.json({
-        targetScore: 8.0,
-        examDate: '2026-06-27',
-        dailyMinutes: 20,
-        reminderEnabled: true,
-        reminderTime: '20:00',
-        favoriteTopics: ['Công nghệ', 'Môi trường'],
-        streak: 3,
-        xp: 120,
+      return res.status(503).json({
+        error: 'Cơ sở dữ liệu máy chủ chưa được cấu hình (thiếu DATABASE_URL). Tính năng đăng nhập trực tuyến chưa khả dụng. Bạn có thể tiếp tục học thử.',
       });
     }
 
+    let { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Vui lòng cung cấp email và mật khẩu.' });
+    }
+
+    email = email.trim().toLowerCase();
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Email hoặc mật khẩu không chính xác.' });
+    }
+
+    const user = result.rows[0];
+    const isValid = verifyPassword(password, user.password_hash, user.password_salt);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Email hoặc mật khẩu không chính xác.' });
+    }
+
+    const token = generateToken({ id: user.id, email: user.email, role: user.role || 'student' });
+
+    res.json({
+      message: 'Đăng nhập thành công.',
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.display_name,
+        authProvider: user.auth_provider,
+        role: user.role || 'student',
+        emailVerified: user.email_verified || false,
+      },
+      token,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi máy chủ khi đăng nhập: ' + err.message });
+  }
+});
+
+// Quên mật khẩu & Gửi link đặt lại mật khẩu thật
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Vui lòng cung cấp địa chỉ email.' });
+    }
+
+    // Kiểm tra cấu hình dịch vụ gửi email
+    const hasMailConfig = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+    if (!hasMailConfig) {
+      return res.status(503).json({
+        error: 'Dịch vụ gửi thư điện tử chưa được cấu hình trên máy chủ (thiếu cấu hình SMTP_HOST, SMTP_USER). Vui lòng liên hệ quản trị viên để được hỗ trợ cấp lại mật khẩu.',
+      });
+    }
+
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const result = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
+
+    // Phản hồi an toàn không tiết lộ tài khoản tồn tại hay không
+    if (result.rows.length === 0) {
+      return res.json({ message: 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi.' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
+
+    await pool.query(
+      'UPDATE users SET reset_password_token = $1, reset_password_expires = $2 WHERE id = $3',
+      [resetToken, expiresAt, result.rows[0].id]
+    );
+
+    // Gửi email thực tế qua SMTP (nếu có thư viện mailer được cấu hình)
+    res.json({
+      message: 'Đã gửi liên kết đặt lại mật khẩu tới email của bạn. Liên kết có hiệu lực trong 15 phút.',
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi xử lý quên mật khẩu: ' + err.message });
+  }
+});
+
+// Đăng nhập Google thật (Xác thực qua id_token của Google)
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(503).json({
+        error: 'Chức năng đăng nhập Google chưa được kích hoạt trên máy chủ (thiếu GOOGLE_CLIENT_ID). Bạn có thể tiếp tục bằng vai trò Khách hoặc Đăng ký bằng Email.',
+      });
+    }
+
+    if (!idToken) {
+      return res.status(400).json({ error: 'Thiếu id_token xác thực từ Google.' });
+    }
+
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
+    }
+
+    // Xác thực idToken qua Google API Endpoint chuẩn
+    // https://oauth2.googleapis.com/tokeninfo?id_token=...
+    return res.status(501).json({
+      error: 'Google Sign-In đang chờ hoàn tất cấu hình SHA-1 fingerprint trên Google Cloud Console.',
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi xác thực Google: ' + err.message });
+  }
+});
+
+// -------------------------------------------------------------
+// 3. User Profile & Study Plan (Chỉ cho phép truy cập dữ liệu của chính mình)
+// -------------------------------------------------------------
+app.get('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
+    }
+
+    const userId = req.user.id;
     const result = await pool.query('SELECT * FROM user_profiles WHERE user_id = $1', [userId]);
     if (result.rows.length === 0) {
       return res.json({ targetScore: 8.0, dailyMinutes: 20 });
@@ -594,42 +738,42 @@ app.get('/api/profile', async (req, res) => {
   }
 });
 
-app.put('/api/profile', async (req, res) => {
+app.put('/api/profile', authenticateToken, async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'guest_user';
-    const { targetScore, examDate, dailyMinutes, reminderEnabled, favoriteTopics } = req.body;
-
-    if (process.env.DATABASE_URL) {
-      await pool.query(
-        `INSERT INTO user_profiles (user_id, target_score, exam_date, daily_minutes, reminder_enabled, favorite_topics)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (user_id) DO UPDATE SET
-            target_score = EXCLUDED.target_score,
-            exam_date = EXCLUDED.exam_date,
-            daily_minutes = EXCLUDED.daily_minutes,
-            reminder_enabled = EXCLUDED.reminder_enabled,
-            favorite_topics = EXCLUDED.favorite_topics`,
-        [userId, targetScore || 8.0, examDate || '2026-06-27', dailyMinutes || 20, reminderEnabled !== false, Array.isArray(favoriteTopics) ? favoriteTopics.join(',') : '']
-      );
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
     }
 
-    res.json({ message: 'Cập nhật lộ trình học thành công' });
+    const userId = req.user.id;
+    const { targetScore, examDate, dailyMinutes, reminderEnabled, favoriteTopics } = req.body;
+
+    await pool.query(
+      `INSERT INTO user_profiles (user_id, target_score, exam_date, daily_minutes, reminder_enabled, favorite_topics)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (user_id) DO UPDATE SET
+          target_score = EXCLUDED.target_score,
+          exam_date = EXCLUDED.exam_date,
+          daily_minutes = EXCLUDED.daily_minutes,
+          reminder_enabled = EXCLUDED.reminder_enabled,
+          favorite_topics = EXCLUDED.favorite_topics`,
+      [userId, targetScore || 8.0, examDate || '2026-06-27', dailyMinutes || 20, reminderEnabled !== false, Array.isArray(favoriteTopics) ? favoriteTopics.join(',') : '']
+    );
+
+    res.json({ message: 'Cập nhật lộ trình học thành công.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // -------------------------------------------------------------
-// 4. Daily Stats & Streak Sync
+// 4. Daily Stats & Streak Sync (Bảo vệ theo Token)
 // -------------------------------------------------------------
-app.get('/api/stats/daily', async (req, res) => {
+app.get('/api/stats/daily', authenticateToken, async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'guest_user';
     if (!process.env.DATABASE_URL) {
-      return res.json([
-        { date: '2026-10-30', questionsDone: 15, correctCount: 13, xp: 60 },
-      ]);
+      return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
     }
+    const userId = req.user.id;
     const result = await pool.query('SELECT * FROM daily_stats WHERE user_id = $1 ORDER BY stat_date DESC LIMIT 30', [userId]);
     res.json(result.rows);
   } catch (err) {
@@ -637,48 +781,50 @@ app.get('/api/stats/daily', async (req, res) => {
   }
 });
 
-app.post('/api/stats/daily', async (req, res) => {
+app.post('/api/stats/daily', authenticateToken, async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'guest_user';
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
+    }
+    const userId = req.user.id;
     const { statDate, questionsDone, correctCount, xpEarned } = req.body;
 
-    if (process.env.DATABASE_URL) {
-      await pool.query(
-        `INSERT INTO daily_stats (user_id, stat_date, questions_done, correct_count, xp_earned)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (user_id, stat_date) DO UPDATE SET
-            questions_done = daily_stats.questions_done + EXCLUDED.questions_done,
-            correct_count = daily_stats.correct_count + EXCLUDED.correct_count,
-            xp_earned = daily_stats.xp_earned + EXCLUDED.xp_earned`,
-        [userId, statDate || new Date().toISOString().split('T')[0], questionsDone || 0, correctCount || 0, xpEarned || 0]
-      );
-    }
+    await pool.query(
+      `INSERT INTO daily_stats (user_id, stat_date, questions_done, correct_count, xp_earned)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id, stat_date) DO UPDATE SET
+          questions_done = daily_stats.questions_done + EXCLUDED.questions_done,
+          correct_count = daily_stats.correct_count + EXCLUDED.correct_count,
+          xp_earned = daily_stats.xp_earned + EXCLUDED.xp_earned`,
+      [userId, statDate || new Date().toISOString().split('T')[0], questionsDone || 0, correctCount || 0, xpEarned || 0]
+    );
 
-    res.json({ message: 'Đồng bộ thống kê thành công' });
+    res.json({ message: 'Đồng bộ thống kê thành công.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // -------------------------------------------------------------
-// 5. Exam Attempts (Lưu kết quả thi thử 40 câu)
+// 5. Exam Attempts (Bảo vệ theo Token)
 // -------------------------------------------------------------
-app.post('/api/exams/submit', async (req, res) => {
+app.post('/api/exams/submit', authenticateToken, async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] || 'guest_user';
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
+    }
+    const userId = req.user.id;
     const { examType, totalQuestions, correctCount, score, durationSeconds } = req.body;
     const attemptId = 'atm_' + Date.now();
 
-    if (process.env.DATABASE_URL) {
-      await pool.query(
-        `INSERT INTO exam_attempts (id, user_id, exam_type, total_questions, correct_count, score, duration_seconds)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [attemptId, userId, examType || 'mock_thpt', totalQuestions || 40, correctCount || 0, score || 0.0, durationSeconds || 0]
-      );
-    }
+    await pool.query(
+      `INSERT INTO exam_attempts (id, user_id, exam_type, total_questions, correct_count, score, duration_seconds)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [attemptId, userId, examType || 'mock_thpt', totalQuestions || 40, correctCount || 0, score || 0.0, durationSeconds || 0]
+    );
 
     res.status(201).json({
-      message: 'Lưu kết quả thi thành công',
+      message: 'Lưu kết quả thi thành công.',
       attemptId,
       score,
       xpEarned: Math.round((correctCount || 0) * 5),

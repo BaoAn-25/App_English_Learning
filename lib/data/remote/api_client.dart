@@ -110,6 +110,30 @@ class ApiClient {
     return null;
   }
 
+  /// Yêu cầu đặt lại mật khẩu qua email
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final uri = Uri.parse('$baseUrl/auth/forgot-password');
+      final request = await _httpClient.postUrl(uri);
+      _headers().forEach((k, v) => request.headers.set(k, v));
+      request.write(jsonEncode({'email': email}));
+      final response = await request.close();
+      final body = await response.transform(utf8.decoder).join();
+      final data = jsonDecode(body) as Map<String, dynamic>;
+      return {
+        'statusCode': response.statusCode,
+        'success': response.statusCode == 200,
+        'message': data['message'] ?? (data['error'] ?? 'Lỗi không xác định'),
+      };
+    } catch (e) {
+      return {
+        'statusCode': 0,
+        'success': false,
+        'message': 'Không thể kết nối đến máy chủ: $e',
+      };
+    }
+  }
+
   /// Cập nhật hồ sơ & lộ trình học lên đám mây Neon
   Future<bool> updateProfile(Map<String, dynamic> profileData) async {
     try {

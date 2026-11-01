@@ -31,18 +31,28 @@ class AuthController extends ChangeNotifier {
       final savedExamDate = await AppRepository().getSetting('exam_date');
       final savedTargetScoreStr = await AppRepository().getSetting('target_score');
       final savedDailyMinutesStr = await AppRepository().getSetting('daily_minutes');
+      final savedReminderEnabledStr = await AppRepository().getSetting('reminder_enabled');
+      final savedReminderTime = await AppRepository().getSetting('reminder_time');
+      final savedReminderHour = await AppRepository().getSetting('reminder_hour');
+      final savedReminderMinute = await AppRepository().getSetting('reminder_minute');
 
       final targetScore = savedTargetScoreStr != null ? double.tryParse(savedTargetScoreStr) : null;
       final dailyMinutes = savedDailyMinutesStr != null ? int.tryParse(savedDailyMinutesStr) : null;
+      final reminderEnabled = savedReminderEnabledStr != null ? savedReminderEnabledStr == 'true' : null;
 
-      if (savedExamDate != null || targetScore != null || dailyMinutes != null) {
-        _user = _user.copyWith(
-          examDate: savedExamDate ?? _user.examDate,
-          targetScore: targetScore ?? _user.targetScore,
-          dailyMinutes: dailyMinutes ?? _user.dailyMinutes,
-        );
-        notifyListeners();
+      String? computedReminderTime = savedReminderTime;
+      if (computedReminderTime == null && savedReminderHour != null && savedReminderMinute != null) {
+        computedReminderTime = '${savedReminderHour.padLeft(2, '0')}:${savedReminderMinute.padLeft(2, '0')}';
       }
+
+      _user = _user.copyWith(
+        examDate: savedExamDate ?? _user.examDate,
+        targetScore: targetScore ?? _user.targetScore,
+        dailyMinutes: dailyMinutes ?? _user.dailyMinutes,
+        reminderEnabled: reminderEnabled ?? _user.reminderEnabled,
+        reminderTime: computedReminderTime ?? _user.reminderTime,
+      );
+      notifyListeners();
     } catch (_) {}
   }
 
@@ -56,18 +66,30 @@ class AuthController extends ChangeNotifier {
     required String examDate,
     required int dailyMinutes,
     required bool reminderEnabled,
+    String? reminderTime,
     List<String>? favoriteTopics,
   }) {
+    final finalReminderTime = reminderTime ?? _user.reminderTime;
     _user = _user.copyWith(
       targetScore: targetScore,
       examDate: examDate,
       dailyMinutes: dailyMinutes,
       reminderEnabled: reminderEnabled,
+      reminderTime: finalReminderTime,
       favoriteTopics: favoriteTopics ?? _user.favoriteTopics,
     );
-    AppRepository().setSetting('exam_date', examDate);
-    AppRepository().setSetting('target_score', targetScore.toString());
-    AppRepository().setSetting('daily_minutes', dailyMinutes.toString());
+    final repo = AppRepository();
+    repo.setSetting('exam_date', examDate);
+    repo.setSetting('target_score', targetScore.toString());
+    repo.setSetting('daily_minutes', dailyMinutes.toString());
+    repo.setSetting('daily_goal', dailyMinutes.toString());
+    repo.setSetting('reminder_enabled', reminderEnabled ? 'true' : 'false');
+    repo.setSetting('reminder_time', finalReminderTime);
+    final parts = finalReminderTime.split(':');
+    if (parts.length == 2) {
+      repo.setSetting('reminder_hour', parts[0]);
+      repo.setSetting('reminder_minute', parts[1]);
+    }
     notifyListeners();
   }
 

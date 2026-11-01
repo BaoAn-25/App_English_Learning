@@ -161,6 +161,7 @@ void main() {
 
         // 2. Màn hình sau khi nộp: Hiển thị đúng đáp án đúng theo slot hiển thị
         // Vì originalIndex 0 đang ở slot B, nên badge hiển thị 'Đáp án đúng: B'
+        await tester.scrollUntilVisible(find.text('Đáp án đúng: B'), 100);
         expect(find.text('Đáp án đúng: B'), findsOneWidget);
       },
     );

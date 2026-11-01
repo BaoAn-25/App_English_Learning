@@ -80,8 +80,11 @@ class SettingsController extends ChangeNotifier {
         _targetScore = double.tryParse(savedTarget) ?? 8.5;
       }
 
+      final savedMinutes = await _repository.getSetting('daily_minutes');
       final savedGoal = await _repository.getSetting('daily_goal');
-      if (savedGoal != null) {
+      if (savedMinutes != null) {
+        _dailyGoal = int.tryParse(savedMinutes) ?? 20;
+      } else if (savedGoal != null) {
         _dailyGoal = int.tryParse(savedGoal) ?? 20;
       }
 
@@ -90,10 +93,17 @@ class SettingsController extends ChangeNotifier {
 
       final savedHour = await _repository.getSetting('reminder_hour');
       final savedMinute = await _repository.getSetting('reminder_minute');
+      final savedTime = await _repository.getSetting('reminder_time');
       if (savedHour != null && savedMinute != null) {
         _reminderTime = TimeOfDay(
           hour: int.tryParse(savedHour) ?? 20,
           minute: int.tryParse(savedMinute) ?? 0,
+        );
+      } else if (savedTime != null && savedTime.contains(':')) {
+        final parts = savedTime.split(':');
+        _reminderTime = TimeOfDay(
+          hour: int.tryParse(parts[0]) ?? 20,
+          minute: int.tryParse(parts[1]) ?? 0,
         );
       }
 
@@ -135,48 +145,59 @@ class SettingsController extends ChangeNotifier {
     await _syncInBackground();
   }
 
-  /// Cập nhật mục tiêu luyện tập mỗi ngày (10 / 20 / 30 câu)
+  /// Cập nhật mục tiêu luyện tập mỗi ngày (10 / 20 / 30 / 45 phút)
   Future<void> setDailyGoal(int goal) async {
     if (_dailyGoal == goal) return;
     _dailyGoal = goal;
     _hasPendingSync = true;
     _notifyIfActive();
 
-    // Ghi cục bộ trước
+    // Ghi cục bộ trước cho cả hai key để Onboarding và Settings đồng bộ
     await _repository.setSetting('daily_goal', _dailyGoal.toString());
+    await _repository.setSetting('daily_minutes', _dailyGoal.toString());
     await _repository.setSetting('has_pending_sync', 'true');
 
     await _syncInBackground();
   }
 
   /// Bật / tắt thông báo nhắc học hàng ngày
-  Future<void> toggleReminder(bool enabled) async {
-    _reminderEnabled = enabled;
-    _notifyIfActive();
-
-    await _repository.setSetting('reminder_enabled', enabled ? 'true' : 'false');
-
+  Future<bool> toggleReminder(bool enabled) async {
     if (enabled) {
       final granted = await _notificationService.requestPermission();
-      if (granted) {
-        await _notificationService.scheduleDailyReminder(_reminderTime);
+      if (!granted) {
+        _reminderEnabled = false;
+        _notifyIfActive();
+        await _repository.setSetting('reminder_enabled', 'false');
+        return false;
       }
+      _reminderEnabled = true;
+      _notifyIfActive();
+      await _repository.setSetting('reminder_enabled', 'true');
+      final ok = await _notificationService.scheduleDailyReminder(_reminderTime);
+      return ok;
     } else {
+      _reminderEnabled = false;
+      _notifyIfActive();
+      await _repository.setSetting('reminder_enabled', 'false');
       await _notificationService.cancelReminder();
+      return true;
     }
   }
 
   /// Thay đổi giờ nhắc học
-  Future<void> setReminderTime(TimeOfDay time) async {
+  Future<bool> setReminderTime(TimeOfDay time) async {
     _reminderTime = time;
     _notifyIfActive();
 
+    final timeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    await _repository.setSetting('reminder_time', timeStr);
     await _repository.setSetting('reminder_hour', time.hour.toString());
     await _repository.setSetting('reminder_minute', time.minute.toString());
 
     if (_reminderEnabled) {
-      await _notificationService.scheduleDailyReminder(time);
+      return await _notificationService.scheduleDailyReminder(time);
     }
+    return true;
   }
 
   /// Kích hoạt đồng bộ chủ động từ nút "Đồng bộ ngay"

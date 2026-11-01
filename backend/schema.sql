@@ -7,9 +7,15 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(64) PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
+    password_salt VARCHAR(64),
     display_name VARCHAR(120) NOT NULL DEFAULT 'Học sinh English 12',
     avatar_url TEXT,
     auth_provider VARCHAR(32) NOT NULL DEFAULT 'email', -- 'email', 'google', 'guest'
+    role VARCHAR(32) NOT NULL DEFAULT 'student', -- 'student', 'teacher', 'admin'
+    email_verified BOOLEAN DEFAULT FALSE,
+    verification_token VARCHAR(128),
+    reset_password_token VARCHAR(128),
+    reset_password_expires TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

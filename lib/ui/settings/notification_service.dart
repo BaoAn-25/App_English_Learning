@@ -23,6 +23,7 @@ class NotificationService {
     if (_isInitialized) return;
 
     tz.initializeTimeZones();
+    _configureLocalTimeZone();
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwinSettings = DarwinInitializationSettings(
@@ -44,14 +45,36 @@ class NotificationService {
     }
   }
 
-  /// Xin quyền thông báo trên Android 13+ (POST_NOTIFICATIONS) và iOS
+  /// Cấu hình múi giờ thực tế của thiết bị cho thư viện timezone
+  void _configureLocalTimeZone() {
+    try {
+      final timeZoneName = DateTime.now().timeZoneName;
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      return;
+    } catch (_) {}
+
+    try {
+      final offsetMs = DateTime.now().timeZoneOffset.inMilliseconds;
+      for (final loc in tz.timeZoneDatabase.locations.values) {
+        if (loc.currentTimeZone.offset == offsetMs) {
+          tz.setLocalLocation(loc);
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
+  /// Xin quyền thông báo theo nền tảng khi người dùng chủ động bật tính năng
   Future<bool> requestPermission() async {
+    await init();
     try {
       final androidImpl = _notificationsPlugin
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       if (androidImpl != null) {
         final granted = await androidImpl.requestNotificationsPermission();
-        return granted ?? false;
+        if (granted != null) return granted;
+        final areEnabled = await androidImpl.areNotificationsEnabled();
+        return areEnabled ?? false;
       }
 
       final iosImpl = _notificationsPlugin
@@ -64,15 +87,21 @@ class NotificationService {
         );
         return granted ?? false;
       }
-    } catch (_) {}
-    return true;
+    } catch (_) {
+      return false;
+    }
+    return false;
   }
 
-  /// Lên lịch thông báo lặp lại hằng ngày theo giờ đã chọn bằng zonedSchedule (chế độ inexact)
-  Future<void> scheduleDailyReminder(TimeOfDay time) async {
+  /// Lên lịch thông báo lặp lại hằng ngày theo giờ đã chọn bằng zonedSchedule (chế độ inexact).
+  /// Đổi giờ sẽ thay thế lịch cũ bằng một lịch duy nhất.
+  Future<bool> scheduleDailyReminder(TimeOfDay time) async {
     await init();
 
     try {
+      // Hủy lịch cũ trước để đảm bảo chỉ có 1 lịch duy nhất tồn tại
+      await cancelReminder();
+
       final now = tz.TZDateTime.now(tz.local);
       var scheduledDate = tz.TZDateTime(
         tz.local,
@@ -83,7 +112,7 @@ class NotificationService {
         time.minute,
       );
 
-      // Nếu giờ đã qua trong hôm nay thì dời sang ngày mai
+      // Nếu giờ đã qua trong hôm nay thì dời sang ngày tiếp theo
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
@@ -114,15 +143,20 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-    } catch (_) {
-      // Tránh crash nếu môi trường không hỗ trợ zonedSchedule
+      return true;
+    } catch (e) {
+      debugPrint('Error scheduling reminder: $e');
+      return false;
     }
   }
 
   /// Hủy lịch nhắc học khi người dùng tắt tính năng
-  Future<void> cancelReminder() async {
+  Future<bool> cancelReminder() async {
     try {
       await _notificationsPlugin.cancel(reminderNotificationId);
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }

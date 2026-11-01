@@ -25,8 +25,8 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
     },
     {
       'number': 2,
-      'title': 'A Diversity of Cultures',
-      'vietnamese': 'Sự đa dạng của các nền văn hóa',
+      'title': 'A multicultural world',
+      'vietnamese': 'Một thế giới đa văn hóa',
       'startPage': 20,
       'endPage': 31,
     },
@@ -122,7 +122,11 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
   @override
   Widget build(BuildContext context) {
     final unitsStarted = _units.where((u) => _getReadPagesForUnit(u) > 0).length;
-    final totalReadPages = _completedPages.where((p) => p >= 8 && p <= 139).length;
+    final unitPagesSet = <int>{
+      for (final u in _units)
+        for (int p = u['startPage'] as int; p <= (u['endPage'] as int); p++) p,
+    };
+    final totalReadPages = _completedPages.where((p) => unitPagesSet.contains(p)).length;
     const totalCurriculumPages = 120;
     final double progressValue = totalReadPages / totalCurriculumPages;
     final int progressPercent = (progressValue * 100).toInt();

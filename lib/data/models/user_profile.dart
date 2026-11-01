@@ -13,8 +13,13 @@ class UserProfile {
   final int streakDays;
   final int xp;
   final String authProvider; // 'guest' | 'email' | 'google'
+  final String role; // 'student' | 'teacher' | 'admin'
+  final bool emailVerified;
 
   bool get isGuest => authProvider == 'guest' || !isLoggedIn;
+  bool get isStudent => role == 'student';
+  bool get isTeacher => role == 'teacher';
+  bool get isAdmin => role == 'admin';
 
   const UserProfile({
     this.id = 'guest_user',
@@ -31,6 +36,8 @@ class UserProfile {
     this.streakDays = 0,
     this.xp = 0,
     this.authProvider = 'guest',
+    this.role = 'student',
+    this.emailVerified = false,
   });
 
   UserProfile copyWith({
@@ -48,6 +55,8 @@ class UserProfile {
     int? streakDays,
     int? xp,
     String? authProvider,
+    String? role,
+    bool? emailVerified,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -64,6 +73,8 @@ class UserProfile {
       streakDays: streakDays ?? this.streakDays,
       xp: xp ?? this.xp,
       authProvider: authProvider ?? this.authProvider,
+      role: role ?? this.role,
+      emailVerified: emailVerified ?? this.emailVerified,
     );
   }
 

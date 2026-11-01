@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../navigation/main_shell.dart';
 import '../theme/components/app_button.dart';
 import 'auth_controller.dart';
+import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -191,9 +192,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tính năng đặt lại mật khẩu qua email chưa khả dụng.'),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordScreen(),
                       ),
                     );
                   },

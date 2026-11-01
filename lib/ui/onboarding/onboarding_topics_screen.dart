@@ -8,6 +8,7 @@ class OnboardingTopicsScreen extends StatefulWidget {
   final int dailyMinutes;
   final String examDate;
   final bool reminderEnabled;
+  final String reminderTime;
 
   const OnboardingTopicsScreen({
     super.key,
@@ -15,6 +16,7 @@ class OnboardingTopicsScreen extends StatefulWidget {
     required this.dailyMinutes,
     required this.examDate,
     required this.reminderEnabled,
+    this.reminderTime = '20:00',
   });
 
   @override
@@ -67,6 +69,7 @@ class _OnboardingTopicsScreenState extends State<OnboardingTopicsScreen> {
       examDate: widget.examDate,
       dailyMinutes: widget.dailyMinutes,
       reminderEnabled: widget.reminderEnabled,
+      reminderTime: widget.reminderTime,
       favoriteTopics: _selectedTopics.toList(),
     );
     Navigator.push(
@@ -76,6 +79,7 @@ class _OnboardingTopicsScreenState extends State<OnboardingTopicsScreen> {
           targetScore: widget.targetScore,
           dailyMinutes: widget.dailyMinutes,
           reminderEnabled: widget.reminderEnabled,
+          reminderTime: widget.reminderTime,
         ),
       ),
     );
