@@ -1,24 +1,49 @@
-/// Model câu hỏi đọc hiểu học thử chuẩn SGK Tiếng Anh 12 Global Success trang 14
+import 'models/question.dart';
+
+/// Model câu hỏi đọc hiểu học thử chuẩn SGK Tiếng Anh 12 Global Success (Trang in 12)
 class TrialQuestion {
   final String id;
   final String word;
+  final String targetWord;
+  final String contextSentence;
+  final String pageLabel;
   final List<String> options;
   final int correctIndex;
   final String explanation;
+  final String textbookQuote;
 
   const TrialQuestion({
     required this.id,
     required this.word,
+    required this.targetWord,
+    required this.contextSentence,
+    this.pageLabel = 'Trang in 12',
     required this.options,
     required this.correctIndex,
     required this.explanation,
+    required this.textbookQuote,
   });
+
+  Question toQuestion() {
+    return Question(
+      id: id,
+      grade: 12,
+      type: 'reading',
+      stem: '$word\nNgữ cảnh trong bài đọc: "$contextSentence"',
+      options: options,
+      correctIndex: correctIndex,
+      explanation: 'Trích dẫn SGK trang in 11: "$textbookQuote"\nGiải nghĩa biên soạn: $explanation',
+      topicId: 'unit1',
+      passageId: TrialPolicy.trialLessonId,
+      difficulty: 1,
+    );
+  }
 }
 
 /// Chính sách học thử tập trung của ứng dụng Tiếng Anh 12 Global Success.
 ///
 /// Khách mới có thể học thử bài đọc tương tác Unit 1 Reading ("Steve Jobs: Life and Achievements"),
-/// tra cứu từ điển tương tác, làm bài kiểm tra đọc hiểu thật với 5 câu hỏi Activity 2 theo SGK,
+/// tra cứu từ điển tương tác trực tiếp trên bài đọc, làm bài kiểm tra đọc hiểu thật với 5 câu hỏi Activity 2 theo SGK trang in 12,
 /// xem điểm số và giải thích đáp án thực tế.
 ///
 /// Dữ liệu học thử được lưu trên thiết bị với mã phiên khách [guestSessionId] và sẽ được
@@ -38,10 +63,14 @@ class TrialPolicy {
   /// Phần bài học dùng để học thử
   static const String trialSection = 'Reading';
 
-  /// Tiêu đề bài đọc học thử chuẩn SGK trang 13-14
+  /// Tiêu đề bài đọc học thử chuẩn SGK (Trang in 11-12)
   static const String trialArticleTitle = 'Steve Jobs: Life and Achievements';
 
-  /// Đoạn văn chuẩn SGK Tiếng Anh 12 Unit 1 trang 13-14
+  /// Nguồn gốc tài liệu
+  static const String textbookSourceInfo =
+      'SGK Tiếng Anh 12 Global Success · Unit 1: Life Stories We Admire · Reading (Trang in 11-12)';
+
+  /// Đoạn văn chuẩn SGK Tiếng Anh 12 Unit 1 trang in 11
   static const String paragraphA =
       "Steven Paul Jobs was born on 24 February, 1955 in San Francisco, USA. His biological parents were not married and gave him up for adoption. He was adopted by Clara and Paul Jobs. In 1971, Jobs met Steve Wozniak, who was five years older than him, but they bonded over their love of electronics. After high school, Jobs attended Reed College in Oregon, but found the classes boring and dropped out after six months.";
 
@@ -51,64 +80,98 @@ class TrialPolicy {
   static const String paragraphC =
       "In 2003, Jobs was diagnosed with a rare form of pancreatic cancer. He fought the disease for several years, and stopped working in August, 2011. Two months later, he passed away. He had four children, three with his wife of 20 years and one from a previous relationship. On an Apple web page, a statement reads, 'Apple has lost a visionary and creative genius, and the world has lost an amazing human being.'";
 
-  /// 5 câu hỏi trắc nghiệm Activity 2 chuẩn SGK Tiếng Anh 12 Unit 1 trang 14
+  /// 5 câu hỏi trắc nghiệm Activity 2 chuẩn SGK Tiếng Anh 12 Unit 1 trang in 12
   static const List<TrialQuestion> unit1Questions = [
     TrialQuestion(
       id: 'u1_rd_q1',
-      word: '1. adopted (SGK trang 14)',
+      word: '1. adopted (SGK trang in 12)',
+      targetWord: 'adopted',
+      pageLabel: 'Trang in 12',
+      contextSentence:
+          'His biological parents were not married and gave him up for adoption. He was adopted by Clara and Paul Jobs.',
+      textbookQuote:
+          'His biological parents were not married and gave him up for adoption. He was adopted by Clara and Paul Jobs.',
       options: [
         'A. given birth to',
         'B. taken by another family as their own child',
       ],
       correctIndex: 1,
       explanation:
-          'Đoạn A: "His biological parents were not married and gave him up for adoption. He was adopted by Clara and Paul Jobs." -> Được nhận làm con nuôi bởi gia đình khác.',
+          'Được nhận làm con nuôi bởi một gia đình khác.',
     ),
     TrialQuestion(
       id: 'u1_rd_q2',
-      word: '2. dropped out (SGK trang 14)',
+      word: '2. dropped out (SGK trang in 12)',
+      targetWord: 'dropped out',
+      pageLabel: 'Trang in 12',
+      contextSentence:
+          'After high school, Jobs attended Reed College in Oregon, but found the classes boring and dropped out after six months.',
+      textbookQuote:
+          'Jobs attended Reed College in Oregon, but found the classes boring and dropped out after six months.',
       options: [
         'A. continued to study',
         'B. left school/college before completing your studies',
       ],
       correctIndex: 1,
       explanation:
-          'Đoạn A: "Jobs attended Reed College in Oregon, but found the classes boring and dropped out after six months." -> Nghỉ học trước khi tốt nghiệp.',
+          'Rời trường/đại học trước khi hoàn thành chương trình học (bỏ học giữa chừng).',
     ),
     TrialQuestion(
       id: 'u1_rd_q3',
-      word: '3. cancer (SGK trang 14)',
+      word: '3. cancer (SGK trang in 12)',
+      targetWord: 'cancer',
+      pageLabel: 'Trang in 12',
+      contextSentence:
+          'In 2003, Jobs was diagnosed with a rare form of pancreatic cancer. He fought the disease for several years, and stopped working in August, 2011.',
+      textbookQuote:
+          'In 2003, Jobs was diagnosed with a rare form of pancreatic cancer. He fought the disease for several years, and stopped working in August, 2011.',
       options: [
         'A. a serious disease',
         'B. a dangerous animal',
       ],
       correctIndex: 0,
       explanation:
-          'Đoạn C: "In 2003, Jobs was diagnosed with a rare form of pancreatic cancer. He fought the disease for several years..." -> Bệnh hiểm nghèo (ung thư tuyến tụy).',
+          'Bệnh hiểm nghèo (ung thư tuyến tụy).',
     ),
     TrialQuestion(
       id: 'u1_rd_q4',
-      word: '4. passed away (SGK trang 14)',
+      word: '4. passed away (SGK trang in 12)',
+      targetWord: 'passed away',
+      pageLabel: 'Trang in 12',
+      contextSentence:
+          'He stopped working in August, 2011. Two months later, he passed away.',
+      textbookQuote:
+          'He stopped working in August, 2011. Two months later, he passed away.',
       options: [
         'A. died',
         'B. went past something',
       ],
       correctIndex: 0,
       explanation:
-          'Đoạn C: "He stopped working in August, 2011. Two months later, he passed away." -> Qua đời, mất (cách nói trang trọng thay cho "died").',
+          'Qua đời, mất (cụm từ trang trọng thay cho "died").',
     ),
     TrialQuestion(
       id: 'u1_rd_q5',
-      word: '5. genius (SGK trang 14)',
+      word: '5. genius (SGK trang in 12)',
+      targetWord: 'genius',
+      pageLabel: 'Trang in 12',
+      contextSentence:
+          'On an Apple web page, a statement reads, \'Apple has lost a visionary and creative genius, and the world has lost an amazing human being.\'',
+      textbookQuote:
+          'Apple has lost a visionary and creative genius, and the world has lost an amazing human being.',
       options: [
         'A. a very intelligent person',
         'B. an ordinary person',
       ],
       correctIndex: 0,
       explanation:
-          'Đoạn C: "\'Apple has lost a visionary and creative genius...\'" -> Người xuất chúng, thiên tài.',
+          'Người xuất chúng, có tài năng thiên bẩm (thiên tài).',
     ),
   ];
+
+  /// Danh sách 5 câu hỏi học thử dạng Question model để lưu vào SQLite / Sổ câu sai
+  static List<Question> get questionsAsStandardQuestions =>
+      unit1Questions.map((q) => q.toQuestion()).toList();
 
   /// Từ điển tra cứu nhanh các từ in đậm trong bài đọc SGK
   static const Map<String, String> keyVocabulary = {

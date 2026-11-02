@@ -145,10 +145,12 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
   Map<String, String>? _selectedWordData;
   bool _isSaved = false;
   bool _isSaving = false;
+  late final int _screenOpenTimeEpoch;
 
   @override
   void initState() {
     super.initState();
+    _screenOpenTimeEpoch = DateTime.now().millisecondsSinceEpoch;
     final firstKey = _activeDictionary.keys.first;
     _selectedWordData = _activeDictionary[firstKey];
     _initTts();
@@ -275,7 +277,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
     return [
       _QuestionItem(
         id: 'u1_rd_q1',
-        word: '1. adopted (SGK trang 14)',
+        word: '1. adopted (SGK trang in 12)',
         options: [
           'A. given birth to',
           'B. taken by another family as their own child',
@@ -286,7 +288,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
       ),
       _QuestionItem(
         id: 'u1_rd_q2',
-        word: '2. dropped out (SGK trang 14)',
+        word: '2. dropped out (SGK trang in 12)',
         options: [
           'A. continued to study',
           'B. left school/college before completing your studies',
@@ -297,7 +299,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
       ),
       _QuestionItem(
         id: 'u1_rd_q3',
-        word: '3. cancer (SGK trang 14)',
+        word: '3. cancer (SGK trang in 12)',
         options: [
           'A. a serious disease',
           'B. a dangerous animal',
@@ -308,7 +310,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
       ),
       _QuestionItem(
         id: 'u1_rd_q4',
-        word: '4. passed away (SGK trang 14)',
+        word: '4. passed away (SGK trang in 12)',
         options: [
           'A. died',
           'B. went past something',
@@ -319,7 +321,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
       ),
       _QuestionItem(
         id: 'u1_rd_q5',
-        word: '5. genius (SGK trang 14)',
+        word: '5. genius (SGK trang in 12)',
         options: [
           'A. a very intelligent person',
           'B. an ordinary person',
@@ -368,7 +370,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
                   ],
                 ),
                 const Text(
-                  'Chọn nghĩa phù hợp nhất với các từ/cụm từ in đậm trong SGK trang 13-14.',
+                  'Chọn nghĩa phù hợp nhất với các từ/cụm từ in đậm trong SGK trang in 11-12.',
                   style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
                 ),
                 const SizedBox(height: 12),
@@ -500,11 +502,13 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
     try {
       // 1. Lưu kết quả thi vào SQLite (Attempt + AttemptAnswers + WrongBook + DailyStat)
       final finishedAtEpoch = now.millisecondsSinceEpoch;
+      final durationSec = ((finishedAtEpoch - _screenOpenTimeEpoch) ~/ 1000).clamp(1, 7200);
+      final minutes = (durationSec / 60).ceil().clamp(1, 120);
       final attempt = Attempt(
         mode: 'practice',
         type: 'reading_study',
-        startedAt: finishedAtEpoch - 60000,
-        durationSec: 60,
+        startedAt: _screenOpenTimeEpoch,
+        durationSec: durationSec,
         score: correctCount,
         total: questions.length,
       );
@@ -531,7 +535,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
         xp: correctCount * 10,
         questionsDone: questions.length,
         correct: correctCount,
-        minutes: 2,
+        minutes: minutes,
       );
 
       await repo.savePracticeResult(
@@ -891,7 +895,7 @@ class _ReadingStudyScreenState extends State<ReadingStudyScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'SGK Tiếng Anh 12 Global Success · Trang ${widget.unitNumber == 1 ? "13-14" : "36"}',
+                      'SGK Tiếng Anh 12 Global Success · Trang in ${widget.unitNumber == 1 ? "11-12" : "36"}',
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: Color(0xFF64748B),

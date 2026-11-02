@@ -10,6 +10,7 @@ import 'models/topic.dart';
 import 'models/word.dart';
 import 'models/word_progress.dart';
 import 'models/wrong_book_entry.dart';
+import 'trial_policy.dart';
 
 /// Lớp mỏng bọc AppDatabase, là nơi duy nhất các màn hình gọi để truy xuất dữ liệu.
 class AppRepository {
@@ -101,9 +102,37 @@ class AppRepository {
     return _db.syncQuestionsSafe(questions, targetVersion: targetVersion);
   }
 
-  Future<List<Question>> getAllQuestions() => _db.getAllQuestions();
-  Future<List<Question>> getQuestionsByIds(List<String> ids) =>
-      _db.getQuestionsByIds(ids);
+  Future<List<Question>> getAllQuestions() async {
+    final questions = await _db.getAllQuestions();
+    final trialQuestions = TrialPolicy.questionsAsStandardQuestions;
+    final existingIds = {for (final q in questions) q.id};
+    final missing = trialQuestions.where((q) => !existingIds.contains(q.id)).toList();
+    if (missing.isNotEmpty) {
+      await _db.insertQuestions(missing);
+      return [...questions, ...missing];
+    }
+    return questions;
+  }
+
+  Future<List<Question>> getQuestionsByIds(List<String> ids) async {
+    final questions = await _db.getQuestionsByIds(ids);
+    final foundIds = {for (final q in questions) q.id};
+    final missingIds = ids.where((id) => !foundIds.contains(id)).toList();
+    if (missingIds.isNotEmpty) {
+      final trialQuestions = TrialPolicy.questionsAsStandardQuestions;
+      final trialMap = {for (final q in trialQuestions) q.id: q};
+      final newlyAdded = <Question>[];
+      for (final id in missingIds) {
+        final q = trialMap[id];
+        if (q != null) newlyAdded.add(q);
+      }
+      if (newlyAdded.isNotEmpty) {
+        await _db.insertQuestions(newlyAdded);
+        questions.addAll(newlyAdded);
+      }
+    }
+    return questions;
+  }
   Future<List<Question>> getQuestionsByGrade(int grade) =>
       _db.getQuestionsByGrade(grade);
   Future<List<Question>> getQuestionsByType(String type) =>

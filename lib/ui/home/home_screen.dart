@@ -687,7 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Tiếp tục làm câu hỏi Activity 2 theo SGK trang 14.',
+                'Tiếp tục làm câu hỏi Activity 2 theo SGK trang in 12.',
                 style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 14),
