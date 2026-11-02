@@ -203,7 +203,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppTokens.space4),
                     Text(
-                      'Lớp ${controller.grade} • Mục tiêu: ${controller.targetScore.toStringAsFixed(1)} đ',
+                      controller.hasTargetScore
+                          ? 'Lớp ${controller.grade} • Mục tiêu: ${controller.targetScore!.toStringAsFixed(1)} đ'
+                          : 'Lớp ${controller.grade} • Chưa chọn mục tiêu',
                       style: TextStyle(
                         fontSize: 13,
                         color: theme.colorScheme.outline,
@@ -331,6 +333,13 @@ class SettingsScreen extends StatelessWidget {
                 final picked = await showTimePicker(
                   context: context,
                   initialTime: controller.reminderTime,
+                  initialEntryMode: TimePickerEntryMode.input,
+                  helpText: 'CHỌN GIỜ NHẮC HỌC HẰNG NGÀY',
+                  cancelText: 'HỦY',
+                  confirmText: 'XÁC NHẬN',
+                  hourLabelText: 'Giờ',
+                  minuteLabelText: 'Phút',
+                  errorInvalidText: 'Giờ hoặc phút không hợp lệ',
                 );
                 if (picked != null) {
                   controller.setReminderTime(picked);
@@ -449,7 +458,9 @@ class SettingsScreen extends StatelessWidget {
 
   void _showEditProfileDialog(BuildContext context, SettingsController controller) {
     final nameCtrl = TextEditingController(text: controller.name);
-    final targetCtrl = TextEditingController(text: controller.targetScore.toString());
+    final targetCtrl = TextEditingController(
+      text: controller.hasTargetScore ? controller.targetScore!.toString() : '',
+    );
 
     showDialog(
       context: context,
@@ -486,7 +497,7 @@ class SettingsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 final newName = nameCtrl.text.trim();
-                final newTarget = double.tryParse(targetCtrl.text.trim()) ?? controller.targetScore;
+                final newTarget = double.tryParse(targetCtrl.text.trim()) ?? controller.targetScore ?? 8.0;
                 if (newName.isNotEmpty) {
                   controller.updateProfile(
                     name: newName,

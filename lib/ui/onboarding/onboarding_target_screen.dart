@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
+import '../../data/app_repository.dart';
 import '../auth/auth_controller.dart';
 import '../theme/components/app_button.dart';
 import 'onboarding_schedule_screen.dart';
 
 class OnboardingTargetScreen extends StatefulWidget {
-  const OnboardingTargetScreen({super.key});
+  final double? initialTargetScore;
+  final bool autoLoadSavedSettings;
+
+  const OnboardingTargetScreen({
+    super.key,
+    this.initialTargetScore,
+    this.autoLoadSavedSettings = false,
+  });
 
   @override
   State<OnboardingTargetScreen> createState() => _OnboardingTargetScreenState();
 }
 
 class _OnboardingTargetScreenState extends State<OnboardingTargetScreen> {
-  double _selectedScore = 8.0;
+  double? _selectedScore;
+  bool _isSaving = false;
+  bool _userHasInteracted = false;
 
   final List<Map<String, dynamic>> _targets = [
     {
@@ -45,6 +55,87 @@ class _OnboardingTargetScreenState extends State<OnboardingTargetScreen> {
       'desc': 'Chinh phục 10 điểm trọn vẹn mọi dạng bài',
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedScore = widget.initialTargetScore;
+    if (widget.initialTargetScore != null) {
+      _userHasInteracted = true;
+    } else if (widget.autoLoadSavedSettings) {
+      _loadSavedTarget();
+    }
+  }
+
+  Future<void> _loadSavedTarget() async {
+    try {
+      final repo = AppRepository();
+      final isConfirmed = await repo.getSetting('target_score_confirmed');
+      final savedTargetStr = await repo.getSetting('target_score');
+
+      if (!mounted) return;
+
+      // Không ghi đè nếu người dùng đã chủ động chọn trên giao diện
+      if (_userHasInteracted) return;
+
+      // Chỉ khôi phục khi người dùng thực sự đã xác nhận mục tiêu trước đó
+      if (isConfirmed == 'true' && savedTargetStr != null) {
+        final score = double.tryParse(savedTargetStr);
+        if (score != null && [6.0, 7.0, 8.0, 9.0, 10.0].contains(score)) {
+          setState(() {
+            _selectedScore = score;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _onSelectTarget(double score) {
+    setState(() {
+      _userHasInteracted = true;
+      _selectedScore = score;
+    });
+  }
+
+  Future<void> _handleContinue() async {
+    if (_selectedScore == null || _isSaving) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final repo = AppRepository();
+      await repo.setSetting('target_score', _selectedScore!.toString());
+      await repo.setSetting('target_score_confirmed', 'true');
+
+      final auth = AuthController.instance;
+      auth.setPlan(
+        targetScore: _selectedScore!,
+        examDate: auth.user.examDate,
+        dailyMinutes: auth.user.dailyMinutes,
+        reminderEnabled: auth.user.reminderEnabled,
+        reminderTime: auth.user.reminderTime,
+      );
+
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OnboardingScheduleScreen(targetScore: _selectedScore),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể lưu mục tiêu điểm. Vui lòng thử lại.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,11 +211,7 @@ class _OnboardingTargetScreenState extends State<OnboardingTargetScreen> {
 
                     return InkWell(
                       borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        setState(() {
-                          _selectedScore = score;
-                        });
-                      },
+                      onTap: () => _onSelectTarget(score),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         padding: const EdgeInsets.all(16),
@@ -192,12 +279,15 @@ class _OnboardingTargetScreenState extends State<OnboardingTargetScreen> {
                                 ],
                               ),
                             ),
-                            if (isSelected)
-                              const Icon(
-                                Icons.check_circle_rounded,
-                                color: Color(0xFF2563EB),
-                                size: 24,
-                              ),
+                            Icon(
+                              isSelected
+                                  ? Icons.check_circle_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              color: isSelected
+                                  ? const Color(0xFF2563EB)
+                                  : const Color(0xFFCBD5E1),
+                              size: 24,
+                            ),
                           ],
                         ),
                       ),
@@ -206,26 +296,30 @@ class _OnboardingTargetScreenState extends State<OnboardingTargetScreen> {
                 ),
               ),
 
+              // Dòng hướng dẫn
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Center(
+                  child: Text(
+                    _selectedScore == null
+                        ? 'Chọn mục tiêu để tiếp tục'
+                        : 'Đã chọn mục tiêu ${_selectedScore == 10.0 ? '10' : '${_selectedScore!.toStringAsFixed(0)}+'} · Có thể thay đổi sau',
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontSize: 13,
+                      fontWeight: _selectedScore == null ? FontWeight.w500 : FontWeight.w600,
+                      color: _selectedScore == null ? const Color(0xFF64748B) : const Color(0xFF2563EB),
+                    ),
+                  ),
+                ),
+              ),
+
               AppButton(
-                label: 'Tiếp tục',
+                label: _isSaving ? 'Đang lưu...' : 'Tiếp tục',
                 isFullWidth: true,
                 variant: AppButtonVariant.primary,
                 height: 52,
-                onPressed: () {
-                  final auth = AuthController.instance;
-                  auth.setPlan(
-                    targetScore: _selectedScore,
-                    examDate: auth.user.examDate,
-                    dailyMinutes: auth.user.dailyMinutes,
-                    reminderEnabled: auth.user.reminderEnabled,
-                  );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OnboardingScheduleScreen(targetScore: _selectedScore),
-                    ),
-                  );
-                },
+                onPressed: (_selectedScore == null || _isSaving) ? null : _handleContinue,
               ),
               const SizedBox(height: 8),
             ],

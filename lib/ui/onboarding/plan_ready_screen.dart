@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../navigation/main_shell.dart';
-import '../auth/register_screen.dart';
 import '../theme/components/app_button.dart';
+import '../trial/trial_lesson_screen.dart';
 
 class PlanReadyScreen extends StatelessWidget {
-  final double targetScore;
+  final double? targetScore;
   final int dailyMinutes;
   final bool reminderEnabled;
   final String reminderTime;
 
   const PlanReadyScreen({
     super.key,
-    required this.targetScore,
+    this.targetScore,
     required this.dailyMinutes,
     required this.reminderEnabled,
     this.reminderTime = '20:00',
@@ -97,7 +97,9 @@ class PlanReadyScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildSummaryItem(
-                      badge: '${targetScore.toStringAsFixed(0)}+',
+                      badge: targetScore != null
+                          ? (targetScore == 10.0 ? '10' : '${targetScore!.toStringAsFixed(0)}+')
+                          : 'Chưa đặt',
                       label: 'Điểm mục tiêu',
                     ),
                     Container(width: 1, height: 32, color: Colors.white24),
@@ -157,23 +159,51 @@ class PlanReadyScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
                 ),
-                child: const Text(
-                  'Bạn đang học với tư cách khách. Để không mất chuỗi streak và đồng bộ máy khác, hãy tạo tài khoản.',
-                  style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
-                  textAlign: TextAlign.center,
+                child: const Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline_rounded, color: Color(0xFF2563EB), size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Bắt đầu ngay với bài đọc Unit 1 (Steve Jobs) để trải nghiệm phương pháp học và làm bài tập SGK thật.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF1E40AF), height: 1.35),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 14),
 
-              // Nút Vào học
+              // Nút chính: Bắt đầu học thử
               AppButton(
-                label: 'Vào học ngay',
+                label: 'Bắt đầu học thử',
                 isFullWidth: true,
                 variant: AppButtonVariant.primary,
                 height: 52,
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('has_completed_onboarding', true);
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TrialLessonScreen()),
+                      (route) => false,
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+
+              // Nút phụ: Khám phá ứng dụng (mới về Trang chủ)
+              AppButton(
+                label: 'Khám phá ứng dụng',
+                isFullWidth: true,
+                variant: AppButtonVariant.outlined,
+                height: 48,
                 onPressed: () async {
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setBool('has_completed_onboarding', true);
@@ -184,19 +214,6 @@ class PlanReadyScreen extends StatelessWidget {
                       (route) => false,
                     );
                   }
-                },
-              ),
-              const SizedBox(height: 8),
-              AppButton(
-                label: 'Tạo tài khoản để lưu tiến độ',
-                isFullWidth: true,
-                variant: AppButtonVariant.outlined,
-                height: 48,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                  );
                 },
               ),
               const SizedBox(height: 4),

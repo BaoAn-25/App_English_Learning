@@ -3,7 +3,8 @@ class UserProfile {
   final String displayName;
   final String email;
   final String avatarUrl;
-  final double targetScore;
+  final double? targetScore;
+  final bool isTargetScoreConfirmed;
   final String examDate;
   final int dailyMinutes;
   final bool reminderEnabled;
@@ -20,13 +21,15 @@ class UserProfile {
   bool get isStudent => role == 'student';
   bool get isTeacher => role == 'teacher';
   bool get isAdmin => role == 'admin';
+  bool get hasConfirmedTargetScore => isTargetScoreConfirmed && targetScore != null && targetScore! > 0;
 
   const UserProfile({
     this.id = 'guest_user',
     this.displayName = 'Khách',
     this.email = '',
     this.avatarUrl = '',
-    this.targetScore = 8.0,
+    this.targetScore,
+    this.isTargetScoreConfirmed = false,
     this.examDate = '',
     this.dailyMinutes = 20,
     this.reminderEnabled = false,
@@ -46,6 +49,7 @@ class UserProfile {
     String? email,
     String? avatarUrl,
     double? targetScore,
+    bool? isTargetScoreConfirmed,
     String? examDate,
     int? dailyMinutes,
     bool? reminderEnabled,
@@ -64,6 +68,7 @@ class UserProfile {
       email: email ?? this.email,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       targetScore: targetScore ?? this.targetScore,
+      isTargetScoreConfirmed: isTargetScoreConfirmed ?? this.isTargetScoreConfirmed,
       examDate: examDate ?? this.examDate,
       dailyMinutes: dailyMinutes ?? this.dailyMinutes,
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -85,6 +90,7 @@ class UserProfile {
       'email': email,
       'avatarUrl': avatarUrl,
       'targetScore': targetScore,
+      'isTargetScoreConfirmed': isTargetScoreConfirmed ? 1 : 0,
       'examDate': examDate,
       'dailyMinutes': dailyMinutes,
       'reminderEnabled': reminderEnabled ? 1 : 0,
@@ -98,12 +104,15 @@ class UserProfile {
   }
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
+    final confirmed = map['isTargetScoreConfirmed'] == 1 || map['isTargetScoreConfirmed'] == true;
+    final rawTarget = (map['targetScore'] as num?)?.toDouble();
     return UserProfile(
       id: map['id'] as String? ?? 'guest_user',
       displayName: map['displayName'] as String? ?? 'Khách',
       email: map['email'] as String? ?? '',
       avatarUrl: map['avatarUrl'] as String? ?? '',
-      targetScore: (map['targetScore'] as num?)?.toDouble() ?? 8.0,
+      targetScore: confirmed ? rawTarget : null,
+      isTargetScoreConfirmed: confirmed,
       examDate: map['examDate'] as String? ?? '',
       dailyMinutes: (map['dailyMinutes'] as num?)?.toInt() ?? 20,
       reminderEnabled: (map['reminderEnabled'] == 1 || map['reminderEnabled'] == true),
@@ -119,4 +128,3 @@ class UserProfile {
     );
   }
 }
-

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/app_repository.dart';
+import '../auth/auth_controller.dart';
 import '../theme/components/sync_status_badge.dart';
 import 'notification_service.dart';
 
@@ -35,7 +36,7 @@ class SettingsController extends ChangeNotifier {
   // Trạng thái hồ sơ & cài đặt
   String _name = 'Khách';
   int _grade = 12;
-  double _targetScore = 8.0;
+  double? _targetScore;
   int _dailyGoal = 20;
 
   // Trạng thái thông báo
@@ -50,7 +51,8 @@ class SettingsController extends ChangeNotifier {
   // Getters
   String get name => _name;
   int get grade => _grade;
-  double get targetScore => _targetScore;
+  double? get targetScore => _targetScore;
+  bool get hasTargetScore => _targetScore != null && _targetScore! > 0;
   int get dailyGoal => _dailyGoal;
   bool get reminderEnabled => _reminderEnabled;
   TimeOfDay get reminderTime => _reminderTime;
@@ -76,8 +78,11 @@ class SettingsController extends ChangeNotifier {
       }
 
       final savedTarget = await _repository.getSetting('target_score');
-      if (savedTarget != null) {
-        _targetScore = double.tryParse(savedTarget) ?? 8.5;
+      final isTargetConfirmed = await _repository.getSetting('target_score_confirmed');
+      if (savedTarget != null && isTargetConfirmed == 'true') {
+        _targetScore = double.tryParse(savedTarget);
+      } else {
+        _targetScore = null;
       }
 
       final savedMinutes = await _repository.getSetting('daily_minutes');
@@ -139,7 +144,15 @@ class SettingsController extends ChangeNotifier {
     await _repository.setSetting('user_name', _name);
     await _repository.setSetting('grade', _grade.toString());
     await _repository.setSetting('target_score', _targetScore.toString());
+    await _repository.setSetting('target_score_confirmed', 'true');
     await _repository.setSetting('has_pending_sync', 'true');
+
+    // Đồng bộ vào AuthController
+    final auth = AuthController.instance;
+    auth.updateProfile(auth.user.copyWith(
+      targetScore: targetScore,
+      isTargetScoreConfirmed: true,
+    ));
 
     // 2. Kích hoạt đồng bộ nền nếu có mạng
     await _syncInBackground();

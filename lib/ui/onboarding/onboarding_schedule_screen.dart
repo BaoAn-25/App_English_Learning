@@ -8,7 +8,7 @@ import '../theme/components/app_button.dart';
 import 'onboarding_topics_screen.dart';
 
 class OnboardingScheduleScreen extends StatefulWidget {
-  final double targetScore;
+  final double? targetScore;
   final int? initialDailyMinutes;
   final bool? initialReminderEnabled;
   final TimeOfDay? initialReminderTime;
@@ -17,7 +17,7 @@ class OnboardingScheduleScreen extends StatefulWidget {
 
   const OnboardingScheduleScreen({
     super.key,
-    required this.targetScore,
+    this.targetScore,
     this.initialDailyMinutes,
     this.initialReminderEnabled,
     this.initialReminderTime,
@@ -38,10 +38,10 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
   bool _isSaving = false;
 
   final List<Map<String, dynamic>> _minuteOptions = [
-    {'minutes': 10, 'label': '10 phút', 'tag': null},
-    {'minutes': 20, 'label': '20 phút', 'tag': 'Gợi ý'},
-    {'minutes': 30, 'label': '30 phút', 'tag': null},
-    {'minutes': 45, 'label': '45 phút+', 'tag': null},
+    {'minutes': 10, 'label': '10 phút'},
+    {'minutes': 20, 'label': '20 phút'},
+    {'minutes': 30, 'label': '30 phút'},
+    {'minutes': 45, 'label': '45 phút+'},
   ];
 
   @override
@@ -117,10 +117,24 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
     return '$minutes phút';
   }
 
+  String? _getTimePeriodNote(TimeOfDay time) {
+    if (time.hour == 0 && time.minute == 0) {
+      return 'Nửa đêm';
+    }
+    if (time.hour == 12 && time.minute == 0) {
+      return 'Buổi trưa';
+    }
+    return null;
+  }
+
   String _getExplanationText() {
     final durationLabel = _getDurationLabel(_selectedMinutes);
     if (_reminderEnabled) {
       final timeStr = _formatTimeOfDay(_reminderTime);
+      final periodNote = _getTimePeriodNote(_reminderTime);
+      if (periodNote != null) {
+        return 'Nhắc lúc $timeStr mỗi ngày · $periodNote · Mục tiêu $durationLabel học';
+      }
       return 'Nhắc lúc $timeStr mỗi ngày · Mục tiêu $durationLabel học';
     } else {
       return 'Mục tiêu $durationLabel học mỗi ngày · Chưa bật nhắc nhở';
@@ -159,8 +173,80 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _reminderTime,
+      initialEntryMode: TimePickerEntryMode.input,
       helpText: 'CHỌN GIỜ NHẮC HỌC HẰNG NGÀY',
+      cancelText: 'HỦY',
+      confirmText: 'XÁC NHẬN',
+      hourLabelText: 'Giờ',
+      minuteLabelText: 'Phút',
+      errorInvalidText: 'Giờ hoặc phút không hợp lệ',
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              hourMinuteShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              hourMinuteColor: WidgetStateColor.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Color(0xFFEFF6FF);
+                }
+                return const Color(0xFFF8FAFC);
+              }),
+              hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Color(0xFF2563EB);
+                }
+                return const Color(0xFF1E293B);
+              }),
+              dayPeriodShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              dayPeriodColor: WidgetStateColor.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Color(0xFF2563EB); // Nền xanh nổi bật khi chọn
+                }
+                return const Color(0xFFF1F5F9); // Nền xám trung tính khi chưa chọn
+              }),
+              dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Colors.white; // Chữ trắng tương phản cao
+                }
+                return const Color(0xFF475569); // Chữ xám trung tính
+              }),
+              dayPeriodBorderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1),
+              entryModeIconColor: const Color(0xFF2563EB),
+              dialHandColor: const Color(0xFF2563EB),
+              dialBackgroundColor: const Color(0xFFF1F5F9),
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF64748B),
+                textStyle: const TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF2563EB),
+                textStyle: const TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
+    if (!mounted) return;
     if (picked != null) {
       setState(() {
         _reminderTime = picked;
@@ -211,7 +297,10 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
       // Lưu cục bộ đồng bộ cho cả Onboarding và Settings
       final repo = AppRepository();
       await repo.setSetting('exam_date', examDateStr);
-      await repo.setSetting('target_score', widget.targetScore.toString());
+      if (widget.targetScore != null) {
+        await repo.setSetting('target_score', widget.targetScore.toString());
+        await repo.setSetting('target_score_confirmed', 'true');
+      }
       await repo.setSetting('daily_minutes', _selectedMinutes.toString());
       await repo.setSetting('daily_goal', _selectedMinutes.toString());
       await repo.setSetting('reminder_enabled', finalReminderEnabled ? 'true' : 'false');
@@ -220,13 +309,16 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
       await repo.setSetting('reminder_minute', _reminderTime.minute.toString());
 
       final auth = AuthController.instance;
-      auth.setPlan(
-        targetScore: widget.targetScore,
-        examDate: examDateStr,
-        dailyMinutes: _selectedMinutes,
-        reminderEnabled: finalReminderEnabled,
-        reminderTime: timeStr,
-      );
+      final effectiveScore = widget.targetScore ?? auth.user.targetScore;
+      if (effectiveScore != null) {
+        auth.setPlan(
+          targetScore: effectiveScore,
+          examDate: examDateStr,
+          dailyMinutes: _selectedMinutes,
+          reminderEnabled: finalReminderEnabled,
+          reminderTime: timeStr,
+        );
+      }
 
       if (!mounted) return;
 
@@ -449,7 +541,6 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
                         final opt = _minuteOptions[index];
                         final int min = opt['minutes'] as int;
                         final isSelected = _selectedMinutes == min;
-                        final String? tag = opt['tag'] as String?;
 
                         return InkWell(
                           borderRadius: BorderRadius.circular(14),
@@ -478,43 +569,18 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
                                 ),
                               ],
                             ),
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: Text(
-                                    opt['label'] as String,
-                                    style: TextStyle(
-                                      fontFamily: 'BeVietnamPro',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                      color: isSelected
-                                          ? const Color(0xFF1D4ED8)
-                                          : const Color(0xFF1E293B),
-                                    ),
-                                  ),
+                            child: Center(
+                              child: Text(
+                                opt['label'] as String,
+                                style: TextStyle(
+                                  fontFamily: 'BeVietnamPro',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  color: isSelected
+                                      ? const Color(0xFF1D4ED8)
+                                      : const Color(0xFF1E293B),
                                 ),
-                                if (tag != null)
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFC107),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        tag,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 10,
-                                          color: Color(0xFF78350F),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                              ),
                             ),
                           ),
                         );
@@ -610,6 +676,7 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
                                         border: Border.all(color: const Color(0xFFBFDBFE)),
                                       ),
                                       child: Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Icon(Icons.access_time_rounded, size: 16, color: AppTokens.primary),
                                           const SizedBox(width: 6),
@@ -622,6 +689,25 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
                                               color: AppTokens.primary,
                                             ),
                                           ),
+                                          if (_getTimePeriodNote(_reminderTime) != null) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFDBEAFE),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                _getTimePeriodNote(_reminderTime)!,
+                                                style: const TextStyle(
+                                                  fontFamily: 'BeVietnamPro',
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF1D4ED8),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),

@@ -30,13 +30,17 @@ class AuthController extends ChangeNotifier {
     try {
       final savedExamDate = await AppRepository().getSetting('exam_date');
       final savedTargetScoreStr = await AppRepository().getSetting('target_score');
+      final savedTargetConfirmedStr = await AppRepository().getSetting('target_score_confirmed');
+      final isTargetConfirmed = savedTargetConfirmedStr == 'true';
       final savedDailyMinutesStr = await AppRepository().getSetting('daily_minutes');
       final savedReminderEnabledStr = await AppRepository().getSetting('reminder_enabled');
       final savedReminderTime = await AppRepository().getSetting('reminder_time');
       final savedReminderHour = await AppRepository().getSetting('reminder_hour');
       final savedReminderMinute = await AppRepository().getSetting('reminder_minute');
 
-      final targetScore = savedTargetScoreStr != null ? double.tryParse(savedTargetScoreStr) : null;
+      final targetScore = (isTargetConfirmed && savedTargetScoreStr != null)
+          ? double.tryParse(savedTargetScoreStr)
+          : null;
       final dailyMinutes = savedDailyMinutesStr != null ? int.tryParse(savedDailyMinutesStr) : null;
       final reminderEnabled = savedReminderEnabledStr != null ? savedReminderEnabledStr == 'true' : null;
 
@@ -47,7 +51,8 @@ class AuthController extends ChangeNotifier {
 
       _user = _user.copyWith(
         examDate: savedExamDate ?? _user.examDate,
-        targetScore: targetScore ?? _user.targetScore,
+        targetScore: targetScore,
+        isTargetScoreConfirmed: isTargetConfirmed,
         dailyMinutes: dailyMinutes ?? _user.dailyMinutes,
         reminderEnabled: reminderEnabled ?? _user.reminderEnabled,
         reminderTime: computedReminderTime ?? _user.reminderTime,
@@ -72,6 +77,7 @@ class AuthController extends ChangeNotifier {
     final finalReminderTime = reminderTime ?? _user.reminderTime;
     _user = _user.copyWith(
       targetScore: targetScore,
+      isTargetScoreConfirmed: true,
       examDate: examDate,
       dailyMinutes: dailyMinutes,
       reminderEnabled: reminderEnabled,
@@ -81,6 +87,7 @@ class AuthController extends ChangeNotifier {
     final repo = AppRepository();
     repo.setSetting('exam_date', examDate);
     repo.setSetting('target_score', targetScore.toString());
+    repo.setSetting('target_score_confirmed', 'true');
     repo.setSetting('daily_minutes', dailyMinutes.toString());
     repo.setSetting('daily_goal', dailyMinutes.toString());
     repo.setSetting('reminder_enabled', reminderEnabled ? 'true' : 'false');

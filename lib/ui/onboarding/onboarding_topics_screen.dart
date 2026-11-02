@@ -4,19 +4,21 @@ import '../theme/components/app_button.dart';
 import 'plan_ready_screen.dart';
 
 class OnboardingTopicsScreen extends StatefulWidget {
-  final double targetScore;
+  final double? targetScore;
   final int dailyMinutes;
   final String examDate;
   final bool reminderEnabled;
   final String reminderTime;
+  final List<String>? initialTopics;
 
   const OnboardingTopicsScreen({
     super.key,
-    required this.targetScore,
+    this.targetScore,
     required this.dailyMinutes,
     required this.examDate,
     required this.reminderEnabled,
     this.reminderTime = '20:00',
+    this.initialTopics,
   });
 
   @override
@@ -24,7 +26,15 @@ class OnboardingTopicsScreen extends StatefulWidget {
 }
 
 class _OnboardingTopicsScreenState extends State<OnboardingTopicsScreen> {
-  final Set<String> _selectedTopics = {'Công nghệ', 'Môi trường'};
+  late final Set<String> _selectedTopics;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTopics = widget.initialTopics != null
+        ? Set<String>.from(widget.initialTopics!)
+        : <String>{};
+  }
 
   final List<String> _allTopics = [
     'Game',
@@ -64,14 +74,17 @@ class _OnboardingTopicsScreenState extends State<OnboardingTopicsScreen> {
 
   void _submit() {
     final auth = AuthController.instance;
-    auth.setPlan(
-      targetScore: widget.targetScore,
-      examDate: widget.examDate,
-      dailyMinutes: widget.dailyMinutes,
-      reminderEnabled: widget.reminderEnabled,
-      reminderTime: widget.reminderTime,
-      favoriteTopics: _selectedTopics.toList(),
-    );
+    final score = widget.targetScore ?? auth.user.targetScore;
+    if (score != null) {
+      auth.setPlan(
+        targetScore: score,
+        examDate: widget.examDate,
+        dailyMinutes: widget.dailyMinutes,
+        reminderEnabled: widget.reminderEnabled,
+        reminderTime: widget.reminderTime,
+        favoriteTopics: _selectedTopics.toList(),
+      );
+    }
     Navigator.push(
       context,
       MaterialPageRoute(

@@ -83,7 +83,7 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
   Future<void> _persistSession({bool isCompleted = false, int? completedScore}) async {
     try {
       final repository = context.read<AppRepository>();
-      String? ownerId;
+      String ownerId;
       try {
         final auth = AuthController.instance;
         if (auth.isAuthenticated) {
