@@ -464,180 +464,198 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
     );
   }
 
+  void _handleBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
-            : Column(
-                children: [
-                  // 1. BANNER HEADER BẢN SẮC ENGPASS (CÓ NÚT HƯỚNG DẪN)
-                  _buildHeaderBanner(context, isDark),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        body: SafeArea(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
+              : Column(
+                  children: [
+                    // 1. BANNER HEADER BẢN SẮC ENGPASS (CÓ NÚT HƯỚNG DẪN)
+                    _buildHeaderBanner(context, isDark),
 
-                  // 2. CÂY LỘ TRÌNH NỐT ZICZAC
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 10),
+                    // 2. CÂY LỘ TRÌNH NỐT ZICZAC
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 10),
 
-                          // Cây nốt ziczac kèm Linh vật chim xanh EngPass đứng cạnh
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              // Đường nối các nốt
-                              Positioned.fill(
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Container(
-                                    width: 4,
-                                    margin: const EdgeInsets.symmetric(vertical: 40),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                                      borderRadius: BorderRadius.circular(2),
+                            // Cây nốt ziczac kèm Linh vật chim xanh EngPass đứng cạnh
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Đường nối các nốt
+                                Positioned.fill(
+                                  child: Align(
+                                    alignment: Alignment.center,
+                                    child: Container(
+                                      width: 4,
+                                      margin: const EdgeInsets.symmetric(vertical: 40),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
 
-                              // Danh sách 5 Nốt
-                              Column(
-                                children: [
-                                  // NỐT 1: TỪ VỰNG TRỰC QUAN (VISUAL CARDS)
-                                  _buildTreeNode(
-                                    stepNumber: 1,
-                                    title: 'Cửa 1: Từ vựng trực quan',
-                                    badgeLabel: 'BẮT ĐẦU',
-                                    icon: Icons.star_rounded,
-                                    offsetX: -40,
-                                    isUnlocked: _unlockedNode >= 1,
-                                    isCurrent: _unlockedNode == 1,
-                                    onTap: _openVisualLesson,
-                                    isDark: isDark,
-                                  ),
-                                  const SizedBox(height: 48),
-
-                                  // NỐT 2: NỐI ÂM THANH
-                                  _buildTreeNode(
-                                    stepNumber: 2,
-                                    title: 'Cửa 2: Bắt âm & Phản xạ',
-                                    icon: Icons.headphones_rounded,
-                                    offsetX: 30,
-                                    isUnlocked: _unlockedNode >= 2,
-                                    isCurrent: _unlockedNode == 2,
-                                    onTap: _openVisualLesson,
-                                    isDark: isDark,
-                                  ),
-                                  const SizedBox(height: 48),
-
-                                  // NỐT 3: RƯƠNG KHO BÁU
-                                  _buildTreeNode(
-                                    stepNumber: 3,
-                                    title: 'Cửa 3: Rương kinh nghiệm',
-                                    icon: Icons.card_giftcard_rounded,
-                                    offsetX: -20,
-                                    isUnlocked: _unlockedNode >= 3,
-                                    isCurrent: _unlockedNode == 3,
-                                    isChest: true,
-                                    onTap: _openTreasureChest,
-                                    isDark: isDark,
-                                  ),
-                                  const SizedBox(height: 48),
-
-                                  // NỐT 4: THỬ THÁCH LẬT THẺ
-                                  _buildTreeNode(
-                                    stepNumber: 4,
-                                    title: 'Cửa 4: Flashcard nhớ sâu',
-                                    icon: Icons.bolt_rounded,
-                                    offsetX: 35,
-                                    isUnlocked: _unlockedNode >= 4,
-                                    isCurrent: _unlockedNode == 4,
-                                    onTap: _openVisualLesson,
-                                    isDark: isDark,
-                                  ),
-                                  const SizedBox(height: 48),
-
-                                  // NỐT 5: GHÉP CÂU HOÀN CHỈNH
-                                  _buildTreeNode(
-                                    stepNumber: 5,
-                                    title: 'Cửa 5: Về đích - Ghép câu',
-                                    icon: Icons.emoji_events_rounded,
-                                    offsetX: 0,
-                                    isUnlocked: _unlockedNode >= 5,
-                                    isCurrent: _unlockedNode == 5,
-                                    onTap: _openVisualLesson,
-                                    isDark: isDark,
-                                  ),
-                                ],
-                              ),
-
-                              // LINH VẬT CHÚ CHIM XANH ENGPASS ĐỨNG CỔ VŨ
-                              Positioned(
-                                right: 10,
-                                top: 90,
-                                child: Column(
+                                // Danh sách 5 Nốt
+                                Column(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: const Color(0xFF2563EB).withAlpha(100)),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Color(0x10000000),
-                                            offset: Offset(0, 2),
-                                            blurRadius: 6,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Text(
-                                        'Cố lên bạn ơi! 🚀',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF2563EB),
-                                        ),
-                                      ),
+                                    // NỐT 1: TỪ VỰNG TRỰC QUAN (VISUAL CARDS)
+                                    _buildTreeNode(
+                                      stepNumber: 1,
+                                      title: 'Cửa 1: Từ vựng trực quan',
+                                      badgeLabel: 'BẮT ĐẦU',
+                                      icon: Icons.star_rounded,
+                                      offsetX: -40,
+                                      isUnlocked: _unlockedNode >= 1,
+                                      isCurrent: _unlockedNode == 1,
+                                      onTap: _openVisualLesson,
+                                      isDark: isDark,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      width: 68,
-                                      height: 68,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 2),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Color(0x202563EB),
-                                            offset: Offset(0, 4),
-                                            blurRadius: 10,
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipOval(
-                                        child: Image.asset('assets/images/app_logo.png', fit: BoxFit.cover),
-                                      ),
+                                    const SizedBox(height: 48),
+
+                                    // NỐT 2: NỐI ÂM THANH
+                                    _buildTreeNode(
+                                      stepNumber: 2,
+                                      title: 'Cửa 2: Bắt âm & Phản xạ',
+                                      icon: Icons.headphones_rounded,
+                                      offsetX: 30,
+                                      isUnlocked: _unlockedNode >= 2,
+                                      isCurrent: _unlockedNode == 2,
+                                      onTap: _openVisualLesson,
+                                      isDark: isDark,
+                                    ),
+                                    const SizedBox(height: 48),
+
+                                    // NỐT 3: RƯƠNG KHO BÁU
+                                    _buildTreeNode(
+                                      stepNumber: 3,
+                                      title: 'Cửa 3: Rương kinh nghiệm',
+                                      icon: Icons.card_giftcard_rounded,
+                                      offsetX: -20,
+                                      isUnlocked: _unlockedNode >= 3,
+                                      isCurrent: _unlockedNode == 3,
+                                      isChest: true,
+                                      onTap: _openTreasureChest,
+                                      isDark: isDark,
+                                    ),
+                                    const SizedBox(height: 48),
+
+                                    // NỐT 4: THỬ THÁCH LẬT THẺ
+                                    _buildTreeNode(
+                                      stepNumber: 4,
+                                      title: 'Cửa 4: Flashcard nhớ sâu',
+                                      icon: Icons.bolt_rounded,
+                                      offsetX: 35,
+                                      isUnlocked: _unlockedNode >= 4,
+                                      isCurrent: _unlockedNode == 4,
+                                      onTap: _openVisualLesson,
+                                      isDark: isDark,
+                                    ),
+                                    const SizedBox(height: 48),
+
+                                    // NỐT 5: GHÉP CÂU HOÀN CHỈNH
+                                    _buildTreeNode(
+                                      stepNumber: 5,
+                                      title: 'Cửa 5: Về đích - Ghép câu',
+                                      icon: Icons.emoji_events_rounded,
+                                      offsetX: 0,
+                                      isUnlocked: _unlockedNode >= 5,
+                                      isCurrent: _unlockedNode == 5,
+                                      onTap: _openVisualLesson,
+                                      isDark: isDark,
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
 
-                          const SizedBox(height: 36),
-                        ],
+                                // LINH VẬT CHÚ CHIM XANH ENGPASS ĐỨNG CỔ VŨ
+                                Positioned(
+                                  right: 10,
+                                  top: 90,
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: const Color(0xFF2563EB).withAlpha(100)),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              color: Color(0x10000000),
+                                              offset: Offset(0, 2),
+                                              blurRadius: 6,
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Text(
+                                          'Cố lên bạn ơi! 🚀',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF2563EB),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        width: 68,
+                                        height: 68,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white, width: 2),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              color: Color(0x202563EB),
+                                              offset: Offset(0, 4),
+                                              blurRadius: 10,
+                                            ),
+                                          ],
+                                        ),
+                                        child: ClipOval(
+                                          child: Image.asset('assets/images/app_logo.png', fit: BoxFit.cover),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 36),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -664,7 +682,7 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-            onPressed: () => Navigator.pop(context),
+            onPressed: _handleBack,
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -924,20 +942,37 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
     return Icons.menu_book_rounded;
   }
 
+  void _handleClose() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-          onPressed: () => Navigator.pop(context),
-        ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleClose();
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.close_rounded, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            onPressed: _handleClose,
+          ),
         title: ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
@@ -971,8 +1006,9 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // --- STEP 0: VISUAL CHOICE CARDS ("ĐÂU LÀ 'ĐƯỜNG'?") ---
   Widget _buildVisualChoiceStep(bool isDark) {
@@ -1310,7 +1346,7 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
             variant: AppButtonVariant.primary,
             onPressed: () {
               widget.onCompleted();
-              Navigator.pop(context);
+              _handleClose();
             },
           ),
         ],

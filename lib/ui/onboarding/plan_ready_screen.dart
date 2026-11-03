@@ -358,10 +358,14 @@ class _PlanReadyScreenState extends State<PlanReadyScreen> {
                         if (context.mounted) {
                           Navigator.pushAndRemoveUntil(
                             context,
+                            MaterialPageRoute(builder: (_) => const MainShell()),
+                            (route) => false,
+                          );
+                          Navigator.push(
+                            context,
                             MaterialPageRoute(
                               builder: (_) => InterestTopicDetailScreen(topic: _matchedTopic!),
                             ),
-                            (route) => false,
                           );
                         }
                       },
@@ -379,8 +383,12 @@ class _PlanReadyScreenState extends State<PlanReadyScreen> {
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => const TrialLessonScreen()),
+                      MaterialPageRoute(builder: (_) => const MainShell()),
                       (route) => false,
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TrialLessonScreen()),
                     );
                   }
                 },

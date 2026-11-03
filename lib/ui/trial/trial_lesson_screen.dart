@@ -554,14 +554,27 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
     );
   }
 
+  Future<void> _safeExit() async {
+    final canLeave = await _handleWillPop();
+    if (!canLeave || !mounted) return;
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      nav.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _currentStep == 0,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          _handleWillPop();
-        }
+        if (didPop) return;
+        _safeExit();
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
@@ -570,13 +583,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
           elevation: 0.5,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
-            onPressed: () async {
-              final nav = Navigator.of(context);
-              final canLeave = await _handleWillPop();
-              if (canLeave && mounted) {
-                nav.pop();
-              }
-            },
+            onPressed: _safeExit,
           ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

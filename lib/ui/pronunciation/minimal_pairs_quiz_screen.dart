@@ -26,6 +26,20 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
   String _activeTargetWord = '';
   bool _isAudioPulsing = false;
 
+  void _handleExit(BuildContext context) async {
+    await MainShell.markFirstLessonCompleted(context);
+    if (!context.mounted) return;
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      nav.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (route) => false,
+      );
+    }
+  }
+
   void _playAudioWithPulse(String word, PronunciationController controller) {
     setState(() => _isAudioPulsing = true);
     controller.speakWord(word);
@@ -89,7 +103,13 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
 
           final progress = (_currentIndex + 1) / questions.length;
 
-          return Scaffold(
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              _handleExit(context);
+            },
+            child: Scaffold(
             backgroundColor: const Color(0xFFF8FAFC), // Nền sáng chuẩn EngPass
             body: SafeArea(
               child: Column(
@@ -101,10 +121,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 24),
-                          onPressed: () async {
-                  await MainShell.markFirstLessonCompleted(context);
-                  if (context.mounted) Navigator.pop(context);
-                },
+                          onPressed: () => _handleExit(context),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -139,7 +156,8 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                 ],
               ),
             ),
-          );
+          ),
+        );
         },
       ),
     );
@@ -656,7 +674,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                 isFullWidth: true,
                 height: 52,
                 variant: AppButtonVariant.primary,
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => _handleExit(context),
               ),
               const SizedBox(height: 20),
             ],
