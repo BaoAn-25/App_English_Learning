@@ -199,19 +199,24 @@ class TextbookReader extends StatefulWidget {
 
 class _TextbookReaderState extends State<TextbookReader> {
   late int page;
+  late final PageController _pageController;
+  bool _isZoomed = false;
   final repo = TextbookRepository();
   final transform = TransformationController();
   Set<int> completed = {};
   bool saving = false;
+
   @override
   void initState() {
     super.initState();
     page = widget.initialPage;
+    _pageController = PageController(initialPage: widget.initialPage - widget.start);
     _refresh();
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     transform.dispose();
     super.dispose();
   }
@@ -231,9 +236,17 @@ class _TextbookReaderState extends State<TextbookReader> {
     ),
   );
   void _go(int target) {
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        target - widget.start,
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
+      );
+    }
     setState(() {
       page = target;
       transform.value = Matrix4.identity();
+      _isZoomed = false;
     });
   }
 
@@ -281,23 +294,104 @@ class _TextbookReaderState extends State<TextbookReader> {
       children: [
         Expanded(
           child: ColoredBox(
-            color: Colors.grey.shade200,
-            child: SizedBox.expand(
-              child: InteractiveViewer(
-                transformationController: transform,
-                minScale: 1,
-                maxScale: 6,
-                child: Image.asset(
-                  widget.book.asset(page),
-                  key: ValueKey(page),
-                  fit: BoxFit.contain,
-                  semanticLabel:
-                      'Trang sách gốc ${Textbook.pageLabel(page)}. Phóng to để đọc.',
-                  errorBuilder: (_, error, stack) => const Center(
-                    child: Text('Không tải được ảnh trang sách.'),
-                  ),
-                ),
-              ),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF0F172A)
+                : const Color(0xFFF1F5F9),
+            child: PageView.builder(
+              controller: _pageController,
+              physics: _isZoomed
+                  ? const NeverScrollableScrollPhysics()
+                  : const BouncingScrollPhysics(),
+              itemCount: widget.end - widget.start + 1,
+              onPageChanged: (idx) {
+                HapticFeedback.lightImpact();
+                setState(() {
+                  page = widget.start + idx;
+                  transform.value = Matrix4.identity();
+                  _isZoomed = false;
+                });
+              },
+              itemBuilder: (context, index) {
+                final currentPageNum = widget.start + index;
+                return AnimatedBuilder(
+                  animation: _pageController,
+                  builder: (context, child) {
+                    double value = 0.0;
+                    if (_pageController.position.haveDimensions) {
+                      value = index - (_pageController.page ?? _pageController.initialPage.toDouble());
+                      value = value.clamp(-1.0, 1.0);
+                    }
+                    final isFlipping = value != 0;
+                    final rotationY = value * 0.45;
+                    final matrix = Matrix4.identity()
+                      ..setEntry(3, 2, 0.001)
+                      ..rotateY(rotationY);
+
+                    return Transform(
+                      transform: matrix,
+                      alignment: value > 0 ? Alignment.centerLeft : Alignment.centerRight,
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(isFlipping ? 50 : 25),
+                                    blurRadius: isFlipping ? 16 : 8,
+                                    offset: Offset(value * 12, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: InteractiveViewer(
+                                  transformationController: currentPageNum == page ? transform : null,
+                                  minScale: 1,
+                                  maxScale: 6,
+                                  onInteractionUpdate: (details) {
+                                    final scale = transform.value.getMaxScaleOnAxis();
+                                    if (scale > 1.05 != _isZoomed) {
+                                      setState(() => _isZoomed = scale > 1.05);
+                                    }
+                                  },
+                                  child: Image.asset(
+                                    widget.book.asset(currentPageNum),
+                                    fit: BoxFit.contain,
+                                    semanticLabel: 'Trang sách gốc . Phóng to để đọc.',
+                                    errorBuilder: (_, error, stack) => const Center(
+                                      child: Text('Không tải được ảnh trang sách.'),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (isFlipping)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.black.withAlpha((value.abs() * 70).toInt()),
+                                        Colors.transparent,
+                                      ],
+                                      begin: value > 0 ? Alignment.centerLeft : Alignment.centerRight,
+                                      end: Alignment.center,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ),
