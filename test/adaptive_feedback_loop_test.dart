@@ -44,7 +44,7 @@ class _FeedbackLoopFakeRepo implements AppRepository {
   Future<List<Attempt>> getAllAttempts({String? ownerId}) async => List.from(attempts);
 
   @override
-  Future<List<AttemptAnswer>> getAllAttemptAnswers() async =>
+  Future<List<AttemptAnswer>> getAllAttemptAnswers({String? ownerId}) async =>
       List.from(answers);
 
   @override

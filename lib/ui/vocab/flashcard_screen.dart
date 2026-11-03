@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/models/topic.dart';
 import '../../data/models/word.dart';
+import 'match_game_screen.dart';
 import 'topic_quiz_screen.dart';
 import 'vocab_provider.dart';
 
@@ -201,6 +202,24 @@ class _FlashcardScreenState extends State<FlashcardScreen>
           ],
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.dashboard_customize_outlined),
+            tooltip: 'Chuyển sang Ghép Thẻ',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MatchGameScreen(
+                    customWords: widget.words,
+                    initialUnit: widget.topic?.order,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

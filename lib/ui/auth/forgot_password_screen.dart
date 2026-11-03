@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../data/remote/api_client.dart';
-import '../theme/app_tokens.dart';
+
 import '../theme/components/app_button.dart';
+import 'auth_controller.dart';
+import 'reset_password_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -23,7 +24,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    final email = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim().toLowerCase();
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập địa chỉ email hợp lệ.')),
@@ -36,15 +37,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _statusMessage = null;
     });
 
-    final apiClient = ApiClient();
-    final result = await apiClient.forgotPassword(email);
+    final auth = AuthController.instance;
+    final result = await auth.forgotPassword(email);
 
     if (!mounted) return;
 
     setState(() {
       _isLoading = false;
-      _isSuccess = result['success'] == true;
-      _statusMessage = result['message'] as String?;
+      _isSuccess = result.isSuccess;
+      _statusMessage = result.isSuccess
+          ? (result.data?['message'] as String? ?? 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi.')
+          : (result.errorMessage ?? 'Không thể gửi yêu cầu đặt lại mật khẩu.');
     });
   }
 
@@ -75,7 +78,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Icon biểu tượng
               Center(
                 child: Container(
                   width: 72,
@@ -85,7 +87,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Center(
-                    child: Icon(Icons.lock_reset_rounded, size: 36, color: AppTokens.primary),
+                    child: Icon(Icons.lock_reset_rounded, size: 36, color: Color(0xFF2563EB)),
                   ),
                 ),
               ),
@@ -113,7 +115,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 28),
 
               // Trường nhập email
-              TextFormField(
+              TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
@@ -150,17 +152,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     children: [
                       Icon(
                         _isSuccess ? Icons.check_circle_rounded : Icons.info_outline_rounded,
-                        color: _isSuccess ? AppTokens.successGreen : AppTokens.errorRed,
-                        size: 22,
+                        color: _isSuccess ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                        size: 20,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _statusMessage!,
                           style: TextStyle(
-                            fontFamily: 'BeVietnamPro',
                             fontSize: 13,
-                            color: _isSuccess ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                            color: _isSuccess ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
                             height: 1.4,
                           ),
                         ),
@@ -171,25 +172,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 20),
               ],
 
+              // Nút Gửi yêu cầu
               AppButton(
-                label: _isLoading ? 'Đang gửi yêu cầu...' : 'Gửi liên kết đặt lại mật khẩu',
+                label: _isLoading ? 'Đang xử lý...' : 'Gửi liên kết đặt lại mật khẩu',
                 isFullWidth: true,
-                variant: AppButtonVariant.primary,
                 height: 52,
                 onPressed: _isLoading ? null : _handleSubmit,
               ),
               const SizedBox(height: 16),
+
+              // Nút dẫn sang màn hình nhập mã xác nhận
               Center(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Quay lại Đăng nhập',
+                child: TextButton.icon(
+                  icon: const Icon(Icons.key_rounded, size: 18, color: Color(0xFF2563EB)),
+                  label: const Text(
+                    'Tôi đã có mã xác nhận (Token)',
                     style: TextStyle(
-                      fontFamily: 'BeVietnamPro',
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      color: AppTokens.primary,
+                      color: Color(0xFF2563EB),
                     ),
                   ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
+                    );
+                  },
                 ),
               ),
             ],
@@ -199,4 +208,3 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 }
-

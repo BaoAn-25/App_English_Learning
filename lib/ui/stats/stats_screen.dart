@@ -439,13 +439,16 @@ class StatsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        item.displayName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          item.displayName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         item.totalQuestions > 0
                             ? '${item.correctQuestions}/${item.totalQuestions} câu (${item.accuracy.toStringAsFixed(0)}%)'

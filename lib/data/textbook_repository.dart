@@ -164,8 +164,20 @@ class TextbookRepository {
     });
   }
 
-  Future<Map<String, dynamic>> study(int page) async {
-    final value = await database.getSetting('book_${version}_page_$page');
+  String _studyKey(int page, String? ownerId) {
+    if (ownerId != null && ownerId.trim().isNotEmpty) {
+      return 'book_${version}_owner_${ownerId}_page_$page';
+    }
+    return 'book_${version}_page_$page';
+  }
+
+  Future<Map<String, dynamic>> study(int page, {String? ownerId}) async {
+    final key = _studyKey(page, ownerId);
+    var value = await database.getSetting(key);
+    // Nếu chưa có theo owner và ownerId được truyền vào, thử đọc bản ghi cũ chưa gắn owner (nếu có)
+    if (value == null && ownerId != null && ownerId.trim().isNotEmpty) {
+      value = await database.getSetting('book_${version}_page_$page');
+    }
     return value == null
         ? {'completed': false, 'answers': <dynamic>[]}
         : jsonDecode(value);
@@ -174,25 +186,31 @@ class TextbookRepository {
   Future<void> saveStudy(
     int page,
     List<Map<String, dynamic>> answers,
-    bool completed,
-  ) async {
+    bool completed, {
+    String? ownerId,
+  }) async {
     if (page < -1 || page > 157) throw ArgumentError.value(page);
+    final key = _studyKey(page, ownerId);
     await database.setSetting(
-      'book_${version}_page_$page',
+      key,
       jsonEncode({
         'completed': completed,
         'answers': answers,
+        'ownerId': ownerId,
         'updatedAt': DateTime.now().toIso8601String(),
       }),
     );
   }
 
-  Future<Set<int>> completedPages() async {
+  Future<Set<int>> completedPages({String? ownerId}) async {
     final db = await database.database;
+    final prefix = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? 'book_${version}_owner_${ownerId}_page_%'
+        : 'book_${version}_page_%';
     final rows = await db.query(
       'app_settings',
       where: 'key LIKE ?',
-      whereArgs: ['book_${version}_page_%'],
+      whereArgs: [prefix],
     );
     return {
       for (final r in rows)

@@ -1,5 +1,6 @@
 class Attempt {
   final int? id;
+  final String? ownerId;
   final String mode; // "practice" hoặc "mock"
   final String? type;
   final int startedAt; // millisecondsSinceEpoch
@@ -9,6 +10,7 @@ class Attempt {
 
   const Attempt({
     this.id,
+    this.ownerId,
     required this.mode,
     this.type,
     required this.startedAt,
@@ -20,6 +22,7 @@ class Attempt {
   factory Attempt.fromMap(Map<String, dynamic> map) {
     return Attempt(
       id: map['id'] as int?,
+      ownerId: map['ownerId'] as String?,
       mode: map['mode'] as String,
       type: map['type'] as String?,
       startedAt: (map['startedAt'] as num).toInt(),
@@ -40,6 +43,9 @@ class Attempt {
     };
     if (id != null) {
       map['id'] = id;
+    }
+    if (ownerId != null && ownerId!.isNotEmpty) {
+      map['ownerId'] = ownerId;
     }
     return map;
   }

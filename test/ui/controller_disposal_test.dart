@@ -13,7 +13,7 @@ class DelayedRepository extends AppRepository {
   final ready = Completer<void>();
 
   @override
-  Future<List<DailyStat>> getAllDailyStats() async {
+  Future<List<DailyStat>> getAllDailyStats({String? ownerId}) async {
     await ready.future;
     return [];
   }
@@ -27,7 +27,7 @@ class DelayedRepository extends AppRepository {
   @override
   Future<List<Attempt>> getAllAttempts({String? ownerId}) async => [];
   @override
-  Future<List<AttemptAnswer>> getAllAttemptAnswers() async => [];
+  Future<List<AttemptAnswer>> getAllAttemptAnswers({String? ownerId}) async => [];
   @override
   Future<List<Question>> getAllQuestions() async => [];
 }

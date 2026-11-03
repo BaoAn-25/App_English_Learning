@@ -130,4 +130,7 @@ class AdaptiveStudentProfile {
 
   /// Kiểm tra xem học sinh có dữ liệu làm bài nào chưa
   bool get hasAnyHistory => totalQuestionsDone > 0;
+
+  /// Kiểm tra xem học sinh đã có đủ dữ liệu để đánh giá năng lực thực tế chưa
+  bool get isEvaluated => hasAnyHistory && overallMastery > 0.0;
 }

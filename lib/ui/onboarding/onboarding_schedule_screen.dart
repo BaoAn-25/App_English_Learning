@@ -270,10 +270,11 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
         if (granted) {
           final scheduled = await notifService.scheduleDailyReminder(_reminderTime);
           if (!scheduled) {
+            finalReminderEnabled = false;
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Không thể lên lịch thông báo trên thiết bị. Bạn có thể tiếp tục học và thử lại sau.'),
+                  content: Text('Không thể lên lịch thông báo trên thiết bị. Bạn có thể tiếp tục học và thử lại sau trong Cài đặt.'),
                   duration: Duration(seconds: 3),
                 ),
               );
@@ -659,13 +660,15 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text(
-                                      'Giờ nhắc',
-                                      style: TextStyle(
-                                        fontFamily: 'BeVietnamPro',
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14.5,
-                                        color: Color(0xFF334155),
+                                    const Expanded(
+                                      child: Text(
+                                        'Giờ nhắc',
+                                        style: TextStyle(
+                                          fontFamily: 'BeVietnamPro',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14.5,
+                                          color: Color(0xFF334155),
+                                        ),
                                       ),
                                     ),
                                     Container(
@@ -713,6 +716,15 @@ class _OnboardingScheduleScreenState extends State<OnboardingScheduleScreen> {
                                     ),
                                   ],
                                 ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Thông báo có thể đến muộn do cài đặt hệ thống.',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xFF64748B),
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
                           ],

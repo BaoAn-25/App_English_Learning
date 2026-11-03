@@ -1,0 +1,927 @@
+{
+  "schemaVersion": 1,
+  "bookVersion": "global-success-12-2026-v1",
+  "contentVersion": "2026-11-03",
+  "scope": "Listening 10 Units + 4 Reviews; Vocabulary activity 1 for 10 Units; Reading 10 Units + 4 Reviews. Not all audio in textbook.",
+  "tracks": [
+    {
+      "id": "gs12_unit_01_listening_a2",
+      "lessonKey": "unit-01",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-01-listening-activity-2.mp3",
+      "durationSeconds": 143.995,
+      "bytes": 2304959,
+      "sha256": "e4a96f31bff922973ab8cf78050bd0d6732b485df20a3fed082016efb5ba49ae",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-1-listening-a157002.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/04.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-01/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_01_listening_a3",
+      "lessonKey": "unit-01",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-01-listening-activity-3.mp3",
+      "durationSeconds": 142.223,
+      "bytes": 2276603,
+      "sha256": "9b8d54b57e998b762d068cc6a1998fc7ded0bf38a21cbb2b49107b22e85949eb",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-1-listening-a157002.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/05.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-01/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_02_listening_a2",
+      "lessonKey": "unit-02",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-02-listening-activity-2.mp3",
+      "durationSeconds": 149.338,
+      "bytes": 2390444,
+      "sha256": "cb6ab2d5b53c57e995ccf6bd39264a34301ed328eb1e8e0006992f13eb6751f2",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-2-listening-a157215.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/11.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-02/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_02_listening_a3",
+      "lessonKey": "unit-02",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-02-listening-activity-3.mp3",
+      "durationSeconds": 147.748,
+      "bytes": 2365007,
+      "sha256": "bbbbf2644fc641eaef26eed9c0da72c31e38ed86522101a98049c3ff76f1f236",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-2-listening-a157215.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/12.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-02/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_03_listening_a2",
+      "lessonKey": "unit-03",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-03-listening-activity-2.mp3",
+      "durationSeconds": 161.848,
+      "bytes": 2590604,
+      "sha256": "7a71f62d45a28c4f275bf11f78ca17eff97fc767c4b8b9a2de8aa443d24f5330",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-3-listening-a157304.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/18.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-03/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_03_listening_a3",
+      "lessonKey": "unit-03",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-03-listening-activity-3.mp3",
+      "durationSeconds": 160.832,
+      "bytes": 2574341,
+      "sha256": "ef98168ee14dc014c30ddc5776a14cb3dc90c7a24b2c23cfd47e4fb6c66aa1e0",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-3-listening-a157304.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/19.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-03/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_04_listening_a2",
+      "lessonKey": "unit-04",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-04-listening-activity-2.mp3",
+      "durationSeconds": 175.974,
+      "bytes": 2816618,
+      "sha256": "0df1ad23000613802d02513ec36ae8c01a8cf6118a1fc7fd984924c0a9b532a8",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-4-listening-a157359.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/27.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-04/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_04_listening_a3",
+      "lessonKey": "unit-04",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-04-listening-activity-3.mp3",
+      "durationSeconds": 178.163,
+      "bytes": 2851646,
+      "sha256": "ebcea26c94cc6d3841cea3c5bbb6c2795486f7726a8c7e332b429e7fabd78794",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-4-listening-a157359.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/28.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-04/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_05_listening_a2",
+      "lessonKey": "unit-05",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-05-listening-activity-2.mp3",
+      "durationSeconds": 153.873,
+      "bytes": 2463002,
+      "sha256": "284073473c79547a83e4112ca816383bc0b3371de4a6bdd68bde6476ee09416a",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-5-listening-a157433.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/34.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-05/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_05_listening_a3",
+      "lessonKey": "unit-05",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-05-listening-activity-3.mp3",
+      "durationSeconds": 152.466,
+      "bytes": 2440484,
+      "sha256": "f49bedebbf9168126c6e81a324117ade0d276953efc075aa9cc13dd8350e910d",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-5-listening-a157433.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/35.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-05/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_06_listening_a2",
+      "lessonKey": "unit-06",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-06-listening-activity-2.mp3",
+      "durationSeconds": 77.093,
+      "bytes": 1234520,
+      "sha256": "b7d0ff53add88e13ab8360dd06d8bdc85c58ca7b265c930f2a461dfa1dab3d4d",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-6-listening-a163965.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/45.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-06/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_06_listening_a3",
+      "lessonKey": "unit-06",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-06-listening-activity-3.mp3",
+      "durationSeconds": 105.814,
+      "bytes": 1694054,
+      "sha256": "4ba8a59bce9c7173dc5a0c6d5e29430b9ff3fee7a286e3747e3007a757a1c448",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-6-listening-a163965.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/46.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-06/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_07_listening_a2_3",
+      "lessonKey": "unit-07",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2",
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-07-listening-activity-2-3.mp3",
+      "durationSeconds": 202.453,
+      "bytes": 3240290,
+      "sha256": "6298bef58080a7ff31e17b1a1b01e13e5a984bf6a5a618f1673057d0a678932f",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-7-listening-a164026.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/52.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-07/listening-activity-2-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_08_listening_a3",
+      "lessonKey": "unit-08",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-08-listening-activity-3.mp3",
+      "durationSeconds": 184.913,
+      "bytes": 2959649,
+      "sha256": "fb5a4c413d1d04b84ed7c408980d16c5ecd5fae3fe5fc99621700fcebeae2a84",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-8-listening-a164139.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/59.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-08/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_08_listening_a4",
+      "lessonKey": "unit-08",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "4"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-08-listening-activity-4.mp3",
+      "durationSeconds": 186.217,
+      "bytes": 2980499,
+      "sha256": "a9fcde5910ce8c7401d4fefb03594743c19d2443a9a41b6371f88158feffb757",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-8-listening-a164139.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/60.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-08/listening-activity-4.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_09_listening_a2",
+      "lessonKey": "unit-09",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-09-listening-activity-2.mp3",
+      "durationSeconds": 166.487,
+      "bytes": 2664830,
+      "sha256": "d9aaf2c68d3e2e6c222b4f30effb1a9b4da1225e99375faa754487b151b3aaef",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-9-listening-a164226.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/71_1.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-09/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_09_listening_a3",
+      "lessonKey": "unit-09",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-09-listening-activity-3.mp3",
+      "durationSeconds": 164.194,
+      "bytes": 2628134,
+      "sha256": "3cd99c2dfa46c836eea627971a2f2c697a51f452d30e6359943818f8a8427f02",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-9-listening-a164226.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/72_1.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-09/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_10_listening_a2",
+      "lessonKey": "unit-10",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-10-listening-activity-2.mp3",
+      "durationSeconds": 171.804,
+      "bytes": 2749898,
+      "sha256": "8b9553649c7bda403cb7f2b226b4f079e79eb791b6bc4134506cb30bc8f2b1d9",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-10-listening-a164266.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/78_1.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-10/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_10_listening_a3",
+      "lessonKey": "unit-10",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "3"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/unit-10-listening-activity-3.mp3",
+      "durationSeconds": 172.69,
+      "bytes": 2764076,
+      "sha256": "2ca2d22f7026286708e12b695dc09fdd036b26bb1d2b1fd8080afb13176ee7b2",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-unit-10-listening-a164266.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/79_2.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/unit-10/listening-activity-3.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_01_listening_a1",
+      "lessonKey": "review-01",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-01-listening-activity-1.mp3",
+      "durationSeconds": 153.977,
+      "bytes": 2464670,
+      "sha256": "859c34ba14cd634649d7ece7c6689ade2fef1c9fc2a73fc027302dc80aeec93d",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-1-skills-a157321.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/22.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-01/listening-activity-1.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_01_listening_a2",
+      "lessonKey": "review-01",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-01-listening-activity-2.mp3",
+      "durationSeconds": 149.781,
+      "bytes": 2397533,
+      "sha256": "adbda3c1651c35597807e784a8f5bc764e43d446114390291ec9aead5e105601",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-1-skills-a157321.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/23.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-01/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_02_listening_a1",
+      "lessonKey": "review-02",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-02-listening-activity-1.mp3",
+      "durationSeconds": 137.401,
+      "bytes": 2199458,
+      "sha256": "e567d590fb6a9575cc4a01b58c7bc04671bda7872e16e133e6c5bc81933ebc3f",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-2-skills-a157447.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/40.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-02/listening-activity-1.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_02_listening_a2",
+      "lessonKey": "review-02",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-02-listening-activity-2.mp3",
+      "durationSeconds": 140.321,
+      "bytes": 2246162,
+      "sha256": "524388c776f79e902324d0742f2c2b3a2c8540f01a9ef9b0a7649060ec4a4bab",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-2-skills-a157447.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/41.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-02/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_03_listening_a1",
+      "lessonKey": "review-03",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-03-listening-activity-1.mp3",
+      "durationSeconds": 146.054,
+      "bytes": 2337902,
+      "sha256": "a11a07757b1594cedb441da853e88f74f74cd1a2833d5398a32703029c01f93e",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-3-skills-a164202.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/66_1.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-03/listening-activity-1.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_03_listening_a2",
+      "lessonKey": "review-03",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-03-listening-activity-2.mp3",
+      "durationSeconds": 143.969,
+      "bytes": 2304542,
+      "sha256": "d81880e7934457551f9683480af2a95dfcdfe032d70b42db2b150a5de8858f4a",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-3-skills-a164202.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/67_1.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-03/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_04_listening_a1",
+      "lessonKey": "review-04",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-04-listening-activity-1.mp3",
+      "durationSeconds": 141.441,
+      "bytes": 2264093,
+      "sha256": "9628522d4594a5e088a7802450e2c065ee08d162c69b2b69184db82e543126f8",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-4-skills-a164308.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/84.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-04/listening-activity-1.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_04_listening_a2",
+      "lessonKey": "review-04",
+      "section": "listening",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/listening/review-04-listening-activity-2.mp3",
+      "durationSeconds": 140.19,
+      "bytes": 2244077,
+      "sha256": "71a87b5aaba8aea659d6394bcdb506fec1c8076bf88c83db78215ca0f5117db3",
+      "sourcePageUrl": "https://loigiaihay.com/tieng-anh-12-review-4-skills-a164308.html",
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/85.mp3",
+      "sourceLocalPath": "output/sgk12-listening-matched/review-04/listening-activity-2.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_01_vocabulary_a1",
+      "lessonKey": "unit-01",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-01-vocabulary-activity-1.mp3",
+      "durationSeconds": 33.647,
+      "bytes": 539381,
+      "sha256": "f832e95ff08dd944153f8170c89490bbc807fcca1d0998af5c124202ea0aa55c",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/001.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_02_vocabulary_a1",
+      "lessonKey": "unit-02",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-02-vocabulary-activity-1.mp3",
+      "durationSeconds": 25.098,
+      "bytes": 402605,
+      "sha256": "428fb026aa25952dc1adf6326f5c96234a4e7d68a56bb84bfe8d2e1ef423f3f3",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/002.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_03_vocabulary_a1",
+      "lessonKey": "unit-03",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-03-vocabulary-activity-1.mp3",
+      "durationSeconds": 24.342,
+      "bytes": 390512,
+      "sha256": "d67087f0602bb34bc078d2146678fdf341939f55661d08e5ece7f98db1534f52",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/003.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_04_vocabulary_a1",
+      "lessonKey": "unit-04",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-04-vocabulary-activity-1.mp3",
+      "durationSeconds": 24.421,
+      "bytes": 391763,
+      "sha256": "4d0801dedda7174a8131b940889400a3674f7f9229683e16c0e214e6941187d3",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/004.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_05_vocabulary_a1",
+      "lessonKey": "unit-05",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-05-vocabulary-activity-1.mp3",
+      "durationSeconds": 24.864,
+      "bytes": 398852,
+      "sha256": "6b8f3244d3ef74dab1bb3973cc1b02559d18aedfc35c0d121eb9f16195d65cf3",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/005.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_06_vocabulary_a1",
+      "lessonKey": "unit-06",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-06-vocabulary-activity-1.mp3",
+      "durationSeconds": 26.245,
+      "bytes": 420953,
+      "sha256": "d5a3dc83aa56a060bd8faf7b30995536f6226660789b4e8a42ef9d2cd9d79348",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/006.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_07_vocabulary_a1",
+      "lessonKey": "unit-07",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-07-vocabulary-activity-1.mp3",
+      "durationSeconds": 25.411,
+      "bytes": 407609,
+      "sha256": "c3b5048a7ce7500da0e3e6dcc61c89143d6fc1dfcb6edcef9a2f0cf5f6de9abd",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/007.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_08_vocabulary_a1",
+      "lessonKey": "unit-08",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-08-vocabulary-activity-1.mp3",
+      "durationSeconds": 25.229,
+      "bytes": 404690,
+      "sha256": "9cf9435d97077a1d99b81e74a679d2e67d928d3c4554767421e9ec5826e5e03d",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/008.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_09_vocabulary_a1",
+      "lessonKey": "unit-09",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-09-vocabulary-activity-1.mp3",
+      "durationSeconds": 30.389,
+      "bytes": 487256,
+      "sha256": "7ce05b939207bb3806886da75c3abefd13939ffdbb260519775e60b93eef0bf6",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/009.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_10_vocabulary_a1",
+      "lessonKey": "unit-10",
+      "section": "language",
+      "subskill": "vocabulary",
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": null,
+      "assetPath": "assets/audio/global_success_12/vocabulary/unit-10-vocabulary-activity-1.mp3",
+      "durationSeconds": 27.001,
+      "bytes": 433046,
+      "sha256": "bf198a981f05a394d68318f68021436a979480eb1308047d3fb4dcb11727beb2",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1H-1umf-9CWrjTGnpl842kWVkkO5pidGx",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055129Z-vocab/010.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_01_reading_a2",
+      "lessonKey": "unit-01",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 11,
+      "assetPath": "assets/audio/global_success_12/reading/unit-01-reading-activity-2.mp3",
+      "durationSeconds": 177.681,
+      "bytes": 2189502,
+      "sha256": "e9aabdf78a12581536ce1b4df7e2aa2296db99eed9a02ea27c46a09916591457",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/001.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_02_reading_a2",
+      "lessonKey": "unit-02",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 23,
+      "assetPath": "assets/audio/global_success_12/reading/unit-02-reading-activity-2.mp3",
+      "durationSeconds": 200.577,
+      "bytes": 3210266,
+      "sha256": "dd7a9db30442f20578f804eecb2530fbc026146f7a173c685fd2bf2b006c2f0d",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/002.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_03_reading_a2",
+      "lessonKey": "unit-03",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 36,
+      "assetPath": "assets/audio/global_success_12/reading/unit-03-reading-activity-2.mp3",
+      "durationSeconds": 172.768,
+      "bytes": 2765327,
+      "sha256": "8f6ed7aa489f73e2ee356c497191a186ee1f945336015558eb8239343bf1e689",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/003.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_01_reading_a1",
+      "lessonKey": "review-01",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": 47,
+      "assetPath": "assets/audio/global_success_12/reading/review-01-reading-activity-1.mp3",
+      "durationSeconds": 120.695,
+      "bytes": 1932161,
+      "sha256": "d354a072b54ee9e24704b4a84de1f4f7cbc8f57b739ce970e0156c787f7bd8e3",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/004.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_04_reading_a2",
+      "lessonKey": "unit-04",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 52,
+      "assetPath": "assets/audio/global_success_12/reading/unit-04-reading-activity-2.mp3",
+      "durationSeconds": 179.909,
+      "bytes": 2879585,
+      "sha256": "09f4a1d59c0be9dc474e8c2ede214180f998283f973f7a2fbc82e9eab1596a5d",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/005.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_05_reading_a2",
+      "lessonKey": "unit-05",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 64,
+      "assetPath": "assets/audio/global_success_12/reading/unit-05-reading-activity-2.mp3",
+      "durationSeconds": 192.498,
+      "bytes": 3080996,
+      "sha256": "2d3825a11f678abda6807a0c1ab2c1667693f266a8d5cfc01685c2e550e4a2c7",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/006.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_02_reading_a1",
+      "lessonKey": "review-02",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": 75,
+      "assetPath": "assets/audio/global_success_12/reading/review-02-reading-activity-1.mp3",
+      "durationSeconds": 134.307,
+      "bytes": 1890188,
+      "sha256": "af53e076a27f773d7780d3a87cd5c0d3c7a90798e693e86f5c5744decf2d9b39",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/007.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_06_reading_a2",
+      "lessonKey": "unit-06",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 80,
+      "assetPath": "assets/audio/global_success_12/reading/unit-06-reading-activity-2.mp3",
+      "durationSeconds": 214.807,
+      "bytes": 3437948,
+      "sha256": "53c549898112357bd1ca18fd605ac05cb0a80b79a9a5e879c5cdc7cc6b4e8d47",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/008.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_07_reading_a2",
+      "lessonKey": "unit-07",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 92,
+      "assetPath": "assets/audio/global_success_12/reading/unit-07-reading-activity-2.mp3",
+      "durationSeconds": 201.515,
+      "bytes": 3225278,
+      "sha256": "75c9c5ceb6c758f60f2170d3ac5ae9efa1919f442f6b8bf78acced329cd00df7",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/009.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_08_reading_a2",
+      "lessonKey": "unit-08",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 104,
+      "assetPath": "assets/audio/global_success_12/reading/unit-08-reading-activity-2.mp3",
+      "durationSeconds": 165.523,
+      "bytes": 2649401,
+      "sha256": "3e7a6fa2e3849e3759816cf7440d1b93fd8715778f929660afbef93d8d1ea461",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/010.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_03_reading_a1",
+      "lessonKey": "review-03",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": 115,
+      "assetPath": "assets/audio/global_success_12/reading/review-03-reading-activity-1.mp3",
+      "durationSeconds": 146.888,
+      "bytes": 2351246,
+      "sha256": "93815dda44e010717ab0c2d43ee48482044372147eba02832fcf60f76a8984aa",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/011.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_09_reading_a2",
+      "lessonKey": "unit-09",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 120,
+      "assetPath": "assets/audio/global_success_12/reading/unit-09-reading-activity-2.mp3",
+      "durationSeconds": 165.021,
+      "bytes": 2276437,
+      "sha256": "d06416600e9297ec7c4dc68e496d506e759734931a42f5302b039b3d7819e2f5",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/012.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_unit_10_reading_a2",
+      "lessonKey": "unit-10",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "2"
+      ],
+      "printedPage": 132,
+      "assetPath": "assets/audio/global_success_12/reading/unit-10-reading-activity-2.mp3",
+      "durationSeconds": 191.585,
+      "bytes": 3066401,
+      "sha256": "f7e025b469e0d9cc85bdc5eb3fa128e27a83e81871d2a3117b49e141c1c9b86c",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/013.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    },
+    {
+      "id": "gs12_review_04_reading_a1",
+      "lessonKey": "review-04",
+      "section": "reading",
+      "subskill": null,
+      "activityNumbers": [
+        "1"
+      ],
+      "printedPage": 143,
+      "assetPath": "assets/audio/global_success_12/reading/review-04-reading-activity-1.mp3",
+      "durationSeconds": 162.63,
+      "bytes": 2603114,
+      "sha256": "b05787a064e61e78d41051c687f58d4524232ed9a891fbf93f38ad7ebee454e0",
+      "sourcePageUrl": "https://drive.google.com/drive/folders/1RuX43dA4bm-Q_8hOHrYrf_TDXaUX9d0O",
+      "sourceAudioUrl": null,
+      "sourceLocalPath": "output/drive-download-20261031T055544Z-reading/014.mp3",
+      "verification": "File integrity and decoding verified; spoken introduction/topic checked. Full wording and publisher origin not certified."
+    }
+  ]
+}

@@ -129,7 +129,7 @@ class AppButton extends StatelessWidget {
 
     final buttonWidget = AnimatedContainer(
       duration: const Duration(milliseconds: 100),
-      height: height,
+      constraints: BoxConstraints(minHeight: height),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
@@ -151,7 +151,7 @@ class AppButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: isEnabled ? onPressed : null,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Center(child: content),
           ),
         ),

@@ -211,7 +211,8 @@ class AdaptiveLearningService {
     }
 
     // 5. Tính điểm năng lực tổng hợp (Overall Mastery)
-    double overallMastery = AdaptiveConfig.priorMastery;
+    // Người học chưa có bài làm xác thực thì overallMastery = 0.0 (trạng thái khảo sát ban đầu)
+    double overallMastery = 0.0;
     if (assessedSkills.isNotEmpty) {
       double totalWeightedMastery = 0.0;
       double totalWeight = 0.0;
@@ -222,7 +223,7 @@ class AdaptiveLearningService {
       }
       overallMastery = totalWeight > 0
           ? (totalWeightedMastery / totalWeight)
-          : AdaptiveConfig.priorMastery;
+          : 0.0;
     }
 
     return AdaptiveStudentProfile(

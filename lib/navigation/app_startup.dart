@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/app_repository.dart';
 import '../data/asset_seeder.dart';
 import '../data/question_sync_service.dart';
+import '../data/remote/api_client.dart';
 import '../ui/auth/splash_screen.dart';
 import 'main_shell.dart';
 
@@ -41,6 +42,7 @@ class _AppStartupState extends State<AppStartup> {
         await initialize();
       } else {
         final repository = context.read<AppRepository>();
+        await ApiClient.sanitizeOrMigrateApiUrl(repository);
         await AssetSeeder.seedIfEmpty();
         await AssetSeeder.syncVocabulary();
         await QuestionSyncService.syncQuestions(repository);
@@ -70,20 +72,21 @@ class _AppStartupState extends State<AppStartup> {
     builder: (context, snapshot) {
       final loading = snapshot.connectionState != ConnectionState.done;
       if (!loading && !snapshot.hasError) {
-        // Trong môi trường flutter test tự động: trả về MainShell để thỏa mãn test contract
-        final isAutomatedTest = widget.initialize != null ||
-            WidgetsBinding.instance.runtimeType
-                .toString()
-                .contains('TestWidgetsFlutterBinding');
-
+        // Cơ chế điều hướng minh bạch:
+        // 1. Nếu có chỉ định rõ ràng qua startWithOnboarding
         if (widget.startWithOnboarding == true) {
           return const SplashScreen();
         }
-
-        if (isAutomatedTest || _hasCompletedOnboarding) {
+        if (widget.startWithOnboarding == false) {
           return const MainShell();
         }
-        // Khi người dùng chạy thật (flutter run): mở luồng Khách & Onboarding setup học thử
+
+        // 2. Mặc định theo trạng thái người học thực tế đã hoàn thành Onboarding hay chưa
+        if (_hasCompletedOnboarding) {
+          return const MainShell();
+        }
+
+        // Chưa hoàn thành onboarding -> vào màn hình chào mừng & học thử
         return const SplashScreen();
       }
       return Scaffold(

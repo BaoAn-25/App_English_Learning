@@ -26,11 +26,11 @@ class ReadingCompletionScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             children: [
-              const Spacer(flex: 2),
+              const SizedBox(height: 16),
 
               // Cúp Trophy Vàng toả sáng Duolingo
               Container(
@@ -85,27 +85,32 @@ class ReadingCompletionScreen extends StatelessWidget {
 
               // 3 Stats
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildStatCard(
-                    badge: xpEarned > 0 ? '+$xpEarned' : '0',
-                    label: 'XP',
-                    color: const Color(0xFF2563EB),
-                    bgColor: const Color(0xFFEFF6FF),
+                  Expanded(
+                    child: _buildStatCard(
+                      badge: xpEarned > 0 ? '+$xpEarned' : '0',
+                      label: 'XP',
+                      color: const Color(0xFF2563EB),
+                      bgColor: const Color(0xFFEFF6FF),
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  _buildStatCard(
-                    badge: '${accuracy.toInt()}%',
-                    label: 'Chính xác',
-                    color: const Color(0xFF16A34A),
-                    bgColor: const Color(0xFFDCFCE7),
+                  Expanded(
+                    child: _buildStatCard(
+                      badge: '${accuracy.toInt()}%',
+                      label: 'Chính xác',
+                      color: const Color(0xFF16A34A),
+                      bgColor: const Color(0xFFDCFCE7),
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  _buildStatCard(
-                    badge: currentStreak > 0 ? '$currentStreak ngày' : '0 ngày',
-                    label: 'Streak 🔥',
-                    color: const Color(0xFFEA580C),
-                    bgColor: const Color(0xFFFFEDD5),
+                  Expanded(
+                    child: _buildStatCard(
+                      badge: currentStreak > 0 ? '$currentStreak ngày' : '0 ngày',
+                      label: 'Streak 🔥',
+                      color: const Color(0xFFEA580C),
+                      bgColor: const Color(0xFFFFEDD5),
+                    ),
                   ),
                 ],
               ),
@@ -159,7 +164,7 @@ class ReadingCompletionScreen extends StatelessWidget {
                   ),
                 ),
 
-              const Spacer(flex: 3),
+              const SizedBox(height: 32),
 
               // 2 Nút hành động
               AppButton(
@@ -196,8 +201,7 @@ class ReadingCompletionScreen extends StatelessWidget {
     required Color bgColor,
   }) {
     return Container(
-      width: 96,
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
@@ -207,6 +211,7 @@ class ReadingCompletionScreen extends StatelessWidget {
         children: [
           Text(
             badge,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'BeVietnamPro',
               fontWeight: FontWeight.w900,
@@ -217,6 +222,7 @@ class ReadingCompletionScreen extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'BeVietnamPro',
               fontWeight: FontWeight.w600,

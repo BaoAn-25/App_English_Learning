@@ -18,7 +18,7 @@ import 'settings_controller.dart';
 /// Màn hình Cá nhân & Cài đặt.
 /// Xuất widget công khai để MainShell gắn vào NavigationBar.
 /// Không tự điều hướng đăng xuất, gọi qua [onLogout] truyền vào.
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   final AppRepository? repository;
   final VoidCallback? onLogout;
 
@@ -29,16 +29,43 @@ class SettingsScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    AppRepository repo;
-    try {
-      repo = repository ?? Provider.of<AppRepository>(context, listen: false);
-    } catch (_) {
-      repo = AppRepository();
-    }
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
 
-    return ChangeNotifierProvider<SettingsController>(
-      create: (_) => SettingsController(repo: repo),
+class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
+  late final AppRepository _repo;
+  late final SettingsController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    try {
+      _repo = widget.repository ?? Provider.of<AppRepository>(context, listen: false);
+    } catch (_) {
+      _repo = AppRepository();
+    }
+    _controller = SettingsController(repo: _repo);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _controller.checkAndReconcileReminder();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<SettingsController>.value(
+      value: _controller,
       child: Scaffold(
         appBar: AppBar(
           title: const Text(AppStrings.settingsTitle),
@@ -173,6 +200,11 @@ class SettingsScreen extends StatelessWidget {
   // --- Khối 1B: Hồ sơ học sinh đã đăng nhập ---
   Widget _buildProfileCard(BuildContext context, SettingsController controller) {
     final theme = Theme.of(context);
+    final auth = AuthController.instance;
+    final user = auth.user;
+    final initialLetter = user.displayName.isNotEmpty
+        ? user.displayName.trim()[0].toUpperCase()
+        : 'H';
 
     return AppCard(
       child: Column(
@@ -180,34 +212,55 @@ class SettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: AppTokens.primary.withAlpha(25),
-                child: const Icon(
-                  Icons.person_rounded,
-                  size: 32,
-                  color: AppTokens.primary,
+              // Avatar người dùng thật (hoặc chữ cái đầu tên)
+              if (user.avatarUrl.isNotEmpty)
+                CircleAvatar(
+                  radius: 28,
+                  backgroundImage: NetworkImage(user.avatarUrl),
+                )
+              else
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: AppTokens.primary,
+                  child: Text(
+                    initialLetter,
+                    style: const TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
               const SizedBox(width: AppTokens.space16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      controller.name,
+                      user.displayName.isNotEmpty ? user.displayName : controller.name,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 17,
                       ),
                     ),
+                    if (user.email.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        user.email,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppTokens.space4),
                     Text(
                       controller.hasTargetScore
-                          ? 'Lớp ${controller.grade} • Mục tiêu: ${controller.targetScore!.toStringAsFixed(1)} đ'
-                          : 'Lớp ${controller.grade} • Chưa chọn mục tiêu',
+                          ? 'Mục tiêu: ${controller.targetScore!.toStringAsFixed(1)} đ • Kế hoạch: ${controller.dailyGoal} câu/ngày'
+                          : 'Chưa chọn mục tiêu điểm số',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         color: theme.colorScheme.outline,
                         fontWeight: FontWeight.w500,
                       ),
@@ -222,6 +275,107 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 14),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+
+          // Phương thức đăng nhập & Trạng thái xác minh email thật
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      user.authProvider == 'google' ? Icons.g_mobiledata_rounded : Icons.email_outlined,
+                      size: 18,
+                      color: const Color(0xFF64748B),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        user.authProvider == 'google' ? 'Đăng nhập Google' : 'Đăng nhập Email',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569), fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Badge trạng thái xác minh email
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: user.emailVerified ? const Color(0xFFF0FDF4) : const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: user.emailVerified ? const Color(0xFF86EFAC) : const Color(0xFFFDE68A),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      user.emailVerified ? Icons.verified_rounded : Icons.info_outline_rounded,
+                      size: 14,
+                      color: user.emailVerified ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      user.emailVerified ? 'Đã xác minh' : 'Chưa xác minh',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: user.emailVerified ? const Color(0xFF15803D) : const Color(0xFFB45309),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Lời nhắc gửi lại thư xác minh nếu email chưa xác minh
+          if (!user.emailVerified && user.authProvider == 'email') ...[
+            const SizedBox(height: 10),
+            InkWell(
+              onTap: () async {
+                final success = await auth.resendVerificationEmail();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? (auth.successMessage ?? 'Đã gửi lại thư xác minh!')
+                            : (auth.errorMessage ?? 'Không thể gửi thư xác minh.'),
+                      ),
+                      backgroundColor: success ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                    ),
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.forward_to_inbox_rounded, size: 16, color: Color(0xFF2563EB)),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Bấm để gửi lại thư xác minh vào email của bạn',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF1D4ED8), fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -300,6 +454,7 @@ class SettingsScreen extends StatelessWidget {
 
     return AppCard(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -320,41 +475,79 @@ class SettingsScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Switch(
-                value: controller.reminderEnabled,
-                onChanged: (val) => controller.toggleReminder(val),
-              ),
+              if (controller.isProcessingReminder)
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Switch(
+                  value: controller.reminderEnabled,
+                  onChanged: (val) => controller.toggleReminder(val),
+                ),
             ],
           ),
+
+          // Hiển thị thông báo trạng thái/lỗi phản ánh trung thực
+          if (controller.reminderStatusMessage != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFCD34D)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFB45309)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      controller.reminderStatusMessage!,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF92400E)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           if (controller.reminderEnabled) ...[
             const Divider(height: 24),
             InkWell(
-              onTap: () async {
-                final picked = await showTimePicker(
-                  context: context,
-                  initialTime: controller.reminderTime,
-                  initialEntryMode: TimePickerEntryMode.input,
-                  helpText: 'CHỌN GIỜ NHẮC HỌC HẰNG NGÀY',
-                  cancelText: 'HỦY',
-                  confirmText: 'XÁC NHẬN',
-                  hourLabelText: 'Giờ',
-                  minuteLabelText: 'Phút',
-                  errorInvalidText: 'Giờ hoặc phút không hợp lệ',
-                );
-                if (picked != null) {
-                  controller.setReminderTime(picked);
-                }
-              },
+              onTap: controller.isProcessingReminder
+                  ? null
+                  : () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: controller.reminderTime,
+                        initialEntryMode: TimePickerEntryMode.input,
+                        helpText: 'CHỌN GIỜ NHẮC HỌC HẰNG NGÀY',
+                        cancelText: 'HỦY',
+                        confirmText: 'XÁC NHẬN',
+                        hourLabelText: 'Giờ',
+                        minuteLabelText: 'Phút',
+                        errorInvalidText: 'Giờ hoặc phút không hợp lệ',
+                      );
+                      if (picked != null) {
+                        controller.setReminderTime(picked);
+                      }
+                    },
               borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      AppStrings.reminderTime,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    const Expanded(
+                      child: Text(
+                        AppStrings.reminderTime,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -373,6 +566,15 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              'Thông báo có thể đến muộn do cài đặt hệ thống.',
+              style: TextStyle(
+                fontSize: 11.5,
+                color: theme.colorScheme.outline,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
           ],
         ],
       ),
@@ -382,6 +584,64 @@ class SettingsScreen extends StatelessWidget {
 
   // --- Khối 5: Trạng thái đồng bộ ---
   Widget _buildSyncCard(BuildContext context, SettingsController controller) {
+    final auth = AuthController.instance;
+    final isGuest = !auth.isAuthenticated || auth.user.isGuest;
+
+    if (isGuest) {
+      return AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: SectionHeader(
+                    title: 'Lưu trữ & Đồng bộ',
+                    icon: Icons.storage_rounded,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: const Text(
+                    'Lưu trên thiết bị',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF475569),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTokens.space8),
+            const Text(
+              'Dữ liệu học tập và bài làm của bạn đang được lưu an toàn trên máy. Đăng nhập để đồng bộ tiến độ và kết quả học lên máy chủ đám mây.',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.4),
+            ),
+            const SizedBox(height: AppTokens.space12),
+            AppButton(
+              label: 'Đăng nhập để đồng bộ',
+              icon: Icons.login_rounded,
+              variant: AppButtonVariant.primary,
+              isFullWidth: true,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Giao diện đồng bộ dành cho Học viên đã đăng nhập
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +651,7 @@ class SettingsScreen extends StatelessWidget {
             children: [
               const Expanded(
                 child: SectionHeader(
-                  title: 'Đồng bộ dữ liệu',
+                  title: 'Đồng bộ dữ liệu đám mây',
                   icon: Icons.cloud_sync_outlined,
                 ),
               ),
@@ -406,19 +666,44 @@ class SettingsScreen extends StatelessWidget {
             controller.formattedLastSynced,
             style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
+          if (controller.syncMessage != null) ...[
+            const SizedBox(height: AppTokens.space8),
+            Text(
+              controller.syncMessage!,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: controller.syncState == SyncState.error
+                    ? AppTokens.errorRed
+                    : (controller.syncState == SyncState.synced
+                        ? AppTokens.successGreen
+                        : const Color(0xFF64748B)),
+              ),
+            ),
+          ],
           const SizedBox(height: AppTokens.space12),
           AppButton(
-            label: 'Đồng bộ đám mây (Chưa khả dụng)',
-            icon: Icons.cloud_off_rounded,
-            isLoading: false,
-            variant: AppButtonVariant.outlined,
+            label: controller.syncState == SyncState.syncing
+                ? 'Đang đồng bộ...'
+                : 'Đồng bộ ngay',
+            icon: Icons.sync_rounded,
+            isLoading: controller.syncState == SyncState.syncing,
+            variant: AppButtonVariant.primary,
             isFullWidth: true,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Dữ liệu đang được lưu an toàn trên thiết bị. Dịch vụ đồng bộ đám mây chưa khả dụng ở bước này.'),
-                ),
-              );
+            onPressed: () async {
+              await controller.syncNow();
+              if (context.mounted && controller.syncMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(controller.syncMessage!),
+                    backgroundColor: controller.syncState == SyncState.error
+                        ? AppTokens.errorRed
+                        : (controller.syncState == SyncState.synced
+                            ? AppTokens.successGreen
+                            : AppTokens.primary),
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -531,8 +816,8 @@ class SettingsScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(backgroundColor: AppTokens.errorRed),
               onPressed: () {
                 Navigator.pop(dialogCtx);
-                if (onLogout != null) {
-                  onLogout!();
+                if (widget.onLogout != null) {
+                  widget.onLogout!();
                 } else {
                   SharedPreferences.getInstance().then((prefs) {
                     prefs.setBool('has_completed_onboarding', false);

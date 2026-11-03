@@ -148,8 +148,8 @@ void main() {
       expect(isTrial, isTrue);
 
       final isOutOfTrial = TrialPolicy.isTrialContent(
-        unitNumber: 2,
-        sectionTitle: 'Reading',
+        unitNumber: 1,
+        sectionTitle: 'Speaking',
       );
       expect(isOutOfTrial, isFalse);
     });
@@ -279,7 +279,7 @@ void main() {
     test('8. Accessing content outside trial explains account benefits', () {
       final isTrialUnit3 = TrialPolicy.isTrialContent(
         unitNumber: 3,
-        sectionTitle: 'Reading',
+        sectionTitle: 'Speaking',
       );
       expect(isTrialUnit3, isFalse);
       expect(TrialPolicy.accountBenefitsExplanation, contains('Lưu toàn bộ kết quả'));

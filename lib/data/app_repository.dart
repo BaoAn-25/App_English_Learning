@@ -7,6 +7,7 @@ import 'models/daily_stat.dart';
 import 'models/learning_session.dart';
 import 'models/question.dart';
 import 'models/topic.dart';
+import 'models/user_profile.dart';
 import 'models/word.dart';
 import 'models/word_progress.dart';
 import 'models/wrong_book_entry.dart';
@@ -19,6 +20,14 @@ class AppRepository {
   AppRepository({AppDatabase? db}) : _db = db ?? AppDatabase.instance;
 
   // --- Quản lý phiên khách (Guest Session) & Quyền sở hữu (Ownership) ---
+  Future<String> getCurrentOwnerId() async {
+    final user = await getAuthUser();
+    if (user != null && user.id.isNotEmpty && !user.isGuest) {
+      return user.id;
+    }
+    return getOrCreateGuestSessionId();
+  }
+
   Future<String> getOrCreateGuestSessionId() async {
     final existing = await getSetting('current_guest_session_id');
     if (existing != null && existing.trim().isNotEmpty) {
@@ -35,6 +44,14 @@ class AppRepository {
     return newId;
   }
 
+  Future<String?> getCompletedTrialLessonId(String ownerId) async {
+    return getSetting('completed_trial_lesson_$ownerId');
+  }
+
+  Future<void> setCompletedTrialLessonId(String ownerId, String lessonId) async {
+    await setSetting('completed_trial_lesson_$ownerId', lessonId);
+  }
+
   Future<TransferResult> transferGuestData({
     required String fromGuestId,
     required String toUserId,
@@ -47,28 +64,68 @@ class AppRepository {
 
   // --- Quản lý bài đang học dở & trạng thái tiếp tục học (Learning Session) ---
   Future<void> saveLearningSession(LearningSession session) async {
+    // 1. Lưu theo chủ sở hữu và lessonId cụ thể (để không bị ghi đè khi người học đổi Unit)
+    await setSetting(
+      'learning_session_${session.ownerId}_${session.lessonId}',
+      session.toJson(),
+    );
+    // 2. Lưu phiên gần nhất cho ownerId (để HomeScreen hiển thị thẻ Tiếp tục học bài gần nhất)
     await setSetting('learning_session_${session.ownerId}', session.toJson());
     // Lưu title bài học gần nhất để đồng bộ hiển thị tương thích
     await setSetting('last_studied_unit', session.lessonTitle);
   }
 
-  Future<LearningSession?> getLearningSession(String ownerId) async {
+  Future<LearningSession?> getLearningSession(
+    String ownerId, {
+    String? lessonId,
+  }) async {
+    if (lessonId != null && lessonId.isNotEmpty) {
+      final rawSpecific = await getSetting(
+        'learning_session_${ownerId}_$lessonId',
+      );
+      if (rawSpecific != null && rawSpecific.trim().isNotEmpty) {
+        try {
+          return LearningSession.fromJson(rawSpecific);
+        } catch (_) {}
+      }
+    }
     final raw = await getSetting('learning_session_$ownerId');
     if (raw == null || raw.trim().isEmpty) return null;
     try {
-      return LearningSession.fromJson(raw);
+      final session = LearningSession.fromJson(raw);
+      if (lessonId == null || session.lessonId == lessonId) {
+        return session;
+      }
+      return null;
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> clearLearningSession(String ownerId) async {
+  Future<void> clearLearningSession(String ownerId, {String? lessonId}) async {
     final db = await _db.database;
-    await db.delete(
-      'app_settings',
-      where: 'key = ?',
-      whereArgs: ['learning_session_$ownerId'],
-    );
+    if (lessonId != null && lessonId.isNotEmpty) {
+      await db.delete(
+        'app_settings',
+        where: 'key = ?',
+        whereArgs: ['learning_session_${ownerId}_$lessonId'],
+      );
+      // Nếu session gần nhất trùng lessonId này thì xóa luôn
+      final current = await getLearningSession(ownerId);
+      if (current?.lessonId == lessonId) {
+        await db.delete(
+          'app_settings',
+          where: 'key = ?',
+          whereArgs: ['learning_session_$ownerId'],
+        );
+      }
+    } else {
+      await db.delete(
+        'app_settings',
+        where: 'key LIKE ?',
+        whereArgs: ['learning_session_$ownerId%'],
+      );
+    }
   }
 
   // --- Cài đặt (App Settings) ---
@@ -102,17 +159,7 @@ class AppRepository {
     return _db.syncQuestionsSafe(questions, targetVersion: targetVersion);
   }
 
-  Future<List<Question>> getAllQuestions() async {
-    final questions = await _db.getAllQuestions();
-    final trialQuestions = TrialPolicy.questionsAsStandardQuestions;
-    final existingIds = {for (final q in questions) q.id};
-    final missing = trialQuestions.where((q) => !existingIds.contains(q.id)).toList();
-    if (missing.isNotEmpty) {
-      await _db.insertQuestions(missing);
-      return [...questions, ...missing];
-    }
-    return questions;
-  }
+  Future<List<Question>> getAllQuestions() => _db.getAllQuestions();
 
   Future<List<Question>> getQuestionsByIds(List<String> ids) async {
     final questions = await _db.getQuestionsByIds(ids);
@@ -141,50 +188,200 @@ class AppRepository {
       _db.getQuestionsByTopicId(topicId);
 
   // --- Lượt làm bài (Attempts) ---
-  Future<int> insertAttempt(Attempt attempt, {String? ownerId}) =>
-      _db.insertAttempt(attempt, ownerId: ownerId);
-  Future<List<Attempt>> getAllAttempts({String? ownerId}) =>
-      _db.getAllAttempts(ownerId: ownerId);
-  Future<List<Attempt>> getAttempts({String? ownerId, int? limit}) =>
-      _db.getAttempts(ownerId: ownerId, limit: limit);
+  Future<int> insertAttempt(Attempt attempt, {String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.insertAttempt(attempt, ownerId: effectiveOwner);
+  }
+
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getAllAttempts(ownerId: effectiveOwner);
+  }
+
+  Future<List<Attempt>> getAttempts({String? ownerId, int? limit}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getAttempts(ownerId: effectiveOwner, limit: limit);
+  }
 
   // --- Chi tiết câu trả lời (Attempt Answers) ---
   Future<void> insertAttemptAnswers(List<AttemptAnswer> answers) =>
       _db.insertAttemptAnswers(answers);
-  Future<List<AttemptAnswer>> getAllAttemptAnswers() =>
-      _db.getAllAttemptAnswers();
+  Future<List<AttemptAnswer>> getAllAttemptAnswers({String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getAllAttemptAnswers(ownerId: effectiveOwner);
+  }
   Future<List<AttemptAnswer>> getAttemptAnswers(int attemptId) =>
       _db.getAttemptAnswers(attemptId);
 
   // --- Sổ câu sai (Wrong Book) ---
-  Future<void> insertWrongBookEntries(List<WrongBookEntry> entries) =>
-      _db.insertWrongBookEntries(entries);
-  Future<List<WrongBookEntry>> getAllWrongBookEntries({String? ownerId}) =>
-      _db.getAllWrongBookEntries(ownerId: ownerId);
-  Future<void> upsertWrongBookEntry(WrongBookEntry entry) =>
-      _db.upsertWrongBookEntry(entry);
+  Future<void> insertWrongBookEntries(List<WrongBookEntry> entries, {String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.insertWrongBookEntries(entries, ownerId: effectiveOwner);
+  }
+
+  Future<List<WrongBookEntry>> getAllWrongBookEntries({String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getAllWrongBookEntries(ownerId: effectiveOwner);
+  }
+
+  Future<void> upsertWrongBookEntry(WrongBookEntry entry, {String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.upsertWrongBookEntry(entry, ownerId: effectiveOwner);
+  }
+
   Future<List<WrongBookEntry>> getDueWrongBookEntries(
-    int beforeOrAtTimestamp,
-  ) => _db.getDueWrongBookEntries(beforeOrAtTimestamp);
+    int beforeOrAtTimestamp, {
+    String? ownerId,
+  }) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getDueWrongBookEntries(beforeOrAtTimestamp, ownerId: effectiveOwner);
+  }
 
   // --- Thống kê hàng ngày (Daily Stats) ---
-  Future<void> insertDailyStats(List<DailyStat> stats) =>
-      _db.insertDailyStats(stats);
-  Future<List<DailyStat>> getAllDailyStats() => _db.getAllDailyStats();
-  Future<void> upsertDailyStat(DailyStat stat) => _db.upsertDailyStat(stat);
+  Future<void> insertDailyStats(List<DailyStat> stats, {String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.insertDailyStats(stats, ownerId: effectiveOwner);
+  }
+
+  Future<List<DailyStat>> getAllDailyStats({String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getAllDailyStats(ownerId: effectiveOwner);
+  }
+
+  Future<void> upsertDailyStat(DailyStat stat, {String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.upsertDailyStat(stat, ownerId: effectiveOwner);
+  }
+
   Future<List<DailyStat>> getDailyStatsInRange(
     String startDate,
-    String endDate,
-  ) => _db.getDailyStatsInRange(startDate, endDate);
+    String endDate, {
+    String? ownerId,
+  }) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getDailyStatsInRange(startDate, endDate, ownerId: effectiveOwner);
+  }
+
+  Future<bool> hasGuestData(String guestId) async {
+    final session = await getLearningSession(guestId);
+    if (session != null) return true;
+    final trialLesson = await getCompletedTrialLessonId(guestId);
+    if (trialLesson != null && trialLesson.isNotEmpty) return true;
+    final attempts = await getEntityKeysByOwner(guestId, 'attempts');
+    if (attempts.isNotEmpty) return true;
+    final words = await getAllWordProgress(ownerId: guestId);
+    if (words.isNotEmpty) return true;
+    final wrongEntries = await getAllWrongBookEntries(ownerId: guestId);
+    if (wrongEntries.isNotEmpty) return true;
+    return false;
+  }
+
+  // --- Quản lý phiên đăng nhập an toàn của học viên ---
+  Future<void> saveAuthToken(String token) async {
+    await setSetting('auth_token', token);
+  }
+
+  Future<String?> getAuthToken() async {
+    return getSetting('auth_token');
+  }
+
+  Future<void> clearAuthToken() async {
+    final db = await _db.database;
+    await db.delete('app_settings', where: 'key = ?', whereArgs: ['auth_token']);
+  }
+
+  Future<void> saveAuthUser(UserProfile user) async {
+    await setSetting('auth_user_id', user.id);
+    await setSetting('auth_email', user.email);
+    await setSetting('auth_display_name', user.displayName);
+    await setSetting('auth_avatar_url', user.avatarUrl);
+    await setSetting('auth_provider', user.authProvider);
+    await setSetting('auth_role', user.role);
+    await setSetting('auth_email_verified', user.emailVerified ? 'true' : 'false');
+    await setSetting('is_logged_in', 'true');
+  }
+
+  Future<UserProfile?> getAuthUser() async {
+    final isLoggedIn = await getSetting('is_logged_in');
+    if (isLoggedIn != 'true') return null;
+    final id = await getSetting('auth_user_id');
+    if (id == null || id.isEmpty) return null;
+    final email = await getSetting('auth_email') ?? '';
+    final name = await getSetting('auth_display_name') ?? 'Học viên';
+    final avatar = await getSetting('auth_avatar_url') ?? '';
+    final provider = await getSetting('auth_provider') ?? 'email';
+    final role = await getSetting('auth_role') ?? 'student';
+    final verified = await getSetting('auth_email_verified') == 'true';
+
+    return UserProfile(
+      id: id,
+      email: email,
+      displayName: name,
+      avatarUrl: avatar,
+      authProvider: provider,
+      role: role,
+      emailVerified: verified,
+      isLoggedIn: true,
+    );
+  }
+
+  Future<void> clearAuthUser() async {
+    final db = await _db.database;
+    await db.delete('app_settings', where: "key LIKE 'auth_%' OR key = 'is_logged_in'");
+  }
 
   // --- Tiến độ từ vựng (Word Progress / SRS) ---
-  Future<WordProgress?> getWordProgress(String wordId) =>
-      _db.getWordProgress(wordId);
-  Future<List<WordProgress>> getAllWordProgress({String? ownerId}) =>
-      _db.getAllWordProgress(ownerId: ownerId);
-  Future<void> upsertWordProgress(WordProgress progress, {String? ownerId}) =>
-      _db.upsertWordProgress(progress, ownerId: ownerId);
-  Future<List<WordProgress>> getDueWordProgress() => _db.getDueWordProgress();
+  Future<WordProgress?> getWordProgress(String wordId, {String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getWordProgress(wordId, ownerId: effectiveOwner);
+  }
+
+  Future<List<WordProgress>> getAllWordProgress({String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getAllWordProgress(ownerId: effectiveOwner);
+  }
+
+  Future<void> upsertWordProgress(WordProgress progress, {String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.upsertWordProgress(progress, ownerId: effectiveOwner);
+  }
+
+  Future<List<WordProgress>> getDueWordProgress({String? ownerId}) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
+    return _db.getDueWordProgress(ownerId: effectiveOwner);
+  }
 
   Future<void> savePracticeResult({
     required Attempt attempt,
@@ -192,13 +389,16 @@ class AppRepository {
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
     String? ownerId,
-  }) {
+  }) async {
+    final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
+        ? ownerId
+        : await getCurrentOwnerId();
     return _db.savePracticeResult(
       attempt: attempt,
       buildAnswers: buildAnswers,
       wrongEntries: wrongEntries,
       dailyStat: dailyStat,
-      ownerId: ownerId,
+      ownerId: effectiveOwner,
     );
   }
 }

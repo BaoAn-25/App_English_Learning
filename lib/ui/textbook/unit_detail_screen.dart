@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../data/app_repository.dart';
 import '../../data/textbook_repository.dart';
+import '../../data/trial_lesson_repository.dart';
 import '../../data/trial_policy.dart';
 import '../auth/auth_controller.dart';
-import '../auth/login_screen.dart';
-import '../auth/register_screen.dart';
+import '../listening/unit_listening_screen.dart';
 import '../theme/app_tokens.dart';
-import 'reading_study_screen.dart';
+import '../trial/trial_lesson_screen.dart';
 import 'textbook_screen.dart';
+import 'unit_getting_started_screen.dart';
+import 'unit_language_screen.dart';
+import 'unit_skills_screen.dart';
 
 class UnitDetailScreen extends StatefulWidget {
   final int unitNumber;
@@ -25,69 +29,133 @@ class UnitDetailScreen extends StatefulWidget {
 }
 
 class _UnitDetailScreenState extends State<UnitDetailScreen> {
-  // Danh sách các phần bài học chuẩn theo cấu trúc SGK 12
+  final AppRepository _repository = AppRepository();
+
+  // Danh sách các phần bài học chuẩn theo mục lục SGK 12 Global Success
   final List<Map<String, dynamic>> _sections = [
     {
       'id': 1,
       'title': 'Getting Started',
-      'subtitle': 'Khởi động & Làm quen chủ đề',
-      'pageOffset': 0, // Bắt đầu unit
+      'subtitle': 'Khởi động & Làm quen chủ đề bài học',
+      'pageOffset': 0,
       'status': 'not_started',
       'icon': Icons.flag_rounded,
     },
     {
       'id': 2,
       'title': 'Language',
-      'subtitle': 'Từ vựng & Ngữ pháp trọng tâm',
+      'subtitle': 'Ngữ âm, Từ vựng & Ngữ pháp trọng tâm',
       'pageOffset': 1,
       'status': 'not_started',
       'icon': Icons.menu_book_rounded,
     },
     {
       'id': 3,
-      'title': 'Pronunciation',
-      'subtitle': 'Ngữ điệu và phát âm chuẩn',
-      'pageOffset': 1,
-      'status': 'not_started',
-      'icon': Icons.record_voice_over_rounded,
-    },
-    {
-      'id': 4,
       'title': 'Reading',
-      'subtitle': 'Bài đọc · Tra từ điển · Luyện tập đọc hiểu',
+      'subtitle': 'Bài đọc hiểu tương tác & Tra từ ngữ cảnh',
       'pageOffset': 3,
       'status': 'not_started',
       'icon': Icons.auto_stories_rounded,
     },
     {
-      'id': 5,
+      'id': 4,
       'title': 'Speaking',
-      'subtitle': 'Luyện nói theo tình huống SGK',
+      'subtitle': 'Luyện nói & Thuyết trình theo tình huống SGK',
       'pageOffset': 5,
       'status': 'not_started',
       'icon': Icons.chat_bubble_outline_rounded,
     },
     {
-      'id': 6,
-      'title': 'Listening & Writing',
-      'subtitle': 'Luyện nghe & kỹ năng viết SGK',
+      'id': 5,
+      'title': 'Listening',
+      'subtitle': 'Luyện nghe & bài tập tương tác chuẩn SGK',
       'pageOffset': 6,
+      'status': 'not_started',
+      'icon': Icons.headphones_rounded,
+    },
+    {
+      'id': 6,
+      'title': 'Writing',
+      'subtitle': 'Luyện viết học thuật & bài luận chuẩn SGK',
+      'pageOffset': 7,
       'status': 'not_started',
       'icon': Icons.edit_note_rounded,
     },
     {
       'id': 7,
+      'title': 'Communication & Culture / CLIL',
+      'subtitle': 'Tiếng Anh đời sống & Mở rộng văn hóa liên môn',
+      'pageOffset': 8,
+      'status': 'not_started',
+      'icon': Icons.public_rounded,
+    },
+    {
+      'id': 8,
       'title': 'Looking Back & Project',
-      'subtitle': 'Ôn tập toàn diện Unit & Dự án',
+      'subtitle': 'Tổng kết toàn diện Unit & Dự án thực tế',
       'pageOffset': 10,
       'status': 'not_started',
       'icon': Icons.assignment_outlined,
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSectionStatuses();
+  }
+
+  String _cleanKey(String title) {
+    return title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+  }
+
+  Future<String> _getEffectiveOwnerId() async {
+    final auth = AuthController.instance;
+    if (auth.isAuthenticated && !auth.user.isGuest) {
+      return auth.user.id;
+    }
+    return await _repository.getOrCreateGuestSessionId();
+  }
+
+  Future<void> _loadSectionStatuses() async {
+    try {
+      final ownerId = await _getEffectiveOwnerId();
+      for (final sec in _sections) {
+        final title = sec['title'] as String;
+        final key = _cleanKey(title);
+
+        if (title == 'Reading') {
+          final lesson = TrialLessonRepository.instance.getLessonByUnit(widget.unitNumber) ??
+              TrialLessonRepository.instance.getDefaultLesson();
+          final session = await _repository.getLearningSession(ownerId, lessonId: lesson.lessonId);
+          if (session != null && session.isCompleted) {
+            sec['status'] = 'completed';
+          } else if (session != null && session.isInProgress) {
+            sec['status'] = 'in_progress';
+          } else {
+            sec['status'] = 'not_started';
+          }
+        } else {
+          final progress = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
+          if (progress == 'completed') {
+            sec['status'] = 'completed';
+          } else {
+            final note = await _repository.getSetting('unit_skill_note_${ownerId}_u${widget.unitNumber}_$key');
+            if (note != null && note.isNotEmpty) {
+              sec['status'] = 'in_progress';
+            } else {
+              sec['status'] = 'not_started';
+            }
+          }
+        }
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (_) {}
+  }
+
   int _getUnitStartPage() {
-    // Ước lượng hoặc tính theo mục lục 10 Unit chuẩn SGK
-    // Unit 1: 8..19, Unit 2: 20..31, Unit 3: 32..43, Unit 4: 48..59, Unit 5: 60..71...
     switch (widget.unitNumber) {
       case 1:
         return 8;
@@ -140,128 +208,99 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     }
   }
 
-  void _handleSectionTap(Map<String, dynamic> sec) {
+  Future<void> _handleSectionTap(Map<String, dynamic> sec) async {
     final title = sec['title'] as String;
-    final bool isTrial = TrialPolicy.isTrialContent(
-      unitNumber: widget.unitNumber,
-      sectionTitle: title,
-    );
+    final int targetPage = _getUnitStartPage() + (sec['pageOffset'] as int);
+    final key = _cleanKey(title);
 
-    // Nếu là nội dung trong phạm vi học thử (Unit 1 Reading)
-    if (isTrial) {
-      Navigator.push(
+    if (title == 'Getting Started') {
+      final res = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (_) => ReadingStudyScreen(
+          builder: (_) => UnitGettingStartedScreen(
             unitNumber: widget.unitNumber,
             unitTitle: widget.unitTitle,
-            articleTitle: widget.unitNumber == 1
-                ? TrialPolicy.trialArticleTitle
-                : widget.unitTopic,
+            startPage: targetPage,
           ),
         ),
       );
+      if (res == true) {
+        final ownerId = await _getEffectiveOwnerId();
+        await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+      }
+      await _loadSectionStatuses();
       return;
     }
 
-    final isGuest = AuthController.instance.user.isGuest;
-    final int targetPage = _getUnitStartPage() + (sec['pageOffset'] as int);
-
-    if (isGuest) {
-      // Khách bấm vào nội dung ngoài phạm vi thử: giải thích lợi ích tài khoản
-      showDialog(
-        context: context,
-        builder: (dCtx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: const [
-              Icon(Icons.lock_outline_rounded, color: AppTokens.primary),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Nội dung dành cho Học viên',
-                  style: TextStyle(
-                    fontFamily: 'BeVietnamPro',
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
+    if (title == 'Language') {
+      final res = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UnitLanguageScreen(
+            unitNumber: widget.unitNumber,
+            unitTitle: widget.unitTitle,
+            startPage: targetPage,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Phần "$title" thuộc phạm vi chương trình chính thức. ${TrialPolicy.accountBenefitsExplanation}',
-                style: const TextStyle(
-                  fontFamily: 'BeVietnamPro',
-                  fontSize: 13.5,
-                  height: 1.45,
-                  color: AppTokens.textMain,
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'Bạn vẫn có thể xem trước trang sách nguyên bản dưới đây hoặc đăng ký tài khoản miễn phí để học tương tác.',
-                style: TextStyle(
-                  fontFamily: 'BeVietnamPro',
-                  fontSize: 12.5,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dCtx);
-                _openTextbookPage(targetPage);
-              },
-              child: const Text('Xem trang SGK gốc'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dCtx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-              child: const Text('Đăng nhập'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dCtx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                );
-              },
-              child: const Text('Tạo tài khoản'),
-            ),
-          ],
         ),
       );
-    } else {
-      // Học viên đã đăng nhập
-      if (title == 'Reading') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ReadingStudyScreen(
-              unitNumber: widget.unitNumber,
-              unitTitle: widget.unitTitle,
-              articleTitle: widget.unitTopic,
-            ),
-          ),
-        );
-      } else {
-        _openTextbookPage(targetPage);
+      if (res == true) {
+        final ownerId = await _getEffectiveOwnerId();
+        await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
       }
+      await _loadSectionStatuses();
+      return;
     }
+
+    if (title == 'Reading') {
+      final lesson = TrialLessonRepository.instance.getLessonByUnit(widget.unitNumber) ??
+          TrialLessonRepository.instance.getDefaultLesson();
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TrialLessonScreen(lessonId: lesson.lessonId),
+        ),
+      );
+      await _loadSectionStatuses();
+      return;
+    }
+
+    if (title == 'Listening') {
+      final res = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UnitListeningScreen(
+            lessonKey: 'unit-${widget.unitNumber.toString().padLeft(2, '0')}',
+            initialTitle: widget.unitTitle,
+            printedPage: targetPage,
+          ),
+        ),
+      );
+      if (res == true) {
+        final ownerId = await _getEffectiveOwnerId();
+        await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+      }
+      await _loadSectionStatuses();
+      return;
+    }
+
+    // Speaking, Writing, Communication & Culture / CLIL, Looking Back & Project
+    final res = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UnitSkillsScreen(
+          unitNumber: widget.unitNumber,
+          unitTitle: widget.unitTitle,
+          sectionTitle: title,
+          subtitle: sec['subtitle'] as String,
+          startPage: targetPage,
+        ),
+      ),
+    );
+    if (res == true) {
+      final ownerId = await _getEffectiveOwnerId();
+      await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+    }
+    await _loadSectionStatuses();
   }
 
   @override
@@ -299,26 +338,11 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
         ),
         actions: [
           TextButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Nội dung sách giáo khoa Global Success 12 đã được tích hợp sẵn ngoại tuyến trong ứng dụng.'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            icon: const Icon(
-              Icons.check_circle_outline_rounded,
-              size: 18,
-              color: Color(0xFF16A34A),
-            ),
+            onPressed: () => _openTextbookPage(_getUnitStartPage()),
+            icon: const Icon(Icons.menu_book_rounded, size: 16, color: AppTokens.primary),
             label: const Text(
-              'Có sẵn ngoại tuyến',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF16A34A),
-              ),
+              'Xem sách gốc',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTokens.primary),
             ),
           ),
         ],
@@ -397,10 +421,13 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     final status = section['status'] as String;
     final bool isCompleted = status == 'completed';
     final bool isInProgress = status == 'in_progress';
-    final bool isTrial = TrialPolicy.isTrialContent(
-      unitNumber: widget.unitNumber,
-      sectionTitle: section['title'] as String,
-    );
+    final authCtrl = AuthController.instance;
+    final bool isGuest = !authCtrl.isAuthenticated || authCtrl.user.isGuest;
+    final bool isTrial = isGuest &&
+        TrialPolicy.isTrialContent(
+          unitNumber: widget.unitNumber,
+          sectionTitle: section['title'] as String,
+        );
 
     Color iconBg;
     Color iconColor;

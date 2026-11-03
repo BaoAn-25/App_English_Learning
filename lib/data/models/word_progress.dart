@@ -1,6 +1,7 @@
 /// Model lưu tiến độ học từng từ (SRS – Spaced Repetition System)
 class WordProgress {
   final String wordId;
+  final String? ownerId;
 
   /// Số lần đã ôn thành công
   final int reviewCount;
@@ -16,13 +17,12 @@ class WordProgress {
 
   const WordProgress({
     required this.wordId,
+    this.ownerId,
     this.reviewCount = 0,
     this.streak = 0,
     required this.nextReviewAt,
     required this.lastReviewedAt,
   });
-
-
 
   /// Trả về WordProgress mới sau khi người dùng ôn đúng:
   /// Hộp ôn từ đơn giản - Nhớ thì ôn lại sau 3 ngày
@@ -31,6 +31,7 @@ class WordProgress {
     final now = DateTime.now().millisecondsSinceEpoch;
     return WordProgress(
       wordId: wordId,
+      ownerId: ownerId,
       reviewCount: reviewCount + 1,
       streak: newStreak,
       lastReviewedAt: now,
@@ -44,6 +45,7 @@ class WordProgress {
     final now = DateTime.now().millisecondsSinceEpoch;
     return WordProgress(
       wordId: wordId,
+      ownerId: ownerId,
       reviewCount: reviewCount + 1,
       streak: 0,
       lastReviewedAt: now,
@@ -60,16 +62,23 @@ class WordProgress {
   /// Đã thành thạo (streak >= 4)
   bool get isMastered => streak >= 4;
 
-  Map<String, dynamic> toMap() => {
-        'wordId': wordId,
-        'reviewCount': reviewCount,
-        'streak': streak,
-        'nextReviewAt': nextReviewAt,
-        'lastReviewedAt': lastReviewedAt,
-      };
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'wordId': wordId,
+      'reviewCount': reviewCount,
+      'streak': streak,
+      'nextReviewAt': nextReviewAt,
+      'lastReviewedAt': lastReviewedAt,
+    };
+    if (ownerId != null && ownerId!.isNotEmpty) {
+      map['ownerId'] = ownerId;
+    }
+    return map;
+  }
 
   factory WordProgress.fromMap(Map<String, dynamic> m) => WordProgress(
         wordId: m['wordId'] as String,
+        ownerId: m['ownerId'] as String?,
         reviewCount: (m['reviewCount'] as num).toInt(),
         streak: (m['streak'] as num).toInt(),
         nextReviewAt: (m['nextReviewAt'] as num).toInt(),
@@ -77,10 +86,11 @@ class WordProgress {
       );
 
   /// Tạo tiến độ mới cho từ chưa học
-  factory WordProgress.newWord(String wordId) {
+  factory WordProgress.newWord(String wordId, {String? ownerId}) {
     final now = DateTime.now().millisecondsSinceEpoch;
     return WordProgress(
       wordId: wordId,
+      ownerId: ownerId,
       reviewCount: 0,
       streak: 0,
       nextReviewAt: now,

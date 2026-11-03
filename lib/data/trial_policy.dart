@@ -1,205 +1,105 @@
 import 'models/question.dart';
+import 'trial_lesson_repository.dart';
 
-/// Model câu hỏi đọc hiểu học thử chuẩn SGK Tiếng Anh 12 Global Success (Trang in 12)
-class TrialQuestion {
-  final String id;
-  final String word;
-  final String targetWord;
-  final String contextSentence;
-  final String pageLabel;
-  final List<String> options;
-  final int correctIndex;
-  final String explanation;
-  final String textbookQuote;
-
-  const TrialQuestion({
-    required this.id,
-    required this.word,
-    required this.targetWord,
-    required this.contextSentence,
-    this.pageLabel = 'Trang in 12',
-    required this.options,
-    required this.correctIndex,
-    required this.explanation,
-    required this.textbookQuote,
-  });
-
-  Question toQuestion() {
-    return Question(
-      id: id,
-      grade: 12,
-      type: 'reading',
-      stem: '$word\nNgữ cảnh trong bài đọc: "$contextSentence"',
-      options: options,
-      correctIndex: correctIndex,
-      explanation: 'Trích dẫn SGK trang in 11: "$textbookQuote"\nGiải nghĩa biên soạn: $explanation',
-      topicId: 'unit1',
-      passageId: TrialPolicy.trialLessonId,
-      difficulty: 1,
-    );
-  }
-}
+/// Model câu hỏi đọc hiểu học thử tương thích ngược
+typedef TrialQuestion = TrialQuestionData;
 
 /// Chính sách học thử tập trung của ứng dụng Tiếng Anh 12 Global Success.
 ///
-/// Khách mới có thể học thử bài đọc tương tác Unit 1 Reading ("Steve Jobs: Life and Achievements"),
-/// tra cứu từ điển tương tác trực tiếp trên bài đọc, làm bài kiểm tra đọc hiểu thật với 5 câu hỏi Activity 2 theo SGK trang in 12,
-/// xem điểm số và giải thích đáp án thực tế.
-///
-/// Dữ liệu học thử được lưu trên thiết bị với mã phiên khách [guestSessionId] và sẽ được
-/// chuyển giao trọn vẹn sang tài khoản học viên khi đăng ký thành công.
+/// Hỗ trợ luồng học thử mở rộng cho toàn bộ 10 Unit trong SGK:
+/// - Khách có thể tự chọn bài học thử đã sẵn sàng ở bất kỳ Unit nào (không ép buộc duy nhất Unit 1).
+/// - Mỗi phiên khách được hoàn thành 1 bài thử miễn phí và có thể ôn lại bài đó bất cứ lúc nào.
+/// - Trước khi hoàn thành, khách có thể đổi lựa chọn bài thử khác mà không bị trộn đáp án hay mất tiến độ bài cũ.
+/// - Tra cứu từ, nhận diện cụm từ và bản dịch câu/đoạn hỗ trợ hoạt động hoàn toàn ngoại tuyến.
+/// - Không gán dữ liệu giả, không tự đặt isLoggedIn = true, lưu thực tế vào SQLite qua guestSessionId.
 class TrialPolicy {
   TrialPolicy._();
 
-  /// ID định danh bài học thử thống nhất trong toàn app
+  /// ID định danh bài học thử mặc định (Unit 1 Reading)
   static const String trialLessonId = 'trial_unit1_reading';
 
-  /// Số Unit dùng để học thử
+  /// Số Unit mặc định
   static const int trialUnitNumber = 1;
 
-  /// Tiêu đề Unit
+  /// Tiêu đề Unit 1
   static const String trialUnitTitle = 'Life Stories We Admire';
 
   /// Phần bài học dùng để học thử
   static const String trialSection = 'Reading';
 
-  /// Tiêu đề bài đọc học thử chuẩn SGK (Trang in 11-12)
+  /// Tiêu đề bài đọc học thử mặc định
   static const String trialArticleTitle = 'Steve Jobs: Life and Achievements';
 
   /// Nguồn gốc tài liệu
   static const String textbookSourceInfo =
       'SGK Tiếng Anh 12 Global Success · Unit 1: Life Stories We Admire · Reading (Trang in 11-12)';
 
-  /// Đoạn văn chuẩn SGK Tiếng Anh 12 Unit 1 trang in 11
-  static const String paragraphA =
-      "Steven Paul Jobs was born on 24 February, 1955 in San Francisco, USA. His biological parents were not married and gave him up for adoption. He was adopted by Clara and Paul Jobs. In 1971, Jobs met Steve Wozniak, who was five years older than him, but they bonded over their love of electronics. After high school, Jobs attended Reed College in Oregon, but found the classes boring and dropped out after six months.";
+  /// Đoạn văn chuẩn SGK Tiếng Anh 12 Unit 1 trang in 11 (Tương thích ngược)
+  static String get paragraphA =>
+      TrialLessonRepository.instance.getLessonById(trialLessonId)?.paragraphs[0].text ?? '';
 
-  static const String paragraphB =
-      "When Jobs was 21, he and Wozniak started Apple Computers in Jobs' family garage with money they got by selling Jobs' van and Wozniak's scientific calculator. By making computers smaller, cheaper, and accessible to everyday users, their company became a huge success and sales quickly increased. Although Jobs left Apple in 1985, he returned to his post in 1997 when the company needed new ideas. He helped invent new products such as the iMac, the iBook for students, the iPod music player, and iTunes music software. In 2007, he introduced the touch-screen iPhone which changed the way phones were used. Apple products were not only designed to be cutting-edge technology, but also to be stylish and easy to use. In addition, Jobs contributed to computer animation. In 1986, he bought a small company, which later became Pixar Animation Studios. It produced the first full-length computer-animated film Toy Story, followed by other blockbusters.";
+  static String get paragraphB =>
+      TrialLessonRepository.instance.getLessonById(trialLessonId)?.paragraphs[1].text ?? '';
 
-  static const String paragraphC =
-      "In 2003, Jobs was diagnosed with a rare form of pancreatic cancer. He fought the disease for several years, and stopped working in August, 2011. Two months later, he passed away. He had four children, three with his wife of 20 years and one from a previous relationship. On an Apple web page, a statement reads, 'Apple has lost a visionary and creative genius, and the world has lost an amazing human being.'";
+  static String get paragraphC =>
+      TrialLessonRepository.instance.getLessonById(trialLessonId)?.paragraphs[2].text ?? '';
 
   /// 5 câu hỏi trắc nghiệm Activity 2 chuẩn SGK Tiếng Anh 12 Unit 1 trang in 12
-  static const List<TrialQuestion> unit1Questions = [
-    TrialQuestion(
-      id: 'u1_rd_q1',
-      word: '1. adopted (SGK trang in 12)',
-      targetWord: 'adopted',
-      pageLabel: 'Trang in 12',
-      contextSentence:
-          'His biological parents were not married and gave him up for adoption. He was adopted by Clara and Paul Jobs.',
-      textbookQuote:
-          'His biological parents were not married and gave him up for adoption. He was adopted by Clara and Paul Jobs.',
-      options: [
-        'A. given birth to',
-        'B. taken by another family as their own child',
-      ],
-      correctIndex: 1,
-      explanation:
-          'Được nhận làm con nuôi bởi một gia đình khác.',
-    ),
-    TrialQuestion(
-      id: 'u1_rd_q2',
-      word: '2. dropped out (SGK trang in 12)',
-      targetWord: 'dropped out',
-      pageLabel: 'Trang in 12',
-      contextSentence:
-          'After high school, Jobs attended Reed College in Oregon, but found the classes boring and dropped out after six months.',
-      textbookQuote:
-          'Jobs attended Reed College in Oregon, but found the classes boring and dropped out after six months.',
-      options: [
-        'A. continued to study',
-        'B. left school/college before completing your studies',
-      ],
-      correctIndex: 1,
-      explanation:
-          'Rời trường/đại học trước khi hoàn thành chương trình học (bỏ học giữa chừng).',
-    ),
-    TrialQuestion(
-      id: 'u1_rd_q3',
-      word: '3. cancer (SGK trang in 12)',
-      targetWord: 'cancer',
-      pageLabel: 'Trang in 12',
-      contextSentence:
-          'In 2003, Jobs was diagnosed with a rare form of pancreatic cancer. He fought the disease for several years, and stopped working in August, 2011.',
-      textbookQuote:
-          'In 2003, Jobs was diagnosed with a rare form of pancreatic cancer. He fought the disease for several years, and stopped working in August, 2011.',
-      options: [
-        'A. a serious disease',
-        'B. a dangerous animal',
-      ],
-      correctIndex: 0,
-      explanation:
-          'Bệnh hiểm nghèo (ung thư tuyến tụy).',
-    ),
-    TrialQuestion(
-      id: 'u1_rd_q4',
-      word: '4. passed away (SGK trang in 12)',
-      targetWord: 'passed away',
-      pageLabel: 'Trang in 12',
-      contextSentence:
-          'He stopped working in August, 2011. Two months later, he passed away.',
-      textbookQuote:
-          'He stopped working in August, 2011. Two months later, he passed away.',
-      options: [
-        'A. died',
-        'B. went past something',
-      ],
-      correctIndex: 0,
-      explanation:
-          'Qua đời, mất (cụm từ trang trọng thay cho "died").',
-    ),
-    TrialQuestion(
-      id: 'u1_rd_q5',
-      word: '5. genius (SGK trang in 12)',
-      targetWord: 'genius',
-      pageLabel: 'Trang in 12',
-      contextSentence:
-          'On an Apple web page, a statement reads, \'Apple has lost a visionary and creative genius, and the world has lost an amazing human being.\'',
-      textbookQuote:
-          'Apple has lost a visionary and creative genius, and the world has lost an amazing human being.',
-      options: [
-        'A. a very intelligent person',
-        'B. an ordinary person',
-      ],
-      correctIndex: 0,
-      explanation:
-          'Người xuất chúng, có tài năng thiên bẩm (thiên tài).',
-    ),
-  ];
+  static List<TrialQuestionData> get unit1Questions =>
+      TrialLessonRepository.instance.getLessonById(trialLessonId)?.questions ?? [];
 
-  /// Danh sách 5 câu hỏi học thử dạng Question model để lưu vào SQLite / Sổ câu sai
+  /// Danh sách câu hỏi học thử dạng Question model để lưu vào SQLite / Sổ câu sai
   static List<Question> get questionsAsStandardQuestions =>
-      unit1Questions.map((q) => q.toQuestion()).toList();
+      TrialLessonRepository.instance.getAllReadyStandardQuestions();
 
-  /// Từ điển tra cứu nhanh các từ in đậm trong bài đọc SGK
-  static const Map<String, String> keyVocabulary = {
-    'adopted': 'được nhận làm con nuôi',
-    'dropped out': 'bỏ học giữa chừng',
-    'electronics': 'thiết bị điện tử',
-    'garage': 'nhà để xe',
-    'accessible': 'dễ tiếp cận, dễ sử dụng',
-    'cutting-edge': 'tiên tiến, hiện đại nhất',
-    'animation': 'hoạt hình máy tính (Pixar)',
-    'cancer': 'bệnh ung thư (tuyến tụy)',
-    'passed away': 'qua đời, mất',
-    'genius': 'người xuất chúng, thiên tài',
-  };
+  /// Từ điển tra cứu nhanh các từ in đậm trong bài đọc Unit 1
+  static Map<String, String> get keyVocabulary =>
+      TrialLessonRepository.instance.getLessonById(trialLessonId)?.vocabulary ?? {};
 
-  /// Kiểm tra xem nội dung có nằm trong phạm vi học thử có chấm điểm hay không
+  /// Kiểm tra xem một Unit và phân mục có bài học thử sẵn sàng hay không
   static bool isTrialContent({
     required int unitNumber,
     required String sectionTitle,
   }) {
-    return unitNumber == trialUnitNumber &&
-        sectionTitle.trim().toLowerCase() == trialSection.toLowerCase();
+    if (sectionTitle.trim().toLowerCase() != trialSection.toLowerCase()) {
+      return false;
+    }
+    final lesson = TrialLessonRepository.instance.getLessonByUnit(unitNumber);
+    return lesson != null && lesson.isReady;
   }
 
-  /// Thông điệp giải thích lợi ích tài khoản khi người dùng muốn học nội dung ngoài phạm vi thử
+  /// Kiểm tra xem người học có quyền truy cập bài học thử cụ thể hay không.
+  ///
+  /// Chính sách học thử hiện có:
+  /// 1. Tất cả các bài học thử đã có nội dung sẵn sàng (isReady == true) trong 10 Unit
+  ///    đều mở cho người học (kể cả khách) trải nghiệm học tập và ôn tập.
+  /// 2. Tuyệt đối không tự ý đặt giới hạn số bài học thử đối với khách khi chưa có quy định xác nhận.
+  /// 3. Các bài học chưa sẵn sàng (isReady == false) không mở làm câu hỏi tương tác để đảm bảo
+  ///    chất lượng học liệu chuẩn SGK, người dùng được hỗ trợ mở trực tiếp trang sách gốc.
+  static bool canAccessTrialLesson({
+    required String lessonId,
+    bool isGuest = true,
+  }) {
+    final lesson = TrialLessonRepository.instance.getLessonById(lessonId);
+    if (lesson == null) return false;
+    return lesson.isReady;
+  }
+
+  /// Tương thích ngược: kiểm tra quyền truy cập bài học thử
+  static bool canGuestAccessLesson({
+    required bool isGuest,
+    required String targetLessonId,
+    String? completedLessonId,
+  }) {
+    return canAccessTrialLesson(lessonId: targetLessonId, isGuest: isGuest);
+  }
+
+  /// Thông điệp giải thích lợi ích tài khoản khi người dùng muốn mở rộng các tính năng nâng cao
+  /// (đồng bộ đa thiết bị, mở khóa đầy đủ 10 Unit, lộ trình thi thử THPT toàn diện...)
   static const String accountBenefitsExplanation =
-      'Bạn đang học thử nội dung Unit 1. Đăng ký tài khoản miễn phí để:\n'
+      'Đăng ký tài khoản miễn phí để:\n'
       '• Lưu toàn bộ kết quả, điểm số và sổ câu sai đã làm.\n'
-      '• Mở khóa lộ trình học và bài tập tương tác cho toàn bộ 10 Unit.\n'
+      '• Mở khóa lộ trình học và bài tập tương tác cho toàn bộ 10 Unit trong SGK 12.\n'
+      '• Luyện tập 8 dạng bài bám sát cấu trúc đề thi tốt nghiệp THPT mới.\n'
       '• Đồng bộ tiến độ khi kết nối hệ thống máy chủ.';
 }
