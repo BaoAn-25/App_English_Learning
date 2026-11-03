@@ -6,7 +6,7 @@ import '../data/app_repository.dart';
 import '../data/asset_seeder.dart';
 import '../data/question_sync_service.dart';
 import '../data/remote/api_client.dart';
-import '../ui/auth/splash_screen.dart';
+import '../ui/auth/welcome_screen.dart';
 import 'main_shell.dart';
 
 class AppStartup extends StatefulWidget {
@@ -75,7 +75,7 @@ class _AppStartupState extends State<AppStartup> {
         // Cơ chế điều hướng minh bạch:
         // 1. Nếu có chỉ định rõ ràng qua startWithOnboarding
         if (widget.startWithOnboarding == true) {
-          return const SplashScreen();
+          return const WelcomeScreen();
         }
         if (widget.startWithOnboarding == false) {
           return const MainShell();
@@ -86,8 +86,8 @@ class _AppStartupState extends State<AppStartup> {
           return const MainShell();
         }
 
-        // Chưa hoàn thành onboarding -> vào màn hình chào mừng & học thử
-        return const SplashScreen();
+        // Chưa hoàn thành onboarding -> vào thẳng màn hình chào mừng & học thử (Ảnh 1)
+        return const WelcomeScreen();
       }
       return Scaffold(
         body: SafeArea(

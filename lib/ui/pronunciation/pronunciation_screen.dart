@@ -20,12 +20,12 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
     return ChangeNotifierProvider<PronunciationController>(
       create: (_) => PronunciationController(),
       child: Scaffold(
-        backgroundColor: const Color(0xFF131F24), // Tông màu tối đặc trưng Duolingo
+        backgroundColor: const Color(0xFFF8FAFC), // Nền sáng chuẩn EngPass
         appBar: AppBar(
-          backgroundColor: const Color(0xFF131F24),
-          elevation: 0,
+          backgroundColor: Colors.white,
+          elevation: 0.5,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white70),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF0F172A)),
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
@@ -34,7 +34,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
               fontFamily: 'BeVietnamPro',
               fontWeight: FontWeight.w900,
               fontSize: 18,
-              color: Colors.white,
+              color: Color(0xFF0F172A),
             ),
           ),
           centerTitle: true,
@@ -43,7 +43,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
           builder: (context, controller, child) {
             if (controller.isLoading) {
               return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF1CB0F6)),
+                child: CircularProgressIndicator(color: Color(0xFF2563EB)),
               );
             }
 
@@ -61,7 +61,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                         fontFamily: 'BeVietnamPro',
                         fontWeight: FontWeight.w900,
                         fontSize: 22,
-                        color: Colors.white,
+                        color: Color(0xFF0F172A),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -72,7 +72,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                       style: TextStyle(
                         fontFamily: 'BeVietnamPro',
                         fontSize: 13.5,
-                        color: Color(0xFF8E9EA7),
+                        color: Color(0xFF64748B),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -126,7 +126,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
   Widget _buildSectionHeader(String title) {
     return Row(
       children: [
-        const Expanded(child: Divider(color: Color(0xFF2B3A42), thickness: 1.5)),
+        const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1.5)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -135,12 +135,12 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
               fontFamily: 'BeVietnamPro',
               fontWeight: FontWeight.w800,
               fontSize: 15,
-              color: Color(0xFF8E9EA7),
+              color: Color(0xFF64748B),
               letterSpacing: 0.5,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: Color(0xFF2B3A42), thickness: 1.5)),
+        const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1.5)),
       ],
     );
   }
@@ -187,21 +187,21 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: isPlaying ? const Color(0xFF1CB0F6).withValues(alpha: 0.2) : const Color(0xFF1B2A32),
+          color: isPlaying ? const Color(0xFFEFF6FF) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isPlaying
-                ? const Color(0xFF1CB0F6)
-                : (hasMastery ? const Color(0xFF58CC02) : const Color(0xFF37464F)),
-            width: isPlaying ? 2.2 : 1.5,
+                ? const Color(0xFF2563EB)
+                : (hasMastery ? const Color(0xFF16A34A) : const Color(0xFFE2E8F0)),
+            width: isPlaying ? 2.0 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
               color: isPlaying
-                  ? const Color(0xFF1CB0F6).withValues(alpha: 0.3)
-                  : const Color(0xFF131F24),
-              offset: const Offset(0, 3),
-              blurRadius: 0,
+                  ? const Color(0xFF2563EB).withValues(alpha: 0.18)
+                  : const Color(0x0A0F172A),
+              offset: const Offset(0, 2),
+              blurRadius: 4,
             ),
           ],
         ),
@@ -216,7 +216,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w900,
                 fontSize: 22,
-                color: isPlaying ? const Color(0xFF1CB0F6) : Colors.white,
+                color: isPlaying ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 2),
@@ -228,7 +228,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF778D97),
+                color: Color(0xFF64748B),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -240,14 +240,14 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
               child: Container(
                 height: 4,
                 width: 38,
-                color: const Color(0xFF37464F),
+                color: const Color(0xFFF1F5F9),
                 alignment: Alignment.centerLeft,
                 child: FractionallySizedBox(
                   widthFactor: (sound.masteryLevel / 100).clamp(0.08, 1.0),
                   child: Container(
                     color: sound.masteryLevel >= 60
-                        ? const Color(0xFF58CC02)
-                        : (sound.masteryLevel > 0 ? const Color(0xFFFFC800) : const Color(0xFF52656D)),
+                        ? const Color(0xFF16A34A)
+                        : (sound.masteryLevel > 0 ? const Color(0xFFF59E0B) : const Color(0xFFCBD5E1)),
                   ),
                 ),
               ),
@@ -281,7 +281,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                   width: 44,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF37464F),
+                    color: const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -293,9 +293,9 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                     width: 58,
                     height: 58,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1CB0F6).withValues(alpha: 0.15),
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF1CB0F6)),
+                      border: Border.all(color: const Color(0xFF2563EB)),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -303,7 +303,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                       style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF1CB0F6),
+                        color: Color(0xFF2563EB),
                       ),
                     ),
                   ),
@@ -318,7 +318,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                             fontFamily: 'BeVietnamPro',
                             fontSize: 17,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -328,14 +328,14 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                               : (sound.isDiphthong ? 'Nguyên âm đôi' : 'Phụ âm'),
                           style: const TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF8E9EA7),
+                            color: Color(0xFF64748B),
                           ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF1CB0F6), size: 28),
+                    icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB), size: 28),
                     onPressed: () => controller.speakSound(sound),
                   ),
                 ],
@@ -344,7 +344,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF202F36),
+                  color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -356,7 +356,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                         'Từ ví dụ: ${sound.exampleWord} ${sound.exampleIpa} (${sound.exampleMeaning})',
                         style: const TextStyle(
                           fontSize: 13.5,
-                          color: Colors.white,
+                          color: Color(0xFF0F172A),
                           fontWeight: FontWeight.w600,
                         ),
                       ),

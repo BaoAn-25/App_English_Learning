@@ -50,18 +50,18 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
         builder: (context, controller, child) {
           if (controller.isLoading) {
             return const Scaffold(
-              backgroundColor: Color(0xFF131F24),
-              body: Center(child: CircularProgressIndicator(color: Color(0xFF1CB0F6))),
+              backgroundColor: Color(0xFFF8FAFC),
+              body: Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
             );
           }
 
           final questions = controller.minimalPairs;
           if (questions.isEmpty) {
             return Scaffold(
-              backgroundColor: const Color(0xFF131F24),
+              backgroundColor: const Color(0xFFF8FAFC),
               appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
               body: const Center(
-                child: Text('Chưa có câu hỏi luyện âm.', style: TextStyle(color: Colors.white)),
+                child: Text('Chưa có câu hỏi luyện âm.', style: TextStyle(color: Color(0xFF0F172A))),
               ),
             );
           }
@@ -80,7 +80,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
           final progress = (_currentIndex + 1) / questions.length;
 
           return Scaffold(
-            backgroundColor: const Color(0xFF131F24), // Nền tối chuẩn Duolingo
+            backgroundColor: const Color(0xFFF8FAFC), // Nền sáng chuẩn EngPass
             body: SafeArea(
               child: Column(
                 children: [
@@ -90,7 +90,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Color(0xFF778D97), size: 24),
+                          icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 24),
                           onPressed: () => Navigator.pop(context),
                         ),
                         const SizedBox(width: 8),
@@ -100,13 +100,13 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                             child: LinearProgressIndicator(
                               value: progress,
                               minHeight: 12,
-                              backgroundColor: const Color(0xFF37464F),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF58CC02)),
+                              backgroundColor: const Color(0xFFE2E8F0),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
                             ),
                           ),
                         ),
                         const SizedBox(width: 14),
-                        const Text('⚡ 10 KN', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFFC800))),
+                        const Text('⚡ 10 KN', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
                       ],
                     ),
                   ),
@@ -143,25 +143,25 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w900,
             fontSize: 22,
-            color: Colors.white,
+            color: Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 32),
 
-        // Nút Loa to ở giữa màn hình (Ảnh 4)
+        // Nút Loa to ở giữa màn hình (Ảnh 4 - Tone sáng EngPass)
         GestureDetector(
           onTap: () => controller.speakWord(_activeTargetWord),
           child: Container(
             width: 110,
             height: 110,
             decoration: BoxDecoration(
-              color: const Color(0xFF1CB0F6),
+              color: const Color(0xFF2563EB),
               borderRadius: BorderRadius.circular(28),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0xFF1899D6),
-                  offset: Offset(0, 5),
-                  blurRadius: 0,
+                  color: Color(0x302563EB),
+                  offset: Offset(0, 6),
+                  blurRadius: 16,
                 ),
               ],
             ),
@@ -220,29 +220,36 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w900,
             fontSize: 22,
-            color: Colors.white,
+            color: Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 24),
 
-        // Khung 2 nút loa (Ảnh 5)
+        // Khung 2 nút loa (Ảnh 5 - Tone sáng EngPass)
         Container(
           width: 120,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF202F36),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFF37464F), width: 2),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0C0F172A),
+                offset: Offset(0, 4),
+                blurRadius: 10,
+              ),
+            ],
           ),
           child: Column(
             children: [
               IconButton(
-                icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF1CB0F6), size: 32),
+                icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB), size: 32),
                 onPressed: () => controller.speakWord(firstWord),
               ),
-              const Divider(color: Color(0xFF37464F), thickness: 1.5),
+              const Divider(color: Color(0xFFE2E8F0), thickness: 1.5),
               IconButton(
-                icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF1CB0F6), size: 32),
+                icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB), size: 32),
                 onPressed: () => controller.speakWord(secondWord),
               ),
             ],
@@ -256,7 +263,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w700,
             fontSize: 16,
-            color: Colors.white,
+            color: Color(0xFF334155),
           ),
         ),
         const SizedBox(height: 16),
@@ -297,17 +304,17 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
         duration: const Duration(milliseconds: 100),
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1CB0F6).withValues(alpha: 0.18) : const Color(0xFF202F36),
+          color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF1CB0F6) : const Color(0xFF37464F),
-            width: isSelected ? 2.5 : 1.5,
+            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+            width: isSelected ? 2.2 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected ? const Color(0xFF1899D6) : const Color(0xFF131F24),
-              offset: const Offset(0, 3.5),
-              blurRadius: 0,
+              color: isSelected ? const Color(0x182563EB) : const Color(0x0A0F172A),
+              offset: const Offset(0, 2),
+              blurRadius: 4,
             ),
           ],
         ),
@@ -319,7 +326,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
-                color: isSelected ? const Color(0xFF1CB0F6) : Colors.white,
+                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 4),
@@ -327,7 +334,8 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
               ipa,
               style: TextStyle(
                 fontSize: 13,
-                color: isSelected ? const Color(0xFF1CB0F6) : const Color(0xFF778D97),
+                fontWeight: FontWeight.w500,
+                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
               ),
             ),
           ],
@@ -349,17 +357,17 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
         duration: const Duration(milliseconds: 100),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1CB0F6).withValues(alpha: 0.18) : const Color(0xFF202F36),
+          color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF1CB0F6) : const Color(0xFF37464F),
-            width: isSelected ? 2.5 : 1.5,
+            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+            width: isSelected ? 2.2 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected ? const Color(0xFF1899D6) : const Color(0xFF131F24),
-              offset: const Offset(0, 3.5),
-              blurRadius: 0,
+              color: isSelected ? const Color(0x182563EB) : const Color(0x0A0F172A),
+              offset: const Offset(0, 2),
+              blurRadius: 4,
             ),
           ],
         ),
@@ -372,7 +380,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
-                color: isSelected ? const Color(0xFF1CB0F6) : Colors.white,
+                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
               ),
             ),
           ],
@@ -511,7 +519,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
 
   Widget _buildCompletionView(BuildContext context, int totalCount) {
     return Scaffold(
-      backgroundColor: const Color(0xFF131F24),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -603,7 +611,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF778D97),
+            color: Color(0xFF64748B),
             letterSpacing: 0.5,
           ),
         ),

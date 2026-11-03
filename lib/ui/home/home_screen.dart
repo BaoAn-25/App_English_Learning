@@ -235,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 10),
         Row(
           children: [
-            // Card 1: Phát âm IPA 44 âm (Phong cách Duolingo)
+            // Card 1: Phát âm IPA 44 âm (Thiết kế sáng đồng bộ EngPass)
             Expanded(
               child: GestureDetector(
                 onTap: () {
@@ -247,12 +247,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF131F24),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFF37464F)),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x180F172A),
+                        color: Color(0x0C0F172A),
                         offset: Offset(0, 4),
                         blurRadius: 10,
                       ),
@@ -265,10 +265,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1CB0F6).withValues(alpha: 0.18),
+                          color: const Color(0xFFE0F2FE),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.mic_none_rounded, color: Color(0xFF1CB0F6), size: 22),
+                        child: const Icon(Icons.mic_none_rounded, color: Color(0xFF0284C7), size: 22),
                       ),
                       const SizedBox(height: 10),
                       const Text(
@@ -277,24 +277,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w900,
                           fontSize: 14.5,
-                          color: Colors.white,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 2),
                       const Text(
                         '44 âm & Cặp đối lập',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF8E9EA7)),
+                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1CB0F6),
+                          color: const Color(0xFFE0F2FE),
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFBAE6FD)),
                         ),
                         child: const Text(
                           '+10 KN',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: Colors.white),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: Color(0xFF0284C7)),
                         ),
                       ),
                     ],
