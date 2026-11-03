@@ -1157,11 +1157,8 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
                     runSpacing: 8,
                     children: _assembledTokens.asMap().entries.map((entry) {
                       final token = entry.value;
-                      return ActionChip(
-                        label: Text(token, style: const TextStyle(fontWeight: FontWeight.w700)),
-                        backgroundColor: const Color(0xFF2563EB),
-                        labelStyle: const TextStyle(color: Colors.white),
-                        onPressed: _isChecked
+                      return InkWell(
+                        onTap: _isChecked
                             ? null
                             : () {
                                 setState(() {
@@ -1169,6 +1166,30 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
                                   _scrambledTokens.add(token);
                                 });
                               },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2563EB),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x252563EB),
+                                offset: Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            token,
+                            style: const TextStyle(
+                              fontFamily: 'BeVietnamPro',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),
@@ -1181,10 +1202,8 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
             runSpacing: 10,
             children: _scrambledTokens.asMap().entries.map((entry) {
               final token = entry.value;
-              return ActionChip(
-                label: Text(token, style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                onPressed: _isChecked
+              return InkWell(
+                onTap: _isChecked
                     ? null
                     : () {
                         setState(() {
@@ -1193,6 +1212,34 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
                         });
                         _speak(token);
                       },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                      width: 1.5,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    token,
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
               );
             }).toList(),
           ),
