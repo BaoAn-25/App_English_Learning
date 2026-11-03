@@ -17,24 +17,25 @@ class PronunciationScreen extends StatefulWidget {
 class _PronunciationScreenState extends State<PronunciationScreen> {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ChangeNotifierProvider<PronunciationController>(
       create: (_) => PronunciationController(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC), // Nền sáng chuẩn EngPass
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
           elevation: 0.5,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF0F172A)),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF0F172A)),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
+          title: Text(
             'Phát âm IPA',
             style: TextStyle(
               fontFamily: 'BeVietnamPro',
               fontWeight: FontWeight.w900,
               fontSize: 18,
-              color: Color(0xFF0F172A),
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
             ),
           ),
           centerTitle: true,
@@ -54,25 +55,25 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Tiêu đề & Lời dẫn chuẩn Duolingo
-                    const Text(
+                    Text(
                       'Cùng học phát âm tiếng Anh!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'BeVietnamPro',
                         fontWeight: FontWeight.w900,
                         fontSize: 22,
-                        color: Color(0xFF0F172A),
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
+                    Text(
                       'Tập nghe và học phát âm các âm trong tiếng Anh',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'BeVietnamPro',
                         fontSize: 13.5,
-                        color: Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -97,7 +98,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                     const SizedBox(height: 28),
 
                     // --- PHẦN 1: NGUYÊN ÂM ---
-                    _buildSectionHeader('Nguyên âm'),
+                    _buildSectionHeader(context, 'Nguyên âm'),
                     const SizedBox(height: 12),
                     _buildSoundGrid(
                       sounds: [...controller.vowels, ...controller.diphthongs],
@@ -106,7 +107,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                     const SizedBox(height: 32),
 
                     // --- PHẦN 2: PHỤ ÂM ---
-                    _buildSectionHeader('Phụ âm'),
+                    _buildSectionHeader(context, 'Phụ âm'),
                     const SizedBox(height: 12),
                     _buildSoundGrid(
                       sounds: controller.consonants,
@@ -123,24 +124,25 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
-        const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1.5)),
+        Expanded(child: Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), thickness: 1.5)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'BeVietnamPro',
               fontWeight: FontWeight.w800,
               fontSize: 15,
-              color: Color(0xFF64748B),
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               letterSpacing: 0.5,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1.5)),
+        Expanded(child: Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), thickness: 1.5)),
       ],
     );
   }
@@ -164,6 +166,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
         final isPlaying = controller.activePlayingSound?.id == sound.id;
 
         return _buildIpaCard(
+          context,
           sound: sound,
           isPlaying: isPlaying,
           onTap: () => controller.speakSound(sound),
@@ -173,12 +176,14 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
     );
   }
 
-  Widget _buildIpaCard({
+  Widget _buildIpaCard(
+    BuildContext context, {
     required IpaSound sound,
     required bool isPlaying,
     required VoidCallback onTap,
     required VoidCallback onLongPress,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasMastery = sound.masteryLevel > 0;
 
     return GestureDetector(
@@ -187,19 +192,21 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: isPlaying ? const Color(0xFFEFF6FF) : Colors.white,
+          color: isPlaying
+              ? (isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF))
+              : (isDark ? const Color(0xFF1E2430) : Colors.white),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isPlaying
-                ? const Color(0xFF2563EB)
-                : (hasMastery ? const Color(0xFF16A34A) : const Color(0xFFE2E8F0)),
+                ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB))
+                : (hasMastery ? const Color(0xFF16A34A) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
             width: isPlaying ? 2.0 : 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: isPlaying
+              color: isDark ? const Color(0x20000000) : (isPlaying
                   ? const Color(0xFF2563EB).withValues(alpha: 0.18)
-                  : const Color(0x0A0F172A),
+                  : const Color(0x0A0F172A)),
               offset: const Offset(0, 2),
               blurRadius: 4,
             ),
@@ -216,7 +223,9 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w900,
                 fontSize: 22,
-                color: isPlaying ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
+                color: isPlaying
+                    ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB))
+                    : (isDark ? Colors.white : const Color(0xFF0F172A)),
               ),
             ),
             const SizedBox(height: 2),
@@ -224,11 +233,11 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
             // Từ ví dụ
             Text(
               sound.exampleWord,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF64748B),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -240,7 +249,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
               child: Container(
                 height: 4,
                 width: 38,
-                color: const Color(0xFFF1F5F9),
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                 alignment: Alignment.centerLeft,
                 child: FractionallySizedBox(
                   widthFactor: (sound.masteryLevel / 100).clamp(0.08, 1.0),

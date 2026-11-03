@@ -67,24 +67,25 @@ class InterestTopicsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ChangeNotifierProvider<InterestController>(
       create: (_) => InterestController(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
           elevation: 0.5,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF0F172A)),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF0F172A)),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
+          title: Text(
             'Học theo sở thích',
             style: TextStyle(
               fontFamily: 'BeVietnamPro',
               fontWeight: FontWeight.w900,
               fontSize: 18,
-              color: Color(0xFF0F172A),
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
             ),
           ),
           centerTitle: true,
@@ -105,20 +106,21 @@ class InterestTopicsScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                     child: TextField(
                       onChanged: controller.setSearchQuery,
+                      style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                       decoration: InputDecoration(
                         hintText: 'Tìm chủ đề (bóng đá, cafe, du lịch, code...)',
-                        hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF94A3B8)),
-                        prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B)),
+                        hintStyle: TextStyle(fontSize: 13.5, color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                        prefixIcon: Icon(Icons.search_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: isDark ? const Color(0xFF1E2430) : Colors.white,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -135,14 +137,14 @@ class InterestTopicsScreen extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       children: [
-                        _buildCategoryChip(controller, 'all', 'Tất cả'),
-                        _buildCategoryChip(controller, 'cat_sports', '⚽ Thể thao'),
-                        _buildCategoryChip(controller, 'cat_food', '🍕 Ẩm thực & Cafe'),
-                        _buildCategoryChip(controller, 'cat_travel', '✈️ Du lịch'),
-                        _buildCategoryChip(controller, 'cat_entertainment', '🎬 Giải trí'),
-                        _buildCategoryChip(controller, 'cat_social', '💬 Giao tiếp'),
-                        _buildCategoryChip(controller, 'cat_career', '🎓 Công nghệ'),
-                        _buildCategoryChip(controller, 'cat_nature', '🐾 Thú cưng'),
+                        _buildCategoryChip(context, controller, 'all', 'Tất cả'),
+                        _buildCategoryChip(context, controller, 'cat_sports', '⚽ Thể thao'),
+                        _buildCategoryChip(context, controller, 'cat_food', '🍕 Ẩm thực & Cafe'),
+                        _buildCategoryChip(context, controller, 'cat_travel', '✈️ Du lịch'),
+                        _buildCategoryChip(context, controller, 'cat_entertainment', '🎬 Giải trí'),
+                        _buildCategoryChip(context, controller, 'cat_social', '💬 Giao tiếp'),
+                        _buildCategoryChip(context, controller, 'cat_career', '🎓 Công nghệ'),
+                        _buildCategoryChip(context, controller, 'cat_nature', '🐾 Thú cưng'),
                       ],
                     ),
                   ),
@@ -176,7 +178,8 @@ class InterestTopicsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryChip(InterestController controller, String catId, String label) {
+  Widget _buildCategoryChip(BuildContext context, InterestController controller, String catId, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = controller.selectedCategory == catId;
 
     return Padding(
@@ -186,10 +189,10 @@ class InterestTopicsScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+            color: isSelected ? const Color(0xFF2563EB) : (isDark ? const Color(0xFF1E2430) : Colors.white),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+              color: isSelected ? const Color(0xFF2563EB) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
           ),
           child: Center(
@@ -199,7 +202,7 @@ class InterestTopicsScreen extends StatelessWidget {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                 fontSize: 12.5,
-                color: isSelected ? Colors.white : const Color(0xFF475569),
+                color: isSelected ? Colors.white : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
               ),
             ),
           ),
@@ -209,17 +212,18 @@ class InterestTopicsScreen extends StatelessWidget {
   }
 
   Widget _buildTopicCard(BuildContext context, InterestTopic topic) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconColor = _getCategoryColor(topic.categoryId);
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E2430) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x080F172A),
-            offset: Offset(0, 3),
+            color: isDark ? const Color(0x20000000) : const Color(0x080F172A),
+            offset: const Offset(0, 3),
             blurRadius: 8,
           ),
         ],
@@ -265,11 +269,11 @@ class InterestTopicsScreen extends StatelessWidget {
                           Expanded(
                             child: Text(
                               topic.title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'BeVietnamPro',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 15.5,
-                                color: Color(0xFF0F172A),
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -277,15 +281,15 @@ class InterestTopicsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               topic.level,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF475569),
+                                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                               ),
                             ),
                           ),
@@ -304,9 +308,9 @@ class InterestTopicsScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         topic.description,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF64748B),
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                           height: 1.3,
                         ),
                         maxLines: 2,

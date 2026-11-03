@@ -315,8 +315,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -360,25 +361,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
+                Text(
                   'Tạo tài khoản EngPass',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                     letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Tạo tài khoản học viên để lưu trữ mục tiêu, điểm số và bài làm của bạn.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontSize: 13.5,
-                    color: Color(0xFF64748B),
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -387,24 +388,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                    border: Border.all(color: isDark ? const Color(0xFF1D4ED8) : const Color(0xFFBFDBFE)),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(
                         Icons.check_circle_rounded,
-                        color: Color(0xFF2563EB),
+                        color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                         size: 20,
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'Toàn bộ tiến độ học thử, câu trả lời và từ vựng của bạn sẽ được chuyển giao đầy đủ vào tài khoản này.',
                           style: TextStyle(
                             fontSize: 12.5,
-                            color: Color(0xFF1E40AF),
+                            color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E40AF),
                             height: 1.35,
                           ),
                         ),
@@ -485,52 +486,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
 
                 // 1. Tên hiển thị
-                const Text(
+                Text(
                   'Tên hiển thị',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,
-                    color: Color(0xFF334155),
+                    color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                   ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: _nameCtrl,
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                   autofillHints: const [AutofillHints.name],
                   decoration: InputDecoration(
                     hintText: 'Tên',
                     errorText: _nameError,
                     prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF64748B)),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: isDark ? const Color(0xFF1E2430) : Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 // 2. Email
-                const Text(
+                Text(
                   'Email đăng ký',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,
-                    color: Color(0xFF334155),
+                    color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                   ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: _emailCtrl,
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
                   decoration: InputDecoration(
@@ -538,35 +541,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     errorText: _emailError,
                     prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B)),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: isDark ? const Color(0xFF1E2430) : Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 // 3. Mật khẩu
-                const Text(
+                Text(
                   'Mật khẩu',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,
-                    color: Color(0xFF334155),
+                    color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                   ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: _passwordCtrl,
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                   obscureText: _obscurePassword,
                   autofillHints: const [AutofillHints.newPassword],
                   decoration: InputDecoration(
@@ -588,18 +592,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: isDark ? const Color(0xFF1E2430) : Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
+                      borderSide: BorderSide(color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
@@ -632,30 +636,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(
                       child: Wrap(
                         children: [
-                          const Text(
+                          Text(
                             'Tôi đồng ý với ',
                             style: TextStyle(
                               fontSize: 12.5,
-                              color: Color(0xFF475569),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
                             ),
                           ),
                           GestureDetector(
                             onTap: _showTermsDialog,
-                            child: const Text(
+                            child: Text(
                               'Điều khoản sử dụng & Chính sách bảo mật',
                               style: TextStyle(
                                 fontSize: 12.5,
-                                color: Color(0xFF2563EB),
+                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                                 fontWeight: FontWeight.bold,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
                           ),
-                          const Text(
+                          Text(
                             ' của EngPass.',
                             style: TextStyle(
                               fontSize: 12.5,
-                              color: Color(0xFF475569),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
                             ),
                           ),
                         ],
@@ -712,10 +716,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Đã có tài khoản? ',
                       style: TextStyle(
-                        color: Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                         fontSize: 13.5,
                       ),
                     ),
@@ -728,10 +732,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         );
                       },
-                      child: const Text(
+                      child: Text(
                         'Đăng nhập',
                         style: TextStyle(
-                          color: Color(0xFF2563EB),
+                          color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                           fontWeight: FontWeight.w700,
                           fontSize: 13.5,
                         ),

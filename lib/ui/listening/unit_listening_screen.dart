@@ -149,10 +149,12 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFF8FAFC),
-        body: Center(
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
+        body: const Center(
           child: CircularProgressIndicator(color: AppTokens.primary),
         ),
       );
@@ -160,6 +162,7 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
 
     if (_lesson == null) {
       return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
         appBar: AppBar(title: const Text('Bài học nghe')),
         body: const Center(child: Text('Không tìm thấy nội dung bài học nghe.')),
       );
@@ -172,12 +175,12 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context, true),
         ),
         title: Column(
@@ -185,16 +188,16 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
           children: [
             Text(
               _lesson!.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             Text(
               'Listening • SGK trang ${_lesson!.printedPage}',
-              style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 11.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ],
         ),
@@ -205,7 +208,7 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
             // Tabs chọn Hoạt động (Activity 2, Activity 3...)
             if (_lesson!.activities.length > 1) ...[
               Container(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF1E2430) : Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: List.generate(_lesson!.activities.length, (idx) {
@@ -217,11 +220,11 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
                         label: Text('Hoạt động ${act.activityNumber}'),
                         selected: isSelected,
                         selectedColor: AppTokens.primary,
-                        backgroundColor: const Color(0xFFF1F5F9),
+                        backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                         labelStyle: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
-                          color: isSelected ? Colors.white : const Color(0xFF475569),
+                          color: isSelected ? Colors.white : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
                         ),
                         onSelected: (val) {
                           if (val && idx != _currentActivityIndex) {
@@ -233,7 +236,7 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
                   }),
                 ),
               ),
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+              Divider(height: 1, thickness: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ],
 
             // Nội dung chính có cuộn
@@ -277,9 +280,9 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark ? const Color(0xFF1E2430) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,19 +330,19 @@ class _UnitListeningScreenState extends State<UnitListeningScreen> {
                         const SizedBox(height: 8),
                         Text(
                           currentAct.instruction,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'BeVietnamPro',
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0F172A),
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           currentAct.instructionVi,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12.5,
-                            color: Color(0xFF64748B),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                             fontStyle: FontStyle.italic,
                           ),
                         ),

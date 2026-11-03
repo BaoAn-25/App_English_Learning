@@ -538,29 +538,30 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context, _isCompleted),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Getting Started · Khởi động',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTokens.primary),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary),
             ),
             Text(
               'Unit ${widget.unitNumber}: ${widget.unitTitle}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontSize: 14.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -586,7 +587,7 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
         children: [
           // Navigation Tab Bar (Hội thoại / Đọc hiểu SGK)
           Container(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
@@ -597,7 +598,7 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: _currentTab == 0 ? const Color(0xFFEFF6FF) : Colors.transparent,
+                        color: _currentTab == 0 ? (isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF)) : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: _currentTab == 0 ? const Color(0xFF93C5FD) : Colors.transparent,
@@ -610,7 +611,7 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                             fontFamily: 'BeVietnamPro',
                             fontSize: 13,
                             fontWeight: _currentTab == 0 ? FontWeight.w800 : FontWeight.w600,
-                            color: _currentTab == 0 ? const Color(0xFF1D4ED8) : const Color(0xFF64748B),
+                            color: _currentTab == 0 ? (isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8)) : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           ),
                         ),
                       ),
@@ -625,7 +626,7 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: _currentTab == 1 ? const Color(0xFFEFF6FF) : Colors.transparent,
+                        color: _currentTab == 1 ? (isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF)) : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: _currentTab == 1 ? const Color(0xFF93C5FD) : Colors.transparent,
@@ -638,7 +639,7 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                             fontFamily: 'BeVietnamPro',
                             fontSize: 13,
                             fontWeight: _currentTab == 1 ? FontWeight.w800 : FontWeight.w600,
-                            color: _currentTab == 1 ? const Color(0xFF1D4ED8) : const Color(0xFF64748B),
+                            color: _currentTab == 1 ? (isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8)) : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           ),
                         ),
                       ),
@@ -648,18 +649,19 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
               ],
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
 
           // Nội dung tab
           Expanded(
-            child: _currentTab == 0 ? _buildDialogueTab() : _buildQuizTab(),
+            child: _currentTab == 0 ? _buildDialogueTab(context) : _buildQuizTab(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDialogueTab() {
+  Widget _buildDialogueTab(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -667,9 +669,9 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFBFDBFE)),
+            border: Border.all(color: isDark ? const Color(0xFF1D4ED8) : const Color(0xFFBFDBFE)),
           ),
           child: Row(
             children: [
@@ -681,17 +683,17 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                   children: [
                     Text(
                       _topicTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'BeVietnamPro',
                         fontSize: 14.5,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF1E40AF),
+                        color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E40AF),
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
+                    Text(
                       'Chạm từ bất kỳ để tra cứu nghĩa · Bấm "Dịch câu thoại" bên dưới để xem đối chiếu tiếng Việt.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF475569)),
+                      style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
                     ),
                   ],
                 ),
@@ -733,13 +735,13 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark ? const Color(0xFF1E2430) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: const [
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x06000000),
-                          offset: Offset(0, 2),
+                          color: isDark ? const Color(0x20000000) : const Color(0x06000000),
+                          offset: const Offset(0, 2),
                           blurRadius: 4,
                         ),
                       ],
@@ -789,7 +791,8 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
     );
   }
 
-  Widget _buildQuizTab() {
+  Widget _buildQuizTab(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final answeredCount = _checkedAnswers.where((c) => c).length;
     final allAnswered = answeredCount == _quizQuestions.length;
 
@@ -846,20 +849,20 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2430) : Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   statement,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xFF0F172A),
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                     height: 1.4,
                   ),
                 ),
@@ -871,8 +874,8 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                   final optText = optEntry.value;
                   final isSelected = selectedOption == optIdx;
 
-                  Color bg = Colors.white;
-                  Color border = const Color(0xFFE2E8F0);
+                  Color bg = isDark ? const Color(0xFF121620) : Colors.white;
+                  Color border = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
                   if (isChecked) {
                     if (optIdx == correctIdx) {
                       bg = const Color(0xFFF0FDF4);
@@ -919,7 +922,7 @@ class _UnitGettingStartedScreenState extends State<UnitGettingStartedScreen> {
                                 style: TextStyle(
                                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                   fontSize: 13.5,
-                                  color: const Color(0xFF1E293B),
+                                  color: isDark ? Colors.white : const Color(0xFF1E293B),
                                 ),
                               ),
                             ),

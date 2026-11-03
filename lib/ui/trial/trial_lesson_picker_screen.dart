@@ -130,32 +130,33 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final lessons = TrialLessonRepository.allLessons;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Chọn bài học thử',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             Text(
               'SGK Tiếng Anh 12 Global Success · ${TrialLessonRepository.instance.getReadyLessons().length} Unit sẵn sàng',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ],
         ),
@@ -169,9 +170,9 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                    border: Border.all(color: isDark ? const Color(0xFF1D4ED8) : const Color(0xFFBFDBFE)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,8 +249,8 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: lesson.isReady
-                                        ? const Color(0xFFEFF6FF)
-                                        : const Color(0xFFF1F5F9),
+                                        ? (isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF))
+                                        : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -259,8 +260,8 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                                       fontWeight: FontWeight.w800,
                                       fontSize: 11.5,
                                       color: lesson.isReady
-                                          ? AppTokens.primary
-                                          : const Color(0xFF64748B),
+                                          ? (isDark ? const Color(0xFF60A5FA) : AppTokens.primary)
+                                          : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                                     ),
                                   ),
                                 ),

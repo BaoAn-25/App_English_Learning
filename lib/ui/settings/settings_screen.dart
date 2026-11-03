@@ -458,7 +458,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                             : (isDark ? const Color(0xFF1E293B) : Colors.white),
                         borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
                         border: Border.all(
-                          color: isSelected ? AppTokens.primary : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              color: isSelected ? (isDark ? const Color(0xFF3B82F6) : AppTokens.primary) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                           width: 1.5,
                         ),
                       ),
@@ -705,7 +705,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? AppTokens.primary : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              color: isSelected ? (isDark ? const Color(0xFF3B82F6) : AppTokens.primary) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               width: isSelected ? 1.8 : 1,
             ),
           ),
@@ -715,7 +715,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
               Icon(
                 icon,
                 size: 22,
-                color: isSelected ? AppTokens.primary : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                color: isSelected ? (isDark ? const Color(0xFF60A5FA) : AppTokens.primary) : (isDark ? Colors.white70 : const Color(0xFF64748B)),
               ),
               const SizedBox(height: 6),
               Text(
@@ -723,7 +723,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: isSelected ? AppTokens.primary : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                  color: isSelected ? (isDark ? const Color(0xFF60A5FA) : AppTokens.primary) : (isDark ? Colors.white : const Color(0xFF0F172A)),
                 ),
               ),
               Text(
@@ -744,6 +744,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
 
   // --- Khối 5: Trạng thái đồng bộ ---
   Widget _buildSyncCard(BuildContext context, SettingsController controller) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final auth = AuthController.instance;
     final isGuest = !auth.isAuthenticated || auth.user.isGuest;
 
@@ -764,25 +765,25 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                    border: Border.all(color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Lưu trên thiết bị',
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF475569),
+                      color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: AppTokens.space8),
-            const Text(
+            Text(
               'Dữ liệu học tập và bài làm của bạn đang được lưu an toàn trên máy. Đăng nhập để đồng bộ tiến độ và kết quả học lên máy chủ đám mây.',
-              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.4),
+              style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), height: 1.4),
             ),
             const SizedBox(height: AppTokens.space12),
             AppButton(

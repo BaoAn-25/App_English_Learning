@@ -247,17 +247,18 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final skill = _getStructuredSkillData();
     final isWriting = widget.sectionTitle.contains('Writing');
     final wordCount = _countWords(_submissionController.text);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context, _isCompleted),
         ),
         title: Column(
@@ -265,16 +266,16 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
           children: [
             Text(
               'Unit ${widget.unitNumber}: ${widget.sectionTitle}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 15,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             Text(
               'SGK trang in ${widget.startPage} • Học tương tác',
-              style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 11.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ],
         ),
@@ -297,9 +298,9 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark ? const Color(0xFF1E2430) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,17 +320,17 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
                             children: [
                               Text(
                                 skill.goalTitle,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'BeVietnamPro',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F172A),
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 skill.goalDescription,
-                                style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.4),
+                                style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569), height: 1.4),
                               ),
                             ],
                           ),
@@ -344,9 +345,9 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
+                      color: isDark ? const Color(0xFF78350F).withAlpha(120) : const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFFDE68A)),
+                      border: Border.all(color: isDark ? const Color(0xFFD97706) : const Color(0xFFFDE68A)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,11 +370,11 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
                         const SizedBox(height: 8),
                         Text(
                           skill.taskPrompt,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'BeVietnamPro',
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
+                            color: isDark ? Colors.white : const Color(0xFF1E293B),
                             height: 1.4,
                           ),
                         ),

@@ -319,6 +319,7 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
 
   Widget _buildFilterTab(int index, String label) {
     final isSelected = _selectedFilter == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       borderRadius: BorderRadius.circular(20),
       onTap: () => setState(() => _selectedFilter = index),
@@ -326,12 +327,10 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+          color: isSelected ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF0F172A)) : (isDark ? const Color(0xFF1E2430) : Colors.white),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFF0F172A)
-                : const Color(0xFFE2E8F0),
+            color: isSelected ? (isDark ? const Color(0xFF3B82F6) : const Color(0xFF0F172A)) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
         ),
         child: Text(
@@ -339,7 +338,7 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
           style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
+            color: isSelected ? Colors.white : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
           ),
         ),
       ),
@@ -347,6 +346,7 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
   }
 
   Widget _buildUnitCard(BuildContext context, Map<String, dynamic> unit) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final int number = unit['number'] as int;
     final String title = unit['title'] as String;
     final String vietnamese = unit['vietnamese'] as String;
@@ -361,8 +361,8 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
     Widget actionWidget;
 
     if (isCompleted) {
-      numberBg = const Color(0xFFDCFCE7);
-      numberColor = const Color(0xFF16A34A);
+      numberBg = isDark ? const Color(0xFF14532D) : const Color(0xFFDCFCE7);
+      numberColor = isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
       actionWidget = Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
@@ -400,23 +400,23 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
         ),
       );
     } else {
-      numberBg = const Color(0xFFF1F5F9);
-      numberColor = const Color(0xFF64748B);
-      actionWidget = const Icon(
+      numberBg = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+      numberColor = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+      actionWidget = Icon(
         Icons.arrow_forward_ios_rounded,
         size: 16,
-        color: Color(0xFF94A3B8),
+        color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
       );
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E2430) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isInProgress
-              ? const Color(0xFF93C5FD)
-              : const Color(0xFFE2E8F0),
+              ? (isDark ? const Color(0xFF3B82F6) : const Color(0xFF93C5FD))
+              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           width: isInProgress ? 1.6 : 1.0,
         ),
         boxShadow: const [
@@ -482,8 +482,8 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                           fontWeight: FontWeight.w800,
                           fontSize: 14.5,
                           color: isInProgress
-                              ? const Color(0xFF1D4ED8)
-                              : const Color(0xFF0F172A),
+                              ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8))
+                              : (isDark ? Colors.white : const Color(0xFF0F172A)),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -493,9 +493,9 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                             : 'Đã đọc $readPages/$totalPages trang · Chưa theo dõi theo phần học',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11.5,
-                          color: Color(0xFF64748B),
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                         ),
                       ),
                     ],

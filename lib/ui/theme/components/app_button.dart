@@ -55,16 +55,22 @@ class AppButton extends StatelessWidget {
         textColor = const Color(0xFF1F2937);
         break;
       case AppButtonVariant.outlined:
-        bgColor = Colors.white;
-        bevelColor = const Color(0xFFE2E8F0);
-        textColor = theme.colorScheme.primary;
-        border = Border.all(color: const Color(0xFFCBD5E1), width: 1.5);
+        {
+          final isDark = theme.brightness == Brightness.dark;
+          bgColor = isDark ? const Color(0xFF1E2430) : Colors.white;
+          bevelColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0);
+          textColor = isDark ? const Color(0xFF60A5FA) : theme.colorScheme.primary;
+          border = Border.all(color: isDark ? const Color(0xFF3B82F6) : const Color(0xFFCBD5E1), width: 1.5);
+        }
         break;
       case AppButtonVariant.google:
-        bgColor = Colors.white;
-        bevelColor = const Color(0xFFE2E8F0);
-        textColor = const Color(0xFF1E293B);
-        border = Border.all(color: const Color(0xFFE2E8F0), width: 1.5);
+        {
+          final isDark = theme.brightness == Brightness.dark;
+          bgColor = isDark ? const Color(0xFF1E2430) : Colors.white;
+          bevelColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0);
+          textColor = isDark ? Colors.white : const Color(0xFF1E293B);
+          border = Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), width: 1.5);
+        }
         break;
       case AppButtonVariant.text:
         bgColor = Colors.transparent;
@@ -74,9 +80,10 @@ class AppButton extends StatelessWidget {
     }
 
     if (!isEnabled && variant != AppButtonVariant.text) {
-      bgColor = const Color(0xFFE2E8F0);
-      bevelColor = const Color(0xFFCBD5E1);
-      textColor = const Color(0xFF94A3B8);
+      final isDark = theme.brightness == Brightness.dark;
+      bgColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+      bevelColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1);
+      textColor = isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
       border = null;
     }
 

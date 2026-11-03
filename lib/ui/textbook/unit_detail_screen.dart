@@ -305,17 +305,18 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final completedCount = _sections.where((s) => s['status'] == 'completed').length;
     final totalCount = _sections.length;
     final progressRatio = completedCount / totalCount;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -323,15 +324,15 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
           children: [
             Text(
               'Tiếng Anh 12',
-              style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600], fontWeight: FontWeight.w500),
             ),
             Text(
               'Unit ${widget.unitNumber} · ${widget.unitTitle}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
           ],
@@ -353,27 +354,27 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
             // Thanh tiến độ Unit
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2430) : Colors.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Tiến độ Unit',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 13.5,
-                          color: Color(0xFF334155),
+                          color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                         ),
                       ),
                       Text(
                         '$completedCount/$totalCount phần',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 13.5,
-                          color: AppTokens.primary,
+                          color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
                         ),
                       ),
                     ],
@@ -384,14 +385,14 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                     child: LinearProgressIndicator(
                       value: progressRatio,
                       minHeight: 8,
-                      backgroundColor: const Color(0xFFE2E8F0),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppTokens.primary),
+                      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                      valueColor: AlwaysStoppedAnimation<Color>(isDark ? const Color(0xFF60A5FA) : AppTokens.primary),
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            Divider(height: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
 
             // Danh sách các Section
             Expanded(
@@ -418,6 +419,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     required Map<String, dynamic> section,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final status = section['status'] as String;
     final bool isCompleted = status == 'completed';
     final bool isInProgress = status == 'in_progress';
@@ -434,26 +436,26 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     Widget trailing;
 
     if (isCompleted) {
-      iconBg = const Color(0xFFDCFCE7);
-      iconColor = AppTokens.successGreen;
-      trailing = const Row(
+      iconBg = isDark ? const Color(0xFF14532D) : const Color(0xFFDCFCE7);
+      iconColor = isDark ? const Color(0xFF4ADE80) : AppTokens.successGreen;
+      trailing = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle_rounded, color: AppTokens.successGreen, size: 20),
-          SizedBox(width: 4),
+          Icon(Icons.check_circle_rounded, color: isDark ? const Color(0xFF4ADE80) : AppTokens.successGreen, size: 20),
+          const SizedBox(width: 4),
           Text(
             'Hoàn thành',
-            style: TextStyle(color: AppTokens.successGreen, fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(color: isDark ? const Color(0xFF4ADE80) : AppTokens.successGreen, fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ],
       );
     } else if (isInProgress) {
-      iconBg = const Color(0xFFEFF6FF);
-      iconColor = AppTokens.primary;
+      iconBg = isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF);
+      iconColor = isDark ? const Color(0xFF60A5FA) : AppTokens.primary;
       trailing = Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: AppTokens.primary,
+          color: isDark ? const Color(0xFF2563EB) : AppTokens.primary,
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
@@ -472,43 +474,43 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
         ),
       );
     } else if (isTrial) {
-      iconBg = const Color(0xFFFEF3C7);
-      iconColor = const Color(0xFFD97706);
+      iconBg = isDark ? const Color(0xFF78350F).withAlpha(120) : const Color(0xFFFEF3C7);
+      iconColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
       trailing = Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: const Color(0xFFFEF3C7),
+          color: isDark ? const Color(0xFF78350F).withAlpha(120) : const Color(0xFFFEF3C7),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFFDE68A)),
+          border: Border.all(color: isDark ? const Color(0xFFD97706) : const Color(0xFFFDE68A)),
         ),
-        child: const Text(
+        child: Text(
           'Học thử',
           style: TextStyle(
-            color: Color(0xFFB45309),
+            color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
       );
     } else {
-      iconBg = const Color(0xFFF1F5F9);
-      iconColor = const Color(0xFF64748B);
-      trailing = const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF94A3B8));
+      iconBg = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+      iconColor = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+      trailing = Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8));
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E2430) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isInProgress ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0),
+          color: isInProgress ? (isDark ? const Color(0xFF2563EB) : const Color(0xFFBFDBFE)) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           width: isInProgress ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: isInProgress
+            color: isDark ? const Color(0x20000000) : (isInProgress
                 ? AppTokens.primary.withValues(alpha: 0.08)
-                : const Color(0x04000000),
+                : const Color(0x04000000)),
             offset: const Offset(0, 2),
             blurRadius: 4,
           ),
@@ -549,16 +551,16 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
-                          color: isInProgress ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
+                          color: isInProgress ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8)) : (isDark ? Colors.white : const Color(0xFF0F172A)),
                         ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         section['subtitle'] as String,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontSize: 12,
-                          color: Color(0xFF64748B),
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                         ),
                       ),
                     ],

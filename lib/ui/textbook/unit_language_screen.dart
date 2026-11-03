@@ -584,29 +584,30 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Language · Từ vựng & Ngữ pháp',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTokens.primary),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary),
             ),
             Text(
               'Unit ${widget.unitNumber}: ${widget.unitTitle}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontSize: 14.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -629,9 +630,9 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppTokens.primary,
-          unselectedLabelColor: const Color(0xFF64748B),
-          indicatorColor: AppTokens.primary,
+          labelColor: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+          unselectedLabelColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          indicatorColor: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
           indicatorWeight: 3,
           labelStyle: const TextStyle(
             fontFamily: 'BeVietnamPro',
@@ -655,6 +656,7 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
   }
 
   Widget _buildVocabularyTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (_isLoadingWords) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -778,13 +780,13 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2430) : Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: const [
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x04000000),
-                  offset: Offset(0, 2),
+                  color: isDark ? const Color(0x20000000) : const Color(0x04000000),
+                  offset: const Offset(0, 2),
                   blurRadius: 4,
                 ),
               ],
@@ -801,19 +803,19 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
                         children: [
                           Text(
                             w.english,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'BeVietnamPro',
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
-                              color: Color(0xFF0F172A),
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             w.ipa,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF64748B),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -830,11 +832,11 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
                 const SizedBox(height: 8),
                 Text(
                   w.meaningVi,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xFF1E40AF),
+                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E40AF),
                   ),
                 ),
                 if (w.example.isNotEmpty) ...[
@@ -843,9 +845,9 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
                     ),
                     child: Text(
                       'Ví dụ: "${w.example}"',
@@ -867,6 +869,7 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
   }
 
   Widget _buildGrammarTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final rules = (_grammarData['rules'] as List).cast<Map<String, String>>();
     final questions = (_grammarData['questions'] as List).cast<Map<String, dynamic>>();
 
@@ -877,22 +880,22 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFBFDBFE)),
+            border: Border.all(color: isDark ? const Color(0xFF1D4ED8) : const Color(0xFFBFDBFE)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.psychology_outlined, color: AppTokens.primary, size: 24),
+              Icon(Icons.psychology_outlined, color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary, size: 24),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   _grammarData['title'] as String,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontWeight: FontWeight.w800,
                     fontSize: 14.5,
-                    color: Color(0xFF1E40AF),
+                    color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E40AF),
                   ),
                 ),
               ),
@@ -907,20 +910,20 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2430) : Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   r['rule'] ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xFF0F172A),
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -928,16 +931,16 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: isDark ? const Color(0xFF121620) : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     r['formula'] ?? '',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF334155),
+                      color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
                     ),
                   ),
                 ),
@@ -984,9 +987,9 @@ class _UnitLanguageScreenState extends State<UnitLanguageScreen>
             margin: const EdgeInsets.only(bottom: 14),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2430) : Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -282,22 +282,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   /// Màn hình nhập email ban đầu
   Widget _buildInputFormView() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Đặt lại mật khẩu',
           style: TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w800,
             fontSize: 16,
-            color: Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
         ),
       ),
@@ -328,23 +329,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Quên mật khẩu?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w900,
                   fontSize: 22,
-                  color: Color(0xFF0F172A),
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Nhập địa chỉ email đăng ký tài khoản của bạn để nhận liên kết đặt lại mật khẩu.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13.5,
-                  color: Color(0xFF64748B),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   height: 1.45,
                 ),
               ),
@@ -353,20 +354,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               // Trường nhập email
               TextField(
                 controller: _emailCtrl,
+                style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   hintText: 'Email',
                   prefixIcon: const Icon(Icons.email_outlined, size: 20),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: isDark ? const Color(0xFF1E2430) : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -414,13 +416,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               // Nút dẫn sang màn hình nhập mã xác nhận (dự phòng)
               Center(
                 child: TextButton.icon(
-                  icon: const Icon(Icons.key_rounded, size: 18, color: Color(0xFF2563EB)),
-                  label: const Text(
+                  icon: Icon(Icons.key_rounded, size: 18, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
+                  label: Text(
                     'Tôi đã có mã xác nhận (Token)',
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF2563EB),
+                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                     ),
                   ),
                   onPressed: () {
