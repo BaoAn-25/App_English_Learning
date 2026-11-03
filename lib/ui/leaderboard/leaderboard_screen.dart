@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../data/app_repository.dart';
+import '../../data/remote/api_client.dart';
 import '../auth/auth_controller.dart';
 import '../home/streak_calculator.dart';
 import '../theme/components/app_button.dart';
 import 'speed_quiz_arena_screen.dart';
 
-/// Dữ liệu một đối thủ trên Bảng Xếp Hạng
+/// Dữ liệu một đối thủ trên Bảng Xếp Hạng (Dữ liệu thật từ CSDL)
 class LeaderboardUser {
   final int rank;
   final String name;
@@ -55,8 +56,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
     Color(0xFF8B5CF6), // Kim Cương
   ];
 
-  List<LeaderboardUser> _mockUsers = [];
-  final int _currentUserRank = 6;
+  List<LeaderboardUser> _users = [];
+  int _currentUserRank = 1;
+  int _currentUserXp = 0;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -72,91 +75,99 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
   }
 
   Future<void> _loadUserStats() async {
+    setState(() => _isLoading = true);
     final auth = AuthController.instance;
-    final userName = auth.isAuthenticated ? auth.user.displayName : 'Bạn (Học thử)';
-    int xp = 0;
-    int streak = 0;
+    final currentUserId = (auth.isAuthenticated && !auth.user.isGuest)
+        ? auth.user.id
+        : await _repo.getOrCreateGuestSessionId();
+    final userName = (auth.isAuthenticated && !auth.user.isGuest)
+        ? auth.user.displayName
+        : 'Bạn (Học viên)';
+
+    // 1. Nạp số liệu học tập thật của học sinh từ CSDL SQLite
+    int realXp = 0;
+    int realStreak = 0;
     try {
-      final stats = await _repo.getAllDailyStats();
-      streak = StreakCalculator.calculateStreak(stats);
-      xp = stats.fold<int>(0, (sum, s) => sum + s.xp);
+      final stats = await _repo.getAllDailyStats(ownerId: currentUserId);
+      realStreak = StreakCalculator.calculateStreak(stats);
+      realXp = stats.fold<int>(0, (sum, s) => sum + s.xp);
     } catch (_) {}
+
+    // 2. Thử truy vấn danh sách học sinh thật từ Backend Server API
+    List<LeaderboardUser> realServerUsers = [];
+    try {
+      final token = await _repo.getAuthToken();
+      final client = ApiClient(tokenProvider: () => token);
+      final remoteList = await client.fetchLeaderboard();
+      if (remoteList != null && remoteList.isNotEmpty) {
+        for (int i = 0; i < remoteList.length; i++) {
+          final item = remoteList[i];
+          final isMe = item['id'] == currentUserId;
+          final remoteXp = (item['xp'] as num?)?.toInt() ?? 0;
+          final remoteStreak = (item['streak'] as num?)?.toInt() ?? 0;
+
+          realServerUsers.add(LeaderboardUser(
+            rank: i + 1,
+            name: isMe ? userName : (item['name'] as String? ?? 'Học viên EngPass'),
+            school: item['school'] as String? ?? 'Lớp 12 · Mục tiêu THPT',
+            xp: isMe && realXp > remoteXp ? realXp : remoteXp,
+            streak: isMe && realStreak > remoteStreak ? realStreak : remoteStreak,
+            avatarUrl: item['avatarUrl'] as String? ?? '',
+            isCurrentUser: isMe,
+          ));
+        }
+      }
+    } catch (_) {}
+
+    // 3. Nếu chưa kết nối máy chủ hoặc danh sách rỗng, sử dụng dữ liệu người dùng thật tại thiết bị
+    if (realServerUsers.isEmpty) {
+      realServerUsers = [
+        LeaderboardUser(
+          rank: 1,
+          name: userName,
+          school: 'Lớp 12 · Mục tiêu THPT',
+          xp: realXp,
+          streak: realStreak,
+          isCurrentUser: true,
+        ),
+      ];
+    } else {
+      // Đảm bảo người dùng hiện tại luôn có mặt trong bảng xếp hạng theo điểm XP thật
+      final exists = realServerUsers.any((u) => u.isCurrentUser);
+      if (!exists) {
+        realServerUsers.add(LeaderboardUser(
+          rank: realServerUsers.length + 1,
+          name: userName,
+          school: 'Lớp 12 · Mục tiêu THPT',
+          xp: realXp,
+          streak: realStreak,
+          isCurrentUser: true,
+        ));
+        realServerUsers.sort((a, b) => b.xp.compareTo(a.xp));
+        for (int i = 0; i < realServerUsers.length; i++) {
+          final u = realServerUsers[i];
+          realServerUsers[i] = LeaderboardUser(
+            rank: i + 1,
+            name: u.name,
+            school: u.school,
+            xp: u.xp,
+            streak: u.streak,
+            avatarUrl: u.avatarUrl,
+            isCurrentUser: u.isCurrentUser,
+          );
+        }
+      }
+    }
+
+    final myIdx = realServerUsers.indexWhere((u) => u.isCurrentUser);
+    final myRank = myIdx >= 0 ? realServerUsers[myIdx].rank : 1;
 
     if (mounted) {
       setState(() {
-        _mockUsers = [
-          const LeaderboardUser(
-            rank: 1,
-            name: 'Trần Minh Anh',
-            school: 'THPT Chuyên Lê Hồng Phong',
-            xp: 840,
-            streak: 15,
-          ),
-          const LeaderboardUser(
-            rank: 2,
-            name: 'Nguyễn Quốc Bảo',
-            school: 'THPT Chuyên Hà Nội - Amsterdam',
-            xp: 790,
-            streak: 12,
-          ),
-          const LeaderboardUser(
-            rank: 3,
-            name: 'Lê Hoàng Yến Nhi',
-            school: 'THPT Chu Văn An',
-            xp: 710,
-            streak: 9,
-          ),
-          const LeaderboardUser(
-            rank: 4,
-            name: 'Phạm Đức Huy',
-            school: 'THPT Bùi Thị Xuân',
-            xp: 640,
-            streak: 8,
-          ),
-          const LeaderboardUser(
-            rank: 5,
-            name: 'Võ Thị Mai Phương',
-            school: 'THPT Nguyễn Thượng Hiền',
-            xp: 590,
-            streak: 7,
-          ),
-          LeaderboardUser(
-            rank: 6,
-            name: userName,
-            school: 'Lớp 12 · Mục tiêu THPT',
-            xp: xp > 0 ? xp : 120,
-            streak: streak > 0 ? streak : 1,
-            isCurrentUser: true,
-          ),
-          const LeaderboardUser(
-            rank: 7,
-            name: 'Đặng Tuấn Kiệt',
-            school: 'THPT Gia Định',
-            xp: 490,
-            streak: 5,
-          ),
-          const LeaderboardUser(
-            rank: 8,
-            name: 'Bùi Thanh Trúc',
-            school: 'THPT Marie Curie',
-            xp: 430,
-            streak: 4,
-          ),
-          const LeaderboardUser(
-            rank: 9,
-            name: 'Hoàng Văn Nam',
-            school: 'THPT Chuyên Thái Bình',
-            xp: 380,
-            streak: 3,
-          ),
-          const LeaderboardUser(
-            rank: 10,
-            name: 'Phan Thùy Linh',
-            school: 'THPT Chuyên Lam Sơn',
-            xp: 310,
-            streak: 2,
-          ),
-        ];
+        _users = realServerUsers;
+        _currentUserRank = myRank;
+        _currentUserXp = realXp;
+        _isLoading = false;
       });
     }
   }
@@ -172,7 +183,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
         backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : const Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -186,36 +197,40 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
         ),
         actions: [
           IconButton(
-            tooltip: 'Thể lệ thăng hạng',
-            icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF64748B)),
-            onPressed: () => _showRulesDialog(context, isDark),
+            tooltip: 'Làm mới bảng xếp hạng',
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF2563EB)),
+            onPressed: _loadUserStats,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF2563EB),
           unselectedLabelColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-          labelStyle: const TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.w800, fontSize: 13.5),
           indicatorColor: const Color(0xFF2563EB),
           indicatorWeight: 3,
+          labelStyle: const TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.bold, fontSize: 13.5),
           tabs: const [
-            Tab(icon: Icon(Icons.emoji_events_rounded, size: 20), text: 'Liên Đoàn Tuần'),
-            Tab(icon: Icon(Icons.flash_on_rounded, size: 20), text: 'Đấu Trường 60s'),
+            Tab(text: '🏆 Bảng Xếp Hạng Tuần'),
+            Tab(text: '⚡ Đấu Trường Tốc Độ 60s'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildLeagueRankingTab(context, isDark),
+          _buildLeaderboardTab(isDark),
           _buildArenaIntroTab(context, isDark),
         ],
       ),
-      bottomNavigationBar: _tabController.index == 0 ? _buildStickyMyRankBar(isDark) : null,
+      bottomNavigationBar: _buildStickyMyRankBar(isDark),
     );
   }
 
-  Widget _buildLeagueRankingTab(BuildContext context, bool isDark) {
+  Widget _buildLeaderboardTab(bool isDark) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)));
+    }
+
     return Column(
       children: [
         Container(
@@ -251,7 +266,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
                         ),
                       ),
                       Text(
-                        'Kết thúc sau 2 ngày 14 giờ',
+                        'Cập nhật trực tiếp từ hệ thống',
                         style: TextStyle(fontSize: 10.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ],
@@ -270,7 +285,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
                     Icon(Icons.arrow_upward_rounded, size: 14, color: Color(0xFF16A34A)),
                     SizedBox(width: 3),
                     Text(
-                      'Top 5 Thăng Hạng',
+                      'Top Thăng Hạng',
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)),
                     ),
                   ],
@@ -283,14 +298,52 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
           child: ListView(
             padding: const EdgeInsets.only(bottom: 90),
             children: [
-              _buildTop3Podium(isDark),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: _mockUsers.skip(3).map((u) => _buildUserRankTile(u, isDark)).toList(),
+              if (_users.length >= 3) ...[
+                _buildTop3Podium(isDark),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: _users.skip(3).map((u) => _buildUserRankTile(u, isDark)).toList(),
+                  ),
                 ),
-              ),
+              ] else ...[
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E2430) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.workspace_premium_rounded, size: 48, color: Color(0xFFEAB308)),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Bảng Xếp Hạng Tuần Hiện Tại',
+                          style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.w800, fontSize: 16),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Hiện có ${_users.length} học viên ghi nhận thành tích tuần này. Hãy tiếp tục học bài và tham gia Đấu Trường 60s để gia tăng điểm XP!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: _users.map((u) => _buildUserRankTile(u, isDark)).toList(),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -299,10 +352,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
   }
 
   Widget _buildTop3Podium(bool isDark) {
-    if (_mockUsers.length < 3) return const SizedBox.shrink();
-    final first = _mockUsers[0];
-    final second = _mockUsers[1];
-    final third = _mockUsers[2];
+    if (_users.length < 3) return const SizedBox.shrink();
+    final first = _users[0];
+    final second = _users[1];
+    final third = _users[2];
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
@@ -448,7 +501,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
                         style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w700,
-                          fontSize: 13.5,
+                          fontSize: 13,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                         maxLines: 1,
@@ -458,12 +511,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
                     if (user.isCurrentUser) ...[
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                         decoration: BoxDecoration(
                           color: const Color(0xFF2563EB),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text('BẠN', style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold)),
+                        child: const Text('BẠN', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
                       ),
                     ],
                   ],
@@ -534,7 +587,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
                   ],
                 ),
                 Text(
-                  'Cần thêm 100 XP để lọt Top 5 thăng hạng!',
+                  'Điểm hiện tại: $_currentUserXp XP',
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D)),
                 ),
               ],
@@ -582,25 +635,40 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
               color: isDark ? Colors.white : const Color(0xFF0F172A),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            'Thử thách phản xạ nhanh 10 câu trắc nghiệm THPT trong 60 giây. Trả lời đúng liên tiếp để kích hoạt Combo x2 XP!',
+            'Thử thách phản xạ nhanh 15 câu hỏi THPT ngẫu nhiên trong 60 giây',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), height: 1.4),
+            style: TextStyle(fontSize: 13, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), height: 1.4),
           ),
           const SizedBox(height: 24),
-          _buildArenaRuleRow(Icons.timer_outlined, 'Thời gian 60 giây', 'Đồng hồ đếm ngược, làm nhanh và chính xác nhất có thể.', isDark),
+          _buildArenaRuleCard(
+            icon: Icons.timer_rounded,
+            title: 'Thời gian 60 giây đếm ngược',
+            desc: 'Đồng hồ đếm ngược liên tục. Phản xạ càng nhanh, điểm tích lũy càng cao.',
+            isDark: isDark,
+          ),
           const SizedBox(height: 12),
-          _buildArenaRuleRow(Icons.stars_rounded, 'Cộng điểm Bảng Xếp Hạng', 'Mỗi câu đúng +10 XP, Combo đúng liên tục nhận tới +30 XP.', isDark),
+          _buildArenaRuleCard(
+            icon: Icons.local_fire_department_rounded,
+            title: 'Combo nhân đôi XP',
+            desc: 'Mỗi câu đúng liên tiếp kích hoạt hệ số nhân Combo x2, x3 để leo tháp bảng xếp hạng.',
+            isDark: isDark,
+          ),
           const SizedBox(height: 12),
-          _buildArenaRuleRow(Icons.menu_book_rounded, 'Câu hỏi trích từ đề THPT', 'Ngữ pháp, từ vựng, phát âm chuẩn ma trận kỳ thi tốt nghiệp.', isDark),
-          const SizedBox(height: 36),
+          _buildArenaRuleCard(
+            icon: Icons.auto_awesome_rounded,
+            title: 'Ngân hàng đề thi THPT Quốc gia',
+            desc: 'Các câu hỏi được chọn ngẫu nhiên từ kho 405 câu chuẩn kiến thức SGK 12.',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 32),
           AppButton(
-            label: 'BẮT ĐẦU VÀO ĐẤU TRƯỜNG (60S)',
+            label: 'VÀO ĐẤU TRƯỜNG NGAY',
+            icon: Icons.play_arrow_rounded,
             isFullWidth: true,
             height: 52,
             variant: AppButtonVariant.primary,
-            icon: Icons.play_arrow_rounded,
             onPressed: () => _openSpeedQuizArena(),
           ),
         ],
@@ -608,36 +676,48 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
     );
   }
 
-  Widget _buildArenaRuleRow(IconData icon, String title, String desc, bool isDark) {
+  Widget _buildArenaRuleCard({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required bool isDark,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E2430) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: const Color(0xFF2563EB).withAlpha(20),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: const Color(0xFF2563EB), size: 20),
+            child: Icon(icon, color: const Color(0xFF2563EB), size: 24),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   desc,
-                  style: TextStyle(fontSize: 11.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                  style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), height: 1.4),
                 ),
               ],
             ),
@@ -647,37 +727,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
     );
   }
 
-  void _openSpeedQuizArena() {
-    Navigator.push(
+  Future<void> _openSpeedQuizArena() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SpeedQuizArenaScreen()),
-    ).then((_) => _loadUserStats());
-  }
-
-  void _showRulesDialog(BuildContext context, bool isDark) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Thể lệ Liên Đoàn Tuần'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('• Bảng xếp hạng cập nhật lúc 00:00 Thứ Hai hàng tuần.'),
-            SizedBox(height: 6),
-            Text('• Top 5 học sinh có điểm XP cao nhất sẽ được thăng lên hạng đấu tiếp theo.'),
-            SizedBox(height: 6),
-            Text('• 5 học sinh cuối bảng sẽ rớt hạng đấu để thi đấu vừa sức hơn.'),
-            SizedBox(height: 6),
-            Text('• Điểm XP kiếm được từ việc giải bài SGK, học từ vựng và tham gia Đấu trường tốc độ 60s.'),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Đã hiểu')),
-        ],
-      ),
     );
+    await _loadUserStats();
   }
 }

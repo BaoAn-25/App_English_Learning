@@ -1813,6 +1813,45 @@ app.post('/api/exams/submit', authenticateToken, async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// 5b. Leaderboard API (Bảng xếp hạng học sinh thật từ cơ sở dữ liệu)
+// -------------------------------------------------------------
+app.get('/api/leaderboard', async (req, res) => {
+  if (!process.env.DATABASE_URL) {
+    return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
+  }
+  try {
+    const result = await pool.query(      SELECT 
+        u.id,
+        u.display_name AS name,
+        COALESCE(p.school_name, 'Lớp 12 · Mục tiêu THPT') AS school,
+        COALESCE(SUM(d.xp_earned), p.total_xp, 0)::int AS xp,
+        COALESCE(p.current_streak, 0)::int AS streak,
+        COALESCE(u.avatar_url, '') AS avatar_url
+      FROM users u
+      LEFT JOIN user_profiles p ON u.id = p.user_id
+      LEFT JOIN daily_stats d ON u.id = d.user_id
+      GROUP BY u.id, u.display_name, p.school_name, p.total_xp, p.current_streak, u.avatar_url
+      ORDER BY xp DESC
+      LIMIT 50
+    \);
+
+    const leaderboard = result.rows.map((row, index) => ({
+      rank: index + 1,
+      id: row.id,
+      name: row.name || 'Học viên EngPass',
+      school: row.school || 'Lớp 12 · Mục tiêu THPT',
+      xp: row.xp,
+      streak: row.streak,
+      avatarUrl: row.avatar_url || '',
+    }));
+
+    res.json(leaderboard);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
 // 6. AI Tutor Assistant
 // -------------------------------------------------------------
 app.post('/api/ai/ask', authenticateToken, async (req, res) => {

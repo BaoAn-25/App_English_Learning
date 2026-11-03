@@ -407,4 +407,24 @@ class ApiClient {
       return ApiResponse.error(0, _formatNetworkError(e));
     }
   }
+
+  /// Lay danh sach Bang xep hang that tu Backend
+  Future<List<Map<String, dynamic>>?> fetchLeaderboard() async {
+    try {
+      final uri = Uri.parse('$baseUrl/leaderboard');
+      final request = await _httpClient.getUrl(uri).timeout(const Duration(seconds: 10));
+      _headers().forEach((k, v) => request.headers.set(k, v));
+      final response = await request.close().timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final dynamic decoded = jsonDecode(body);
+        if (decoded is List) {
+          return decoded.map((e) => e as Map<String, dynamic>).toList();
+        }
+      }
+    } catch (_) {
+      /* Fallback offline */
+    }
+    return null;
+  }
 }
