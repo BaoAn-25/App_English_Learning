@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'data/app_repository.dart';
 import 'navigation/app_startup.dart';
+import 'navigation/deep_link_service.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/theme/theme_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  DeepLinkService.init();
 
   runApp(
     MultiProvider(
@@ -26,6 +28,7 @@ class ThptEnglishApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: DeepLinkService.navigatorKey,
       title: 'English 12',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
