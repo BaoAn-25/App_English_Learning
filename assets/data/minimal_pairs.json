@@ -1,0 +1,122 @@
+[
+  {
+    "id": "mp_1",
+    "soundAId": "ipa_v_12",
+    "soundBId": "ipa_v_5",
+    "wordA": "dock",
+    "ipaA": "/dɒk/",
+    "meaningA": "bến tàu",
+    "wordB": "deck",
+    "ipaB": "/dek/",
+    "meaningB": "boong tàu",
+    "difficulty": 1
+  },
+  {
+    "id": "mp_2",
+    "soundAId": "ipa_v_2",
+    "soundBId": "ipa_v_1",
+    "wordA": "ship",
+    "ipaA": "/ʃɪp/",
+    "meaningA": "con tàu",
+    "wordB": "sheep",
+    "ipaB": "/ʃiːp/",
+    "meaningB": "con cừu",
+    "difficulty": 1
+  },
+  {
+    "id": "mp_3",
+    "soundAId": "ipa_v_5",
+    "soundBId": "ipa_v_12",
+    "wordA": "get",
+    "ipaA": "/ɡet/",
+    "meaningA": "nhận, lấy",
+    "wordB": "got",
+    "ipaB": "/ɡɒt/",
+    "meaningB": "đã nhận (quá khứ)",
+    "difficulty": 1
+  },
+  {
+    "id": "mp_4",
+    "soundAId": "ipa_v_9",
+    "soundBId": "ipa_v_5",
+    "wordA": "bad",
+    "ipaA": "/bæd/",
+    "meaningA": "xấu, tồi",
+    "wordB": "bed",
+    "ipaB": "/bed/",
+    "meaningB": "cái giường",
+    "difficulty": 1
+  },
+  {
+    "id": "mp_5",
+    "soundAId": "ipa_v_9",
+    "soundBId": "ipa_v_10",
+    "wordA": "cat",
+    "ipaA": "/kæt/",
+    "meaningA": "con mèo",
+    "wordB": "cut",
+    "ipaB": "/kʌt/",
+    "meaningB": "cắt",
+    "difficulty": 1
+  },
+  {
+    "id": "mp_6",
+    "soundAId": "ipa_v_2",
+    "soundBId": "ipa_v_1",
+    "wordA": "bin",
+    "ipaA": "/bɪn/",
+    "meaningA": "thùng rác",
+    "wordB": "bean",
+    "ipaB": "/biːn/",
+    "meaningB": "hạt đậu",
+    "difficulty": 2
+  },
+  {
+    "id": "mp_7",
+    "soundAId": "ipa_v_5",
+    "soundBId": "ipa_v_9",
+    "wordA": "pen",
+    "ipaA": "/pen/",
+    "meaningA": "cây bút",
+    "wordB": "pan",
+    "ipaB": "/pæn/",
+    "meaningB": "cái chảo",
+    "difficulty": 2
+  },
+  {
+    "id": "mp_8",
+    "soundAId": "ipa_v_3",
+    "soundBId": "ipa_v_4",
+    "wordA": "foot",
+    "ipaA": "/fʊt/",
+    "meaningA": "bàn chân",
+    "wordB": "food",
+    "ipaB": "/fuːd/",
+    "meaningB": "thức ăn",
+    "difficulty": 2
+  },
+  {
+    "id": "mp_9",
+    "soundAId": "ipa_c_1",
+    "soundBId": "ipa_c_2",
+    "wordA": "pie",
+    "ipaA": "/paɪ/",
+    "meaningA": "bánh nướng",
+    "wordB": "bye",
+    "ipaB": "/baɪ/",
+    "meaningB": "tạm biệt",
+    "difficulty": 1
+  },
+  {
+    "id": "mp_10",
+    "soundAId": "ipa_c_11",
+    "soundBId": "ipa_c_13",
+    "wordA": "think",
+    "ipaA": "/θɪŋk/",
+    "meaningA": "suy nghĩ",
+    "wordB": "sink",
+    "ipaB": "/sɪŋk/",
+    "meaningB": "chìm, bồn rửa",
+    "difficulty": 3
+  }
+]

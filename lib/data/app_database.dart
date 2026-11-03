@@ -11,6 +11,10 @@ import 'models/topic.dart';
 import 'models/word.dart';
 import 'models/word_progress.dart';
 import 'models/wrong_book_entry.dart';
+import 'models/interest_topic.dart';
+import 'models/interest_word.dart';
+import 'models/ipa_sound.dart';
+import 'models/minimal_pair_question.dart';
 
 /// Kết quả đồng bộ câu hỏi an toàn
 class QuestionSyncResult {
@@ -67,7 +71,7 @@ class TransferResult {
 
 class AppDatabase {
   static const String _databaseName = 'thpt_english.db';
-  static const int _databaseVersion = 4;
+  static const int _databaseVersion = 5;
 
   AppDatabase._internal();
   static final AppDatabase instance = AppDatabase._internal();
@@ -247,6 +251,9 @@ class AppDatabase {
     }
     if (oldVersion < 4) {
       await _migrateToV4(db);
+    }
+    if (oldVersion < 5) {
+      await _createExploreAndPronunciationTables(db);
     }
   }
 
@@ -1662,4 +1669,186 @@ class AppDatabase {
     );
     return maps.map(WordProgress.fromMap).toList();
   }
+
+// Dữ liệu code phương thức mới
+  Future<void> _createExploreAndPronunciationTables(Database db) async {
+    // 11. Bảng 44 âm IPA
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ipa_sounds (
+        id TEXT PRIMARY KEY,
+        symbol TEXT NOT NULL,
+        type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        exampleWord TEXT NOT NULL,
+        exampleIpa TEXT NOT NULL,
+        exampleMeaning TEXT NOT NULL,
+        audioFile TEXT,
+        "order" INTEGER NOT NULL
+      )
+    ''');
+
+    // 12. Tiến độ luyện phát âm IPA theo người dùng (ownerId)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ipa_progress (
+        soundId TEXT NOT NULL,
+        ownerId TEXT NOT NULL DEFAULT '',
+        masteryLevel INTEGER NOT NULL DEFAULT 0,
+        practiceCount INTEGER NOT NULL DEFAULT 0,
+        lastPracticedAt INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (soundId, ownerId)
+      )
+    ''');
+
+    // 13. Câu hỏi cặp âm tối thiểu (Minimal Pairs: dock vs deck)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS minimal_pairs (
+        id TEXT PRIMARY KEY,
+        soundAId TEXT NOT NULL,
+        soundBId TEXT NOT NULL,
+        wordA TEXT NOT NULL,
+        ipaA TEXT NOT NULL,
+        meaningA TEXT NOT NULL,
+        wordB TEXT NOT NULL,
+        ipaB TEXT NOT NULL,
+        meaningB TEXT NOT NULL,
+        difficulty INTEGER NOT NULL DEFAULT 1
+      )
+    ''');
+
+    // 14. Chủ đề sở thích (Interest Topics)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS interest_topics (
+        id TEXT PRIMARY KEY,
+        categoryId TEXT NOT NULL,
+        categoryName TEXT NOT NULL,
+        title TEXT NOT NULL,
+        titleVi TEXT NOT NULL,
+        iconName TEXT NOT NULL,
+        description TEXT NOT NULL,
+        "order" INTEGER NOT NULL,
+        level TEXT NOT NULL DEFAULT 'A1-B1'
+      )
+    ''');
+
+    // 15. Từ vựng & câu đàm thoại theo sở thích (Interest Words & Phrases)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS interest_words (
+        id TEXT PRIMARY KEY,
+        topicId TEXT NOT NULL,
+        english TEXT NOT NULL,
+        ipa TEXT NOT NULL,
+        meaningVi TEXT NOT NULL,
+        exampleEn TEXT NOT NULL,
+        exampleVi TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'word',
+        "order" INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  // --- CRUD: Bảng ngữ âm IPA & Luyện phát âm ---
+  Future<void> insertIpaSounds(List<IpaSound> sounds) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final s in sounds) {
+      batch.insert('ipa_sounds', s.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<List<IpaSound>> getAllIpaSounds({String? ownerId}) async {
+    final db = await database;
+    final safeOwnerId = ownerId ?? '';
+    final results = await db.rawQuery('''
+      SELECT s.*, COALESCE(p.masteryLevel, 0) as masteryLevel
+      FROM ipa_sounds s
+      LEFT JOIN ipa_progress p ON s.id = p.soundId AND p.ownerId = ?
+      ORDER BY s."order" ASC
+    ''', [safeOwnerId]);
+
+    return results.map((row) {
+      final mastery = (row['masteryLevel'] as num?)?.toInt() ?? 0;
+      return IpaSound.fromMap(row, mastery: mastery);
+    }).toList();
+  }
+
+  Future<void> updateIpaMastery(String soundId, String ownerId, int masteryDelta) async {
+    final db = await database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.rawInsert('''
+      INSERT INTO ipa_progress (soundId, ownerId, masteryLevel, practiceCount, lastPracticedAt)
+      VALUES (?, ?, ?, 1, ?)
+      ON CONFLICT(soundId, ownerId) DO UPDATE SET
+        masteryLevel = MIN(100, MAX(0, masteryLevel + ?)),
+        practiceCount = practiceCount + 1,
+        lastPracticedAt = ?
+    ''', [soundId, ownerId, masteryDelta.clamp(0, 100), now, masteryDelta, now]);
+  }
+
+  Future<void> insertMinimalPairs(List<MinimalPairQuestion> pairs) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final p in pairs) {
+      batch.insert('minimal_pairs', p.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<List<MinimalPairQuestion>> getAllMinimalPairs() async {
+    final db = await database;
+    final results = await db.query('minimal_pairs');
+    return results.map(MinimalPairQuestion.fromMap).toList();
+  }
+
+  // --- CRUD: Chủ đề sở thích & Từ vựng đàm thoại ---
+  Future<void> insertInterestTopics(List<InterestTopic> topics) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final t in topics) {
+      batch.insert('interest_topics', t.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<List<InterestTopic>> getAllInterestTopics() async {
+    final db = await database;
+    final results = await db.rawQuery('''
+      SELECT t.*, COUNT(w.id) as wordCount
+      FROM interest_topics t
+      LEFT JOIN interest_words w ON t.id = w.topicId
+      GROUP BY t.id
+      ORDER BY t."order" ASC
+    ''');
+    return results.map((row) {
+      final count = (row['wordCount'] as num?)?.toInt() ?? 0;
+      return InterestTopic.fromMap(row, wordCount: count);
+    }).toList();
+  }
+
+  Future<void> insertInterestWords(List<InterestWord> words) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final w in words) {
+      batch.insert('interest_words', w.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<List<InterestWord>> getWordsByInterestTopicId(String topicId) async {
+    final db = await database;
+    final results = await db.query(
+      'interest_words',
+      where: 'topicId = ?',
+      whereArgs: [topicId],
+      orderBy: '"order" ASC',
+    );
+    return results.map(InterestWord.fromMap).toList();
+  }
+
+  Future<List<InterestWord>> getAllInterestWords() async {
+    final db = await database;
+    final results = await db.query('interest_words', orderBy: '"order" ASC');
+    return results.map(InterestWord.fromMap).toList();
+  }
+
 }
