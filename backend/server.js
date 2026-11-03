@@ -1573,7 +1573,7 @@ app.get('/reset-password', (req, res) => {
         <div id="successView" style="display: none; text-align: center; padding-top: 10px;">
           <h1 style="font-size: 26px; font-weight: 800; color: #FFFFFF; margin-bottom: 24px; letter-spacing: -0.5px;">Mật khẩu đã thay đổi!</h1>
           <p style="margin-bottom: 20px;">
-            <a href="intent://#Intent;package=com.example.thpt_english;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end" 
+            <a href="english12://login" 
                onclick="openApp(event)"
                style="color: #1CB0F6; font-weight: 800; font-size: 14.5px; text-transform: uppercase; letter-spacing: 0.8px; text-decoration: none; cursor: pointer; display: inline-block; padding: 12px 18px; border-radius: 12px; transition: all 0.2s;"
                onmouseover="this.style.textDecoration='underline'"
@@ -1588,13 +1588,8 @@ app.get('/reset-password', (req, res) => {
       <script>
         function openApp(e) {
           if (e) e.preventDefault();
-          const intentUri = "intent://#Intent;package=com.example.thpt_english;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end";
-          const schemeUri = "english12://login";
-
-          window.location.href = intentUri;
-          setTimeout(function() {
-            window.location.href = schemeUri;
-          }, 250);
+          // Mở trực tiếp bằng Custom URL Scheme của ứng dụng đã đăng ký trong AndroidManifest
+          window.location.href = "english12://login";
         }
 
         function togglePass(inputId, btn) {
