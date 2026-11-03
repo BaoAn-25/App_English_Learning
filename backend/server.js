@@ -1269,15 +1269,19 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       }
     }
 
-    // Trả kết quả thành công kèm resetToken để app có thể hỗ trợ người dùng ngay cả khi Render chặn SMTP
-    res.json({
-      message: emailDelivered
-        ? 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn.'
-        : 'Yêu cầu đặt lại mật khẩu đã được tạo thành công!',
+    // Trả kết quả thành công bảo mật (chỉ gửi token qua email, không để lộ trên API response)
+    const responsePayload = {
+      message: 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn.',
       emailDelivered,
-      resetToken,
-      resetUrl,
-    });
+    };
+
+    // Chỉ khi gửi email thất bại trong môi trường nội bộ mới trả resetToken làm cứu cánh dev
+    if (!emailDelivered && process.env.NODE_ENV !== 'production') {
+      responsePayload.resetToken = resetToken;
+      responsePayload.resetUrl = resetUrl;
+    }
+
+    res.json(responsePayload);
   } catch (err) {
     res.status(500).json({ error: 'Lỗi xử lý yêu cầu đặt lại mật khẩu: ' + err.message });
   }
