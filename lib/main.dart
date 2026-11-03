@@ -32,7 +32,7 @@ class ThptEnglishApp extends StatelessWidget {
       title: 'EngPass',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: context.watch<ThemeController>().themeMode,
       home: const AppStartup(),
     );

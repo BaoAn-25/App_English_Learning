@@ -2,6 +2,8 @@ import '../auth/welcome_screen.dart';
 import '../auth/auth_controller.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
+import '../theme/theme_controller.dart';
+import '../onboarding/onboarding_target_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -93,6 +95,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
 
                 // 3. Nhắc nhở học tập offline
                 _buildReminderCard(context, controller),
+                const SizedBox(height: AppTokens.space16),
+
+                // 4. Giao diện Sáng / Tối
+                _buildThemeModeCard(context),
                 const SizedBox(height: AppTokens.space16),
 
                 // 5. Trạng thái đồng bộ / Lưu trữ
@@ -191,6 +197,25 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 ),
               ),
             ),
+          ),
+          const SizedBox(height: 6),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(42),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            icon: const Icon(Icons.tune_rounded, size: 18, color: Color(0xFF475569)),
+            label: const Text(
+              'Thiết lập lại mục tiêu & sở thích',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OnboardingTargetScreen()),
+              );
+            },
           ),
         ],
       ),
@@ -376,6 +401,25 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
               ),
             ),
           ],
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(40),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            icon: const Icon(Icons.tune_rounded, size: 17, color: Color(0xFF475569)),
+            label: const Text(
+              'Cập nhật sở thích & lộ trình cá nhân hóa',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OnboardingTargetScreen()),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -581,6 +625,118 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     );
   }
 
+  // --- Khối 4: Giao diện Sáng / Tối ---
+  Widget _buildThemeModeCard(BuildContext context) {
+    final themeCtrl = context.watch<ThemeController>();
+    final currentMode = themeCtrl.themeMode;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            title: 'Giao diện ứng dụng',
+            icon: Icons.palette_outlined,
+          ),
+          const SizedBox(height: AppTokens.space8),
+          const Text(
+            'Chọn chế độ hiển thị phù hợp với môi trường học của bạn.',
+            style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildThemeOption(
+                context,
+                title: 'Tự động',
+                subtitle: 'Hệ thống',
+                icon: Icons.brightness_auto_rounded,
+                isSelected: currentMode == ThemeMode.system,
+                onTap: () => themeCtrl.setThemeMode(ThemeMode.system),
+              ),
+              const SizedBox(width: 8),
+              _buildThemeOption(
+                context,
+                title: 'Sáng',
+                subtitle: 'Light',
+                icon: Icons.light_mode_rounded,
+                isSelected: currentMode == ThemeMode.light,
+                onTap: () => themeCtrl.setThemeMode(ThemeMode.light),
+              ),
+              const SizedBox(width: 8),
+              _buildThemeOption(
+                context,
+                title: 'Tối',
+                subtitle: 'Dark',
+                icon: Icons.dark_mode_rounded,
+                isSelected: currentMode == ThemeMode.dark,
+                onTap: () => themeCtrl.setThemeMode(ThemeMode.dark),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOption(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTokens.primary.withAlpha(isDark ? 50 : 25)
+                : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppTokens.primary : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              width: isSelected ? 1.8 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: isSelected ? AppTokens.primary : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected ? AppTokens.primary : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: isSelected
+                      ? AppTokens.primary.withAlpha(200)
+                      : (isDark ? Colors.white54 : const Color(0xFF94A3B8)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   // --- Khối 5: Trạng thái đồng bộ ---
   Widget _buildSyncCard(BuildContext context, SettingsController controller) {

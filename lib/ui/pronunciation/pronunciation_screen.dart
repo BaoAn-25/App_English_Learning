@@ -79,7 +79,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
 
                     // Nút BẮT ĐẦU +10 KN (Màu xanh Cyan Duolingo)
                     AppButton(
-                      label: 'BẮT ĐẦU +10 KN',
+                      label: 'BẮT ĐẦU +10 XP',
                       isFullWidth: true,
                       height: 52,
                       variant: AppButtonVariant.primary,

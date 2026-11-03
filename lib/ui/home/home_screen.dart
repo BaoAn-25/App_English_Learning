@@ -295,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           border: Border.all(color: const Color(0xFFBAE6FD)),
                         ),
                         child: const Text(
-                          '+10 KN',
+                          '+10 XP',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: Color(0xFF0284C7)),
                         ),
                       ),

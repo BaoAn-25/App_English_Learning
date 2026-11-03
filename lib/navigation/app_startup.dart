@@ -45,6 +45,7 @@ class _AppStartupState extends State<AppStartup> {
         await ApiClient.sanitizeOrMigrateApiUrl(repository);
         await AssetSeeder.seedIfEmpty();
         await AssetSeeder.syncVocabulary();
+        await AssetSeeder.syncInterestWords();
         await QuestionSyncService.syncQuestions(repository);
 
         try {

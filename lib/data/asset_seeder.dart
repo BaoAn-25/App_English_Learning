@@ -65,6 +65,33 @@ class AssetSeeder {
     });
   }
 
+  /// Đồng bộ cập nhật các từ vựng và câu đàm thoại theo sở thích mới nhất
+  static Future<void> syncInterestWords({
+    AppDatabase? dbInstance,
+    AssetBundle? bundle,
+  }) async {
+    try {
+      final db = await (dbInstance ?? AppDatabase.instance).database;
+      final assets = bundle ?? rootBundle;
+      final jsonStr = await assets.loadString('assets/data/interest_words.json');
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is List) {
+        final batch = db.batch();
+        for (final item in decoded) {
+          if (item is Map<String, dynamic>) {
+            final row = InterestWord.fromMap(item).toMap();
+            batch.insert(
+              'interest_words',
+              row,
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+        await batch.commit(noResult: true);
+      }
+    } catch (_) {}
+  }
+
   static Future<void> seedIfEmpty({
     AppDatabase? dbInstance,
     AssetBundle? bundle,

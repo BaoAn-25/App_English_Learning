@@ -368,6 +368,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
 
       _isResultSaved = true;
       if (mounted) {
+        MainShell.markFirstLessonCompleted(context);
         setState(() {
           _saveErrorMessage = null;
         });
@@ -983,6 +984,33 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
   // BƯỚC 2: LÀM BÀI TẬP ACTIVITY 2 CHUẨN SGK
   // ==========================================
   Widget _buildQuestionsStep() {
+    if (_questions.isEmpty ||
+        _currentQuestionIndex < 0 ||
+        _currentQuestionIndex >= _questions.length) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.info_outline_rounded, size: 48, color: Color(0xFF64748B)),
+              const SizedBox(height: 16),
+              const Text(
+                'Chưa có câu hỏi cho bài học này hoặc dữ liệu đang tải.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              AppButton(
+                label: 'Quay lại bài đọc',
+                onPressed: () => setState(() => _currentStep = 0),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final question = _questions[_currentQuestionIndex];
     final selectedOption = _selectedAnswers[_currentQuestionIndex];
     final isChecked = _checkedStates[_currentQuestionIndex];

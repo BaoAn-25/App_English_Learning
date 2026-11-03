@@ -93,6 +93,7 @@ class _OnboardingTopicsScreenState extends State<OnboardingTopicsScreen> {
           dailyMinutes: widget.dailyMinutes,
           reminderEnabled: widget.reminderEnabled,
           reminderTime: widget.reminderTime,
+          favoriteTopics: _selectedTopics.toList(),
         ),
       ),
     );
