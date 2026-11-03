@@ -811,25 +811,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               InkWell(
                 onTap: () {
-                  if (!isStudent && hasTrialReady) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TrialLessonScreen(lessonId: lesson.lessonId),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UnitDetailScreen(
+                        unitNumber: item.number,
+                        unitTitle: item.title.replaceAll(RegExp(r'^Unit \d+:\s*'), ''),
+                        unitTopic: item.readingTitle,
                       ),
-                    );
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => UnitDetailScreen(
-                          unitNumber: item.number,
-                          unitTitle: item.title.replaceAll(RegExp(r'^Unit \d+:\s*'), ''),
-                          unitTopic: item.readingTitle,
-                        ),
-                      ),
-                    );
-                  }
+                    ),
+                  );
                 },
                 borderRadius: BorderRadius.circular(30),
                 child: Column(
