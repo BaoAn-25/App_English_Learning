@@ -73,18 +73,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final auth = AuthController.instance;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return ChangeNotifierProvider<HomeController>(
       create: (_) => HomeController(repo: repo),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
           elevation: 0.5,
           title: Row(
             children: [
               const PrepLogo(size: 34, showText: false),
               const SizedBox(width: 10),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -93,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontFamily: 'BeVietnamPro',
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
-                      color: Color(0xFF0F172A),
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   Text(
@@ -102,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontFamily: 'BeVietnamPro',
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -198,19 +201,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- Khu vực Khám phá Duolingo x Quizlet (Phát âm IPA & Chủ đề sở thích) ---
   Widget _buildExploreDuolingoHub(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Góc luyện tập & Khám phá',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             GestureDetector(
@@ -247,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                     boxShadow: const [
@@ -271,19 +276,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Icon(Icons.mic_none_rounded, color: Color(0xFF0284C7), size: 22),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
+                      Text(
                         'Phát âm IPA',
                         style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w900,
                           fontSize: 14.5,
-                          color: Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         '44 âm & Cặp đối lập',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
@@ -318,13 +323,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: const [
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x0C0F172A),
-                        offset: Offset(0, 4),
+                        color: isDark ? const Color(0x20000000) : const Color(0x0C0F172A),
+                        offset: const Offset(0, 4),
                         blurRadius: 10,
                       ),
                     ],
@@ -336,25 +341,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFEF3C7),
+                          color: isDark ? const Color(0xFFB45309).withAlpha(80) : const Color(0xFFFEF3C7),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.sports_soccer_rounded, color: Color(0xFFD97706), size: 22),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
+                      Text(
                         'Theo sở thích',
                         style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w900,
                           fontSize: 14.5,
-                          color: Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'Bóng đá, Cafe, Du lịch...',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
@@ -600,6 +605,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- 4. Lộ trình học tập SGK 12 (Roadmap chuẩn mục lục) ---
   Widget _buildRoadmapTimeline(BuildContext context, HomeController controller, AuthController auth) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isStudent = auth.isAuthenticated && !auth.user.isGuest;
 
     return Column(
@@ -608,13 +614,13 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Lộ trình SGK Tiếng Anh 12',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w900,
                 fontSize: 18,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             TextButton.icon(

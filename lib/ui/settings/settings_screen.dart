@@ -119,6 +119,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   // --- Khối 1A: Hồ sơ dành riêng cho Khách học thử ---
   Widget _buildGuestProfileCard(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return AppCard(
       child: Column(
@@ -149,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 17,
-                        color: AppTokens.textMain,
+                        color: isDark ? Colors.white : AppTokens.textMain,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -157,7 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       'Kết quả đang lưu trên thiết bị này.',
                       style: TextStyle(
                         fontSize: 12.5,
-                        color: theme.colorScheme.outline,
+                        color: isDark ? Colors.white70 : theme.colorScheme.outline,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -203,12 +204,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(42),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
             ),
-            icon: const Icon(Icons.tune_rounded, size: 18, color: Color(0xFF475569)),
-            label: const Text(
+            icon: Icon(Icons.tune_rounded, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+            label: Text(
               'Thiết lập lại mục tiêu & sở thích',
-              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF334155)),
             ),
             onPressed: () {
               Navigator.push(
@@ -225,6 +226,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   // --- Khối 1B: Hồ sơ học sinh đã đăng nhập ---
   Widget _buildProfileCard(BuildContext context, SettingsController controller) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final auth = AuthController.instance;
     final user = auth.user;
     final initialLetter = user.displayName.isNotEmpty
@@ -406,12 +408,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(40),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
             ),
-            icon: const Icon(Icons.tune_rounded, size: 17, color: Color(0xFF475569)),
-            label: const Text(
+            icon: Icon(Icons.tune_rounded, size: 17, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+            label: Text(
               'Cập nhật sở thích & lộ trình cá nhân hóa',
-              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF334155)),
             ),
             onPressed: () {
               Navigator.push(
@@ -428,6 +430,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   // --- Khối 2: Mục tiêu câu/ngày ---
   Widget _buildDailyGoalCard(BuildContext context, SettingsController controller) {
     const goals = [10, 20, 30];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AppCard(
       child: Column(
@@ -452,10 +455,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppTokens.primary
-                            : Theme.of(context).colorScheme.surface,
+                            : (isDark ? const Color(0xFF1E293B) : Colors.white),
                         borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
                         border: Border.all(
-                          color: isSelected ? AppTokens.primary : const Color(0xFFE2E8F0),
+                          color: isSelected ? AppTokens.primary : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                           width: 1.5,
                         ),
                       ),
@@ -466,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : AppTokens.textMain,
+                              color: isSelected ? Colors.white : (isDark ? Colors.white : AppTokens.textMain),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -474,7 +477,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                             AppStrings.questionsDoneUnit,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isSelected ? Colors.white70 : const Color(0xFF64748B),
+                              color: isSelected ? Colors.white70 : (isDark ? Colors.white60 : const Color(0xFF64748B)),
                             ),
                           ),
                         ],
@@ -493,6 +496,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   // --- Khối 3: Nhắc nhở học tập ---
   Widget _buildReminderCard(BuildContext context, SettingsController controller) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final formattedTime =
         '${controller.reminderTime.hour.toString().padLeft(2, '0')}:${controller.reminderTime.minute.toString().padLeft(2, '0')}';
 
@@ -595,14 +599,14 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTokens.primary.withAlpha(20),
+                        color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : AppTokens.primary.withAlpha(20),
                         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                       ),
                       child: Text(
                         formattedTime,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppTokens.primary,
+                          color: isDark ? const Color(0xFF93C5FD) : AppTokens.primary,
                         ),
                       ),
                     ),

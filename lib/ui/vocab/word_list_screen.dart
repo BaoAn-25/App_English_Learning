@@ -9,12 +9,28 @@ import 'topic_quiz_screen.dart';
 import 'vocab_provider.dart';
 
 /// Màn hình danh sách 20 từ của một chủ đề + nút học Flashcard & Quiz
-class WordListScreen extends StatelessWidget {
+class WordListScreen extends StatefulWidget {
   final Topic topic;
   const WordListScreen({super.key, required this.topic});
 
   @override
+  State<WordListScreen> createState() => _WordListScreenState();
+}
+
+class _WordListScreenState extends State<WordListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<VocabProvider>().loadWordsByTopic(widget.topic.id);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final topic = widget.topic;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

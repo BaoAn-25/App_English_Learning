@@ -1346,7 +1346,7 @@ class _VisualChoiceLessonScreenState extends State<_VisualChoiceLessonScreen> {
             variant: AppButtonVariant.primary,
             onPressed: () {
               widget.onCompleted();
-              _handleClose();
+              Navigator.pop(context);
             },
           ),
         ],

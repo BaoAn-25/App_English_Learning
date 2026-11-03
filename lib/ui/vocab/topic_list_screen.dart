@@ -22,16 +22,28 @@ class _TopicListScreenState extends State<TopicListScreen> {
   int _selectedSegment = 0; // 0: Flashcards, 1: Match Game
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<VocabProvider>().loadTopics();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final isDark = theme.brightness == Brightness.dark;
+
     final segmentedControl = Container(
-      color: Colors.white,
+      color: isDark ? const Color(0xFF1E2430) : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(4),
@@ -599,8 +611,7 @@ class _TopicCard extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (_) => ChangeNotifierProvider.value(
-                value: context.read<VocabProvider>()
-                  ..loadWordsByTopic(topic.id),
+                value: context.read<VocabProvider>(),
                 child: WordListScreen(topic: topic),
               ),
             ),
