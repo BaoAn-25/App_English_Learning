@@ -150,6 +150,25 @@ class AppTheme {
           ),
         ),
       ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+        titleTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF0F172A),
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 14,
+          color: Color(0xFF334155),
+        ),
+      ),
     );
   }
 
@@ -294,6 +313,25 @@ class AppTheme {
               fontWeight: FontWeight.w600,
             ),
           ),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: Color(0xFF1E293B),
+        surfaceTintColor: Colors.transparent,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+        titleTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 14,
+          color: Colors.white70,
         ),
       ),
     );

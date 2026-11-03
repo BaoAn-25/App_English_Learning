@@ -382,10 +382,15 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
 
   // --- MỞ RƯƠNG XP (CỬA 3) ---
   void _openTreasureChest() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -403,15 +408,23 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Mở rương kho báu!',
-                style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.w900, fontSize: 19),
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontWeight: FontWeight.w900,
+                  fontSize: 19,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Bạn được thưởng +20 XP vì đã hoàn thành xuất sắc các chặng thử thách.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                ),
               ),
               const SizedBox(height: 16),
               Container(

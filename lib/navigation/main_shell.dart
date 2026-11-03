@@ -84,26 +84,35 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _showUnlockFeatureDialog(String featureName) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
+                  color: isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.lock_rounded, color: Color(0xFFD97706), size: 24),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Nhiệm vụ mở khóa',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
                 ),
               ),
             ],
@@ -114,27 +123,33 @@ class _MainShellState extends State<MainShell> {
             children: [
               Text(
                 'Tính năng $featureName đang tạm khóa để bạn làm quen với phương pháp học.',
-                style: const TextStyle(fontSize: 14, color: Color(0xFF334155), height: 1.4),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white70 : const Color(0xFF334155),
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3B82F6) : const Color(0xFFBFDBFE),
+                  ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.stars_rounded, color: Color(0xFF2563EB), size: 20),
-                    SizedBox(width: 8),
+                    const Icon(Icons.stars_rounded, color: Color(0xFF2563EB), size: 20),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Hoàn thành 1 bài học bất kỳ (Phát âm IPA, Sở thích hoặc Học thử SGK) để tự động mở khóa vĩnh viễn!',
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1E40AF),
+                          color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E40AF),
                         ),
                       ),
                     ),
@@ -146,7 +161,13 @@ class _MainShellState extends State<MainShell> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Để sau', style: TextStyle(color: Color(0xFF64748B))),
+              child: Text(
+                'Để sau',
+                style: TextStyle(
+                  color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
