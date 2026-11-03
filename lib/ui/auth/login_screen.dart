@@ -213,18 +213,48 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Logo EngPass chú chim xanh thương hiệu
+                Center(
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        width: 72,
+                        height: 72,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 const Text(
                   'Chào mừng bạn quay lại',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
-                    fontSize: 26,
+                    fontSize: 24,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF0F172A),
+                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Đăng nhập để xem lộ trình học và tiếp tục mục tiêu điểm thi THPT.',
+                  'Đăng nhập EngPass để tiếp tục lộ trình học và ôn thi THPT.',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontSize: 13.5,
@@ -274,9 +304,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
                   decoration: InputDecoration(
-                    hintText: 'ban@email.com',
+                    hintText: 'Email',
                     errorText: _emailError,
-                    prefixIcon: const Icon(Icons.mail_outline_rounded),
+                    prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B)),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -286,6 +316,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
@@ -308,11 +342,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     hintText: 'Nhập mật khẩu của bạn',
                     errorText: _passwordError,
-                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF64748B)),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                         size: 20,
+                        color: const Color(0xFF64748B),
                       ),
                       onPressed: () {
                         setState(() {
@@ -329,6 +364,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
@@ -389,7 +428,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   label: 'Tiếp tục với Google',
                   isFullWidth: true,
                   variant: AppButtonVariant.google,
-                  height: 50,
+                  height: 52,
                   onPressed: _isSubmitting ? null : _handleGoogleAuth,
                 ),
                 const SizedBox(height: 24),

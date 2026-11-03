@@ -355,8 +355,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: 'Địa chỉ email',
-                  hintText: 'vidu@gmail.com',
+                  labelText: 'Email',
+                  hintText: 'Email',
                   prefixIcon: const Icon(Icons.email_outlined, size: 20),
                   filled: true,
                   fillColor: Colors.white,
@@ -367,6 +367,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
                   ),
                 ),
               ),

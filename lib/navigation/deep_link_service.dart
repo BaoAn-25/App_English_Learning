@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../ui/auth/login_screen.dart';
 
-/// Dịch vụ lắng nghe và điều hướng Deep Link từ trình duyệt web vào ứng dụng English 12
+/// Dịch vụ lắng nghe và điều hướng Deep Link từ trình duyệt web vào ứng dụng EngPass
 class DeepLinkService {
   static const MethodChannel _channel = MethodChannel('com.example.thpt_english/deeplink');
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

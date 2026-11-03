@@ -155,7 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 14),
                   const Text(
                     '1. Mục đích sử dụng\n'
-                    'Ứng dụng English 12 phục vụ học sinh lớp 12 ôn thi Tốt nghiệp THPT theo chương trình GDPT SGK Global Success. '
+                    'Ứng dụng EngPass phục vụ học sinh lớp 12 ôn thi Tốt nghiệp THPT theo chương trình GDPT SGK Global Success. '
                     'Tài khoản học viên được sử dụng để lưu trữ tiến độ học tập, kết quả làm bài thi thử và đồng bộ hóa qua đám mây.\n\n'
                     '2. Quyền riêng tư & Bảo vệ dữ liệu\n'
                     '- Chúng tôi cam kết bảo mật tuyệt đối địa chỉ email và thông tin cá nhân của bạn.\n'
@@ -333,18 +333,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Logo EngPass chú chim xanh thương hiệu
+                Center(
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        width: 72,
+                        height: 72,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
                 const Text(
-                  'Tạo tài khoản English 12',
+                  'Tạo tài khoản EngPass',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
-                    fontSize: 26,
+                    fontSize: 24,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF0F172A),
+                    letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 6),
                 const Text(
                   'Tạo tài khoản học viên để lưu trữ mục tiêu, điểm số và bài làm của bạn.',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontSize: 13.5,
@@ -468,9 +498,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _nameCtrl,
                   autofillHints: const [AutofillHints.name],
                   decoration: InputDecoration(
-                    hintText: 'Ví dụ: Minh Anh',
+                    hintText: 'Tên',
                     errorText: _nameError,
-                    prefixIcon: const Icon(Icons.person_outline_rounded),
+                    prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF64748B)),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -480,6 +510,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
@@ -500,9 +534,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
                   decoration: InputDecoration(
-                    hintText: 'ban@email.com',
+                    hintText: 'Email',
                     errorText: _emailError,
-                    prefixIcon: const Icon(Icons.mail_outline_rounded),
+                    prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B)),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -512,6 +546,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
@@ -534,13 +572,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     hintText: 'Tối thiểu 6 ký tự',
                     errorText: _passwordError,
-                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF64748B)),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
                         size: 20,
+                        color: const Color(0xFF64748B),
                       ),
                       onPressed: () {
                         setState(() {
@@ -557,6 +596,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
                     ),
                   ),
                 ),
@@ -609,7 +652,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const Text(
-                            ' của English 12.',
+                            ' của EngPass.',
                             style: TextStyle(
                               fontSize: 12.5,
                               color: Color(0xFF475569),
@@ -659,7 +702,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   label: 'Tiếp tục với Google',
                   isFullWidth: true,
                   variant: AppButtonVariant.google,
-                  height: 50,
+                  height: 52,
                   onPressed: _isSubmitting ? null : _handleGoogleAuth,
                 ),
                 const SizedBox(height: 20),

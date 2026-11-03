@@ -12,7 +12,7 @@ class AppTokens {
   // Font chữ chuẩn SGK
   static const String fontFamily = 'BeVietnamPro';
 
-  // Palette màu sắc thương hiệu (Dựa theo logo English 12)
+  // Palette màu sắc thương hiệu (Dựa theo logo EngPass)
   static const Color navyDark = Color(0xFF0F172A); // Navy đen sâu
   static const Color primary = Color(0xFF1E3A8A); // Navy chủ đạo (Action, Header)
   static const Color primaryLight = Color(0xFF2563EB); // Navy sáng

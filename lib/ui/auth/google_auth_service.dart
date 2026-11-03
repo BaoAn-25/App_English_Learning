@@ -51,7 +51,7 @@ class GoogleSignInResult {
   }
 }
 
-/// Dịch vụ quản trị Đăng nhập Google chuẩn hóa cho ứng dụng Flutter English 12.
+/// Dịch vụ quản trị Đăng nhập Google chuẩn hóa cho ứng dụng Flutter EngPass.
 /// Tương thích toàn diện với google_sign_in 7.x và Android Credential Manager.
 class GoogleAuthService {
   GoogleAuthService._();

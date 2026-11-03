@@ -108,7 +108,7 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               const Center(
                 child: Text(
-                  'Khi tiếp tục nghĩa là bạn đã đồng ý với Điều khoản của English 12',
+                  'Khi tiếp tục nghĩa là bạn đã đồng ý với Điều khoản của EngPass',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,

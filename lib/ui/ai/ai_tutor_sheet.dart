@@ -271,7 +271,7 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Gia sư AI English 12',
+                        'Gia sư AI EngPass',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,

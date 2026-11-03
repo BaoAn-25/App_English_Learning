@@ -3,7 +3,7 @@ import '../../data/audio_repository.dart';
 import '../theme/app_tokens.dart';
 import 'app_audio_controller.dart';
 
-/// Widget thanh phát âm thanh chuẩn hóa của ứng dụng English 12 THPT
+/// Widget thanh phát âm thanh chuẩn hóa của ứng dụng EngPass THPT
 class AppAudioPlayerWidget extends StatefulWidget {
   final AudioTrack track;
   final String? title;

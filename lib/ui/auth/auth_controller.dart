@@ -384,7 +384,7 @@ class AuthController extends ChangeNotifier {
       final loggedInUser = UserProfile(
         id: userData['id'] as String,
         email: userData['email'] as String,
-        displayName: userData['displayName'] as String? ?? googleResult.account?.displayName ?? 'Học sinh English 12',
+        displayName: userData['displayName'] as String? ?? googleResult.account?.displayName ?? 'Học sinh EngPass',
         avatarUrl: userData['avatarUrl'] as String? ?? googleResult.account?.photoUrl ?? '',
         authProvider: 'google',
         role: userData['role'] as String? ?? 'student',

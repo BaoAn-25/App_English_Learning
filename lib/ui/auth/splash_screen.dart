@@ -32,7 +32,7 @@ class SplashScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'English 12',
+                  'EngPass',
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontSize: 40,

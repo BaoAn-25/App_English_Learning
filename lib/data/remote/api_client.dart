@@ -34,7 +34,7 @@ class ApiResponse {
   }
 }
 
-/// API Client chuẩn kết nối tới Backend English 12.
+/// API Client chuẩn kết nối tới Backend EngPass.
 /// Dùng thư viện lõi dart:io, có timeout toàn phần cho mỗi request.
 class ApiClient {
   /// Địa chỉ Backend API chính thức trên Render HTTPS
