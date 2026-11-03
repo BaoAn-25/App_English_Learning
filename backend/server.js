@@ -500,7 +500,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Đăng nhập Google thật (Xác thực ID Token bằng google-auth-library chính thức)
 app.post('/api/auth/google', async (req, res) => {
-  const { idToken } = req.body;
+  const idToken = req.body?.idToken || req.body?.id_token;
 
   if (!idToken || typeof idToken !== 'string' || idToken.trim().length === 0) {
     return res.status(400).json({ error: 'Thiếu idToken xác thực từ Google.' });
