@@ -14,7 +14,7 @@ class PrepLogo extends StatelessWidget {
     this.size = 56,
     this.showText = true,
     this.textColor,
-    this.appName = 'English 12',
+    this.appName = 'EngPass',
   });
 
   @override

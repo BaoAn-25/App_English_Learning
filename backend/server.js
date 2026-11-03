@@ -1209,16 +1209,20 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
     const studentName = result.rows[0].display_name || 'học viên';
 
-    const emailSubject = '[English 12] Yêu cầu đặt lại mật khẩu tài khoản học viên';
+    const emailSubject = '[EngPass] Yêu cầu đặt lại mật khẩu tài khoản học viên';
     const emailHtml = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2>Yêu cầu đặt lại mật khẩu</h2>
-        <p>Xin chào <strong>${studentName}</strong>,</p>
-        <p>Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản English 12 của bạn. Vui lòng bấm vào liên kết bên dưới để tạo mật khẩu mới:</p>
-        <p style="margin: 24px 0;">
-          <a href="${resetUrl}" style="background-color: #1CB0F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Đặt lại Mật khẩu</a>
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #131F24; color: #FFFFFF; border-radius: 16px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #1CB0F6; font-size: 28px; margin: 0 0 6px 0;">EngPass</h1>
+          <p style="color: #94A3B8; font-size: 13px; margin: 0;">Luyện Thi THPT Tiếng Anh</p>
+        </div>
+        <h2 style="color: #FFFFFF; font-size: 20px;">Yêu cầu đặt lại mật khẩu</h2>
+        <p style="color: #CBD5E1; font-size: 15px;">Xin chào <strong>${studentName}</strong>,</p>
+        <p style="color: #CBD5E1; font-size: 15px; line-height: 1.5;">Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>EngPass</strong> của bạn. Vui lòng bấm vào nút bên dưới để tạo mật khẩu mới:</p>
+        <p style="margin: 28px 0; text-align: center;">
+          <a href="${resetUrl}" style="background-color: #1CB0F6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 0 #1899D6;">Đặt lại Mật khẩu</a>
         </p>
-        <p style="color: #DC2626; font-size: 13px;">Liên kết này chỉ có hiệu lực trong vòng 15 phút và chỉ được sử dụng một lần.</p>
+        <p style="color: #F87171; font-size: 13px;">Liên kết này chỉ có hiệu lực trong vòng 15 phút và chỉ được sử dụng một lần.</p>
         <p style="color: #64748B; font-size: 13px;">Nếu bạn không yêu cầu hành động này, vui lòng bỏ qua thư này để bảo vệ tài khoản.</p>
       </div>
     `;
@@ -1235,7 +1239,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: process.env.RESEND_FROM || 'English 12 <onboarding@resend.dev>',
+            from: process.env.RESEND_FROM || 'EngPass <onboarding@resend.dev>',
             to: [cleanEmail],
             subject: emailSubject,
             html: emailHtml,
@@ -1420,6 +1424,11 @@ app.post('/api/auth/resend-verification', authenticateToken, async (req, res) =>
   }
 });
 
+// Phục vụ logo thương hiệu chính thức
+app.get(['/logo.png', '/app-logo.png'], (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../assets/images/app_logo.png'));
+});
+
 // Trang HTML cho phép người dùng đặt lại mật khẩu từ trình duyệt khi bấm link email (Chuẩn giao diện Duolingo)
 app.get('/reset-password', (req, res) => {
   const token = req.query.token || '';
@@ -1429,7 +1438,8 @@ app.get('/reset-password', (req, res) => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Đặt lại mật khẩu - English 12</title>
+      <title>Đặt lại mật khẩu - EngPass</title>
+      <link rel="icon" type="image/png" href="/logo.png" />
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -1451,11 +1461,10 @@ app.get('/reset-password', (req, res) => {
           font-size: 26px;
           font-weight: 800;
           color: #1CB0F6;
-          margin-bottom: 24px;
           letter-spacing: -0.5px;
         }
         .card-title {
-          font-size: 24px;
+          font-size: 22px;
           font-weight: 700;
           margin-bottom: 24px;
           color: #FFFFFF;
@@ -1543,7 +1552,11 @@ app.get('/reset-password', (req, res) => {
     </head>
     <body>
       <div class="container">
-        <div class="logo-title">English 12</div>
+        <div style="margin-bottom: 12px;">
+          <img src="/logo.png" alt="EngPass Logo" style="width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 4px 16px rgba(28, 176, 246, 0.35); object-fit: cover;" />
+        </div>
+        <div class="logo-title" style="margin-bottom: 4px;">EngPass</div>
+        <div style="font-size: 13px; color: #94A3B8; margin-bottom: 22px; font-weight: 500;">Luyện Thi THPT Tiếng Anh</div>
         <h1 class="card-title">Đặt lại mật khẩu</h1>
         
         <form id="resetForm">
@@ -1571,17 +1584,20 @@ app.get('/reset-password', (req, res) => {
         <div id="statusMsg" class="msg"></div>
 
         <div id="successView" style="display: none; text-align: center; padding-top: 10px;">
-          <h1 style="font-size: 26px; font-weight: 800; color: #FFFFFF; margin-bottom: 24px; letter-spacing: -0.5px;">Mật khẩu đã thay đổi!</h1>
+          <div style="margin-bottom: 18px;">
+            <img src="/logo.png" alt="EngPass Logo" style="width: 92px; height: 92px; border-radius: 22px; box-shadow: 0 6px 20px rgba(28, 176, 246, 0.4); object-fit: cover;" />
+          </div>
+          <h1 style="font-size: 26px; font-weight: 800; color: #FFFFFF; margin-bottom: 20px; letter-spacing: -0.5px;">Mật khẩu đã thay đổi!</h1>
           <p style="margin-bottom: 20px;">
             <a href="english12://login" 
                onclick="openApp(event)"
-               style="color: #1CB0F6; font-weight: 800; font-size: 14.5px; text-transform: uppercase; letter-spacing: 0.8px; text-decoration: none; cursor: pointer; display: inline-block; padding: 12px 18px; border-radius: 12px; transition: all 0.2s;"
+               style="color: #1CB0F6; font-weight: 800; font-size: 15px; text-transform: uppercase; letter-spacing: 0.8px; text-decoration: none; cursor: pointer; display: inline-block; padding: 12px 18px; border-radius: 12px; transition: all 0.2s;"
                onmouseover="this.style.textDecoration='underline'"
                onmouseout="this.style.textDecoration='none'">
-              BẤM VÀO ĐÂY ĐỂ TIẾP TỤC VÀO ENGLISH 12
+              BẤM VÀO ĐÂY ĐỂ TIẾP TỤC VÀO ENGPASS
             </a>
           </p>
-          <p style="color: #64748B; font-size: 13px; line-height: 1.5;">Hoặc bạn có thể quay lại ứng dụng English 12 trên màn hình điện thoại để đăng nhập.</p>
+          <p style="color: #64748B; font-size: 13px; line-height: 1.5;">Hoặc bạn có thể quay lại ứng dụng EngPass trên màn hình điện thoại để đăng nhập.</p>
         </div>
       </div>
 

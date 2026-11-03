@@ -29,7 +29,7 @@ class ThptEnglishApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: DeepLinkService.navigatorKey,
-      title: 'English 12',
+      title: 'EngPass',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.lightTheme,

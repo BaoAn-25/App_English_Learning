@@ -75,7 +75,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'English 12',
+          'EngPass',
           style: TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w900,
@@ -112,101 +112,57 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             children: [
               const Spacer(flex: 2),
 
-              // Hình minh họa linh vật cầm phong bì chuẩn phong cách Duolingo
+              // Hình minh họa linh vật chú chim xanh giơ sách chuẩn phong cách Duolingo
               Center(
                 child: SizedBox(
                   width: 140,
-                  height: 120,
+                  height: 140,
                   child: Stack(
                     alignment: Alignment.center,
                     clipBehavior: Clip.none,
                     children: [
                       // Các hạt pháo giấy confetti trang trí
                       const Positioned(
-                        top: 4,
-                        left: 12,
-                        child: Text('✨', style: TextStyle(fontSize: 16)),
+                        top: 0,
+                        left: 4,
+                        child: Text('✨', style: TextStyle(fontSize: 18)),
                       ),
                       const Positioned(
-                        top: 14,
-                        right: 8,
-                        child: Text('🎉', style: TextStyle(fontSize: 16)),
+                        top: 8,
+                        right: 2,
+                        child: Text('🎉', style: TextStyle(fontSize: 18)),
                       ),
                       const Positioned(
                         bottom: 8,
-                        left: 8,
-                        child: Text('⭐', style: TextStyle(fontSize: 14)),
+                        left: 2,
+                        child: Text('⭐', style: TextStyle(fontSize: 16)),
                       ),
                       const Positioned(
-                        bottom: 12,
-                        right: 16,
-                        child: Text('✨', style: TextStyle(fontSize: 14)),
-                      ),
-
-                      // Linh vật màu xanh lá Duolingo
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF58CC02),
-                          borderRadius: BorderRadius.circular(45),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0xFF46A302),
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Mắt linh vật
-                            Positioned(
-                              top: 22,
-                              left: 20,
-                              child: CircleAvatar(
-                                radius: 10,
-                                backgroundColor: Colors.white,
-                                child: CircleAvatar(radius: 5, backgroundColor: Color(0xFF131F24)),
-                              ),
-                            ),
-                            Positioned(
-                              top: 22,
-                              right: 20,
-                              child: CircleAvatar(
-                                radius: 10,
-                                backgroundColor: Colors.white,
-                                child: CircleAvatar(radius: 5, backgroundColor: Color(0xFF131F24)),
-                              ),
-                            ),
-                            // Mỏ cam
-                            Positioned(
-                              top: 36,
-                              child: Icon(Icons.arrow_drop_down_rounded, size: 24, color: Color(0xFFFF9600)),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Phong bì thư vàng cầm trên tay
-                      Positioned(
                         bottom: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFC800),
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0xFFE5A500),
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.mail_rounded,
-                            color: Colors.white,
-                            size: 24,
+                        right: 4,
+                        child: Text('✨', style: TextStyle(fontSize: 16)),
+                      ),
+
+                      // Linh vật chú chim xanh 2D giơ sách điểm A
+                      Container(
+                        width: 104,
+                        height: 104,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB),
+                          borderRadius: BorderRadius.circular(26),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1CB0F6).withValues(alpha: 0.4),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(26),
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -353,14 +309,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             children: [
               Center(
                 child: Container(
-                  width: 72,
-                  height: 72,
+                  width: 76,
+                  height: 76,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1CB0F6).withValues(alpha: 0.25),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Center(
-                    child: Icon(Icons.lock_reset_rounded, size: 36, color: Color(0xFF2563EB)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: Image.asset('assets/images/app_logo.png', fit: BoxFit.cover),
                   ),
                 ),
               ),
