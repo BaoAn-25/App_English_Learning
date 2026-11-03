@@ -911,7 +911,7 @@ app.post('/api/auth/resend-verification', authenticateToken, async (req, res) =>
   }
 });
 
-// Trang HTML cho phép người dùng đặt lại mật khẩu từ trình duyệt khi bấm link email
+// Trang HTML cho phép người dùng đặt lại mật khẩu từ trình duyệt khi bấm link email (Chuẩn giao diện Duolingo)
 app.get('/reset-password', (req, res) => {
   const token = req.query.token || '';
   res.send(`
@@ -922,57 +922,218 @@ app.get('/reset-password', (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Đặt lại mật khẩu - English 12</title>
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #F8FAFC; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; }
-        .card { background: white; border-radius: 16px; padding: 32px; max-width: 420px; width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-        h2 { margin-top: 0; color: #0F172A; }
-        p { color: #64748B; font-size: 14px; }
-        input { width: 100%; padding: 12px; margin: 8px 0 16px; border: 1px solid #CBD5E1; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
-        button { width: 100%; background: #2563EB; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:hover { background: #1D4ED8; }
-        .msg { padding: 12px; border-radius: 8px; margin-top: 16px; display: none; font-size: 14px; }
-        .success { background: #DCFCE7; color: #166534; }
-        .error { background: #FEE2E2; color: #991B1B; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          background: #131F24;
+          color: #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 20px;
+        }
+        .container {
+          width: 100%;
+          max-width: 400px;
+          text-align: center;
+        }
+        .logo-title {
+          font-size: 26px;
+          font-weight: 800;
+          color: #1CB0F6;
+          margin-bottom: 24px;
+          letter-spacing: -0.5px;
+        }
+        .card-title {
+          font-size: 24px;
+          font-weight: 700;
+          margin-bottom: 24px;
+          color: #FFFFFF;
+        }
+        .form-group {
+          margin-bottom: 16px;
+          text-align: left;
+          position: relative;
+        }
+        .input-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        input {
+          width: 100%;
+          background: #202F36;
+          border: 2px solid #37464F;
+          border-radius: 14px;
+          padding: 14px 44px 14px 16px;
+          color: #FFFFFF;
+          font-size: 15px;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        input:focus {
+          border-color: #1CB0F6;
+        }
+        input::placeholder {
+          color: #778D97;
+        }
+        .toggle-btn {
+          position: absolute;
+          right: 14px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #778D97;
+          display: flex;
+          align-items: center;
+          padding: 0;
+        }
+        .toggle-btn:hover {
+          color: #FFFFFF;
+        }
+        .btn-submit {
+          width: 100%;
+          background: #1CB0F6;
+          color: #FFFFFF;
+          border: none;
+          border-radius: 14px;
+          padding: 14px;
+          font-size: 16px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          cursor: pointer;
+          margin-top: 10px;
+          box-shadow: 0 4px 0 #1899D6;
+          transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-submit:active {
+          transform: translateY(2px);
+          box-shadow: 0 2px 0 #1899D6;
+        }
+        .msg {
+          padding: 14px;
+          border-radius: 12px;
+          margin-top: 18px;
+          font-size: 14px;
+          line-height: 1.45;
+          display: none;
+        }
+        .success {
+          background: #193B2D;
+          border: 1px solid #58CC02;
+          color: #79F73A;
+        }
+        .error {
+          background: #3B1B1B;
+          border: 1px solid #EA2B2B;
+          color: #FF7878;
+        }
       </style>
     </head>
     <body>
-      <div class="card">
-        <h2>Đặt lại Mật khẩu</h2>
-        <p>Nhập mật khẩu mới cho tài khoản học viên English 12 của bạn (tối thiểu 6 ký tự).</p>
+      <div class="container">
+        <div class="logo-title">English 12</div>
+        <h1 class="card-title">Đặt lại mật khẩu</h1>
+        
         <form id="resetForm">
-          <label style="font-size: 13px; font-weight: bold; color: #334155;">Mật khẩu mới</label>
-          <input type="password" id="newPass" minlength="6" required placeholder="Nhập ít nhất 6 ký tự" />
-          <button type="submit" id="btnSubmit">Cập nhật mật khẩu</button>
+          <div class="form-group">
+            <div class="input-wrap">
+              <input type="password" id="newPass" minlength="6" required placeholder="Mật khẩu mới" />
+              <button type="button" class="toggle-btn" onclick="togglePass('newPass', this)" title="Ẩn/Hiện">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="input-wrap">
+              <input type="password" id="confirmPass" minlength="6" required placeholder="Xác nhận mật khẩu mới" />
+              <button type="button" class="toggle-btn" onclick="togglePass('confirmPass', this)" title="Ẩn/Hiện">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btnSubmit">GỬI</button>
         </form>
+
         <div id="statusMsg" class="msg"></div>
       </div>
+
       <script>
+        function togglePass(inputId, btn) {
+          const input = document.getElementById(inputId);
+          if (input.type === 'password') {
+            input.type = 'text';
+            btn.style.color = '#1CB0F6';
+          } else {
+            input.type = 'password';
+            btn.style.color = '#778D97';
+          }
+        }
+
         const form = document.getElementById('resetForm');
         const statusMsg = document.getElementById('statusMsg');
+        const token = '${token}';
+
+        if (!token) {
+          statusMsg.className = 'msg error';
+          statusMsg.innerText = 'Đường dẫn không hợp lệ hoặc thiếu mã xác thực token.';
+          statusMsg.style.display = 'block';
+          form.style.display = 'none';
+        }
+
         form.onsubmit = async (e) => {
           e.preventDefault();
           const pass = document.getElementById('newPass').value;
+          const confirm = document.getElementById('confirmPass').value;
+
+          if (pass.length < 6) {
+            statusMsg.className = 'msg error';
+            statusMsg.innerText = 'Mật khẩu phải có tối thiểu 6 ký tự.';
+            statusMsg.style.display = 'block';
+            return;
+          }
+
+          if (pass !== confirm) {
+            statusMsg.className = 'msg error';
+            statusMsg.innerText = 'Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.';
+            statusMsg.style.display = 'block';
+            return;
+          }
+
+          const btn = document.getElementById('btnSubmit');
+          btn.disabled = true;
+          btn.innerText = 'ĐANG XỬ LÝ...';
           statusMsg.style.display = 'none';
+
           try {
             const res = await fetch('/api/auth/reset-password', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: '${token}', newPassword: pass })
+              body: JSON.stringify({ token: token, newPassword: pass })
             });
             const data = await res.json();
             if (res.ok) {
               statusMsg.className = 'msg success';
-              statusMsg.innerText = data.message + ' Bây giờ bạn có thể mở ứng dụng English 12 để đăng nhập.';
+              statusMsg.innerHTML = '<strong>' + data.message + '</strong><br><br>Bây giờ bạn có thể mở lại ứng dụng <strong>English 12</strong> trên điện thoại để đăng nhập bằng mật khẩu mới!';
               statusMsg.style.display = 'block';
               form.style.display = 'none';
             } else {
               statusMsg.className = 'msg error';
-              statusMsg.innerText = data.error || 'Có lỗi xảy ra.';
+              statusMsg.innerText = data.error || 'Có lỗi xảy ra khi cập nhật mật khẩu.';
               statusMsg.style.display = 'block';
+              btn.disabled = false;
+              btn.innerText = 'GỬI';
             }
           } catch(err) {
             statusMsg.className = 'msg error';
-            statusMsg.innerText = 'Không thể kết nối máy chủ.';
+            statusMsg.innerText = 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.';
             statusMsg.style.display = 'block';
+            btn.disabled = false;
+            btn.innerText = 'GỬI';
           }
         };
       </script>
