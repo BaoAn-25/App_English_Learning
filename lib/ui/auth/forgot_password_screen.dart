@@ -36,6 +36,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _submittedEmail = email;
     });
 
     final auth = AuthController.instance;
@@ -229,18 +230,41 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
-              // Đoạn mô tả với email người dùng
-              Text(
-                'Nếu có tài khoản liên kết với email\n$_submittedEmail, bạn sẽ nhận được đường dẫn đặt lại mật khẩu sau giây lát.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF94A3B8),
-                  height: 1.5,
-                  fontWeight: FontWeight.w500,
-                ),
+              // Đoạn mô tả với email người dùng được in đậm trên 1 dòng riêng chuẩn Duolingo
+              Builder(
+                builder: (context) {
+                  final displayEmail = _submittedEmail.isNotEmpty
+                      ? _submittedEmail
+                      : _emailCtrl.text.trim();
+                  return Text.rich(
+                    TextSpan(
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        color: Color(0xFF94A3B8),
+                        height: 1.6,
+                        fontFamily: 'BeVietnamPro',
+                      ),
+                      children: [
+                        const TextSpan(text: 'Nếu có tài khoản liên kết với email\n'),
+                        TextSpan(
+                          text: displayEmail.isNotEmpty ? displayEmail : 'tài khoản của bạn',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15.5,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: ',\nbạn sẽ nhận được đường dẫn đặt lại mật khẩu sau giây lát.',
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  );
+                },
               ),
 
               const Spacer(flex: 3),
