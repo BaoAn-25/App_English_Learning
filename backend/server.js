@@ -16,18 +16,38 @@ const ACTIVE_JWT_SECRET = JWT_SECRET || 'thpt_english12_production_secret_key_20
 
 // Cấu hình dịch vụ gửi email Nodemailer
 let mailerTransporter = null;
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
   try {
     const nodemailer = require('nodemailer');
-    mailerTransporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const cleanPass = String(process.env.SMTP_PASS).replace(/\s+/g, '');
+    const isGmail = (process.env.SMTP_HOST && process.env.SMTP_HOST.includes('gmail')) ||
+                    (process.env.SMTP_USER && process.env.SMTP_USER.includes('@gmail.com'));
+
+    const transportConfig = isGmail
+      ? {
+          service: 'gmail',
+          auth: {
+            user: process.env.SMTP_USER.trim(),
+            pass: cleanPass,
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+        }
+      : {
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: parseInt(process.env.SMTP_PORT || '587', 10),
+          secure: process.env.SMTP_PORT === '465',
+          auth: {
+            user: process.env.SMTP_USER.trim(),
+            pass: cleanPass,
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+        };
+
+    mailerTransporter = nodemailer.createTransport(transportConfig);
     console.log('✅ Dịch vụ gửi thư điện tử SMTP đã được cấu hình thành công.');
   } catch (err) {
     console.warn('⚠️ Không thể khởi tạo dịch vụ gửi thư SMTP:', err.message);

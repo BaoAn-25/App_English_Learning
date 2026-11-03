@@ -44,13 +44,13 @@ class ApiClient {
   final String baseUrl;
   final String? Function()? tokenProvider;
   final HttpClient _httpClient;
-  static const Duration requestTimeout = Duration(seconds: 15);
+  static const Duration requestTimeout = Duration(seconds: 30);
 
   ApiClient({
     String? baseUrl,
     this.tokenProvider,
   }) : baseUrl = officialBaseUrl,
-       _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 15);
+       _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 30);
 
   /// Kiểm tra và chuyển đổi cấu hình cũ trên thiết bị về Render chính thức.
   /// Tuyệt đối không xóa SQLite, bài làm, tiến độ học hoặc dữ liệu cá nhân.
