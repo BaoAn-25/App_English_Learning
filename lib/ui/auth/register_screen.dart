@@ -51,32 +51,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Text(
             'Hợp nhất dữ liệu học thử?',
-            style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(
+              fontFamily: 'BeVietnamPro',
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
           content: const Text(
             'Trên thiết bị này đang có dữ liệu làm bài học thử của bạn. '
             'Bạn có muốn chuyển toàn bộ điểm số, từ vựng và câu sai vào tài khoản mới này không?',
-            style: TextStyle(fontSize: 14, color: Color(0xFF475569), height: 1.45),
+            style: TextStyle(
+              fontSize: 14,
+              color: Color(0xFF475569),
+              height: 1.45,
+            ),
           ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           actions: [
             TextButton(
               onPressed: () {
                 auth.dismissGuestDataMerge();
                 Navigator.pop(ctx, false);
               },
-              child: const Text('Bỏ qua', style: TextStyle(color: Color(0xFF94A3B8))),
+              child: const Text(
+                'Bỏ qua',
+                style: TextStyle(color: Color(0xFF94A3B8)),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Hợp nhất ngay', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Hợp nhất ngay',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -339,7 +363,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.check_circle_rounded, color: Color(0xFF2563EB), size: 20),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF2563EB),
+                        size: 20,
+                      ),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -371,12 +399,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 20),
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Color(0xFFDC2626),
+                              size: 20,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 _formGeneralError!,
-                                style: const TextStyle(fontSize: 13, color: Color(0xFFB91C1C), height: 1.35),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFFB91C1C),
+                                  height: 1.35,
+                                ),
                               ),
                             ),
                           ],
@@ -391,7 +427,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               onPressed: () {
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginScreen(),
+                                  ),
                                 );
                               },
                               icon: const Icon(Icons.login_rounded, size: 16),
@@ -401,7 +439,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               style: TextButton.styleFrom(
                                 foregroundColor: const Color(0xFF2563EB),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 visualDensity: VisualDensity.compact,
                               ),
                             ),
@@ -496,7 +537,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                         size: 20,
                       ),
                       onPressed: () {
@@ -529,7 +572,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Checkbox(
                         value: _agreedToTerms,
                         activeColor: const Color(0xFF2563EB),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                         onChanged: (val) {
                           setState(() {
                             _agreedToTerms = val ?? false;
@@ -546,7 +591,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           const Text(
                             'Tôi đồng ý với ',
-                            style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Color(0xFF475569),
+                            ),
                           ),
                           GestureDetector(
                             onTap: _showTermsDialog,
@@ -562,7 +610,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const Text(
                             ' của English 12.',
-                            style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Color(0xFF475569),
+                            ),
                           ),
                         ],
                       ),
@@ -573,7 +624,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Nút tạo tài khoản
                 AppButton(
-                  label: _isSubmitting ? 'Đang tạo tài khoản...' : 'Tạo tài khoản',
+                  label: _isSubmitting
+                      ? 'Đang tạo tài khoản...'
+                      : 'Tạo tài khoản',
                   isFullWidth: true,
                   variant: AppButtonVariant.primary,
                   height: 52,
@@ -589,7 +642,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         'HOẶC',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     Expanded(child: Divider()),
@@ -614,13 +671,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     const Text(
                       'Đã có tài khoản? ',
-                      style: TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 13.5,
+                      ),
                     ),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
                         );
                       },
                       child: const Text(
