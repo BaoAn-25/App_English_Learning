@@ -239,7 +239,441 @@ async function initializeDatabase() {
 }
 
 // -------------------------------------------------------------
-// 1. Health & Info
+// 1. Swagger UI & OpenAPI 3.0 Documentation
+// -------------------------------------------------------------
+const openApiSpec = {
+  openapi: '3.0.0',
+  info: {
+    title: 'English 12 - Luyện Thi THPT Web API',
+    version: '1.0.0',
+    description: 'Hệ thống RESTful Web API chuẩn phục vụ ứng dụng di động English 12. Tích hợp xác thực tài khoản, đăng nhập Google, đặt lại mật khẩu, lưu trữ tiến độ học SGK, đồng bộ kết quả thi thử THPT và kết nối trực tiếp với Neon Serverless PostgreSQL.',
+    contact: {
+      name: 'English 12 Engineering Team',
+    },
+  },
+  servers: [
+    { url: '/', description: 'Máy chủ hiện tại (Render.com / Localhost)' },
+  ],
+  tags: [
+    { name: 'Authentication', description: 'Xác thực: Đăng ký, Đăng nhập, Google Sign-In, Quên & Đặt lại mật khẩu' },
+    { name: 'User Profile', description: 'Hồ sơ học viên & Lộ trình điểm số THPT' },
+    { name: 'Daily Stats & Streak', description: 'Thống kê học tập mỗi ngày, Chuỗi Streak & XP' },
+    { name: 'Exams & Practice', description: 'Nộp bài thi thử THPT 40 câu và lưu lịch sử điểm' },
+    { name: 'AI Tutor', description: 'Trợ lý AI giải đáp thắc mắc ngữ pháp & từ vựng Tiếng Anh 12' },
+    { name: 'Health & System', description: 'Kiểm tra trạng thái máy chủ và Neon Database' },
+  ],
+  paths: {
+    '/health': {
+      get: {
+        tags: ['Health & System'],
+        summary: 'Kiểm tra máy chủ hoạt động (Health check)',
+        responses: {
+          200: {
+            description: 'Máy chủ đang hoạt động bình thường',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'healthy' },
+                    uptime: { type: 'number', example: 124.5 },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/register': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Đăng ký tài khoản mới bằng Email & Mật khẩu',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', example: 'hocsinh12@gmail.com' },
+                  password: { type: 'string', example: 'MatKhau123@' },
+                  displayName: { type: 'string', example: 'Minh Anh' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Đăng ký tài khoản thành công' },
+          400: { description: 'Thiếu email hoặc mật khẩu' },
+          409: { description: 'Email đã được đăng ký trước đó' },
+        },
+      },
+    },
+    '/api/auth/login': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Đăng nhập bằng Email & Mật khẩu',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', example: 'hocsinh12@gmail.com' },
+                  password: { type: 'string', example: 'MatKhau123@' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đăng nhập thành công, trả về token và thông tin user' },
+          401: { description: 'Sai tài khoản hoặc mật khẩu' },
+        },
+      },
+    },
+    '/api/auth/google': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Đăng nhập / Đăng ký nhanh qua tài khoản Google',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['idToken'],
+                properties: {
+                  idToken: { type: 'string', example: 'eyJhbGciOiJSUzI1NiIs...' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đăng nhập Google thành công' },
+        },
+      },
+    },
+    '/api/auth/forgot-password': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Yêu cầu liên kết đặt lại mật khẩu qua Email (chuẩn Duolingo)',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email'],
+                properties: {
+                  email: { type: 'string', example: 'hocsinh12@gmail.com' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Tạo mã đặt lại mật khẩu và gửi email thành công' },
+        },
+      },
+    },
+    '/api/auth/reset-password': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Xác nhận mã Token và đặt mật khẩu mới',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['token', 'newPassword'],
+                properties: {
+                  token: { type: 'string', example: '9a8b7c6d5e4f3a2b1c0d' },
+                  newPassword: { type: 'string', example: 'MatKhauMoi123@' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Cập nhật mật khẩu mới thành công' },
+          400: { description: 'Token không hợp lệ hoặc đã hết hạn' },
+        },
+      },
+    },
+    '/api/profile': {
+      get: {
+        tags: ['User Profile'],
+        summary: 'Lấy thông tin hồ sơ và mục tiêu điểm thi THPT của học sinh',
+        parameters: [
+          { name: 'Authorization', in: 'header', required: true, schema: { type: 'string', example: 'Bearer <jwt_token>' } },
+        ],
+        responses: {
+          200: { description: 'Trả về mục tiêu điểm số, ngày thi, thời gian học mỗi ngày' },
+        },
+      },
+      put: {
+        tags: ['User Profile'],
+        summary: 'Cập nhật mục tiêu điểm số, thời gian học và chủ đề yêu thích',
+        parameters: [
+          { name: 'Authorization', in: 'header', required: true, schema: { type: 'string', example: 'Bearer <jwt_token>' } },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  targetScore: { type: 'number', example: 8.5 },
+                  examDate: { type: 'string', example: '2026-06-27' },
+                  dailyMinutes: { type: 'integer', example: 20 },
+                  reminderEnabled: { type: 'boolean', example: true },
+                  favoriteTopics: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    example: ['Công nghệ', 'Môi trường', 'Du lịch'],
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Cập nhật thành công' },
+        },
+      },
+    },
+    '/api/stats/daily': {
+      get: {
+        tags: ['Daily Stats & Streak'],
+        summary: 'Lấy lịch sử học tập 30 ngày gần nhất (Streak & XP)',
+        parameters: [
+          { name: 'Authorization', in: 'header', required: true, schema: { type: 'string', example: 'Bearer <jwt_token>' } },
+        ],
+        responses: {
+          200: { description: 'Danh sách ngày học và XP tích lũy' },
+        },
+      },
+      post: {
+        tags: ['Daily Stats & Streak'],
+        summary: 'Ghi nhận số câu đã làm, số câu đúng và cộng điểm XP hôm nay',
+        parameters: [
+          { name: 'Authorization', in: 'header', required: true, schema: { type: 'string', example: 'Bearer <jwt_token>' } },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  statDate: { type: 'string', example: '2026-11-04' },
+                  questionsDone: { type: 'integer', example: 20 },
+                  correctCount: { type: 'integer', example: 18 },
+                  xpEarned: { type: 'integer', example: 50 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đồng bộ thống kê thành công' },
+        },
+      },
+    },
+    '/api/exams/submit': {
+      post: {
+        tags: ['Exams & Practice'],
+        summary: 'Nộp bài thi thử THPT Quốc gia (40 câu) và lưu kết quả',
+        parameters: [
+          { name: 'Authorization', in: 'header', required: true, schema: { type: 'string', example: 'Bearer <jwt_token>' } },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  examType: { type: 'string', example: 'mock_thpt_de_1' },
+                  totalQuestions: { type: 'integer', example: 40 },
+                  correctCount: { type: 'integer', example: 34 },
+                  score: { type: 'number', example: 8.5 },
+                  durationSeconds: { type: 'integer', example: 2450 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Lưu kết quả thi thành công' },
+        },
+      },
+    },
+    '/api/ai/ask': {
+      post: {
+        tags: ['AI Tutor'],
+        summary: 'Hỏi trợ lý Gia sư AI về kiến thức Tiếng Anh 12 SGK',
+        parameters: [
+          { name: 'Authorization', in: 'header', required: true, schema: { type: 'string', example: 'Bearer <jwt_token>' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['question'],
+                properties: {
+                  question: { type: 'string', example: 'Giải thích giúp em câu điều kiện hỗn hợp loại 3 và loại 2?' },
+                  unitNumber: { type: 'integer', example: 5 },
+                  section: { type: 'string', example: 'Grammar' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Câu trả lời giải thích từ AI' },
+        },
+      },
+    },
+  },
+};
+
+// Route trả về OpenAPI Specification JSON
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json(openApiSpec);
+});
+
+// Giao diện Swagger UI chuẩn HTML
+const swaggerHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English 12 - Swagger UI & Web API</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.11.0/favicon-32x32.png" />
+  <style>
+    body {
+      margin: 0;
+      background: #F8FAFC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .custom-topbar {
+      background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+      color: #FFFFFF;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      border-bottom: 3px solid #1CB0F6;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #FFFFFF;
+    }
+    .brand-title {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .brand-badge {
+      background: #1CB0F6;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .status-pill {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10B981;
+      color: #34D399;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10B981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10B981;
+    }
+    .swagger-ui {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .swagger-ui .topbar { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="custom-topbar">
+    <div class="brand">
+      <span style="font-size: 28px;">🎓</span>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="brand-title">English 12 Web API</span>
+          <span class="brand-badge">Swagger OAS 3.0</span>
+        </div>
+        <div style="font-size: 12px; color: #94A3B8; font-weight: 500;">
+          Luyện Thi THPT Tiếng Anh • Render & Neon Serverless PostgreSQL
+        </div>
+      </div>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      Neon PostgreSQL Connected
+    </div>
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      SwaggerUIBundle({
+        url: '/swagger.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: "BaseLayout"
+      });
+    };
+  </script>
+</body>
+</html>`;
+
+// Khi mở trên trình duyệt (hoặc các đường dẫn /docs, /swagger, /api-docs) -> Hiển thị Swagger UI
+app.get(['/docs', '/swagger', '/api-docs'], (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(swaggerHtml);
+});
+
+// -------------------------------------------------------------
+// Health & Info
 // -------------------------------------------------------------
 app.get(['/health', '/api/health'], (req, res) => {
   res.status(200).json({
@@ -249,11 +683,19 @@ app.get(['/health', '/api/health'], (req, res) => {
   });
 });
 
+// Trang chủ: Nếu là trình duyệt truy cập -> hiển thị Swagger UI tương tác, nếu là API client -> trả JSON
 app.get('/', (req, res) => {
+  const acceptsHtml = req.headers.accept && req.headers.accept.includes('text/html');
+  if (acceptsHtml) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(swaggerHtml);
+  }
+
   res.json({
     status: 'online',
     app: 'English 12 - Luyện Thi THPT',
     version: '1.0.0',
+    documentation: '/docs',
     database: process.env.DATABASE_URL ? 'Neon Postgres Connected' : 'No DB Configured',
     timestamp: new Date().toISOString(),
   });
