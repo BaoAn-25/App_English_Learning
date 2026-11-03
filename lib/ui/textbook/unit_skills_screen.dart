@@ -760,6 +760,186 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
             'Ngữ pháp câu phức và từ vựng về chủ đề văn hóa chuẩn xác.',
           ],
         );
+      case 3:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết bài báo về lối sống xanh trong trường học (Article on Green Living)',
+          goalDescription: 'Viết bài báo 150-180 từ gợi ý các giải pháp thiết thực để biến trường học thành một môi trường xanh, không rác thải nhựa.',
+          taskPrompt: 'Write an article (150-180 words) for your school newsletter suggesting practical ways students can adopt a greener lifestyle at school.',
+          taskGuidance: 'Sử dụng các từ chỉ nguyên nhân - kết quả (as a result, consequently) và các động từ khuyết thiếu (should, ought to, must).',
+          outline: '1. Tiêu đề hấp dẫn (Catchy Title) & Giới thiệu thực trạng rác thải tại trường học.\n'
+              '2. Biện pháp 1: Giảm thiểu rác thải nhựa (dùng bình nước cá nhân, hộp cơm tái sử dụng).\n'
+              '3. Biện pháp 2: Tiết kiệm năng lượng & Tham gia phong trào xanh (tắt thiết bị điện, trồng cây xanh).\n'
+              '4. Kết luận: Lời kêu gọi hành động chung tay bảo vệ môi trường học đường.',
+          usefulLanguage: '• "Small actions can make a huge difference to our environment..."\n'
+              '• "First, students should replace single-use plastic bottles with reusable ones."\n'
+              '• "In addition, turning off unnecessary lights and air conditioners helps save electricity."\n'
+              '• "Let us take action today to build a cleaner and greener school for tomorrow."',
+          modelText: 'Small everyday habits can make a dramatic difference in making our school a greener place. As high school students, we have the responsibility to protect our surroundings and reduce our environmental footprint.\n\nFirst and foremost, students should eliminate single-use plastic items from their daily routine. Bringing a personal reusable water bottle and cloth lunch containers significantly reduces the amount of plastic rubbish accumulating in our school bins. Furthermore, plastic takes hundreds of years to decompose, so minimizing plastic waste is an urgent priority.\n\nSecondly, saving energy inside classrooms must become a shared habit. Everyone should remember to switch off lights, fans, and projectors when leaving the room. Organising weekly cleanup campaigns and planting more potted flowers on balconies will also enhance air quality and create a pleasant study atmosphere.\n\nIn conclusion, building an eco-friendly school does not require grand gestures, but persistent individual commitment. Let us act together today to preserve our green future.',
+          rubricCriteria: [
+            'Đủ dung lượng yêu cầu (150-180 từ).',
+            'Cấu trúc bài báo rõ ràng (Tiêu đề, Giới thiệu, 2 giải pháp, Lời kêu gọi).',
+            'Vận dụng tốt từ vựng Unit 3 (carbon footprint, single-use, eco-friendly, decompose).',
+            'Ngữ pháp mạch lạc và liên kết câu chặt chẽ.',
+          ],
+        );
+      case 4:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết bài văn phân tích thách thức của đô thị hóa (Problem-Solution Essay)',
+          goalDescription: 'Viết bài văn 150-180 từ thảo luận các vấn đề phát sinh từ quá trình đô thị hóa nhanh và đề xuất giải pháp phù hợp.',
+          taskPrompt: 'Write an essay (150-180 words) discussing the problems caused by rapid urbanisation in big cities and suggesting potential solutions.',
+          taskGuidance: 'Trình bày rõ ràng mối liên hệ giữa các vấn đề (tắc nghẽn giao thông, thiếu nhà ở) và các giải pháp tương ứng (giao thông công cộng, quy hoạch đô thị thông minh).',
+          outline: '1. Introduction: Giới thiệu làn sóng đô thị hóa nhanh chóng tại các đô thị lớn.\n'
+              '2. Body 1 (Problems): Tắc đường nghiêm trọng, ô nhiễm không khí và áp lực nhà ở quá tải.\n'
+              '3. Body 2 (Solutions): Phát triển hệ thống tàu điện/xe buýt điện và giãn dân ra các đô thị vệ tinh.\n'
+              '4. Conclusion: Khẳng định sự cần thiết của quy hoạch bền vững để nâng cao chất lượng cuộc sống.',
+          usefulLanguage: '• "Rapid urbanisation has transformed rural areas into booming metropolises..."\n'
+              '• "However, this phenomenon has led to severe traffic congestion and air pollution."\n'
+              '• "To tackle these challenges, local authorities ought to invest heavily in mass transit systems."\n'
+              '• "In summary, sustainable urban development is key to ensuring a high quality of life."',
+          modelText: 'Rapid urbanisation has turned many rural regions into booming metropolises across the country. While this transformation offers abundant employment opportunities and modern services, it also brings severe challenges that demand immediate attention.\n\nOne of the most pressing issues is catastrophic traffic congestion and air pollution. During rush hours, hundreds of thousands of vehicles flood narrow streets, releasing toxic fumes that threaten public health. Additionally, rapid population influx causes acute housing shortages and strains public healthcare and educational facilities.\n\nTo address these difficulties effectively, city authorities must take proactive measures. First, investing in green public transit, such as electric buses and urban railways, will encourage commuters to leave their motorbikes at home. Moreover, designing satellite towns with complete infrastructure can help decentralize the population and ease the burden on city centres.\n\nIn summary, while urbanisation is an inevitable trend, implementing smart and sustainable urban planning is vital to ensuring a prosperous future for all citizens.',
+          rubricCriteria: [
+            'Đạt dung lượng yêu cầu 150-180 từ.',
+            'Bố cục bài viết gồm Mở bài, Thực trạng vấn đề, Giải pháp khả thi, Kết luận.',
+            'Dùng chính xác từ vựng chủ đề Đô thị hóa (metropolis, traffic congestion, satellite town, sustainable).',
+            'Chính tả và cấu trúc câu phức chuẩn xác.',
+          ],
+        );
+      case 5:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết thư ứng tuyển công việc thực tập hoặc làm thêm (Job Application Letter)',
+          goalDescription: 'Viết một bức thư ứng tuyển 150-180 từ nộp đơn xin việc làm thêm hoặc vị trí tình nguyện viên hè phù hợp với học sinh lớp 12.',
+          taskPrompt: 'Write a formal letter of application (150-180 words) for a summer internship or part-time position advertised in a local community organisation.',
+          taskGuidance: 'Sử dụng văn phong trang trọng (formal register), lời chào và kết thư chuẩn quy tắc (Dear Sir/Madam, Yours faithfully).',
+          outline: '1. Lời chào & Lý do viết thư (Nêu rõ vị trí ứng tuyển và nơi biết thông tin).\n'
+              '2. Trình độ học vấn & Phẩm chất phù hợp (Kỹ năng giao tiếp, trách nhiệm, thành tích học tập).\n'
+              '3. Kinh nghiệm liên quan & Giá trị có thể đóng góp cho tổ chức.\n'
+              '4. Kết thư, đề cập hồ sơ đính kèm và mong muốn được phỏng vấn trực tiếp.',
+          usefulLanguage: '• "I am writing to express my enthusiastic interest in the position of..."\n'
+              '• "As an energetic and responsible grade 12 student, I possess strong communication skills."\n'
+              '• "I have previously participated in various extracurricular activities and school clubs."\n'
+              '• "I would welcome the chance to attend an interview at your earliest convenience."',
+          modelText: 'Dear Hiring Manager,\n\nI am writing to express my enthusiastic interest in the part-time Assistant Coordinator position advertised on your organisation website yesterday. As a dedicated grade 12 student at Le Hong Phong High School, I believe my skills and enthusiasm make me a suitable candidate for this role.\n\nDuring my high school years, I have actively participated in our Youth Union club, where I successfully coordinated several charity fundraisers and volunteer campaigns. These experiences have helped me cultivate excellent teamwork, problem-solving, and bilingual communication skills. Furthermore, I am reliable, punctual, and capable of working under pressure during busy events.\n\nI am confident that my positive attitude and dedication will enable me to make a meaningful contribution to your team this summer. I have attached my curriculum vitae for your consideration, and I would be delighted to attend an interview at your convenience.\n\nThank you very much for your time and consideration.\n\nYours faithfully,\nNguyen Minh Anh',
+          rubricCriteria: [
+            'Đúng cấu trúc thư xin việc trang trọng (Formal letter format).',
+            'Dung lượng 150-180 từ.',
+            'Thể hiện rõ kỹ năng, kinh nghiệm và thái độ cầu tiến.',
+            'Ngữ pháp trang trọng, không dùng từ viết tắt.',
+          ],
+        );
+      case 6:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết bài luận về tác động của Trí tuệ nhân tạo (AI Opinion Essay)',
+          goalDescription: 'Viết bài nghị luận 150-180 từ trình bày quan điểm về những lợi ích và nguy cơ của AI đối với việc học tập của học sinh.',
+          taskPrompt: 'Write an opinion essay (150-180 words) expressing your view on whether artificial intelligence (AI) brings more benefits or risks to high school students.',
+          taskGuidance: 'Sử dụng các trạng từ liên kết đối lập (On the one hand, On the other hand, Nonetheless) để bài viết có tính khách quan và sắc sảo.',
+          outline: '1. Giới thiệu sự bùng nổ của AI trong giáo dục và nêu quan điểm cá nhân.\n'
+              '2. Lợi ích: Hỗ trợ học tập cá nhân hóa, tra cứu tài liệu nhanh chóng, giải đáp thắc mắc 24/7.\n'
+              '3. Nguy cơ: Sự phụ thuộc quá mức, giảm sút tư duy phản biện và gian lận học thuật.\n'
+              '4. Kết luận: AI là công cụ hỗ trợ đắc lực nếu học sinh sử dụng có đạo đức và tỉnh táo.',
+          usefulLanguage: '• "Artificial intelligence has rapidly transformed the educational landscape..."\n'
+              '• "Undoubtedly, AI-powered tools provide personalized tutoring and instant feedback."\n'
+              '• "However, excessive reliance on AI may undermine students critical thinking abilities."\n'
+              '• "To conclude, learners must use AI responsibly as a supportive assistant rather than a replacement."',
+          modelText: 'The revolutionary rise of artificial intelligence has fundamentally transformed the way students approach education today. In my view, while AI tools offer remarkable advantages for academic study, learners must remain vigilant about their potential risks.\n\nOn the one hand, AI-driven applications serve as brilliant personal tutors that are available round the clock. They can instantly simplify complex scientific concepts, check grammatical accuracy, and generate customized practice exercises tailored to each student’s learning pace. Consequently, students can grasp difficult materials much faster and enhance their independent learning capacity.\n\nOn the other hand, excessive reliance on AI can severely impair students’ critical thinking and creative problem-solving skills. If students routinely copy machine-generated answers without evaluating their truthfulness, they fail to cultivate authentic analytical abilities. Moreover, academic dishonesty might increase significantly.\n\nIn conclusion, artificial intelligence is an extraordinarily powerful instrument when used responsibly. High school students should harness AI to supplement their intellectual curiosity rather than substitute their own effort.',
+          rubricCriteria: [
+            'Đủ dung lượng quy định (150-180 từ).',
+            'Cấu trúc bài văn nghị luận chặt chẽ (2 mặt lợi ích và rủi ro, kết luận cân bằng).',
+            'Sử dụng đúng thuật ngữ AI (algorithm, personalized tutor, critical thinking, reliance).',
+            'Ngữ pháp và văn phong lập luận học thuật sắc sảo.',
+          ],
+        );
+      case 7:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết bài báo về tác động của Mạng xã hội đối với thanh thiếu niên',
+          goalDescription: 'Viết bài báo 150-180 từ phân tích ảnh hưởng của mạng xã hội đối với thói quen học tập và lối sống của học sinh THPT.',
+          taskPrompt: 'Write an article (150-180 words) for a teenage magazine discussing the impacts of social media on high school students\' daily lives.',
+          outline: '1. Giới thiệu mức độ phổ biến của mạng xã hội trong giới trẻ.\n'
+              '2. Tác động tích cực: Kết nối bạn bè, cập nhật tin tức tức thời, tham gia các nhóm học tập.\n'
+              '3. Tác động tiêu cực: Mất tập trung, hội chứng sợ bỏ lỡ (FOMO), nguy cơ tiếp nhận tin giả.\n'
+              '4. Kết luận: Lời khuyên thiết lập ranh giới số thông minh (digital detox, phân bổ thời gian).',
+          usefulLanguage: '• "Social media platforms have become an inseparable part of modern teenage life."\n'
+              '• "They provide incredible platforms for sharing creative ideas and forming study groups."\n'
+              '• "Nevertheless, spending endless hours scrolling through feeds leads to severe sleep deprivation."\n'
+              '• "In conclusion, digital balance is crucial for maintaining mental well-being."',
+          modelText: 'Social media platforms have become an inseparable part of modern youth culture, profoundly shaping how teenagers communicate, learn, and entertain themselves. While these virtual networks offer considerable conveniences, their negative repercussions should not be overlooked.\n\nOn the positive side, platforms like Facebook, Instagram, and TikTok allow teenagers to stay connected with peers across geographical borders. They serve as valuable resources for collaborating on school assignments, sharing informative educational videos, and raising awareness about societal causes.\n\nNevertheless, unregulated screen time poses severe risks to adolescent well-being. Excessive scrolling frequently leads to sleep deprivation, poor academic concentration, and psychological distress caused by unrealistic social comparisons. Furthermore, the rapid dissemination of fake news and sensational headlines can easily mislead impressionable young minds.\n\nIn summary, social media is a double-edged sword. Teenagers must cultivate digital literacy and practice self-discipline to reap the benefits of digital connectivity without falling into its addictive traps.',
+          rubricCriteria: [
+            'Đủ dung lượng (150-180 từ).',
+            'Thể hiện góc nhìn cân bằng giữa lợi ích và tác hại.',
+            'Từ vựng đa dạng về truyền thông (digital literacy, fake news, double-edged sword).',
+            'Liên kết mạch lạc, chuẩn văn phong báo chí giới trẻ.',
+          ],
+        );
+      case 8:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết bài báo cáo về bảo tồn động vật hoang dã nguy cấp (Conservation Report)',
+          goalDescription: 'Viết báo cáo 150-180 từ về một loài động vật có nguy cơ tuyệt chủng tại Việt Nam và các biện pháp bảo vệ chúng.',
+          taskPrompt: 'Write a report (150-180 words) describing the status of an endangered species in Viet Nam and recommending conservation measures.',
+          outline: '1. Giới thiệu loài động vật (Voọc Cát Bà hoặc Sao la, môi trường sống, số lượng còn lại).\n'
+              '2. Nguyên nhân đe dọa: Phá rừng mất sinh cảnh, săn trộm trái phép, biến đổi khí hậu.\n'
+              '3. Biện pháp bảo tồn: Thiết lập khu bảo tồn nghiêm ngặt, thực thi luật pháp và giáo dục cộng đồng.\n'
+              '4. Kết luận: Tầm quan trọng của việc bảo vệ đa dạng sinh học cho các thế hệ tương lai.',
+          usefulLanguage: '• "Viet Nam is recognized as one of the world\'s biodiversity hotspots..."\n'
+              '• "However, iconic species such as the Cat Ba Langur are hovering on the brink of extinction."\n'
+              '• "The primary threats include rampant habitat loss and illegal wildlife poaching."\n'
+              '• "Decisive conservation initiatives are vital to ensure their continued survival."',
+          modelText: 'Viet Nam is celebrated as one of the world’s most biodiverse nations, yet many of its endemic treasures are hovering on the brink of extinction. Among these critically endangered animals, the Cat Ba Langur is one of the rarest primates on Earth.\n\nCurrently, fewer than eighty individuals remain in the wild, confined to the limestone cliffs of Cat Ba Island. The survival of this majestic species is gravely threatened by habitat fragmentation caused by tourism development, along with past illegal poaching for traditional medicine. The loss of suitable feeding grounds has made their recovery exceptionally difficult.\n\nTo prevent the extinction of the Cat Ba Langur, urgent conservation interventions are indispensable. First, law enforcement must be intensified to eradicate all illegal hunting and trespassing within national park boundaries. Additionally, eco-tourism projects should be carefully regulated to prevent further disturbance to their natural habitats.\n\nIn conclusion, safeguarding our endangered fauna is our moral obligation. Preserving the Cat Ba Langur means preserving our rich ecological heritage.',
+          rubricCriteria: [
+            'Đúng hình thức bài báo cáo sinh thái học (150-180 từ).',
+            'Cung cấp số liệu và thực trạng cụ thể.',
+            'Từ vựng phong phú về sinh thái (biodiversity hotspot, brink of extinction, poaching, habitat fragmentation).',
+            'Mạch lạc, trang trọng và giàu sức thuyết phục.',
+          ],
+        );
+      case 9:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết thư xin lời khuyên định hướng nghề nghiệp (Letter Asking for Career Advice)',
+          goalDescription: 'Viết bức thư 150-180 từ gửi chuyên gia tư vấn hỏi xin lời khuyên về việc nên học đại học hay học nghề sau lớp 12.',
+          taskPrompt: 'Write a letter (150-180 words) to a career adviser asking for guidance on whether to pursue higher education or vocational training.',
+          outline: '1. Lời chào & Lý do viết thư (Băn khoăn lựa chọn hướng đi sau khi tốt nghiệp THPT).\n'
+              '2. Điểm mạnh và sở thích cá nhân (Thích kỹ thuật thực hành, muốn sớm độc lập tài chính).\n'
+              '3. Câu hỏi thắc mắc cụ thể về cơ hội việc làm của bằng nghề so với bằng cử nhân.\n'
+              '4. Lời cảm ơn và mong muốn nhận được lời khuyên.',
+          usefulLanguage: '• "I am currently in my final year of high school and facing a crucial career dilemma."\n'
+              '• "I have a strong passion for automotive mechanics and practical problem-solving."\n'
+              '• "While my parents encourage me to attend university, I am drawn to vocational colleges."\n'
+              '• "I would be deeply grateful if you could share your professional insights on this matter."',
+          modelText: 'Dear Mr Kien,\n\nI am currently a twelfth-grade student at Nguyen Khuyen High School, and I am writing to seek your valuable professional guidance regarding my future career trajectory.\n\nWith our graduation exams approaching rapidly, I find myself torn between pursuing a four-year university degree and enrolling in a vocational training institution. Personally, I have a deep fascination with automotive engineering and hands-on technology. I thoroughly enjoy fixing machines and would prefer practical training that enables me to enter the workforce promptly and achieve financial independence.\n\nHowever, my family strongly wishes that I obtain a traditional bachelor’s degree, believing it guarantees greater prestige and managerial prospects. Could you please advise me on the long-term career growth and employment prospects of certified technicians compared to university graduates in today’s evolving job market? Any recommendations regarding top vocational programmes in Ho Chi Minh City would be immensely helpful.\n\nThank you very much for taking the time to read my letter. I look forward to hearing from you.\n\nYours sincerely,\nTran Hoang Nam',
+          rubricCriteria: [
+            'Cấu trúc thư trang trọng, lịch sự và rõ ràng.',
+            'Dung lượng đúng chuẩn (150-180 từ).',
+            'Trình bày rõ sở thích, điểm mạnh và thắc mắc định hướng nghề nghiệp.',
+            'Từ vựng chủ đề Nghề nghiệp (vocational training, bachelor\'s degree, hands-on, prospects).',
+          ],
+        );
+      case 10:
+        return _SkillStructuredData(
+          icon: Icons.edit_note_rounded,
+          goalTitle: 'Viết bài luận về Tầm quan trọng của Học tập suốt đời (Lifelong Learning Essay)',
+          goalDescription: 'Viết bài luận 150-180 từ giải thích tại sao học tập suốt đời là kỹ năng sinh tồn thiết yếu trong kỷ nguyên số.',
+          taskPrompt: 'Write an essay (150-180 words) discussing why lifelong learning is vital for personal and professional success in the 21st century.',
+          outline: '1. Định nghĩa học tập suốt đời & Khẳng định việc học không kết thúc sau khi rời ghế nhà trường.\n'
+              '2. Lý do 1: Sự chuyển dịch công nghệ và thay đổi nhanh chóng của thị trường việc làm (cần liên tục nâng cấp kỹ năng).\n'
+              '3. Lý do 2: Phát triển trí não, duy trì sự thích nghi và mở rộng cơ hội cá nhân.\n'
+              '4. Kết luận: Cam kết rèn luyện tinh thần tự học bền bỉ.',
+          usefulLanguage: '• "In an era of relentless technological disruption, learning is no longer confined to classrooms."\n'
+              '• "Continuous upskilling enables professionals to stay competitive in a transforming market."\n'
+              '• "Moreover, cultivating intellectual curiosity keeps our minds agile and fulfilled."\n'
+              '• "Ultimately, embracing lifelong learning is the surest pathway to lasting fulfillment."',
+          modelText: 'In an era characterized by relentless technological transformation, education is no longer a phase confined to our school years. Instead, cultivating a mindset of lifelong learning has become an indispensable requirement for personal fulfillment and professional survival.\n\nFirst and foremost, the modern employment landscape is evolving at an unprecedented velocity. Jobs that exist today may be automated by sophisticated technologies within a decade. Therefore, professionals who proactively upskill and embrace emerging digital tools will maintain a competitive advantage, whereas those who remain complacent risk falling behind.\n\nFurthermore, engaging in lifelong learning enriches our daily lives beyond monetary gains. Whether we choose to acquire a new foreign language, master coding, or explore philosophical literature, acquiring novel knowledge keeps our minds sharp, resilient, and adaptable to life\'s uncertainties.\n\nIn conclusion, education is an enduring journey rather than a fixed destination. By nurturing an insatiable curiosity and an openness to change, young people can confidently navigate the challenges of the twenty-first century.',
+          rubricCriteria: [
+            'Đủ dung lượng 150-180 từ.',
+            'Lập luận sắc bén, giàu tính triết lý và thực tiễn.',
+            'Sử dụng chuẩn xác từ vựng nâng cao (technological transformation, upskill, resilient, enduring journey).',
+            'Văn phong học thuật chỉn chu, truyền cảm hứng.',
+          ],
+        );
       default:
         return _SkillStructuredData(
           icon: Icons.edit_note_rounded,
@@ -802,6 +982,138 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
             'Nói lưu loát, tự tin, phát âm rõ ràng.',
             'Đầy đủ thông tin về năm tháng, sự kiện lịch sử quan trọng.',
             'Sử dụng các cụm từ thể hiện lòng ngưỡng mộ (admire, dedicate, inspire).',
+          ],
+        );
+      case 2:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Thảo luận về các phong tục lễ hội đa văn hóa (Cultural Festivals)',
+          goalDescription: 'Luyện nói về các lễ hội độc đáo trên thế giới và chia sẻ trải nghiệm tham gia lễ hội.',
+          taskPrompt: 'Work in pairs. Talk about a festival in Viet Nam or around the world that you have experienced or would like to visit.',
+          outline: '1. Tên lễ hội, thời gian và địa điểm diễn ra.\n'
+              '2. Các hoạt động đặc sắc (ẩm thực, trang phục, nghi lễ, âm nhạc).\n'
+              '3. Cảm xúc cá nhân và ý nghĩa giao lưu văn hóa.',
+          usefulLanguage: '• "Today, I would like to introduce the Mid-Autumn Festival..."\n'
+              '• "People celebrate this special occasion by making colorful lanterns..."\n'
+              '• "What impresses me most is the sense of family reunion and gratitude."',
+          rubricCriteria: [
+            'Nói lưu loát, tự nhiên và đúng chủ đề.',
+            'Vận dụng tốt từ vựng lễ hội (lantern, delicacy, celebration, reunion).',
+          ],
+        );
+      case 3:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Thuyết trình ý tưởng Sống xanh trong trường học (Green Living Presentation)',
+          goalDescription: 'Trình bày 3 giải pháp cụ thể giúp giảm thiểu rác thải nhựa và tiết kiệm năng lượng.',
+          taskPrompt: 'Work in groups. Present 3 practical ideas to reduce carbon footprints and single-use plastic waste in your school.',
+          outline: '1. Thực trạng rác thải tại trường hiện nay.\n'
+              '2. Ba giải pháp hành động cụ thể cho học sinh.\n'
+              '3. Lợi ích lâu dài và lời kêu gọi hành động.',
+          usefulLanguage: '• "Our group proposes three practical solutions to make our school greener..."\n'
+              '• "First, we should launch a Refill Bottle campaign..."\n'
+              '• "By doing so, we can cut down tons of single-use plastic every semester."',
+          rubricCriteria: [
+            'Lập luận rõ ràng, thuyết phục.',
+            'Sử dụng các mẫu câu đề xuất (propose, recommend, suggest).',
+          ],
+        );
+      case 4:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Tranh luận về Cuộc sống ở Đô thị lớn so với Nông thôn (Urban vs. Rural Living)',
+          goalDescription: 'Thảo luận các ưu điểm và bất lợi khi sinh sống tại thành phố lớn so với vùng quê.',
+          taskPrompt: 'Work in pairs. Discuss the advantages and disadvantages of moving from the countryside to a mega-city.',
+          usefulLanguage: '• "Living in a metropolis offers superior education and job prospects..."\n'
+              '• "On the other hand, the high cost of living and traffic congestion can be overwhelming..."\n'
+              '• "Personally, I would choose..."',
+          rubricCriteria: [
+            'Thể hiện quan điểm đa chiều có ví dụ minh họa.',
+            'Ngữ điệu tự nhiên, phản xạ đối đáp tốt.',
+          ],
+        );
+      case 5:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Mô phỏng Phỏng vấn tuyển dụng việc làm thêm (Job Interview Role-Play)',
+          goalDescription: 'Đóng vai người phỏng vấn và ứng viên cho một vị trí làm thêm hè hoặc thực tập sinh.',
+          taskPrompt: 'Work in pairs. Role-play a job interview between an interviewer and an applicant for a part-time position.',
+          usefulLanguage: '• "Could you tell me a little about your strengths and previous experience?"\n'
+              '• "I consider myself a dependable, proactive, and quick learner..."\n'
+              '• "Why do you think you are the right fit for our organisation?"',
+          rubricCriteria: [
+            'Sử dụng ngôn ngữ phỏng vấn trang trọng, tự tin.',
+            'Trả lời lưu loát, nêu bật thế mạnh bản thân.',
+          ],
+        );
+      case 6:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Tranh luận về Tương lai của Trí tuệ nhân tạo (Debate on the Future of AI)',
+          goalDescription: 'Thảo luận liệu robot AI có thay thế giáo viên hay nhân viên văn phòng trong tương lai hay không.',
+          taskPrompt: 'Work in pairs. Debate whether AI and humanoid robots will eventually replace human workers in the education sector.',
+          usefulLanguage: '• "AI algorithms can process massive amounts of data in seconds..."\n'
+              '• "However, empathy, emotional support, and human moral judgment cannot be coded..."\n'
+              '• "Therefore, AI will complement rather than completely replace humans."',
+          rubricCriteria: [
+            'Lập luận sắc bén, logic.',
+            'Sử dụng các liên từ tranh luận (However, Conversely, Therefore).',
+          ],
+        );
+      case 7:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Trao đổi về Thói quen sử dụng Mạng xã hội và Nhận diện tin giả (Social Media & Fake News)',
+          goalDescription: 'Chia sẻ kinh nghiệm sử dụng mạng xã hội thông minh và cách xác thực nguồn tin tức.',
+          taskPrompt: 'Work with a partner. Discuss how social media affects your daily routine and share tips on spotting fake news online.',
+          usefulLanguage: '• "I spend roughly two hours a day browsing educational channels..."\n'
+              '• "Whenever I read shocking headlines, I always check the original source..."\n'
+              '• "Critical digital literacy is essential to protect ourselves from misinformation."',
+          rubricCriteria: [
+            'Trao đổi cởi mở, tự nhiên.',
+            'Đưa ra các mẹo thực tế, hữu ích.',
+          ],
+        );
+      case 8:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Kêu gọi Bảo vệ Động vật hoang dã nguy cấp (Wildlife Conservation Talk)',
+          goalDescription: 'Thuyết trình ngắn 2 phút kêu gọi bảo vệ các loài linh trưởng và động vật quý hiếm tại Việt Nam.',
+          taskPrompt: 'Give a 2-minute presentation proposing actions students can take to protect endangered animals in your region.',
+          usefulLanguage: '• "Today, I urge everyone to say no to illegal wildlife products..."\n'
+              '• "Habitat degradation is pushing many rare primates toward the brink of extinction..."\n'
+              '• "Together, our awareness can save these magnificent creatures."',
+          rubricCriteria: [
+            'Bài nói truyền cảm hứng, phát âm chuẩn xác.',
+            'Thông điệp rõ ràng, có tính kêu gọi hành động.',
+          ],
+        );
+      case 9:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Thảo luận Định hướng nghề nghiệp sau lớp 12 (Choosing a Career Path)',
+          goalDescription: 'Thảo luận các tiêu chí quan trọng khi chọn trường đại học hoặc trung tâm đào tạo nghề.',
+          taskPrompt: 'Discuss with your partner the key factors you will consider when choosing between university and vocational careers.',
+          usefulLanguage: '• "Passion and personal aptitude should always come first..."\n'
+              '• "Vocational courses offer hands-on training and fast workforce entry..."\n'
+              '• "Whichever path you choose, continuous effort is the key to success."',
+          rubricCriteria: [
+            'Phân tích thấu đáo các yếu tố chọn nghề.',
+            'Lắng nghe và phản hồi ý kiến của bạn cùng học.',
+          ],
+        );
+      case 10:
+        return _SkillStructuredData(
+          icon: Icons.chat_bubble_outline_rounded,
+          goalTitle: 'Chia sẻ về Tinh thần Tự học và Học tập suốt đời (Lifelong Learning Experience)',
+          goalDescription: 'Chia sẻ về một kỹ năng mới bạn tự học được qua mạng và kế hoạch tự học trong tương lai.',
+          taskPrompt: 'Talk about a skill, hobby, or foreign language you have learned independently and how you plan to keep learning in the future.',
+          usefulLanguage: '• "Last summer, I taught myself basic Python programming using free online courses..."\n'
+              '• "Self-discipline and curiosity kept me motivated whenever I hit a roadblock..."\n'
+              '• "I believe lifelong learning is the best investment we can ever make."',
+          rubricCriteria: [
+            'Chia sẻ câu chuyện cá nhân chân thực, sinh động.',
+            'Ngữ pháp thì hiện tại hoàn thành và quá khứ đơn chuẩn xác.',
           ],
         );
       default:
