@@ -348,7 +348,9 @@ app.post('/api/auth/register', async (req, res) => {
     const existing = await client.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rows.length > 0) {
       await client.query('ROLLBACK');
-      return res.status(409).json({ error: 'Email này đã được sử dụng để đăng ký tài khoản.' });
+      return res.status(409).json({
+        error: 'Email này đã có tài khoản trên English 12. Bạn vui lòng bấm "Đăng nhập ngay" ở bên dưới hoặc dùng tính năng "Quên mật khẩu" nếu không nhớ mật khẩu nhé.',
+      });
     }
 
     const userId = 'usr_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex');
@@ -420,7 +422,9 @@ app.post('/api/auth/register', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.code === '23505') {
-      return res.status(409).json({ error: 'Email này đã được sử dụng để đăng ký tài khoản.' });
+      return res.status(409).json({
+        error: 'Email này đã có tài khoản trên English 12. Bạn vui lòng bấm "Đăng nhập ngay" ở bên dưới hoặc dùng tính năng "Quên mật khẩu" nếu không nhớ mật khẩu nhé.',
+      });
     }
     res.status(500).json({ error: 'Lỗi máy chủ khi đăng ký: ' + err.message });
   } finally {
@@ -594,26 +598,41 @@ app.post('/api/auth/google', async (req, res) => {
         if (existingByEmail.rows.length > 0) {
           const existingUser = existingByEmail.rows[0];
 
-          // Chính sách an toàn: Nếu email đã đăng ký bằng mật khẩu, KHÔNG tự ý liên kết để tránh chiếm đoạt tài khoản
+          // Nếu email đã đăng ký bằng mật khẩu
           if (existingUser.auth_provider === 'email') {
-            await client.query('ROLLBACK');
-            return res.status(409).json({
-              error: 'Email này đã được đăng ký bằng Mật khẩu. Vui lòng đăng nhập bằng Email và Mật khẩu để bảo mật.',
-            });
+            if (emailVerified) {
+              // Email đã được Google chứng thực chính chủ -> Tự động liên kết Google ID để đăng nhập thuận tiện
+              userId = existingUser.id;
+              userRole = existingUser.role || 'student';
+              await client.query(
+                `UPDATE users
+                 SET google_id = $1,
+                     avatar_url = COALESCE(NULLIF($2, ''), avatar_url),
+                     email_verified = TRUE,
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $3`,
+                [googleSub, googleAvatar, userId]
+              );
+            } else {
+              await client.query('ROLLBACK');
+              return res.status(409).json({
+                error: 'Email này đã có tài khoản mật khẩu trên hệ thống. Vui lòng đăng nhập bằng Email và Mật khẩu để bảo mật.',
+              });
+            }
+          } else {
+            // Nếu tài khoản cũ đã là google nhưng chưa lưu sub (từ các phiên bản trước)
+            userId = existingUser.id;
+            userRole = existingUser.role || 'student';
+            await client.query(
+              `UPDATE users
+               SET google_id = $1,
+                   avatar_url = COALESCE(NULLIF($2, ''), avatar_url),
+                   email_verified = $3,
+                   updated_at = CURRENT_TIMESTAMP
+               WHERE id = $4`,
+              [googleSub, googleAvatar, emailVerified, userId]
+            );
           }
-
-          // Nếu tài khoản cũ đã là google nhưng chưa lưu sub (từ các phiên bản trước)
-          userId = existingUser.id;
-          userRole = existingUser.role || 'student';
-          await client.query(
-            `UPDATE users
-             SET google_id = $1,
-                 avatar_url = COALESCE(NULLIF($2, ''), avatar_url),
-                 email_verified = $3,
-                 updated_at = CURRENT_TIMESTAMP
-             WHERE id = $4`,
-            [googleSub, googleAvatar, emailVerified, userId]
-          );
         } else {
           // 3. Tạo tài khoản học viên mới hoàn toàn
           userId = 'usr_g_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex');

@@ -365,17 +365,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: const Color(0xFFFECACA)),
                     ),
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _formGeneralError!,
-                            style: const TextStyle(fontSize: 13, color: Color(0xFFB91C1C), height: 1.35),
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _formGeneralError!,
+                                style: const TextStyle(fontSize: 13, color: Color(0xFFB91C1C), height: 1.35),
+                              ),
+                            ),
+                          ],
                         ),
+                        if (_formGeneralError!.contains('Đăng nhập') ||
+                            _formGeneralError!.contains('đã có tài khoản') ||
+                            _formGeneralError!.contains('đã được sử dụng')) ...[
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                );
+                              },
+                              icon: const Icon(Icons.login_rounded, size: 16),
+                              label: const Text(
+                                'Đăng nhập ngay',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFF2563EB),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
