@@ -19,6 +19,8 @@ import '../theme/app_tokens.dart';
 import '../theme/components/app_button.dart';
 import '../theme/components/sync_status_badge.dart';
 import '../theme/components/prep_logo.dart';
+import '../pronunciation/pronunciation_screen.dart';
+import '../interest/interest_topics_screen.dart';
 import '../trial/trial_lesson_picker_screen.dart';
 import '../trial/trial_lesson_screen.dart';
 import 'home_controller.dart';
@@ -160,6 +162,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 14),
                   ],
 
+                  // 3.5. Khu vực Khám phá Duolingo x Quizlet (Phát âm IPA & Chủ đề sở thích)
+                  _buildExploreDuolingoHub(context),
+                  const SizedBox(height: 16),
+
                   // 4. Khối Tiếp tục học / Bài học dở (chỉ hiện khi có phiên học thực tế)
                   if (controller.learningSession != null) ...[
                     _buildContinueLearningCard(context, controller, auth),
@@ -187,6 +193,189 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
+    );
+  }
+
+  // --- Khu vực Khám phá Duolingo x Quizlet (Phát âm IPA & Chủ đề sở thích) ---
+  Widget _buildExploreDuolingoHub(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Góc luyện tập & Khám phá',
+              style: TextStyle(
+                fontFamily: 'BeVietnamPro',
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const InterestTopicsScreen()),
+                );
+              },
+              child: const Text(
+                'Xem tất cả >',
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                  color: Color(0xFF2563EB),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            // Card 1: Phát âm IPA 44 âm (Phong cách Duolingo)
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PronunciationScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF131F24),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFF37464F)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x180F172A),
+                        offset: Offset(0, 4),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1CB0F6).withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.mic_none_rounded, color: Color(0xFF1CB0F6), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Phát âm IPA',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        '44 âm & Cặp đối lập',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF8E9EA7)),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1CB0F6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          '+10 KN',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Card 2: Chủ đề sở thích (Bóng đá, Cafe, Du lịch...)
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const InterestTopicsScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0C0F172A),
+                        offset: Offset(0, 4),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.sports_soccer_rounded, color: Color(0xFFD97706), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Theo sở thích',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Bóng đá, Cafe, Du lịch...',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFBFDBFE)),
+                        ),
+                        child: const Text(
+                          'Flashcard & Match',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: Color(0xFF2563EB)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -380,6 +569,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.mic_none_rounded, size: 14),
+                label: const Text('Phát âm IPA'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0284C7),
+                  side: const BorderSide(color: Color(0xFFBAE6FD)),
+                  backgroundColor: const Color(0xFFF0F9FF),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                  minimumSize: Size.zero,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PronunciationScreen()),
                   );
                 },
               ),
