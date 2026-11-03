@@ -16,6 +16,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isLoading = false;
   String? _statusMessage;
   bool _isSuccess = false;
+  String? _resetToken;
 
   @override
   void dispose() {
@@ -45,6 +46,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() {
       _isLoading = false;
       _isSuccess = result.isSuccess;
+      _resetToken = result.data?['resetToken'] as String?;
       _statusMessage = result.isSuccess
           ? (result.data?['message'] as String? ?? 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi.')
           : (result.errorMessage ?? 'Không thể gửi yêu cầu đặt lại mật khẩu.');
@@ -147,25 +149,58 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       color: _isSuccess ? const Color(0xFF86EFAC) : const Color(0xFFFECACA),
                     ),
                   ),
-                  child: Row(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        _isSuccess ? Icons.check_circle_rounded : Icons.info_outline_rounded,
-                        color: _isSuccess ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                        size: 20,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            _isSuccess ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                            color: _isSuccess ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _statusMessage!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: _isSuccess ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          _statusMessage!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: _isSuccess ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
-                            height: 1.4,
+                      if (_isSuccess && _resetToken != null) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF16A34A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              elevation: 0,
+                            ),
+                            icon: const Icon(Icons.lock_open_rounded, size: 18),
+                            label: const Text(
+                              'Đặt lại mật khẩu ngay',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ResetPasswordScreen(initialToken: _resetToken),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

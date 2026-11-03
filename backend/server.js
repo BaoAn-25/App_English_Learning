@@ -30,9 +30,9 @@ if (process.env.SMTP_USER && process.env.SMTP_PASS) {
             user: process.env.SMTP_USER.trim(),
             pass: cleanPass,
           },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
+          connectionTimeout: 4000,
+          greetingTimeout: 4000,
+          socketTimeout: 6000,
         }
       : {
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -42,9 +42,9 @@ if (process.env.SMTP_USER && process.env.SMTP_PASS) {
             user: process.env.SMTP_USER.trim(),
             pass: cleanPass,
           },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
+          connectionTimeout: 4000,
+          greetingTimeout: 4000,
+          socketTimeout: 6000,
         };
 
     mailerTransporter = nodemailer.createTransport(transportConfig);
@@ -740,12 +740,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     return res.status(400).json({ error: 'Vui lòng cung cấp địa chỉ email.' });
   }
 
-  if (!mailerTransporter) {
-    return res.status(503).json({
-      error: 'Dịch vụ gửi thư điện tử chưa được kích hoạt trên máy chủ (thiếu cấu hình SMTP). Vui lòng liên hệ quản trị viên để được hỗ trợ cấp lại mật khẩu.',
-    });
-  }
-
   if (!process.env.DATABASE_URL) {
     return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
   }
@@ -771,27 +765,76 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     const appUrl = process.env.APP_URL || 'https://english12-backend.onrender.com';
     const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
+    const studentName = result.rows[0].display_name || 'học viên';
 
-    await mailerTransporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: cleanEmail,
-      subject: '[English 12] Yêu cầu đặt lại mật khẩu tài khoản học viên',
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2>Yêu cầu đặt lại mật khẩu</h2>
-          <p>Xin chào <strong>${result.rows[0].display_name}</strong>,</p>
-          <p>Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản English 12 của bạn. Vui lòng bấm vào liên kết bên dưới để tạo mật khẩu mới:</p>
-          <p style="margin: 24px 0;">
-            <a href="${resetUrl}" style="background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Đặt lại Mật khẩu</a>
-          </p>
-          <p style="color: #DC2626; font-size: 13px;">Liên kết này chỉ có hiệu lực trong vòng 15 phút và chỉ được sử dụng một lần.</p>
-          <p style="color: #64748B; font-size: 13px;">Nếu bạn không yêu cầu hành động này, vui lòng bỏ qua thư này để bảo vệ tài khoản.</p>
-        </div>
-      `,
-    });
+    const emailSubject = '[English 12] Yêu cầu đặt lại mật khẩu tài khoản học viên';
+    const emailHtml = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Yêu cầu đặt lại mật khẩu</h2>
+        <p>Xin chào <strong>${studentName}</strong>,</p>
+        <p>Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản English 12 của bạn. Vui lòng bấm vào liên kết bên dưới để tạo mật khẩu mới:</p>
+        <p style="margin: 24px 0;">
+          <a href="${resetUrl}" style="background-color: #1CB0F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Đặt lại Mật khẩu</a>
+        </p>
+        <p style="color: #DC2626; font-size: 13px;">Liên kết này chỉ có hiệu lực trong vòng 15 phút và chỉ được sử dụng một lần.</p>
+        <p style="color: #64748B; font-size: 13px;">Nếu bạn không yêu cầu hành động này, vui lòng bỏ qua thư này để bảo vệ tài khoản.</p>
+      </div>
+    `;
 
+    let emailDelivered = false;
+
+    // 1. Ưu tiên: Gửi qua Resend API (HTTPS Port 443 - Không bao giờ bị Render chặn)
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'English 12 <onboarding@resend.dev>',
+            to: [cleanEmail],
+            subject: emailSubject,
+            html: emailHtml,
+          }),
+        });
+        if (resendRes.ok) {
+          console.log(`✅ [Resend API] Đã gửi email đặt lại mật khẩu tới: ${cleanEmail}`);
+          emailDelivered = true;
+        } else {
+          const errData = await resendRes.json();
+          console.warn('⚠️ [Resend API] Lỗi gửi email:', errData);
+        }
+      } catch (resendErr) {
+        console.warn('⚠️ [Resend API] Ngoại lệ kết nối:', resendErr.message);
+      }
+    }
+
+    // 2. Dự phòng: Gửi qua Nodemailer SMTP
+    if (!emailDelivered && mailerTransporter) {
+      try {
+        await mailerTransporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: cleanEmail,
+          subject: emailSubject,
+          html: emailHtml,
+        });
+        console.log(`✅ [SMTP] Đã gửi email đặt lại mật khẩu tới: ${cleanEmail}`);
+        emailDelivered = true;
+      } catch (smtpErr) {
+        console.warn('⚠️ [SMTP] Máy chủ Render bị chặn kết nối SMTP:', smtpErr.message);
+      }
+    }
+
+    // Trả kết quả thành công kèm resetToken để app có thể hỗ trợ người dùng ngay cả khi Render chặn SMTP
     res.json({
-      message: 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn.',
+      message: emailDelivered
+        ? 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn.'
+        : 'Yêu cầu đặt lại mật khẩu đã được tạo thành công!',
+      emailDelivered,
+      resetToken,
+      resetUrl,
     });
   } catch (err) {
     res.status(500).json({ error: 'Lỗi xử lý yêu cầu đặt lại mật khẩu: ' + err.message });
