@@ -1569,9 +1569,34 @@ app.get('/reset-password', (req, res) => {
         </form>
 
         <div id="statusMsg" class="msg"></div>
+
+        <div id="successView" style="display: none; text-align: center; padding-top: 10px;">
+          <h1 style="font-size: 26px; font-weight: 800; color: #FFFFFF; margin-bottom: 24px; letter-spacing: -0.5px;">Mật khẩu đã thay đổi!</h1>
+          <p style="margin-bottom: 20px;">
+            <a href="intent://#Intent;package=com.example.thpt_english;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end" 
+               onclick="openApp(event)"
+               style="color: #1CB0F6; font-weight: 800; font-size: 14.5px; text-transform: uppercase; letter-spacing: 0.8px; text-decoration: none; cursor: pointer; display: inline-block; padding: 12px 18px; border-radius: 12px; transition: all 0.2s;"
+               onmouseover="this.style.textDecoration='underline'"
+               onmouseout="this.style.textDecoration='none'">
+              BẤM VÀO ĐÂY ĐỂ TIẾP TỤC VÀO ENGLISH 12
+            </a>
+          </p>
+          <p style="color: #64748B; font-size: 13px; line-height: 1.5;">Hoặc bạn có thể quay lại ứng dụng English 12 trên màn hình điện thoại để đăng nhập.</p>
+        </div>
       </div>
 
       <script>
+        function openApp(e) {
+          if (e) e.preventDefault();
+          const intentUri = "intent://#Intent;package=com.example.thpt_english;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end";
+          const schemeUri = "english12://login";
+
+          window.location.href = intentUri;
+          setTimeout(function() {
+            window.location.href = schemeUri;
+          }, 250);
+        }
+
         function togglePass(inputId, btn) {
           const input = document.getElementById(inputId);
           if (input.type === 'password') {
@@ -1626,10 +1651,11 @@ app.get('/reset-password', (req, res) => {
             });
             const data = await res.json();
             if (res.ok) {
-              statusMsg.className = 'msg success';
-              statusMsg.innerHTML = '<strong>' + data.message + '</strong><br><br>Bây giờ bạn có thể mở lại ứng dụng <strong>English 12</strong> trên điện thoại để đăng nhập bằng mật khẩu mới!';
-              statusMsg.style.display = 'block';
               form.style.display = 'none';
+              const cardTitle = document.querySelector('.card-title');
+              if (cardTitle) cardTitle.style.display = 'none';
+              statusMsg.style.display = 'none';
+              document.getElementById('successView').style.display = 'block';
             } else {
               statusMsg.className = 'msg error';
               statusMsg.innerText = data.error || 'Có lỗi xảy ra khi cập nhật mật khẩu.';
