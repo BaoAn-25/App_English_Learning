@@ -24,6 +24,7 @@ import '../interest/interest_topics_screen.dart';
 import '../trial/trial_lesson_picker_screen.dart';
 import '../trial/trial_lesson_screen.dart';
 import 'home_controller.dart';
+import '../leaderboard/leaderboard_screen.dart';
 
 class RoadmapUnitItem {
   final int number; // 0 for Review
@@ -113,6 +114,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           actions: [
+            IconButton(
+              tooltip: 'Bảng xếp hạng & Đấu trường',
+              icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFFD97706), size: 24),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+                );
+              },
+            ),
             // Nút Khám phá Onboarding / Chào mừng
             IconButton(
               tooltip: 'Xem luồng Khách & Onboarding',
