@@ -620,3 +620,4 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
     );
   }
 }
+

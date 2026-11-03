@@ -572,25 +572,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.mic_none_rounded, size: 14),
-                label: const Text('Phát âm IPA'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF0284C7),
-                  side: const BorderSide(color: Color(0xFFBAE6FD)),
-                  backgroundColor: const Color(0xFFF0F9FF),
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-                  minimumSize: Size.zero,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PronunciationScreen()),
-                  );
-                },
-              ),
               const Spacer(),
               TextButton(
                 onPressed: () {

@@ -46,3 +46,4 @@
   { "id": "ipa_c_23", "symbol": "w", "type": "consonant", "name": "Voiced W", "exampleWord": "wet", "exampleIpa": "/wet/", "exampleMeaning": "ẩm ướt", "order": 43 },
   { "id": "ipa_c_24", "symbol": "j", "type": "consonant", "name": "Voiced Y", "exampleWord": "yes", "exampleIpa": "/jes/", "exampleMeaning": "vâng, có", "order": 44 }
 ]
+

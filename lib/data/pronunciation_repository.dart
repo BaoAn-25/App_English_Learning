@@ -23,3 +23,4 @@ class PronunciationRepository {
   /// Lấy danh sách các câu hỏi luyện tai nghe cặp âm đối lập (Minimal Pairs: dock vs deck)
   Future<List<MinimalPairQuestion>> getMinimalPairs() => _db.getAllMinimalPairs();
 }
+

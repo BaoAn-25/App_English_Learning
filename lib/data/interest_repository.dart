@@ -18,3 +18,4 @@ class InterestRepository {
   /// Lấy toàn bộ từ vựng sở thích cho việc tìm kiếm hoặc tạo Flashcard ngẫu nhiên
   Future<List<InterestWord>> getAllWords() => _db.getAllInterestWords();
 }
+

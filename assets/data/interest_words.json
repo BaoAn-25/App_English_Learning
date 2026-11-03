@@ -39,3 +39,4 @@
   { "id": "iw_pet_1", "topicId": "it_pets", "english": "puppy", "ipa": "/ˈpʌpi/", "meaningVi": "chó con", "exampleEn": "The cute puppy is running in the garden.", "exampleVi": "Chú chó con đáng yêu đang chạy trong vườn.", "category": "word", "order": 1 },
   { "id": "iw_pet_2", "topicId": "it_pets", "english": "veterinarian", "ipa": "/ˌvetərɪˈneəriən/", "meaningVi": "bác sĩ thú y", "exampleEn": "Take the cat to the veterinarian for a checkup.", "exampleVi": "Đưa con mèo tới bác sĩ thú y để khám bệnh.", "category": "word", "order": 2 }
 ]
+
