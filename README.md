@@ -77,6 +77,10 @@ Các phần sau đã có trên `feature/tai`, được đẩy lên [PR #3](https
 **Phần còn lại:** kiểm thử nâng cấp và plugin trên thiết bị thật. Giữ nguyên ID từ vựng và tiến độ; chưa hợp nhất các từ trùng nội dung nhưng khác ID. Màn hình Trang chủ, Thống kê và Cá nhân/Cài đặt thuộc phần An, không tính là chức năng Tài đã hoàn thành trong PR này.
 
 
+## Kiểm thử SQLite phần Tài — 29/10/2026
+
+Bổ sung kiểm thử mở database đồng thời, thử lại sau lỗi và nâng cấp v1 → v2 bảo toàn dữ liệu. Dùng schema v1 lịch sử và SQLite trên tệp tạm; không thay đổi mã sản phẩm hoặc thêm dependency. Xem [phạm vi, cách chạy và giới hạn kiểm chứng](docs/database-regression.md). Nhánh `feature/tai-db-regression` và PR vào `main` theo quyết định riêng cho nhiệm vụ này; không tạo `develop`.
+
 ## Lưu kết quả bài làm
 
 `AppRepository.savePracticeResult` lưu lượt làm, đáp án, sổ câu sai và thống kê ngày trong một giao dịch, kiểm tra dữ liệu trước khi ghi và rollback khi lỗi. Xem [hướng dẫn tích hợp và kiểm chứng](docs/save-practice-result.md).
