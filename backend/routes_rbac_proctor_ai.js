@@ -2306,7 +2306,6 @@ Trả về JSON thuần túy theo cấu trúc:
       res.status(500).json({ error: err.message });
     }
   });
-  });
 
   app.get('/api/classes/:classId/members', requireRoles(['teacher', 'admin']), async (req, res) => {
     if (!process.env.DATABASE_URL) return res.json({ members: [] });
