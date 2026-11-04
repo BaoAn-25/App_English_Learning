@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -743,25 +743,34 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
         appBar: AppBar(
           backgroundColor: cardColor,
           elevation: 0,
+          titleSpacing: 0,
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 widget.exam.title,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textMain),
+                style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: textMain),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(height: 1),
               Row(
                 children: [
-                  const Icon(Icons.shield_rounded, size: 13, color: AppTokens.success),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Đang giám sát • Cảnh cáo: ${_session?.violationCount ?? 0}/${widget.exam.maxViolations}',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: (_session?.violationCount ?? 0) > 0
-                          ? AppTokens.danger
-                          : AppTokens.success,
+                  const Icon(Icons.shield_rounded, size: 12, color: AppTokens.success),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: Text(
+                      'Giám sát s • Cảnh cáo: ${_session?.violationCount ?? 0}/',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: (_session?.violationCount ?? 0) > 0
+                            ? AppTokens.danger
+                            : AppTokens.success,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -769,20 +778,37 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
             ],
           ),
           actions: [
-            // Nút mô phỏng thoát ứng dụng để kiểm thử trực tiếp đồng hồ 10 giây
-            TextButton.icon(
-              onPressed: () => _triggerAntiCheatCountdown(
-                detail: 'Phát hiện chuyển cửa sổ ra ngoài ứng dụng (Kiểm thử Anti-Cheat 10s)',
+            // Nút mô phỏng thoát ứng dụng gọn gàng, không tràn màn hình
+            IconButton(
+              tooltip: 'Thử nghiệm rời ứng dụng (Test Out App)',
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              constraints: const BoxConstraints(),
+              icon: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppTokens.warning.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppTokens.warning.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.warning_amber_rounded, size: 13, color: AppTokens.warning),
+                    SizedBox(width: 2),
+                    Text(
+                      'Test Out',
+                      style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppTokens.warning),
+                    ),
+                  ],
+                ),
               ),
-              icon: const Icon(Icons.warning_amber_rounded, size: 16, color: AppTokens.warning),
-              label: const Text(
-                'Test Out App',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTokens.warning),
+              onPressed: () => _triggerAntiCheatCountdown(
+                detail: 'Phát hiện chuyển cửa sổ ra ngoài ứng dụng (Kiểm thử Anti-Cheat s)',
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              margin: const EdgeInsets.only(right: 12, left: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
               decoration: BoxDecoration(
                 color: AppTokens.primary.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(999),
@@ -792,7 +818,7 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   color: AppTokens.primary,
-                  fontSize: 13.5,
+                  fontSize: 13,
                 ),
               ),
             ),

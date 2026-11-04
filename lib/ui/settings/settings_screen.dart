@@ -5,6 +5,7 @@ import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
 import '../theme/theme_controller.dart';
 import '../onboarding/onboarding_target_screen.dart';
+import '../common/dialogs/avatar_picker_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -107,8 +108,8 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 _buildDailyGoalCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
-                // 3. Nhắc nhở học tập offline
-                _buildReminderCard(context, controller),
+                // 3. Trung tâm thông báo & Nhắc nhở dự án
+                _buildNotificationCenterCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
                 // 4. Giao diện Sáng / Tối
@@ -390,15 +391,15 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   color: AppTokens.primary.withAlpha(25),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.person_outline_rounded,
-                  size: 28,
+                  size: 30,
                   color: AppTokens.primary,
                 ),
               ),
@@ -407,19 +408,36 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Bạn đang học thử',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17,
-                        color: isDark ? Colors.white : AppTokens.textMain,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'Khách trải nghiệm',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                            color: isDark ? Colors.white : AppTokens.textMain,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF59E0B).withAlpha(25),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFFCD34D)),
+                          ),
+                          child: const Text(
+                            'OFFLINE',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFB45309)),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Kết quả đang lưu trên thiết bị này.',
+                      'Dữ liệu làm bài & từ vựng đang lưu tạm trên máy.',
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 12,
                         color: isDark ? Colors.white70 : theme.colorScheme.outline,
                         fontWeight: FontWeight.w500,
                       ),
@@ -431,7 +449,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           ),
           const SizedBox(height: AppTokens.space16),
           AppButton(
-            label: 'Tạo tài khoản',
+            label: 'Đăng ký tài khoản (Mở khóa toàn bộ)',
             variant: AppButtonVariant.primary,
             isFullWidth: true,
             icon: Icons.person_add_rounded,
@@ -452,7 +470,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 );
               },
               child: const Text(
-                'Đã có tài khoản? Đăng nhập',
+                'Đã có tài khoản? Đăng nhập để đồng bộ',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -480,12 +498,27 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
               );
             },
           ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(40),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              side: BorderSide(color: isDark ? const Color(0xFFEF4444).withAlpha(100) : const Color(0xFFFCA5A5)),
+              foregroundColor: const Color(0xFFEF4444),
+            ),
+            icon: const Icon(Icons.delete_sweep_rounded, size: 18),
+            label: const Text(
+              'Xóa dữ liệu học thử trên thiết bị',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            onPressed: () => _confirmResetGuestData(context),
+          ),
         ],
       ),
     );
   }
 
-  // --- Khối 1B: Hồ sơ học sinh đã đăng nhập ---
+  // --- Khối 1B: Hồ sơ người dùng đã đăng nhập (Học sinh / Giáo viên / Admin) ---
   Widget _buildProfileCard(BuildContext context, SettingsController controller) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -493,7 +526,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     final user = auth.user;
     final initialLetter = user.displayName.isNotEmpty
         ? user.displayName.trim()[0].toUpperCase()
-        : 'H';
+        : (user.email.isNotEmpty ? user.email.trim()[0].toUpperCase() : 'H');
 
     return AppCard(
       child: Column(
@@ -501,26 +534,71 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         children: [
           Row(
             children: [
-              // Avatar người dùng thật (hoặc chữ cái đầu tên)
-              if (user.avatarUrl.isNotEmpty)
-                CircleAvatar(
-                  radius: 28,
-                  backgroundImage: NetworkImage(user.avatarUrl),
-                )
-              else
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppTokens.primary,
-                  child: Text(
-                    initialLetter,
-                    style: const TextStyle(
-                      fontFamily: 'BeVietnamPro',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
+              // Avatar người dùng thật + nút đổi ảnh (Presets hoặc Link bên ngoài)
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppTokens.primary.withAlpha(25),
+                    backgroundImage: user.avatarUrl.isNotEmpty ? NetworkImage(user.avatarUrl) : null,
+                    child: user.avatarUrl.isEmpty
+                        ? Text(
+                            initialLetter,
+                            style: const TextStyle(
+                              fontFamily: 'BeVietnamPro',
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: AppTokens.primary,
+                            ),
+                          )
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: -2,
+                    right: -2,
+                    child: InkWell(
+                      onTap: () {
+                        AvatarPickerDialog.show(
+                          context,
+                          currentAvatarUrl: user.avatarUrl,
+                          onSelected: (newUrl) async {
+                            final ok = await controller.updateAvatar(newUrl);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(ok ? 'Cập nhật ảnh đại diện thành công!' : 'Đã cập nhật ảnh đại diện'),
+                                  backgroundColor: AppTokens.successGreen,
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: AppTokens.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(40),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded, size: 12, color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
+                ],
+              ),
               const SizedBox(width: AppTokens.space16),
               Expanded(
                 child: Column(
@@ -533,12 +611,74 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                         fontSize: 17,
                       ),
                     ),
+                    const SizedBox(height: 3),
+                    // Huy hiệu phân quyền vai trò người dùng
+                    if (user.isAdmin)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7C3AED).withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFC4B5FD)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.shield_rounded, size: 12, color: Color(0xFF7C3AED)),
+                            SizedBox(width: 4),
+                            Text(
+                              'QUẢN TRỊ VIÊN HỆ THỐNG',
+                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF7C3AED)),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (user.isTeacher)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D9488).withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFF5EEAD4)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.school_rounded, size: 12, color: Color(0xFF0D9488)),
+                            SizedBox(width: 4),
+                            Text(
+                              'GIÁO VIÊN BỘ MÔN',
+                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF0D9488)),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB).withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFF93C5FD)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.menu_book_rounded, size: 12, color: Color(0xFF2563EB)),
+                            SizedBox(width: 4),
+                            Text(
+                              'HỌC VIÊN',
+                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (user.email.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         user.email,
                         style: const TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 12,
                           color: Color(0xFF64748B),
                         ),
                       ),
@@ -547,9 +687,9 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     Text(
                       controller.hasTargetScore
                           ? 'Mục tiêu: ${controller.targetScore!.toStringAsFixed(1)} đ • Kế hoạch: ${controller.dailyGoal} câu/ngày'
-                          : 'Chưa chọn mục tiêu điểm số',
+                          : 'Kế hoạch học: ${controller.dailyGoal} câu/ngày',
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 12,
                         color: theme.colorScheme.outline,
                         fontWeight: FontWeight.w500,
                       ),
@@ -559,7 +699,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
               ),
               IconButton(
                 icon: const Icon(Icons.edit_outlined, size: 20),
-                tooltip: 'Chỉnh sửa hồ sơ',
+                tooltip: 'Chỉnh sửa tên & mục tiêu',
                 onPressed: () => _showEditProfileDialog(context, controller),
               ),
             ],
@@ -755,8 +895,8 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     );
   }
 
-  // --- Khối 3: Nhắc nhở học tập ---
-  Widget _buildReminderCard(BuildContext context, SettingsController controller) {
+  // --- Khối 3: Trung tâm thông báo & Nhắc nhở dự án ---
+  Widget _buildNotificationCenterCard(BuildContext context, SettingsController controller) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final formattedTime =
@@ -766,40 +906,124 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.alarm_rounded, color: AppTokens.primary, size: 22),
-              const SizedBox(width: AppTokens.space12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          const SectionHeader(
+            title: 'Trung tâm thông báo & Nhắc học',
+            icon: Icons.notifications_active_rounded,
+          ),
+          const SizedBox(height: AppTokens.space8),
+          Text(
+            'Quản lý nhắc nhở duy trì Streak và nhận thông báo phân nhóm dự án.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // 1. Khối Nhắc nhở Streak hàng ngày (Giờ học)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: controller.reminderEnabled
+                    ? (isDark ? const Color(0xFF3B82F6) : AppTokens.primary)
+                    : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                width: controller.reminderEnabled ? 1.5 : 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    const Text(
-                      AppStrings.enableDailyReminder,
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withAlpha(25),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.alarm_rounded, color: Color(0xFFD97706), size: 20),
                     ),
-                    Text(
-                      'Nhắc duy trì streak mỗi ngày',
-                      style: TextStyle(fontSize: 12, color: theme.colorScheme.outline),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Nhắc học hằng ngày (Bảo vệ Streak)',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                          ),
+                          Text(
+                            controller.reminderEnabled ? 'Đang bật lúc $formattedTime' : 'Đang tắt',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: controller.reminderEnabled
+                                  ? (isDark ? const Color(0xFF60A5FA) : AppTokens.primary)
+                                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    if (controller.isProcessingReminder)
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      Switch(
+                        value: controller.reminderEnabled,
+                        onChanged: (val) => controller.toggleReminder(val),
+                      ),
                   ],
                 ),
-              ),
-              if (controller.isProcessingReminder)
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else
-                Switch(
-                  value: controller.reminderEnabled,
-                  onChanged: (val) => controller.toggleReminder(val),
-                ),
-            ],
+                if (controller.reminderEnabled) ...[
+                  const SizedBox(height: 10),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Thời gian nhắc học:',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: controller.isProcessingReminder
+                            ? null
+                            : () async {
+                                final picked = await showTimePicker(
+                                  context: context,
+                                  initialTime: controller.reminderTime,
+                                  initialEntryMode: TimePickerEntryMode.input,
+                                  helpText: 'CHỌN GIỜ NHẮC HỌC HẰNG NGÀY',
+                                  cancelText: 'HỦY',
+                                  confirmText: 'XÁC NHẬN',
+                                );
+                                if (picked != null) {
+                                  controller.setReminderTime(picked);
+                                }
+                              },
+                        icon: const Icon(Icons.access_time_rounded, size: 16),
+                        label: Text(
+                          formattedTime,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
 
-          // Hiển thị thông báo trạng thái/lỗi phản ánh trung thực
           if (controller.reminderStatusMessage != null) ...[
             const SizedBox(height: 10),
             Container(
@@ -824,68 +1048,104 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             ),
           ],
 
-          if (controller.reminderEnabled) ...[
-            const Divider(height: 24),
-            InkWell(
-              onTap: controller.isProcessingReminder
-                  ? null
-                  : () async {
-                      final picked = await showTimePicker(
-                        context: context,
-                        initialTime: controller.reminderTime,
-                        initialEntryMode: TimePickerEntryMode.input,
-                        helpText: 'CHỌN GIỜ NHẮC HỌC HẰNG NGÀY',
-                        cancelText: 'HỦY',
-                        confirmText: 'XÁC NHẬN',
-                        hourLabelText: 'Giờ',
-                        minuteLabelText: 'Phút',
-                        errorInvalidText: 'Giờ hoặc phút không hợp lệ',
-                      );
-                      if (picked != null) {
-                        controller.setReminderTime(picked);
-                      }
-                    },
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        AppStrings.reminderTime,
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : AppTokens.primary.withAlpha(20),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                      ),
-                      child: Text(
-                        formattedTime,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? const Color(0xFF93C5FD) : AppTokens.primary,
-                        ),
-                      ),
-                    ),
-                  ],
+          const SizedBox(height: 16),
+          const Text(
+            'Kênh thông báo chi tiết',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 6),
+
+          _buildNotificationChannelTile(
+            icon: Icons.campaign_rounded,
+            iconColor: const Color(0xFF2563EB),
+            title: 'Thông báo chung & Bảo trì',
+            subtitle: 'Lịch bảo trì máy chủ, sách mới và tin tức quan trọng',
+            value: controller.notifyAnnouncements,
+            onChanged: (val) => controller.toggleNotifyAnnouncements(val),
+          ),
+          const Divider(height: 1),
+          _buildNotificationChannelTile(
+            icon: Icons.assignment_rounded,
+            iconColor: const Color(0xFF0D9488),
+            title: 'Bài tập & Hạn thi mới',
+            subtitle: 'Nhắc nhở khi thầy cô giao đề hoặc sắp hết hạn làm bài',
+            value: controller.notifyAssignments,
+            onChanged: (val) => controller.toggleNotifyAssignments(val),
+          ),
+          const Divider(height: 1),
+          _buildNotificationChannelTile(
+            icon: Icons.local_fire_department_rounded,
+            iconColor: const Color(0xFFEA580C),
+            title: 'Cảnh báo nguy cơ mất chuỗi Streak',
+            subtitle: 'Nhắc nhở lúc chiều tối nếu bạn chưa hoàn thành mục tiêu',
+            value: controller.notifyStreak,
+            onChanged: (val) => controller.toggleNotifyStreak(val),
+          ),
+          const Divider(height: 1),
+          _buildNotificationChannelTile(
+            icon: Icons.emoji_events_rounded,
+            iconColor: const Color(0xFFEAB308),
+            title: 'Bảng xếp hạng & Vinh danh',
+            subtitle: 'Thông báo khi bạn thăng hạng hoặc có biến động thứ hạng',
+            value: controller.notifyLeaderboard,
+            onChanged: (val) => controller.toggleNotifyLeaderboard(val),
+          ),
+          const Divider(height: 1),
+          _buildNotificationChannelTile(
+            icon: Icons.volume_up_rounded,
+            iconColor: const Color(0xFF6366F1),
+            title: 'Hiệu ứng âm thanh',
+            subtitle: 'Phát âm thanh thông báo nhẹ khi nhận thông báo',
+            value: controller.soundEnabled,
+            onChanged: (val) => controller.toggleSoundEnabled(val),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationChannelTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: iconColor.withAlpha(25),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: iconColor),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-              ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Thông báo có thể đến muộn do cài đặt hệ thống.',
-              style: TextStyle(
-                fontSize: 11.5,
-                color: theme.colorScheme.outline,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
+          ),
+          const SizedBox(width: 8),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
         ],
       ),
     );
@@ -1064,6 +1324,30 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 );
               },
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(40),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+              ),
+              icon: Icon(Icons.cleaning_services_rounded, size: 17, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+              label: Text(
+                'Dọn dẹp bộ nhớ đệm hình ảnh (Cache)',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF334155)),
+              ),
+              onPressed: () {
+                PaintingBinding.instance.imageCache.clear();
+                PaintingBinding.instance.imageCache.clearLiveImages();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã dọn dẹp bộ nhớ đệm thành công!'),
+                    backgroundColor: AppTokens.successGreen,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       );
@@ -1132,6 +1416,30 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   ),
                 );
               }
+            },
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(40),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+            ),
+            icon: Icon(Icons.cleaning_services_rounded, size: 17, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+            label: Text(
+              'Dọn dẹp bộ nhớ đệm (Cache) & Tải lại hình ảnh',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF334155)),
+            ),
+            onPressed: () {
+              PaintingBinding.instance.imageCache.clear();
+              PaintingBinding.instance.imageCache.clearLiveImages();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Đã dọn dẹp bộ nhớ đệm thành công!'),
+                  backgroundColor: AppTokens.successGreen,
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
           ),
         ],
@@ -1221,6 +1529,44 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 Navigator.pop(dialogCtx);
               },
               child: const Text(AppStrings.save),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmResetGuestData(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: const Text('Xóa dữ liệu học thử?'),
+          content: const Text(
+            'Toàn bộ lịch sử làm bài offline, câu hỏi luyện tập và bộ nhớ đệm trên thiết bị này sẽ được dọn dẹp về trạng thái ban đầu.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppTokens.errorRed),
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+                PaintingBinding.instance.imageCache.clear();
+                PaintingBinding.instance.imageCache.clearLiveImages();
+                await _repo.clearLearningSession('guest');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã dọn dẹp và đặt lại dữ liệu học thử!'),
+                      backgroundColor: AppTokens.primary,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Xác nhận xóa', style: TextStyle(color: Colors.white)),
             ),
           ],
         );

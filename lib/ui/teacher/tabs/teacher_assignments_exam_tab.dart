@@ -524,13 +524,13 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text(
-                          'Tự nộp và tính điểm khi quá thời gian',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        title: Text(
+                          'Tự nộp và tính điểm khi quá $graceSeconds giây',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                         ),
-                        subtitle: const Text(
-                          'Câu chưa làm tính là sai',
-                          style: TextStyle(fontSize: 11),
+                        subtitle: Text(
+                          'Tự thu bài và ghi nhận log vi phạm sau $graceSeconds giây rời app',
+                          style: const TextStyle(fontSize: 11),
                         ),
                         value: autoSubmitOnTimeout,
                         onChanged: (v) => setSheetState(() => autoSubmitOnTimeout = v),
@@ -589,7 +589,7 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                       }
                     },
                     icon: const Icon(Icons.verified_user_outlined),
-                    label: const Text('Phát hành bài thi có giám sát'),
+                    label: Text('Phát hành bài thi giám sát ${graceSeconds}s'),
                   ),
                 ),
               ],
