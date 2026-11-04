@@ -28,7 +28,6 @@ class _AppStartupState extends State<AppStartup> {
   late Future<void> _initialization;
   bool _initializing = false;
   bool _hasCompletedOnboarding = false;
-  String? _initErrorDetails;
 
   @override
   void initState() {
@@ -38,7 +37,6 @@ class _AppStartupState extends State<AppStartup> {
 
   Future<void> _initialize() async {
     _initializing = true;
-    _initErrorDetails = null;
     try {
       final initialize = widget.initialize;
       if (initialize != null) {
@@ -104,7 +102,6 @@ class _AppStartupState extends State<AppStartup> {
       }
     } catch (criticalErr) {
       debugPrint('Critical AppStartup error: $criticalErr');
-      _initErrorDetails = criticalErr.toString();
       rethrow;
     } finally {
       _initializing = false;
@@ -113,6 +110,7 @@ class _AppStartupState extends State<AppStartup> {
 
   void _retry() {
     if (_initializing) return;
+    _initializing = true;
     setState(() {
       _initialization = _initialize();
     });
@@ -181,37 +179,30 @@ class _AppStartupState extends State<AppStartup> {
                               ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 16),
                       const Text(
-                        'Đã có trục trặc trong quá trình chuẩn bị dữ liệu ban đầu.',
+                        'Vui lòng thử lại.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13.5, color: Color(0xFF64748B)),
                       ),
-                      if (_initErrorDetails != null) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _initErrorDetails!,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Colors.black54),
-                          ),
-                        ),
-                      ],
                       const SizedBox(height: 24),
 
-                      // Nút 1: Bỏ qua và vào app ngay (Ưu tiên cao nhất để không bao giờ bị kẹt)
+                      // Nút 1: Thử lại (FilledButton)
                       SizedBox(
                         width: double.infinity,
                         height: 48,
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF2563EB),
+                        child: FilledButton(
+                          onPressed: _retry,
+                          child: const Text('Thử lại'),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Nút 2: Tiếp tục vào học (Bỏ qua lỗi để không bao giờ bị kẹt)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           onPressed: () {
@@ -221,24 +212,7 @@ class _AppStartupState extends State<AppStartup> {
                             );
                           },
                           icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                          label: const Text(
-                            'Tiếp tục vào học',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Nút 2: Thử lại
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          onPressed: _retry,
-                          child: const Text('Thử tải lại'),
+                          label: const Text('Tiếp tục vào học'),
                         ),
                       ),
                     ],
