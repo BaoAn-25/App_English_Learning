@@ -69,18 +69,39 @@ class _AdminContentTabState extends State<AdminContentTab> {
     );
     if (!mounted) return;
     setState(() {
-      _questions = allQuestions.map((q) => q.toMap()).toList();
+      _questions = allQuestions.map((q) {
+        final m = q.toMap();
+        m['options'] = q.options;
+        return m;
+      }).toList();
       _isLoadingQuestions = false;
     });
+  }
+
+  List<String> _parseOptions(dynamic raw) {
+    if (raw == null) return [];
+    if (raw is List) {
+      return raw.map((e) => e.toString()).toList();
+    }
+    if (raw is String) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          return decoded.map((e) => e.toString()).toList();
+        }
+      } catch (_) {}
+    }
+    return [];
   }
 
   // Hộp thoại Soạn câu hỏi mới
   Future<void> _showCreateQuestionDialog({Map<String, dynamic>? editItem}) async {
     final stemCtrl = TextEditingController(text: editItem?['stem']?.toString() ?? '');
-    final optACtrl = TextEditingController(text: (editItem?['options'] as List?)?.elementAtOrNull(0)?.toString() ?? '');
-    final optBCtrl = TextEditingController(text: (editItem?['options'] as List?)?.elementAtOrNull(1)?.toString() ?? '');
-    final optCCtrl = TextEditingController(text: (editItem?['options'] as List?)?.elementAtOrNull(2)?.toString() ?? '');
-    final optDCtrl = TextEditingController(text: (editItem?['options'] as List?)?.elementAtOrNull(3)?.toString() ?? '');
+    final parsedOpts = _parseOptions(editItem?['options']);
+    final optACtrl = TextEditingController(text: parsedOpts.elementAtOrNull(0) ?? '');
+    final optBCtrl = TextEditingController(text: parsedOpts.elementAtOrNull(1) ?? '');
+    final optCCtrl = TextEditingController(text: parsedOpts.elementAtOrNull(2) ?? '');
+    final optDCtrl = TextEditingController(text: parsedOpts.elementAtOrNull(3) ?? '');
     final expCtrl = TextEditingController(text: editItem?['explanation']?.toString() ?? '');
 
     int correctIndex = (editItem?['correctIndex'] as num?)?.toInt() ?? 0;
@@ -366,8 +387,8 @@ class _AdminContentTabState extends State<AdminContentTab> {
                           children: [
                             const Text('🎉 Đã số hóa thành công:', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppTokens.success)),
                             const SizedBox(height: 4),
-                            Text('• Từ vựng bóc tách: ${(digitizedResult!['vocabulary'] as List).length} từ kèm IPA'),
-                            Text('• Câu hỏi trắc nghiệm: ${(digitizedResult!['questions'] as List).length} câu kèm giải nghĩa'),
+                            Text('• Từ vựng bóc tách: ${(digitizedResult!['vocabulary'] as List?)?.length ?? 0} từ kèm IPA'),
+                            Text('• Câu hỏi trắc nghiệm: ${(digitizedResult!['questions'] as List?)?.length ?? 0} câu kèm giải nghĩa'),
                             const SizedBox(height: 8),
                             FilledButton.tonal(
                               onPressed: () async {
@@ -627,7 +648,7 @@ class _AdminContentTabState extends State<AdminContentTab> {
           )
         else
           ..._questions.map((q) {
-            final options = (q['options'] as List?) ?? [];
+            final options = _parseOptions(q['options']);
             final correctIdx = (q['correctIndex'] as num?)?.toInt() ?? 0;
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
@@ -758,8 +779,10 @@ class _AdminContentTabState extends State<AdminContentTab> {
     List<Map<String, dynamic>> paragraphsList = [];
     if (customRaw != null && customRaw.isNotEmpty) {
       try {
-        final decoded = jsonDecode(customRaw) as List;
-        paragraphsList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        final decoded = jsonDecode(customRaw);
+        if (decoded is List) {
+          paragraphsList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        }
       } catch (_) {}
     }
     if (paragraphsList.isEmpty) {
