@@ -1531,6 +1531,46 @@ class RbacProctorAiService {
       }
     }
 
+    // Xóa sạch toàn bộ tài khoản mock/test ảo cũ nếu còn tồn lưu trong bộ nhớ cache
+    final origLen = users.length;
+    users.removeWhere((u) {
+      final em = (u['email'] ?? '').toString().trim().toLowerCase();
+      final id = (u['id'] ?? '').toString().trim().toLowerCase();
+      final name = (u['display_name'] ?? u['displayName'] ?? '').toString().toLowerCase();
+      if (UserProfile.isSystemAdmin(em)) return false;
+      return id.contains('mock') ||
+          id.contains('fake') ||
+          id.contains('teacher_pending') ||
+          em.contains('mock') ||
+          em.contains('fake') ||
+          em.contains('example.com') ||
+          name.contains('mẫu') ||
+          name.contains('mock');
+    });
+    if (users.length != origLen) {
+      await _repo.setSetting('admin_cached_users_json', jsonEncode(users));
+    }
+
+    // Xóa sạch toàn bộ tài khoản mock/test ảo cũ nếu còn tồn lưu trong bộ nhớ cache
+    final origLen = users.length;
+    users.removeWhere((u) {
+      final em = (u['email'] ?? '').toString().trim().toLowerCase();
+      final id = (u['id'] ?? '').toString().trim().toLowerCase();
+      final name = (u['display_name'] ?? u['displayName'] ?? '').toString().toLowerCase();
+      if (UserProfile.isSystemAdmin(em)) return false; // Không bao giờ xóa admin hệ thống
+      return id.contains('mock') ||
+          id.contains('fake') ||
+          id.contains('teacher_pending') ||
+          em.contains('mock') ||
+          em.contains('fake') ||
+          em.contains('example.com') ||
+          name.contains('mẫu') ||
+          name.contains('mock');
+    });
+    if (users.length != origLen) {
+      await _repo.setSetting('admin_cached_users_json', jsonEncode(users));
+    }
+
     if (users.isEmpty) {
       final currentAuth = await _repo.getAuthUser();
       users = [
@@ -2345,6 +2385,22 @@ class RbacProctorAiService {
       } catch (_) {}
     }
 
+    // Lọc bỏ triệt để các yêu cầu duyệt giáo viên mock/ảo cũ
+    final origReqLen = list.length;
+    list.removeWhere((r) {
+      final em = (r['email'] ?? '').toString().trim().toLowerCase();
+      final id = (r['id'] ?? '').toString().trim().toLowerCase();
+      return id.contains('mock') ||
+          id.contains('pending_1') ||
+          id.contains('pending_2') ||
+          em.contains('mock') ||
+          em.contains('example.com') ||
+          em.contains('test');
+    });
+    if (list.length != origReqLen) {
+      await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
+    }
+
     return list;
   }
 
@@ -2474,6 +2530,22 @@ class RbacProctorAiService {
     if (classId != null && classId.isNotEmpty && classId != 'all') {
       return list.where((a) => a['classId'] == classId).toList();
     }
+    // Lọc bỏ triệt để các yêu cầu duyệt giáo viên mock/ảo cũ
+    final origReqLen = list.length;
+    list.removeWhere((r) {
+      final em = (r['email'] ?? '').toString().trim().toLowerCase();
+      final id = (r['id'] ?? '').toString().trim().toLowerCase();
+      return id.contains('mock') ||
+          id.contains('pending_1') ||
+          id.contains('pending_2') ||
+          em.contains('mock') ||
+          em.contains('example.com') ||
+          em.contains('test');
+    });
+    if (list.length != origReqLen) {
+      await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
+    }
+
     return list;
   }
 
@@ -2660,6 +2732,22 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
+    // Lọc bỏ triệt để các yêu cầu duyệt giáo viên mock/ảo cũ
+    final origReqLen = list.length;
+    list.removeWhere((r) {
+      final em = (r['email'] ?? '').toString().trim().toLowerCase();
+      final id = (r['id'] ?? '').toString().trim().toLowerCase();
+      return id.contains('mock') ||
+          id.contains('pending_1') ||
+          id.contains('pending_2') ||
+          em.contains('mock') ||
+          em.contains('example.com') ||
+          em.contains('test');
+    });
+    if (list.length != origReqLen) {
+      await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
+    }
+
     return list;
   }
 
@@ -2765,6 +2853,22 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
+    // Lọc bỏ triệt để các yêu cầu duyệt giáo viên mock/ảo cũ
+    final origReqLen = list.length;
+    list.removeWhere((r) {
+      final em = (r['email'] ?? '').toString().trim().toLowerCase();
+      final id = (r['id'] ?? '').toString().trim().toLowerCase();
+      return id.contains('mock') ||
+          id.contains('pending_1') ||
+          id.contains('pending_2') ||
+          em.contains('mock') ||
+          em.contains('example.com') ||
+          em.contains('test');
+    });
+    if (list.length != origReqLen) {
+      await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
+    }
+
     return list;
   }
 
@@ -2831,6 +2935,22 @@ class RbacProctorAiService {
         }
       }
     } catch (_) {}
+
+    // Lọc bỏ triệt để các yêu cầu duyệt giáo viên mock/ảo cũ
+    final origReqLen = list.length;
+    list.removeWhere((r) {
+      final em = (r['email'] ?? '').toString().trim().toLowerCase();
+      final id = (r['id'] ?? '').toString().trim().toLowerCase();
+      return id.contains('mock') ||
+          id.contains('pending_1') ||
+          id.contains('pending_2') ||
+          em.contains('mock') ||
+          em.contains('example.com') ||
+          em.contains('test');
+    });
+    if (list.length != origReqLen) {
+      await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
+    }
 
     return list;
   }

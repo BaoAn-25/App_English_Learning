@@ -277,13 +277,16 @@ class AuthController extends ChangeNotifier {
       _token = token;
       await _repository.saveAuthToken(token);
 
+      final rEmail = userData['email'] as String? ?? cleanEmail;
       final registeredUser = UserProfile(
         id: userData['id'] as String,
-        email: userData['email'] as String,
+        email: rEmail,
         displayName: userData['displayName'] as String? ?? name,
         avatarUrl: userData['avatarUrl'] as String? ?? '',
         authProvider: 'email',
-        role: userData['role'] as String? ?? 'student',
+        role: UserProfile.isSystemAdmin(rEmail)
+            ? 'admin'
+            : (userData['role'] as String? ?? 'student'),
         emailVerified: userData['emailVerified'] == true,
         isLoggedIn: true,
         targetScore: _user.targetScore,
@@ -358,13 +361,16 @@ class AuthController extends ChangeNotifier {
       _token = token;
       await _repository.saveAuthToken(token);
 
+      final lEmail = userData['email'] as String? ?? cleanEmail;
       final loggedInUser = UserProfile(
         id: userData['id'] as String,
-        email: userData['email'] as String,
+        email: lEmail,
         displayName: userData['displayName'] as String? ?? 'Học sinh',
         avatarUrl: userData['avatarUrl'] as String? ?? '',
         authProvider: userData['authProvider'] as String? ?? 'email',
-        role: userData['role'] as String? ?? 'student',
+        role: UserProfile.isSystemAdmin(lEmail)
+            ? 'admin'
+            : (userData['role'] as String? ?? 'student'),
         emailVerified: userData['emailVerified'] == true,
         isLoggedIn: true,
         targetScore: _user.targetScore,
@@ -438,13 +444,16 @@ class AuthController extends ChangeNotifier {
       _token = token;
       await _repository.saveAuthToken(token);
 
+      final gEmail = userData['email'] as String? ?? googleResult.account?.email ?? '';
       final loggedInUser = UserProfile(
         id: userData['id'] as String,
-        email: userData['email'] as String,
+        email: gEmail,
         displayName: userData['displayName'] as String? ?? googleResult.account?.displayName ?? 'Học sinh EngPass',
         avatarUrl: userData['avatarUrl'] as String? ?? googleResult.account?.photoUrl ?? '',
         authProvider: 'google',
-        role: userData['role'] as String? ?? 'student',
+        role: UserProfile.isSystemAdmin(gEmail)
+            ? 'admin'
+            : (userData['role'] as String? ?? 'student'),
         emailVerified: userData['emailVerified'] == true,
         isLoggedIn: true,
         targetScore: _user.targetScore,

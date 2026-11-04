@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../navigation/main_shell.dart';
+import '../../navigation/role_routing_shell.dart';
 import '../theme/components/app_button.dart';
 import 'auth_controller.dart';
 import 'forgot_password_screen.dart';
@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
+        MaterialPageRoute(builder: (_) => const RoleRoutingShell()),
         (route) => false,
       );
     } else {
@@ -181,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
+        MaterialPageRoute(builder: (_) => const RoleRoutingShell()),
         (route) => false,
       );
     } else {

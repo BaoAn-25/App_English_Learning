@@ -16,8 +16,9 @@ import '../theme/components/app_card.dart';
 import '../theme/components/section_header.dart';
 import '../theme/components/sync_status_badge.dart';
 import 'settings_controller.dart';
-import '../teacher/teacher_portal_screen.dart';
-import '../admin/admin_portal_screen.dart';
+import '../teacher/teacher_main_shell.dart';
+import '../admin/admin_main_shell.dart';
+import '../admin/components/student_preview_mode.dart';
 
 /// Màn hình Cá nhân & Cài đặt.
 /// Xuất widget công khai để MainShell gắn vào NavigationBar.
@@ -205,9 +206,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
+                        if (StudentPreviewMode.instance.isPreviewActive) {
+                          StudentPreviewMode.instance.exitPreview();
+                        }
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                          MaterialPageRoute(builder: (_) => AdminMainShell(repository: _repo)),
                         );
                       },
                       icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
@@ -221,7 +225,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                          MaterialPageRoute(builder: (_) => TeacherMainShell(repository: _repo)),
                         );
                       },
                       icon: const Icon(Icons.school_rounded, size: 18),
@@ -299,7 +303,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                    MaterialPageRoute(builder: (_) => TeacherMainShell(repository: _repo)),
                   );
                 },
                 icon: const Icon(Icons.school_rounded, size: 18),

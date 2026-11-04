@@ -27,8 +27,8 @@ import 'home_controller.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../translation/translation_hub_screen.dart';
 import '../practice/supervised_exam_screen.dart';
-import '../teacher/teacher_portal_screen.dart';
-import '../admin/admin_portal_screen.dart';
+import '../teacher/teacher_main_shell.dart';
+import '../admin/admin_main_shell.dart';
 
 class RoadmapUnitItem {
   final int number; // 0 for Review
@@ -548,9 +548,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton.icon(
                   style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                   onPressed: () {
+                    final repo = context.read<AppRepository>();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                      MaterialPageRoute(builder: (_) => TeacherMainShell(repository: repo)),
                     );
                   },
                   icon: const Icon(Icons.school_rounded, size: 16),
@@ -560,9 +561,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton.icon(
                   style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                   onPressed: () {
+                    final repo = context.read<AppRepository>();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                      MaterialPageRoute(builder: (_) => AdminMainShell(repository: repo)),
                     );
                   },
                   icon: const Icon(Icons.admin_panel_settings_rounded, size: 16),
