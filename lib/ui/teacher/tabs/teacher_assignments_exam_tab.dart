@@ -940,17 +940,23 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                           style: TextStyle(fontWeight: FontWeight.bold),
                         )
                       : DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: _selectedExam?.id,
                           decoration: const InputDecoration(
                             labelText: 'Đề thi đang giám sát',
                             border: OutlineInputBorder(),
                             isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                           ),
                           items: _exams
                               .map(
                                 (e) => DropdownMenuItem(
                                   value: e.id,
-                                  child: Text(e.title, overflow: TextOverflow.ellipsis),
+                                  child: Text(
+                                    e.title,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
                                 ),
                               )
                               .toList(),
@@ -967,7 +973,11 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                 ),
                 const SizedBox(width: 8),
                 FilledButton.icon(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF283593),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    visualDensity: VisualDensity.compact,
+                  ),
                   onPressed: _showCreateSupervisedExamModal,
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Cài đặt đề'),

@@ -2240,6 +2240,31 @@ class RbacProctorAiService {
     return newCode;
   }
 
+  /// Xóa hoặc Giải tán một lớp học khỏi hệ thống
+  Future<bool> deleteClass(String classId) async {
+    final classes = await getClasses();
+    final idx = classes.indexWhere((c) => c['id'].toString() == classId.toString());
+    if (idx < 0) return false;
+
+    final removed = classes.removeAt(idx);
+    await _repo.setSetting('admin_classes_json', jsonEncode(classes));
+    await _repo.setSetting('class_members_$classId', '[]');
+
+    await recordAuditLog(
+      action: 'DELETE_CLASS',
+      targetType: 'class',
+      targetId: classId,
+      details: 'Giải tán / Xóa lớp học "${removed['name']}" (Mã: ${removed['code']})',
+    );
+
+    try {
+      final client = await _client();
+      await client.deleteJson('/classes/$classId');
+    } catch (_) {}
+
+    return true;
+  }
+
   /// Lấy danh sách các lớp học mà học sinh hiện tại đang tham gia
   Future<List<Map<String, dynamic>>> getMyJoinedClasses() async {
     final user = await _repo.getAuthUser();

@@ -78,6 +78,66 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
     }
   }
 
+  void _confirmDeleteClass(Map<String, dynamic> c, {VoidCallback? onSuccess}) {
+    final className = (c['name'] ?? 'Lớp học').toString();
+    final classId = c['id'].toString();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Giải tán $className?')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hành động này sẽ xóa vĩnh viễn lớp "$className" (Mã: ${c['code']}) khỏi hệ thống.',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '• Học sinh sẽ bị gỡ khỏi danh sách lớp.\n• Mã tham gia lớp lập tức bị vô hiệu hóa.\n• Dữ liệu gắn với lớp này sẽ được làm sạch.',
+              style: TextStyle(fontSize: 12.5, color: Colors.black87, height: 1.4),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy bỏ'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red[700]),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await _service.deleteClass(classId);
+              if (success) {
+                await _loadData();
+                onSuccess?.call();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã giải tán lớp "$className" thành công!'),
+                      backgroundColor: Colors.red[800],
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.delete_forever, size: 18),
+            label: const Text('Xác nhận giải tán'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddClassModal() {
     final nameCtrl = TextEditingController();
     final schoolCtrl = TextEditingController(text: 'THPT Nguyễn Trãi');
@@ -1258,6 +1318,13 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                             onPressed: () => _handleRegenerateClassCode(c),
                             icon: const Icon(Icons.refresh, size: 14),
                             label: const Text('Đổi mã'),
+                          ),
+                          const SizedBox(width: 6),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            tooltip: 'Giải tán lớp',
+                            icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                            onPressed: () => _confirmDeleteClass(c),
                           ),
                         ],
                       ),
