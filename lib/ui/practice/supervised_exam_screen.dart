@@ -1131,60 +1131,165 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
   }
 
   void _showSubmitExplanationDialog(ExamLiveSessionModel session) {
-    final explainCtrl = TextEditingController(text: session.studentExplanation ?? '');
+    String selectedReason = 'Mất mạng hoặc Wi-Fi bị rớt';
+    final explainCtrl = TextEditingController();
 
-    showDialog(
+    // Nếu đã có giải trình trước đó
+    if (session.studentExplanation != null && session.studentExplanation!.isNotEmpty) {
+      final raw = session.studentExplanation!;
+      if (raw.startsWith('[') && raw.contains('] ')) {
+        final closing = raw.indexOf('] ');
+        selectedReason = raw.substring(1, closing);
+        explainCtrl.text = raw.substring(closing + 2);
+      } else {
+        explainCtrl.text = raw;
+      }
+    }
+
+    final reasonOptions = const [
+      'Mất mạng hoặc Wi-Fi bị rớt',
+      'Có cuộc gọi đến',
+      'Sự cố ứng dụng / máy tắt nguồn',
+      'Việc gia đình khẩn cấp',
+      'Khác...',
+    ];
+
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Gửi giải trình cho giáo viên'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Nếu bạn bị tự nộp do lý do khách quan (mất mạng, cuộc gọi khẩn), hãy gửi giải trình để giáo viên xem xét cho làm lại.',
-              style: TextStyle(fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: explainCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Lý do giải trình',
-                hintText: 'VD: Điện thoại em có cuộc gọi đột xuất từ phụ huynh...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Đóng'),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
           ),
-          FilledButton(
-            onPressed: () async {
-              if (explainCtrl.text.trim().isEmpty) return;
-              Navigator.pop(ctx);
-              final updated = await RbacProctorAiService.instance.submitExamExplanation(
-                examId: widget.exam.id,
-                sessionId: session.id,
-                explanation: explainCtrl.text.trim(),
-              );
-              if (updated != null && mounted) {
-                setState(() => _session = updated);
-              }
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Đã gửi giải trình tới giáo viên giám sát!'),
-                  backgroundColor: AppTokens.success,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.assignment_late_outlined, color: Color(0xFF283593)),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Gửi giải trình sự cố thi',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  ],
                 ),
-              );
-            },
-            child: const Text('Gửi giải trình'),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.red[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.timer_off_outlined, color: Colors.red[800], size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${widget.exam.title} • Quá hạn rời app ${widget.exam.graceSeconds}s',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red[900]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text('Lý do sự cố', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedReason,
+                  isExpanded: true,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                  items: reasonOptions.map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 13)))).toList(),
+                  onChanged: (val) {
+                    if (val != null) setSheetState(() => selectedReason = val);
+                  },
+                ),
+                const SizedBox(height: 12),
+                const Text('Cô cần biết thêm điều gì?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: explainCtrl,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Ví dụ: Wi-Fi nhà em bị rớt lúc thi, em mở lại app ngay.',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(10)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: Color(0xFF283593)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'App sẽ tự động đính kèm nhật ký rời app và thời gian của bạn cho cô xem.',
+                          style: TextStyle(fontSize: 11, color: Colors.blue[900]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Giải trình không đảm bảo được thi lại. Giáo viên sẽ xem xét nhật ký và trả lời. Hãy nói đúng sự thật.',
+                  style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
+                    onPressed: () async {
+                      final detail = explainCtrl.text.trim();
+                      final fullExplanation = '[$selectedReason] ${detail.isNotEmpty ? detail : "Học sinh báo cáo sự cố $selectedReason"}';
+                      final sm = ScaffoldMessenger.of(context);
+                      Navigator.pop(ctx);
+                      final updated = await RbacProctorAiService.instance.submitExamExplanation(
+                        examId: widget.exam.id,
+                        sessionId: session.id,
+                        explanation: fullExplanation,
+                      );
+                      if (updated != null && mounted) {
+                        setState(() => _session = updated);
+                      }
+                      if (mounted) {
+                        sm.showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã gửi giải trình kèm nhật ký tới giáo viên!'),
+                            backgroundColor: AppTokens.success,
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.send_rounded, size: 18),
+                    label: const Text('Gửi giải trình cho giáo viên'),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

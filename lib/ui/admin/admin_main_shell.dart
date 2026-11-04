@@ -162,7 +162,9 @@ class _AdminMainShellState extends State<AdminMainShell> {
           AdminDashboardTab(
             onNavigateTab: _onTabSelected,
           ),
-          const AdminContentTab(),
+          AdminContentTab(
+            repository: widget.repository,
+          ),
           AdminUsersTab(
             repository: widget.repository,
           ),

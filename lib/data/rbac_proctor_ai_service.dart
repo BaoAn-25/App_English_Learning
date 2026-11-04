@@ -2086,6 +2086,7 @@ class RbacProctorAiService {
       'requireApproval': m['requireApproval'] == true || m['require_approval'] == true,
       'showLeaderboard': m['showLeaderboard'] != false && m['show_leaderboard'] != false,
       'allowJoin': m['allowJoin'] != false && m['allow_join'] != false,
+      'membershipStatus': (m['membershipStatus'] ?? m['membership_status'] ?? '').toString(),
       'status': (m['status'] ?? 'active').toString(),
       'studentsCount': (m['studentsCount'] ?? m['student_count'] ?? 0 as num).toInt(),
       'pendingCount': (m['pendingCount'] ?? m['pending_count'] ?? 0 as num).toInt(),
@@ -2239,6 +2240,59 @@ class RbacProctorAiService {
     return newCode;
   }
 
+  /// Lấy danh sách các lớp học mà học sinh hiện tại đang tham gia
+  Future<List<Map<String, dynamic>>> getMyJoinedClasses() async {
+    final user = await _repo.getAuthUser();
+    final studentId = user?.id ?? '';
+    final studentEmail = (user?.email ?? '').trim().toLowerCase();
+
+    // 1. Thử gọi API lấy lớp học từ server Neon
+    try {
+      final client = await _client();
+      final res = await client.getJson('/classes', timeout: const Duration(seconds: 6));
+      if (res.isSuccess && res.data?['classes'] is List) {
+        final serverList = (res.data!['classes'] as List)
+            .map((e) => _normalizeClassMap(Map<String, dynamic>.from(e as Map)))
+            .toList();
+        if (serverList.isNotEmpty) {
+          await _repo.setSetting('student_joined_classes_json', jsonEncode(serverList));
+          return serverList;
+        }
+      }
+    } catch (_) {}
+
+    // 2. Đọc từ cache đã lưu
+    final cached = await _repo.getSetting('student_joined_classes_json');
+    if (cached != null && cached.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(cached) as List;
+        final list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        if (list.isNotEmpty) return list;
+      } catch (_) {}
+    }
+
+    // 3. Quét kiểm tra trong toàn bộ lớp học cục bộ
+    final allClasses = await getClasses();
+    final joined = <Map<String, dynamic>>[];
+    for (final c in allClasses) {
+      final cid = c['id'].toString();
+      final members = await getClassMembers(cid, syncRemote: false);
+      final matchedMember = members.where((m) {
+        final mId = (m['studentId'] ?? '').toString();
+        final mEmail = (m['studentEmail'] ?? '').toString().trim().toLowerCase();
+        return (studentId.isNotEmpty && mId == studentId) ||
+            (studentEmail.isNotEmpty && mEmail == studentEmail);
+      }).firstOrNull;
+
+      if (matchedMember != null) {
+        final copy = Map<String, dynamic>.from(c);
+        copy['membershipStatus'] = matchedMember['status'] ?? 'approved';
+        joined.add(copy);
+      }
+    }
+    return joined;
+  }
+
   /// Học sinh nhập Mã lớp để tham gia lớp học
   Future<Map<String, dynamic>> joinClassByCode(String joinCode) async {
     final cleanCode = joinCode.trim().toUpperCase();
@@ -2255,11 +2309,26 @@ class RbacProctorAiService {
       final client = await _client();
       final res = await client.postJson('/classes/join', {'joinCode': cleanCode});
       if (res.isSuccess && res.data != null) {
+        final rawStatus = res.data!['membership']?['status'] ?? res.data!['memberStatus'] ?? 'approved';
+        final status = (rawStatus == 'active') ? 'approved' : rawStatus;
+        final classData = res.data!['classItem'] ?? res.data!['class'];
+        final classMap = classData is Map ? _normalizeClassMap(Map<String, dynamic>.from(classData)) : null;
+        if (classMap != null) {
+          classMap['membershipStatus'] = status;
+          final myJoined = await getMyJoinedClasses();
+          final jIdx = myJoined.indexWhere((c) => c['id'] == classMap['id']);
+          if (jIdx >= 0) {
+            myJoined[jIdx] = classMap;
+          } else {
+            myJoined.insert(0, classMap);
+          }
+          await _repo.setSetting('student_joined_classes_json', jsonEncode(myJoined));
+        }
         return {
           'ok': true,
-          'status': res.data!['memberStatus'] ?? 'approved',
+          'status': status,
           'message': res.data!['message'] ?? 'Tham gia lớp học thành công.',
-          'classItem': res.data!['class'],
+          'classItem': classMap,
         };
       }
     } catch (_) {}
@@ -2307,6 +2376,18 @@ class RbacProctorAiService {
       members.insert(0, memberItem);
     }
     await _saveClassMembersLocal(classId, members);
+
+    // Cập nhật danh sách lớp học của học sinh vào cache
+    final myJoined = await getMyJoinedClasses();
+    final jIdx = myJoined.indexWhere((c) => c['id'] == targetClass['id']);
+    final updatedTarget = Map<String, dynamic>.from(targetClass);
+    updatedTarget['membershipStatus'] = status;
+    if (jIdx >= 0) {
+      myJoined[jIdx] = updatedTarget;
+    } else {
+      myJoined.insert(0, updatedTarget);
+    }
+    await _repo.setSetting('student_joined_classes_json', jsonEncode(myJoined));
 
     // Cập nhật sĩ số lớp học
     await getClasses();
