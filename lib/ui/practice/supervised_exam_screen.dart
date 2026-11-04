@@ -1,9 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/rbac_proctor_ai_service.dart';
 import '../auth/auth_controller.dart';
+import '../auth/login_screen.dart';
 import '../theme/app_tokens.dart';
 import '../theme/components/engpass_mascot.dart';
 
@@ -20,7 +21,12 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
   bool _isLoading = true;
   List<SupervisedExamModel> _exams = [];
   List<Map<String, dynamic>> _assignments = [];
+  Map<String, ExamLiveSessionModel> _myExamSessions = {};
   final TextEditingController _joinCodeController = TextEditingController();
+
+  bool get _isGuest =>
+      !AuthController.instance.isAuthenticated ||
+      AuthController.instance.user.isGuest;
 
   @override
   void initState() {
@@ -38,15 +44,88 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
     setState(() => _isLoading = true);
     final list = await RbacProctorAiService.instance.getSupervisedExams();
     final assigns = await RbacProctorAiService.instance.getAssignments();
+    final user = AuthController.instance.user;
+    final Map<String, ExamLiveSessionModel> mySessions = {};
+
+    for (final exam in list) {
+      final sessions = await RbacProctorAiService.instance.getLiveSessionsForExam(exam.id);
+      final my = sessions.where((s) => s.userId == user.id).firstOrNull;
+      if (my != null) {
+        mySessions[exam.id] = my;
+      }
+    }
+
     if (!mounted) return;
     setState(() {
       _exams = list.where((e) => e.isActive).toList();
       _assignments = assigns.where((a) => a['status'] != 'closed').toList();
+      _myExamSessions = mySessions;
       _isLoading = false;
     });
   }
 
+  void _showGuestWarningDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_person_rounded, color: AppTokens.primary, size: 26),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Yêu Cầu Tài Khoản Học Sinh',
+                style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tính năng Phòng Thi Giám Sát và Lớp Học yêu cầu tài khoản học sinh chính thức để:',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            SizedBox(height: 8),
+            Text('• Tham gia danh sách lớp do Giáo viên tạo.', style: TextStyle(fontSize: 13, height: 1.4)),
+            Text('• Ghi nhận điểm số học bạ và kết quả làm bài.', style: TextStyle(fontSize: 13, height: 1.4)),
+            Text('• Giám sát tính trung thực trong quá trình thi cử.', style: TextStyle(fontSize: 13, height: 1.4)),
+            SizedBox(height: 10),
+            Text(
+              'Tài khoản Khách vãng lai chỉ dùng để học thử bài giảng và không thể lưu điểm thi.',
+              style: TextStyle(fontSize: 12.5, color: Colors.grey, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Để sau'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            },
+            icon: const Icon(Icons.login_rounded, size: 18),
+            label: const Text('Đăng nhập ngay'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleJoinClassByCode() async {
+    if (_isGuest) {
+      _showGuestWarningDialog();
+      return;
+    }
     final code = _joinCodeController.text.trim();
     if (code.isEmpty) return;
     final res = await RbacProctorAiService.instance.joinClassByCode(code);
@@ -66,6 +145,17 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
   }
 
   void _showExamRulesSheet(SupervisedExamModel exam) {
+    if (_isGuest) {
+      _showGuestWarningDialog();
+      return;
+    }
+
+    final mySession = _myExamSessions[exam.id];
+    if (mySession != null && !mySession.isActive) {
+      _showFinishedExamDetailSheet(exam, mySession);
+      return;
+    }
+
     bool agreed = false;
 
     showModalBottomSheet(
@@ -193,6 +283,194 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
     );
   }
 
+  /// Xem lại kết quả bài thi đã hoàn thành hoặc bị thu bài (Chặn thi lại)
+  void _showFinishedExamDetailSheet(SupervisedExamModel exam, ExamLiveSessionModel session) {
+    final isViolation = session.status == 'force_submitted_auto' ||
+        session.status == 'force_submitted_teacher' ||
+        session.status == 'invalidated';
+    final dateFmt = DateFormat('dd/MM/yyyy HH:mm');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isViolation ? Icons.gpp_bad_rounded : Icons.verified_rounded,
+                  color: isViolation ? AppTokens.danger : AppTokens.success,
+                  size: 26,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isViolation ? 'Kết quả: Vi phạm quy chế thi' : 'Kết quả bài thi đã nộp',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: isViolation ? AppTokens.danger : AppTokens.textMain,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              exam.title,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 14),
+
+            // Điểm số nổi bật
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: (isViolation ? AppTokens.danger : AppTokens.primary).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isViolation ? AppTokens.danger : AppTokens.primary,
+                    width: 1.5,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '${session.score.toStringAsFixed(1)} / 10.0',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: isViolation ? AppTokens.danger : AppTokens.primary,
+                      ),
+                    ),
+                    Text(
+                      session.statusLabel,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isViolation ? AppTokens.danger : AppTokens.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Thống kê bài thi
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Số câu đã làm:', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                      Text('${session.answeredCount} / ${session.totalQuestions} câu', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Divider(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Số lần cảnh cáo rời app:', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                      Text('${session.violationCount} lần', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: session.violationCount > 0 ? AppTokens.danger : Colors.black87)),
+                    ],
+                  ),
+                  if (session.submittedAt != null) ...[
+                    const Divider(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Thời điểm nộp bài:', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                        Text(dateFmt.format(session.submittedAt!), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            if (session.teacherWarningMessage != null && session.teacherWarningMessage!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTokens.danger.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTokens.danger.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 18, color: AppTokens.danger),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        session.teacherWarningMessage!,
+                        style: const TextStyle(fontSize: 12.5, color: AppTokens.danger, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 14),
+            // Thông báo quy chế chặn làm lại
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber[300]!),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.lock_clock_rounded, size: 18, color: Colors.amber),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Quy chế thi có giám sát: Mỗi học sinh chỉ được làm bài 1 lần duy nhất để bảo đảm tính công bằng. Bạn không thể làm lại bài thi này.',
+                      style: TextStyle(fontSize: 12, color: Colors.brown, height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Đã hiểu và đóng'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -225,6 +503,46 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (_isGuest)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Bạn đang ở chế độ Khách vãng lai',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Để được vào lớp của giáo viên và lưu điểm thi giám sát, vui lòng đăng nhập.',
+                                style: TextStyle(fontSize: 12, color: textSub),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          ),
+                          child: const Text('Đăng nhập', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // Khối Tham gia lớp học bằng Mã lớp thật
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -336,7 +654,7 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                   const SizedBox(height: 10),
                 ],
 
-                // Thẻ giới thiệu cơ chế chống gian lận 10s
+                // Thẻ giới thiệu cơ chế chống gian lận
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -363,7 +681,7 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                             const SizedBox(height: 4),
                             Text(
                               '• Tự động khóa Dịch thuật & Gia sư AI khi vào phòng thi.\n'
-                              '• Nếu thoát ứng dụng / mở ChatGPT quá 10 giây hoặc vượt số lần cảnh cáo, hệ thống sẽ tự động thu bài và báo cho Giáo viên.',
+                              '• Nếu thoát ứng dụng / mở app khác quá thời gian quy định hoặc vượt số lần cảnh cáo, hệ thống sẽ tự động thu bài và báo cho Giáo viên.',
                               style: TextStyle(fontSize: 12.5, color: textSub, height: 1.4),
                             ),
                           ],
@@ -387,13 +705,25 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
 
                 ..._exams.map((exam) {
                   final isLate = exam.isPastDeadline;
+                  final mySession = _myExamSessions[exam.id];
+                  final hasCompleted = mySession != null && !mySession.isActive;
+                  final isViolation = hasCompleted &&
+                      (mySession.status == 'force_submitted_auto' ||
+                          mySession.status == 'force_submitted_teacher' ||
+                          mySession.status == 'invalidated');
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 14),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: borderColor),
+                      border: Border.all(
+                        color: hasCompleted
+                            ? (isViolation ? AppTokens.danger.withValues(alpha: 0.5) : AppTokens.success.withValues(alpha: 0.5))
+                            : borderColor,
+                        width: hasCompleted ? 1.5 : 1,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,16 +733,22 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: (isLate ? AppTokens.warning : AppTokens.success)
+                                color: (hasCompleted
+                                        ? (isViolation ? AppTokens.danger : AppTokens.success)
+                                        : (isLate ? AppTokens.warning : AppTokens.success))
                                     .withValues(alpha: 0.16),
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                isLate ? 'Đã quá hạn nộp chuẩn' : 'Đang mở nhận bài',
+                                hasCompleted
+                                    ? (isViolation ? 'Đã thu bài do vi phạm' : 'Đã nộp bài hoàn tất')
+                                    : (isLate ? 'Đã quá hạn nộp chuẩn' : 'Đang mở nhận bài'),
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w800,
-                                  color: isLate ? AppTokens.warning : AppTokens.success,
+                                  color: hasCompleted
+                                      ? (isViolation ? AppTokens.danger : AppTokens.success)
+                                      : (isLate ? AppTokens.warning : AppTokens.success),
                                 ),
                               ),
                             ),
@@ -445,6 +781,36 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                             style: TextStyle(fontSize: 13, color: textSub),
                           ),
                         ],
+                        if (hasCompleted) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: (isViolation ? AppTokens.danger : AppTokens.success).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isViolation ? Icons.gpp_bad_rounded : Icons.check_circle_rounded,
+                                  size: 16,
+                                  color: isViolation ? AppTokens.danger : AppTokens.success,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Điểm số: ${mySession.score.toStringAsFixed(1)} / 10.0 • ${mySession.statusLabel}',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isViolation ? AppTokens.danger : AppTokens.success,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 10),
                         Wrap(
                           spacing: 12,
@@ -470,11 +836,21 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                         const SizedBox(height: 14),
                         SizedBox(
                           width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () => _showExamRulesSheet(exam),
-                            icon: const Icon(Icons.play_arrow_rounded),
-                            label: const Text('Vào Phòng Thi Giám Sát'),
-                          ),
+                          child: hasCompleted
+                              ? FilledButton.tonalIcon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: (isViolation ? AppTokens.danger : AppTokens.success).withValues(alpha: 0.12),
+                                    foregroundColor: isViolation ? AppTokens.danger : AppTokens.success,
+                                  ),
+                                  onPressed: () => _showFinishedExamDetailSheet(exam, mySession),
+                                  icon: const Icon(Icons.assignment_turned_in_rounded),
+                                  label: const Text('Xem Kết Quả & Chi Tiết Bài Làm'),
+                                )
+                              : FilledButton.icon(
+                                  onPressed: () => _showExamRulesSheet(exam),
+                                  icon: const Icon(Icons.play_arrow_rounded),
+                                  label: const Text('Vào Phòng Thi Giám Sát'),
+                                ),
                         ),
                       ],
                     ),
@@ -524,11 +900,12 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
   Timer? _examTimer;
   late int _remainingExamSeconds;
 
-  // Đồng hồ đếm ngược 10 giây chống gian lận khi rời ứng dụng
+  // Đồng hồ đếm ngược graceSeconds chống gian lận khi rời ứng dụng
   Timer? _graceCountdownTimer;
   bool _isAntiCheatWarningOverlayVisible = false;
   int _graceSecondsLeft = 10;
   DateTime? _leftAppAt;
+  bool _isAppCurrentlyBackgrounded = false;
 
   bool _isFinished = false;
   String _finalResultMessage = '';
@@ -562,7 +939,27 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
     if (!mounted) return;
     setState(() {
       _session = started;
+      _answers.addAll(started.currentAnswers);
     });
+
+    if (!started.isActive) {
+      setState(() {
+        _isFinished = true;
+        _finalResultMessage = started.teacherWarningMessage ??
+            (started.status.startsWith('submitted')
+                ? 'Bạn đã hoàn thành bài thi này.'
+                : 'Bài thi đã bị khóa kết thúc do vi phạm quy chế.');
+      });
+      return;
+    }
+
+    final elapsedSec = DateTime.now().difference(started.startedAt).inSeconds;
+    final totalSec = widget.exam.durationMinutes * 60;
+    _remainingExamSeconds = (totalSec - elapsedSec).clamp(0, totalSec);
+    if (_remainingExamSeconds <= 0) {
+      _submitExamNow(isAutoTimeout: true);
+      return;
+    }
 
     _examTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted || _isFinished) {
@@ -586,38 +983,38 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      _leftAppAt ??= DateTime.now();
-      _triggerAntiCheatCountdown(
-        detail: 'Phát hiện thoát ứng dụng / chuyển cửa sổ (${state.name})',
-      );
+      if (!_isAppCurrentlyBackgrounded) {
+        _isAppCurrentlyBackgrounded = true;
+        _leftAppAt = DateTime.now();
+      }
     } else if (state == AppLifecycleState.resumed) {
-      if (_leftAppAt != null) {
-        final awaySec = DateTime.now().difference(_leftAppAt!).inSeconds;
+      if (_isAppCurrentlyBackgrounded) {
+        _isAppCurrentlyBackgrounded = false;
+        final left = _leftAppAt;
         _leftAppAt = null;
-        if (awaySec >= widget.exam.graceSeconds) {
-          _handleGracePeriodExceeded(awaySec);
+        if (left != null) {
+          final awaySec = DateTime.now().difference(left).inSeconds;
+          if (awaySec >= widget.exam.graceSeconds) {
+            _handleGracePeriodExceeded(awaySec);
+          } else {
+            _handleReturnedWithinGrace(awaySec);
+          }
         }
       }
     }
   }
 
-  /// Kích hoạt bộ đếm ngược 10 giây yêu cầu quay lại làm bài ngay lập tức
-  Future<void> _triggerAntiCheatCountdown({required String detail}) async {
+  /// Xử lý khi học sinh quay lại phòng thi trong thời gian cho phép
+  Future<void> _handleReturnedWithinGrace(int awaySec) async {
     if (_isFinished || _session == null) return;
 
-    _graceCountdownTimer?.cancel();
-    setState(() {
-      _isAntiCheatWarningOverlayVisible = true;
-      _graceSecondsLeft = widget.exam.graceSeconds;
-    });
-
-    // Ghi nhận ngay sự kiện vi phạm lên hệ thống giám sát của Giáo viên
     final updated = await RbacProctorAiService.instance.recordProctorHeartbeat(
       exam: widget.exam,
       currentSession: _session!,
       currentAnswers: _answers,
       eventType: 'app_backgrounded',
-      detail: detail,
+      outOfAppSeconds: awaySec,
+      detail: 'Rời ứng dụng $awaySec giây rồi quay lại phòng thi.',
     );
 
     if (!mounted) return;
@@ -627,6 +1024,97 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
       _finalizeTerminatedSession(updated);
       return;
     }
+
+    _showReturnWarningDialog(awaySec, updated.violationCount);
+  }
+
+  /// Hiển thị cảnh báo trực quan khi học sinh vừa out app quay lại
+  void _showReturnWarningDialog(int awaySec, int violations) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppTokens.danger, size: 28),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'CẢNH BÁO RỜI PHÒNG THI',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTokens.danger),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hệ thống phát hiện bạn vừa rời khỏi màn hình làm bài ${awaySec > 0 ? awaySec : 1} giây.',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTokens.danger.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTokens.danger.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• Số lần cảnh cáo: $violations / ${widget.exam.maxViolations} lần',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTokens.danger),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '• Thời gian tối đa cho phép mỗi lần: ${widget.exam.graceSeconds} giây',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '• Mọi lần rời app đều được lưu lại và gửi tới Giáo viên giám sát.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              violations >= widget.exam.maxViolations
+                  ? '⚠️ Bạn đã chạm ngưỡng cảnh cáo! Rời app thêm 1 lần nữa bài thi sẽ bị thu hồi ngay lập tức!'
+                  : 'Vui lòng tập trung làm bài và không tiếp tục chuyển đổi ứng dụng.',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+                color: violations >= widget.exam.maxViolations ? AppTokens.danger : AppTokens.primary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tôi đã hiểu, tiếp tục làm bài'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Nút thử nghiệm đếm ngược trực tiếp trên màn hình
+  void _triggerManualTestCountdown() {
+    if (_isFinished || _session == null) return;
+    _graceCountdownTimer?.cancel();
+    setState(() {
+      _isAntiCheatWarningOverlayVisible = true;
+      _graceSecondsLeft = widget.exam.graceSeconds;
+    });
 
     _graceCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted || _isFinished) {
@@ -647,6 +1135,8 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
     setState(() {
       _isAntiCheatWarningOverlayVisible = false;
     });
+    final elapsedSec = widget.exam.graceSeconds - _graceSecondsLeft;
+    _handleReturnedWithinGrace(elapsedSec > 0 ? elapsedSec : 1);
   }
 
   Future<void> _handleGracePeriodExceeded(int awaySeconds) async {
@@ -761,7 +1251,7 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                   const SizedBox(width: 3),
                   Flexible(
                     child: Text(
-                      'Giám sát s • Cảnh cáo: ${_session?.violationCount ?? 0}/',
+                      'Giám sát ${widget.exam.graceSeconds}s • Cảnh cáo: ${_session?.violationCount ?? 0}/${widget.exam.maxViolations}',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -802,9 +1292,7 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                   ],
                 ),
               ),
-              onPressed: () => _triggerAntiCheatCountdown(
-                detail: 'Phát hiện chuyển cửa sổ ra ngoài ứng dụng (Kiểm thử Anti-Cheat s)',
-              ),
+              onPressed: _triggerManualTestCountdown,
             ),
             Container(
               margin: const EdgeInsets.only(right: 12, left: 6),

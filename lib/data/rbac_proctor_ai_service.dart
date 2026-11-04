@@ -1219,6 +1219,29 @@ class RbacProctorAiService {
     required String studentName,
     required String studentEmail,
   }) async {
+    // 1. Kiểm tra nếu học sinh đã hoàn tất bài thi này (nộp bài hoặc bị thu bài do vi phạm)
+    final existingList = await getLiveSessionsForExam(exam.id);
+    final completedSession = existingList
+        .where((s) => s.userId == userId && !s.isActive)
+        .firstOrNull;
+    if (completedSession != null) {
+      ExamLockGuard.instance.exitSupervisedExam();
+      return completedSession;
+    }
+
+    // 2. Nếu đang có phiên thi dở dang (ví dụ bị ngắt nguồn, crash app), tiếp tục phiên đó
+    final runningSession = existingList
+        .where((s) => s.userId == userId && s.isActive)
+        .firstOrNull;
+    if (runningSession != null) {
+      ExamLockGuard.instance.enterSupervisedExam(
+        examId: exam.id,
+        examTitle: exam.title,
+      );
+      return runningSession;
+    }
+
+    // 3. Nếu chưa từng thi: Khởi tạo phiên thi mới
     ExamLockGuard.instance.enterSupervisedExam(
       examId: exam.id,
       examTitle: exam.title,
