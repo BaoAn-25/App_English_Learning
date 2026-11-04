@@ -287,9 +287,28 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           const SizedBox(height: 20),
 
           // Dòng hoạt động gần nhất (Recent Audit Feed)
-          Text(
-            'Nhật ký hoạt động gần nhất',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textMain),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Nhật ký hoạt động gần nhất',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textMain),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Ghi nhận các thao tác quan trọng của GV & Admin',
+                    style: TextStyle(fontSize: 11, color: textSub),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () => widget.onNavigateTab?.call(4), // Sang Tab Quản trị
+                child: const Text('Xem tất cả', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           if (_auditLogs.isEmpty)
@@ -306,6 +325,15 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             )
           else
             ..._auditLogs.take(3).map((log) {
+              final rawAction = (log['action'] ?? '').toString();
+              final isDanger = rawAction.contains('FORCE_SUBMIT') || rawAction.contains('LOCK') || rawAction.contains('DELETE');
+              final isSuccess = rawAction.contains('CREATE') || rawAction.contains('RESOLVE') || rawAction.contains('SAVE') || rawAction.contains('JOIN');
+              final isWarning = rawAction.contains('RESET') || rawAction.contains('UPDATE');
+
+              final Color color = isDanger ? const Color(0xFFDC2626) : (isSuccess ? const Color(0xFF059669) : (isWarning ? const Color(0xFFD97706) : AppTokens.primary));
+              final Color bg = color.withValues(alpha: 0.12);
+              final dateStr = (log['createdAt'] ?? '').toString().split('T').first;
+
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
@@ -315,28 +343,43 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   border: Border.all(color: borderColor),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTokens.primary.withAlpha(20),
+                        color: bg,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.history_rounded, size: 16, color: AppTokens.primary),
+                      child: Icon(Icons.history_rounded, size: 16, color: color),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            (log['action'] ?? 'THAO TÁC HỆ THỐNG').toString(),
-                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: textMain),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _formatActionName(rawAction),
+                                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: color),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (dateStr.isNotEmpty)
+                                Text(
+                                  dateStr,
+                                  style: TextStyle(fontSize: 10, color: textSub),
+                                ),
+                            ],
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             (log['details'] ?? '').toString(),
                             style: TextStyle(fontSize: 11.5, color: textSub),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -350,6 +393,31 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         ],
       ),
     );
+  }
+
+  String _formatActionName(String raw) {
+    switch (raw) {
+      case 'TEACHER_PROCTOR_FORCE_SUBMIT':
+        return 'Thu bài thi cưỡng chế';
+      case 'TEACHER_PROCTOR_RESET_VIOLATION':
+        return 'Xóa cảnh báo vi phạm';
+      case 'SAVE_QUESTIONS':
+        return 'Lưu câu hỏi Ngân hàng SGK';
+      case 'CREATE_CLASS':
+        return 'Tạo lớp học mới';
+      case 'DELETE_CLASS':
+        return 'Giải tán lớp học';
+      case 'ADMIN_CREATE_USER':
+        return 'Tạo tài khoản người dùng';
+      case 'LOCK_USER_ACCOUNT':
+        return 'Khóa tài khoản vi phạm';
+      case 'RESOLVE_BUG_REPORT':
+        return 'Xử lý báo lỗi câu hỏi';
+      case 'CLEAR_AUDIT_LOGS':
+        return 'Dọn nhật ký hệ thống';
+      default:
+        return raw;
+    }
   }
 
   Widget _buildActionItem({

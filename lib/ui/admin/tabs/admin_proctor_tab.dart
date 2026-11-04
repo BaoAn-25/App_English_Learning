@@ -321,6 +321,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 const SizedBox(height: 12),
                 if (_classes.isNotEmpty)
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: selectedClassId,
                     decoration: const InputDecoration(
                       labelText: 'Giao cho lớp học',
@@ -377,6 +378,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
+                  isExpanded: true,
                   initialValue: unitForExam,
                   decoration: const InputDecoration(
                     labelText: 'Trích xuất đề từ Ngân hàng SGK 12',
@@ -692,12 +694,18 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   const Text('Chọn nhanh học sinh đã đăng ký:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Danh sách học sinh', border: OutlineInputBorder(), isDense: true),
                     items: studentUsers
                         .map(
                           (u) => DropdownMenuItem(
                             value: u['email'].toString(),
-                            child: Text('${u['display_name'] ?? u['displayName'] ?? u['email']} (${u['email']})', overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              '${u['display_name'] ?? u['displayName'] ?? u['email']} (${u['email']})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13),
+                            ),
                           ),
                         )
                         .toList(),

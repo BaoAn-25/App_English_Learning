@@ -1734,7 +1734,18 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
 
   try {
     const userId = req.user.id;
-    const { targetScore, examDate, dailyMinutes, reminderEnabled, favoriteTopics } = req.body;
+    const { targetScore, examDate, dailyMinutes, reminderEnabled, favoriteTopics, displayName, avatarUrl } = req.body;
+
+    if (displayName || avatarUrl) {
+      await pool.query(
+        `UPDATE users SET 
+           display_name = COALESCE(NULLIF($1, ''), display_name),
+           avatar_url = COALESCE(NULLIF($2, ''), avatar_url),
+           updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [displayName || null, avatarUrl || null, userId]
+      );
+    }
 
     await pool.query(
       `INSERT INTO user_profiles (user_id, target_score, exam_date, daily_minutes, reminder_enabled, favorite_topics)

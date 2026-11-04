@@ -173,6 +173,7 @@ class _AdminMainShellState extends State<AdminMainShell> {
           ),
           AdminManagementTab(
             repository: widget.repository,
+            onNavigateTab: _onTabSelected,
           ),
         ],
       ),

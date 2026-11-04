@@ -1957,6 +1957,16 @@ class RbacProctorAiService {
     await _repo.setSetting('system_audit_logs_json', jsonEncode(logs));
   }
 
+  Future<void> clearAuditLogs() async {
+    await _repo.setSetting('system_audit_logs_json', jsonEncode([]));
+    await recordAuditLog(
+      action: 'CLEAR_AUDIT_LOGS',
+      targetType: 'system_log',
+      targetId: 'all',
+      details: 'Quản trị viên đã dọn dẹp và làm mới nhật ký kiểm toán hệ thống',
+    );
+  }
+
   // ===========================================================================
   // 8. GIẢI TRÌNH PHÒNG THI, QUẢN LÝ LỚP HỌC, BÀI GIAO, BÁO LỖI & THÔNG BÁO THẬT
   // ===========================================================================
