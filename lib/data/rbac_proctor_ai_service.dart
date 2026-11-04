@@ -2915,22 +2915,6 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
-    // Lọc bỏ triệt để các yêu cầu duyệt giáo viên mock/ảo cũ
-    final origReqLen = list.length;
-    list.removeWhere((r) {
-      final em = (r['email'] ?? '').toString().trim().toLowerCase();
-      final id = (r['id'] ?? '').toString().trim().toLowerCase();
-      return id.contains('mock') ||
-          id.contains('pending_1') ||
-          id.contains('pending_2') ||
-          em.contains('mock') ||
-          em.contains('example.com') ||
-          em.contains('test');
-    });
-    if (list.length != origReqLen) {
-      await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
-    }
-
     return list;
   }
 
@@ -2944,16 +2928,20 @@ class RbacProctorAiService {
     String scheduledAt = 'Gửi ngay',
   }) async {
     final list = await getAnnouncements();
+    final nowIso = DateTime.now().toIso8601String();
     final item = {
       'id': 'ann_${DateTime.now().millisecondsSinceEpoch}',
       'title': title.trim(),
       'content': content.trim(),
       'audience': audience,
+      'target': audience,
       'category': category,
+      'type': category,
       'displayType': displayType,
       'sendPush': sendPush,
       'scheduledAt': scheduledAt,
-      'createdAt': DateTime.now().toIso8601String(),
+      'sentAt': nowIso,
+      'createdAt': nowIso,
     };
     list.insert(0, item);
     await _repo.setSetting('admin_announcements_json', jsonEncode(list));
@@ -2967,7 +2955,12 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      await client.postJson('/announcements', item);
+      await client.postJson('/announcements', {
+        'title': title.trim(),
+        'content': content.trim(),
+        'target': audience,
+        'type': category,
+      });
     } catch (_) {}
 
     return item;

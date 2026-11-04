@@ -209,6 +209,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
     final contentCtrl = TextEditingController();
     String target = 'all';
     String type = 'maintenance';
+    String? titleError;
+    String? contentError;
+    bool isSubmitting = false;
 
     showModalBottomSheet(
       context: context,
@@ -265,41 +268,106 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 const SizedBox(height: 12),
                 TextField(
                   controller: titleCtrl,
-                  decoration: const InputDecoration(labelText: 'Tiêu đề thông báo', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: 'Tiêu đề thông báo *',
+                    hintText: 'Nhập tiêu đề thông báo...',
+                    errorText: titleError,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (_) {
+                    if (titleError != null) setSheetState(() => titleError = null);
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: contentCtrl,
                   maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Nội dung chi tiết', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: 'Nội dung chi tiết *',
+                    hintText: 'Nhập nội dung thông báo gửi đến người dùng...',
+                    errorText: contentError,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (_) {
+                    if (contentError != null) setSheetState(() => contentError = null);
+                  },
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: FilledButton.icon(
+                  child: FilledButton(
                     style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
-                    onPressed: () async {
-                      if (titleCtrl.text.trim().isEmpty) return;
-                      Navigator.pop(ctx);
-                      await _service.createAnnouncement(
-                        title: titleCtrl.text.trim(),
-                        content: contentCtrl.text.trim(),
-                        audience: target,
-                        category: type,
-                      );
-                      _loadData();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Đã phát thông báo toàn hệ thống thành công!'),
-                            backgroundColor: Color(0xFF1B5E20),
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            final title = titleCtrl.text.trim();
+                            final content = contentCtrl.text.trim();
+                            bool hasError = false;
+                            if (title.isEmpty) {
+                              titleError = 'Vui lòng nhập tiêu đề thông báo';
+                              hasError = true;
+                            }
+                            if (content.isEmpty) {
+                              contentError = 'Vui lòng nhập nội dung chi tiết';
+                              hasError = true;
+                            }
+                            if (hasError) {
+                              setSheetState(() {});
+                              return;
+                            }
+
+                            setSheetState(() => isSubmitting = true);
+                            try {
+                              await _service.createAnnouncement(
+                                title: title,
+                                content: content,
+                                audience: target,
+                                category: type,
+                              );
+                              if (ctx.mounted) Navigator.pop(ctx);
+                              await _loadData();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.check_circle_rounded, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(child: Text('Đã phát thông báo "$title" thành công!')),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFF1B5E20),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setSheetState(() => isSubmitting = false);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Lỗi khi phát thông báo: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.send_rounded, size: 20),
+                              SizedBox(width: 8),
+                              Text('Phát thông báo ngay', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                            ],
                           ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.send_rounded),
-                    label: const Text('Phát thông báo ngay'),
                   ),
                 ),
               ],
@@ -844,6 +912,13 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (ctx, idx) {
               final a = _announcements[idx];
+              final targetVal = (a['target'] ?? a['audience'] ?? 'all').toString();
+              final targetLabel = targetVal == 'all'
+                  ? 'Tất cả'
+                  : (targetVal == 'student' ? 'Học sinh' : (targetVal == 'teacher' ? 'Giáo viên' : targetVal));
+              final dateRaw = (a['sentAt'] ?? a['sent_at'] ?? a['createdAt'] ?? DateTime.now().toIso8601String()).toString();
+              final sentDate = dateRaw.contains('T') ? dateRaw.split('T').first : (dateRaw.length >= 10 ? dateRaw.substring(0, 10) : dateRaw);
+
               return Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -860,7 +935,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            a['title'].toString(),
+                            (a['title'] ?? '').toString(),
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ),
@@ -871,7 +946,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            a['target'] == 'all' ? 'Tất cả' : (a['target'] == 'student' ? 'Học sinh' : 'Giáo viên'),
+                            targetLabel,
                             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -879,12 +954,12 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      a['content'].toString(),
+                      (a['content'] ?? '').toString(),
                       style: TextStyle(fontSize: 13, color: Colors.grey[800]),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Gửi lúc: ${a['sentAt'].toString().split('T').first}',
+                      'Gửi lúc: $sentDate',
                       style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                     ),
                   ],
