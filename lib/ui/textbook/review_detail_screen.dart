@@ -123,8 +123,17 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
       );
     }
 
-    // Ghi nhận hoàn thành bài Review
+    // Ghi nhận hoàn thành bài Review & cộng 50 XP vào DailyStat
     await _repo.setSetting('review_${widget.reviewNumber}_completed_$ownerId', 'true');
+    if (!_isSaved) {
+      await _repo.recordStudyReward(
+        xp: 50,
+        minutes: 8,
+        questionsDone: _userAnswers.length,
+        correct: _userAnswers.length,
+        ownerId: ownerId,
+      );
+    }
 
     if (mounted) {
       setState(() => _isSaved = true);
@@ -139,13 +148,18 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -153,24 +167,27 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
           children: [
             Text(
               _info.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             Text(
               '${_info.unitsCovered} • SGK trang ${_info.pages}',
-              style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+              style: TextStyle(
+                fontSize: 11.5,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              ),
             ),
           ],
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppTokens.primary,
-          unselectedLabelColor: const Color(0xFF64748B),
-          indicatorColor: AppTokens.primary,
+          labelColor: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+          unselectedLabelColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          indicatorColor: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
           indicatorWeight: 3,
           isScrollable: true,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
@@ -194,7 +211,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E2430) : Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -224,6 +241,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
 
   // --- TAB 1: LANGUAGE REVIEW ---
   Widget _buildLanguageTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -231,13 +249,17 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
           'Trọng tâm ôn tập Ngôn ngữ',
           '• Phát âm: ${_info.pronunciationFocus}\n• Ngữ pháp: ${_info.grammarFocus}',
           Icons.psychology_rounded,
-          const Color(0xFFEFF6FF),
-          AppTokens.primary,
+          isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.35) : const Color(0xFFEFF6FF),
+          isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'Bài tập trắc nghiệm Ngữ pháp & Từ vựng SGK',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 10),
         ..._info.languageQuestions.asMap().entries.map((entry) {
@@ -251,6 +273,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
 
   // --- TAB 2: LISTENING REVIEW ---
   Widget _buildListeningTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: _audioController,
       builder: (context, _) {
@@ -264,9 +287,9 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF1E2430) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                 boxShadow: const [
                   BoxShadow(color: Color(0x06000000), offset: Offset(0, 2), blurRadius: 6),
                 ],
@@ -279,10 +302,14 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.35) : const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.headphones_rounded, color: AppTokens.primary, size: 24),
+                        child: Icon(
+                          Icons.headphones_rounded,
+                          color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -291,18 +318,25 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
                           children: [
                             Text(
                               'Track: ${_info.title} Listening',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
                             ),
                             Text(
                               'File gốc: ${_info.listeningAsset.split('/').last}',
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
                         iconSize: 42,
-                        color: AppTokens.primary,
+                        color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
                         icon: Icon(isPlayingCurrent
                             ? Icons.pause_circle_filled_rounded
                             : Icons.play_circle_fill_rounded),
@@ -330,9 +364,13 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Câu hỏi kiểm tra kỹ năng nghe',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF0F172A)),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
             ),
             const SizedBox(height: 10),
             ..._info.listeningQuestions.asMap().entries.map((entry) {
@@ -348,6 +386,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
 
   // --- TAB 3: READING REVIEW ---
   Widget _buildReadingTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -355,35 +394,51 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.menu_book_rounded, color: AppTokens.primary, size: 20),
+                  Icon(
+                    Icons.menu_book_rounded,
+                    color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Đoạn đọc SGK Review ${_info.reviewNumber}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
                   ),
                 ],
               ),
               const Divider(height: 20),
               Text(
                 _info.readingPassage,
-                style: const TextStyle(fontSize: 13.5, height: 1.6, color: Color(0xFF1E293B)),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.6,
+                  color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'Câu hỏi đọc hiểu',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
         ),
         const SizedBox(height: 10),
         ..._info.readingQuestions.asMap().entries.map((entry) {
@@ -397,6 +452,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
 
   // --- TAB 4: WRITING & SPEAKING REVIEW ---
   Widget _buildWritingAndSpeakingTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -404,27 +460,41 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF0FDF4),
+            color: isDark ? const Color(0xFF14532D).withValues(alpha: 0.35) : const Color(0xFFF0FDF4),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFBBF7D0)),
+            border: Border.all(
+              color: isDark ? const Color(0xFF22C55E).withValues(alpha: 0.5) : const Color(0xFFBBF7D0),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.record_voice_over_rounded, color: Color(0xFF16A34A), size: 20),
-                  SizedBox(width: 8),
+                  Icon(
+                    Icons.record_voice_over_rounded,
+                    color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     'Chủ đề luyện nói (Speaking Task)',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF166534)),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF166534),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 _info.speakingTask,
-                style: const TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF14532D)),
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: isDark ? const Color(0xFFDCFCE7) : const Color(0xFF14532D),
+                ),
               ),
             ],
           ),
@@ -435,36 +505,59 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.draw_rounded, color: AppTokens.primary, size: 20),
-                  SizedBox(width: 8),
+                  Icon(
+                    Icons.draw_rounded,
+                    color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     'Đề bài Viết (Writing Prompt)',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 _info.writingPrompt,
-                style: const TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                ),
               ),
               const SizedBox(height: 12),
               ExpansionTile(
-                title: const Text('Gợi ý dàn ý (Outline)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                title: Text(
+                  'Gợi ý dàn ý (Outline)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
                 tilePadding: EdgeInsets.zero,
                 children: [
                   Text(
                     _info.writingOutline,
-                    style: const TextStyle(fontSize: 12.5, height: 1.5, color: Color(0xFF475569)),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.5,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                    ),
                   ),
                 ],
               ),
@@ -472,13 +565,22 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Bài làm của bạn:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(
+                    'Bài làm của bạn:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
                   Text(
                     'Số từ: $_wordCount / 120-150 từ',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: _wordCount >= 100 ? AppTokens.successGreen : const Color(0xFF64748B),
+                      color: _wordCount >= 100
+                          ? AppTokens.successGreen
+                          : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ),
                 ],
@@ -492,7 +594,11 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   contentPadding: const EdgeInsets.all(14),
                 ),
-                style: const TextStyle(fontSize: 13.5, height: 1.5),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.5,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
               ),
             ],
           ),
@@ -502,6 +608,7 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
   }
 
   Widget _buildQuestionCard(int questionNum, ReviewQuestion q) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedOption = _userAnswers[q.id];
     final isAnswered = selectedOption != null;
 
@@ -509,16 +616,21 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E2430) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Câu $questionNum: ${q.prompt}',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, height: 1.4),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+              height: 1.4,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
           ),
           const SizedBox(height: 10),
           ...q.options.asMap().entries.map((entry) {
@@ -527,15 +639,15 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
             final isChosen = selectedOption == optIdx;
             final isCorrect = optIdx == q.correctIndex;
 
-            Color border = const Color(0xFFE2E8F0);
-            Color bg = Colors.white;
+            Color border = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+            Color bg = isDark ? const Color(0xFF121620) : Colors.white;
             if (isAnswered) {
               if (isCorrect) {
                 border = AppTokens.successGreen;
-                bg = const Color(0xFFF0FDF4);
+                bg = isDark ? const Color(0xFF14532D).withValues(alpha: 0.4) : const Color(0xFFF0FDF4);
               } else if (isChosen) {
                 border = AppTokens.errorRed;
-                bg = const Color(0xFFFFF1F2);
+                bg = isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : const Color(0xFFFFF1F2);
               }
             }
 
@@ -564,7 +676,9 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
                         height: 24,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isChosen ? AppTokens.primary : const Color(0xFFF1F5F9),
+                          color: isChosen
+                              ? AppTokens.primary
+                              : (isDark ? const Color(0xFF2D3748) : const Color(0xFFF1F5F9)),
                         ),
                         child: Center(
                           child: Text(
@@ -572,7 +686,9 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: isChosen ? Colors.white : const Color(0xFF475569),
+                              color: isChosen
+                                  ? Colors.white
+                                  : (isDark ? const Color(0xFFE2E8F0) : const Color(0xFF475569)),
                             ),
                           ),
                         ),
@@ -581,7 +697,10 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
                       Expanded(
                         child: Text(
                           optText,
-                          style: const TextStyle(fontSize: 13),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
                         ),
                       ),
                     ],
@@ -595,13 +714,16 @@ class _ReviewDetailScreenState extends State<ReviewDetailScreen>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               ),
               child: Text(
                 'Giải thích: ${q.explanation}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF475569)),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                ),
               ),
             ),
           ],

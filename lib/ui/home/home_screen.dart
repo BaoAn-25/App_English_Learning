@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import '../../data/app_repository.dart';
 import '../../data/models/topic.dart';
 import '../../data/trial_lesson_repository.dart';
+import '../../navigation/main_shell.dart';
 import '../ai/ai_tutor_sheet.dart';
 import '../auth/auth_controller.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
-import '../auth/welcome_screen.dart';
 import '../onboarding/onboarding_target_screen.dart';
 import '../practice/practice_quiz_screen.dart';
 import '../practice/practice_screen.dart';
@@ -124,14 +124,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            // Nút Khám phá Onboarding / Chào mừng
+            // Nút mở nhanh Trợ lý AI EngPass
             IconButton(
-              tooltip: 'Xem luồng Khách & Onboarding',
-              icon: const Icon(Icons.explore_outlined, color: Color(0xFF2563EB)),
+              tooltip: 'Hỏi Trợ lý AI EngPass',
+              icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB)),
               onPressed: () {
-                Navigator.push(
+                AiTutorSheet.show(
                   context,
-                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                  unitNumber: 1,
+                  unitTitle: 'Life Stories We Admire',
+                  sectionTitle: 'Hỏi đáp & Giải thích tiếng Anh 12',
                 );
               },
             ),
@@ -254,22 +256,25 @@ class _HomeScreenState extends State<HomeScreen> {
             // Card 1: Phát âm IPA 44 âm (Thiết kế sáng đồng bộ EngPass)
             Expanded(
               child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const PronunciationScreen()),
                   );
+                  if (context.mounted) {
+                    Provider.of<HomeController>(context, listen: false).refresh();
+                  }
                 },
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E2430) : Colors.white,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: const [
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x0C0F172A),
-                        offset: Offset(0, 4),
+                        color: isDark ? const Color(0x20000000) : const Color(0x0C0F172A),
+                        offset: const Offset(0, 4),
                         blurRadius: 10,
                       ),
                     ],
@@ -281,10 +286,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE0F2FE),
+                          color: isDark ? const Color(0xFF0369A1).withAlpha(80) : const Color(0xFFE0F2FE),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.mic_none_rounded, color: Color(0xFF0284C7), size: 22),
+                        child: Icon(Icons.mic_none_rounded, color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7), size: 22),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -325,11 +330,14 @@ class _HomeScreenState extends State<HomeScreen> {
             // Card 2: Chủ đề sở thích (Bóng đá, Cafe, Du lịch...)
             Expanded(
               child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const InterestTopicsScreen()),
                   );
+                  if (context.mounted) {
+                    Provider.of<HomeController>(context, listen: false).refresh();
+                  }
                 },
                 child: Container(
                   padding: const EdgeInsets.all(14),
@@ -430,6 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- 1. Header: GB LỚP 12, Streak, XP thực tế (Không gán tim cố định) ---
   Widget _buildHeaderStats(BuildContext context, HomeController controller, AuthController auth) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // Không dùng fallback > 0 để tránh hiển thị nhầm dữ liệu tài khoản cũ khi điểm/streak thực tế là 0
     final streak = controller.streak;
     final xp = controller.totalXp;
@@ -440,11 +449,11 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFFDCFCE7),
+            color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFF86EFAC)),
+            border: Border.all(color: isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
@@ -453,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w700,
                   fontSize: 11,
-                  color: Color(0xFF15803D),
+                  color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF15803D),
                 ),
               ),
               Text(
@@ -462,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w900,
                   fontSize: 12,
-                  color: Color(0xFF16A34A),
+                  color: isDark ? const Color(0xFF34D399) : const Color(0xFF16A34A),
                 ),
               ),
             ],
@@ -477,11 +486,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 4),
             Text(
               '$streak',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
-                color: Color(0xFFC2410C),
+                color: isDark ? const Color(0xFFFB923C) : const Color(0xFFC2410C),
               ),
             ),
           ],
@@ -495,11 +504,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 2),
             Text(
               '$xp XP',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
-                color: Color(0xFF854D0E),
+                color: isDark ? const Color(0xFFFACC15) : const Color(0xFF854D0E),
               ),
             ),
           ],
@@ -639,10 +648,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.menu_book_rounded, size: 16),
               label: const Text('Xem Sách', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const TextbookHubScreen()),
-                );
+                MainShell.switchToTab(context, 1);
               },
             ),
           ],
@@ -665,6 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isStudent,
     HomeController controller,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final progress = controller.getUnitProgress(item.number);
     final isCompleted = progress.isCompleted;
     final isStarted = progress.isStarted;
@@ -700,8 +707,8 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => UnitDetailScreen(
@@ -711,6 +718,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 );
+                if (context.mounted) controller.refresh();
               },
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -808,11 +816,11 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 width: 2,
                 height: 14,
-                color: const Color(0xFFCBD5E1),
+                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
               ),
               InkWell(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => UnitDetailScreen(
@@ -822,6 +830,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   );
+                  if (context.mounted) controller.refresh();
                 },
                 borderRadius: BorderRadius.circular(30),
                 child: Column(
@@ -834,7 +843,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? const Color(0xFF22C55E)
                             : (isStarted
                                 ? const Color(0xFF2563EB)
-                                : const Color(0xFF0F172A)),
+                                : (isDark ? const Color(0xFF1E3A8A) : const Color(0xFF0F172A))),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -859,12 +868,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isCompleted
                               ? const Color(0xFF86EFAC)
-                              : (isStarted ? const Color(0xFF93C5FD) : const Color(0xFFE2E8F0)),
+                              : (isStarted
+                                  ? const Color(0xFF93C5FD)
+                                  : (isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0))),
                         ),
                       ),
                       child: Text(
@@ -878,8 +889,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: isCompleted
-                              ? const Color(0xFF15803D)
-                              : (isStarted ? const Color(0xFF1D4ED8) : const Color(0xFF1E293B)),
+                              ? (isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D))
+                              : (isStarted
+                                  ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8))
+                                  : (isDark ? Colors.white : const Color(0xFF1E293B))),
                         ),
                       ),
                     ),
@@ -890,7 +903,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           : (isStarted
                               ? 'Đang học (${progress.completedSections}/${progress.totalSections} phần)'
                               : (isStudent ? '${progress.totalSections} phần SGK' : 'Bài đọc có hướng dẫn')),
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                      style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ],
                 ),
@@ -898,7 +911,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 width: 2,
                 height: 14,
-                color: const Color(0xFFCBD5E1),
+                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
               ),
             ],
           ),
@@ -1025,20 +1038,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showLockedDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.school_rounded, color: AppTokens.primary, size: 24),
-            SizedBox(width: 8),
-            Text('Nội dung dành cho Học viên', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Icon(Icons.school_rounded, color: AppTokens.primary, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Nội dung dành cho Học viên',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+            ),
           ],
         ),
-        content: const Text(
+        content: Text(
           'Bạn đang trải nghiệm ở chế độ Khách (được làm các bài đọc hiểu học thử trong 10 Unit).\n\nHãy đăng ký tài khoản Học viên hoàn toàn miễn phí để mở khóa toàn bộ các phần bài học, bài tập ôn tập Review và đồng bộ kết quả học tập!',
-          style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
+          style: TextStyle(fontSize: 13, height: 1.5, color: isDark ? Colors.white70 : const Color(0xFF334155)),
         ),
         actions: [
           TextButton(
@@ -1523,13 +1548,13 @@ class _HomeScreenState extends State<HomeScreen> {
             : 0.0;
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF86EFAC), width: 1.5),
-            boxShadow: const [
+            border: Border.all(color: isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC), width: 1.5),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0A000000),
-                offset: Offset(0, 4),
+                color: isDark ? const Color(0x20000000) : const Color(0x0A000000),
+                offset: const Offset(0, 4),
                 blurRadius: 10,
               ),
             ],
@@ -1543,21 +1568,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDF4),
+                      color: isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 16),
-                        SizedBox(width: 4),
+                        Icon(Icons.check_circle_rounded, color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A), size: 16),
+                        const SizedBox(width: 4),
                         Text(
                           'ĐÃ HOÀN THÀNH BÀI THỬ',
                           style: TextStyle(
                             fontFamily: 'BeVietnamPro',
                             fontWeight: FontWeight.w800,
                             fontSize: 11,
-                            color: Color(0xFF16A34A),
+                            color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
                           ),
                         ),
                       ],
@@ -1566,11 +1591,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Spacer(),
                   Text(
                     '${score.toStringAsFixed(1)} / 10.0 đ',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'BeVietnamPro',
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
-                      color: Color(0xFF15803D),
+                      color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D),
                     ),
                   ),
                 ],
@@ -1578,17 +1603,17 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               Text(
                 'Unit ${lesson.unitNumber}: ${lesson.lessonTitle}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Đúng ${session.score}/${session.totalQuestions} câu theo SGK. Tạo tài khoản để mở khóa toàn bộ 10 Unit.',
-                style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+                style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               ),
               const SizedBox(height: 14),
               Row(
@@ -1818,13 +1843,13 @@ class _HomeScreenState extends State<HomeScreen> {
       final defaultLesson = TrialLessonRepository.instance.getDefaultLesson();
       return Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E2430) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF93C5FD), width: 1.5),
-          boxShadow: const [
+          border: Border.all(color: isDark ? const Color(0xFF2563EB) : const Color(0xFF93C5FD), width: 1.5),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0E2563EB),
-              offset: Offset(0, 4),
+              color: isDark ? const Color(0x20000000) : const Color(0x0E2563EB),
+              offset: const Offset(0, 4),
               blurRadius: 10,
             ),
           ],
@@ -1838,47 +1863,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.school_rounded, color: AppTokens.primary, size: 16),
-                      SizedBox(width: 4),
+                      Icon(Icons.school_rounded, color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary, size: 16),
+                      const SizedBox(width: 4),
                       Text(
                         'LỘ TRÌNH HỌC VIÊN SGK 12',
                         style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w800,
                           fontSize: 11,
-                          color: AppTokens.primary,
+                          color: isDark ? const Color(0xFF93C5FD) : AppTokens.primary,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const Spacer(),
-                const Text(
+                Text(
                   '10 Unit chuẩn SGK',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             Text(
               'Unit ${defaultLesson.unitNumber}: ${defaultLesson.unitTitle}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               '${defaultLesson.lessonTitle} · Đầy đủ bài đọc tương tác, từ vựng và ngữ pháp trọng tâm.',
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.35),
+              style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), height: 1.35),
             ),
             const SizedBox(height: 14),
             Row(
@@ -2228,6 +2253,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required ValueChanged<bool?> onChanged,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -2246,7 +2272,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: isDone ? FontWeight.w500 : FontWeight.w600,
                 fontSize: 14,
-                color: isDone ? const Color(0xFF94A3B8) : const Color(0xFF1E293B),
+                color: isDone
+                    ? const Color(0xFF94A3B8)
+                    : (isDark ? Colors.white : const Color(0xFF1E293B)),
                 decoration: isDone ? TextDecoration.lineThrough : null,
               ),
             ),
@@ -2254,7 +2282,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: isDone ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+              color: isDone
+                  ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
+                  : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -2262,7 +2292,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: isDone ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                color: isDone
+                    ? (isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A))
+                    : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
             ),
           ),
@@ -2282,10 +2314,7 @@ class _HomeScreenState extends State<HomeScreen> {
             variant: AppButtonVariant.outlined,
             height: 48,
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TextbookHubScreen()),
-              );
+              MainShell.switchToTab(context, 1);
             },
           ),
         ),

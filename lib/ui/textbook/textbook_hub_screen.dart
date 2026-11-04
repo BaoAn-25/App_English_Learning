@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../data/app_repository.dart';
 import '../../data/textbook_repository.dart';
+import '../../data/trial_lesson_repository.dart';
+import '../auth/auth_controller.dart';
 import 'textbook_screen.dart';
 import 'unit_detail_screen.dart';
 
@@ -11,9 +14,11 @@ class TextbookHubScreen extends StatefulWidget {
 }
 
 class _TextbookHubScreenState extends State<TextbookHubScreen> {
-  int _selectedFilter = 0; // 0: Tất cả, 1: Đã đọc trang, 2: Có sẵn ngoại tuyến
+  int _selectedFilter = 0; // 0: Tất cả, 1: Đang học, 2: Có sẵn ngoại tuyến
   final TextbookRepository _textbookRepo = TextbookRepository();
+  final AppRepository _appRepo = AppRepository();
   Set<int> _completedPages = {};
+  Map<int, int> _completedSectionsByUnit = {};
 
   final List<Map<String, dynamic>> _units = [
     {
@@ -97,9 +102,45 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
   Future<void> _loadReadingProgress() async {
     try {
       final pages = await _textbookRepo.completedPages();
+      final auth = AuthController.instance;
+      final ownerId = (auth.isAuthenticated && !auth.user.isGuest)
+          ? auth.user.id
+          : await _appRepo.getOrCreateGuestSessionId();
+
+      const sectionKeys = [
+        'getting_started',
+        'language',
+        'speaking',
+        'listening',
+        'writing',
+        'communication___culture___clil',
+        'looking_back___project',
+      ];
+
+      final sectionCounts = <int, int>{};
+      for (final u in _units) {
+        final unitNum = u['number'] as int;
+        int completedCount = 0;
+        final lesson = TrialLessonRepository.instance.getLessonByUnit(unitNum);
+        if (lesson != null) {
+          final session = await _appRepo.getLearningSession(ownerId, lessonId: lesson.lessonId);
+          if (session != null && session.isCompleted) {
+            completedCount++;
+          }
+        }
+        for (final key in sectionKeys) {
+          final status = await _appRepo.getSetting('unit_section_progress_${ownerId}_u${unitNum}_$key');
+          if (status == 'completed') {
+            completedCount++;
+          }
+        }
+        sectionCounts[unitNum] = completedCount;
+      }
+
       if (mounted) {
         setState(() {
           _completedPages = pages;
+          _completedSectionsByUnit = sectionCounts;
         });
       }
     } catch (_) {
@@ -121,19 +162,27 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final unitsStarted = _units.where((u) => _getReadPagesForUnit(u) > 0).length;
+    final unitsStarted = _units.where((u) {
+      final num = u['number'] as int;
+      return _getReadPagesForUnit(u) > 0 || (_completedSectionsByUnit[num] ?? 0) > 0;
+    }).length;
     final unitPagesSet = <int>{
       for (final u in _units)
         for (int p = u['startPage'] as int; p <= (u['endPage'] as int); p++) p,
     };
     final totalReadPages = _completedPages.where((p) => unitPagesSet.contains(p)).length;
+    final totalCompletedSections = _completedSectionsByUnit.values.fold<int>(0, (sum, v) => sum + v);
     const totalCurriculumPages = 120;
-    final double progressValue = totalReadPages / totalCurriculumPages;
+    const totalCurriculumSections = 80;
+    final double pageProgress = totalReadPages / totalCurriculumPages;
+    final double sectionProgress = totalCompletedSections / totalCurriculumSections;
+    final double progressValue = sectionProgress > pageProgress ? sectionProgress : pageProgress;
     final int progressPercent = (progressValue * 100).toInt();
 
     final filteredUnits = _units.where((u) {
       if (_selectedFilter == 1) {
-        return _getReadPagesForUnit(u) > 0;
+        final num = u['number'] as int;
+        return _getReadPagesForUnit(u) > 0 || (_completedSectionsByUnit[num] ?? 0) > 0;
       }
       return true;
     }).toList();
@@ -253,9 +302,11 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            totalReadPages == 0
-                                ? 'Chưa học trang nào · 0%'
-                                : '$totalReadPages/$totalCurriculumPages trang đã đọc · $progressPercent%',
+                            totalCompletedSections > 0
+                                ? 'Đã hoàn thành $totalCompletedSections/80 phần học · $progressPercent%'
+                                : (totalReadPages == 0
+                                    ? '10 Unit chuẩn SGK · Bấm chọn Unit để học'
+                                    : '$totalReadPages/$totalCurriculumPages trang đã đọc · $progressPercent%'),
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.white70,
@@ -347,14 +398,18 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
 
   Widget _buildUnitCard(BuildContext context, Map<String, dynamic> unit) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final auth = AuthController.instance;
+    final isGuest = !auth.isAuthenticated || auth.user.isGuest;
     final int number = unit['number'] as int;
     final String title = unit['title'] as String;
     final String vietnamese = unit['vietnamese'] as String;
     final int readPages = _getReadPagesForUnit(unit);
     final int totalPages = _getTotalPagesForUnit(unit);
+    final int completedSections = _completedSectionsByUnit[number] ?? 0;
+    const int totalSections = 8;
 
-    final bool isCompleted = readPages == totalPages && totalPages > 0;
-    final bool isInProgress = readPages > 0 && !isCompleted;
+    final bool isCompleted = (completedSections >= totalSections) || (readPages == totalPages && totalPages > 0);
+    final bool isInProgress = (completedSections > 0 || readPages > 0) && !isCompleted;
 
     Color numberBg;
     Color numberColor;
@@ -366,15 +421,15 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
       actionWidget = Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Text(
-          'Đọc lại',
+        child: Text(
+          'Ôn lại',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF475569),
+            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
           ),
         ),
       );
@@ -391,7 +446,7 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
           ],
         ),
         child: const Text(
-          'Đọc tiếp',
+          'Học tiếp',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
@@ -432,8 +487,8 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => UnitDetailScreen(
@@ -443,6 +498,7 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                 ),
               ),
             );
+            _loadReadingProgress();
           },
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -488,9 +544,11 @@ class _TextbookHubScreenState extends State<TextbookHubScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        readPages == 0
-                            ? 'Chưa đọc trang nào · Chưa theo dõi theo phần học'
-                            : 'Đã đọc $readPages/$totalPages trang · Chưa theo dõi theo phần học',
+                        completedSections > 0
+                            ? '$vietnamese · Đã học $completedSections/$totalSections phần'
+                            : (readPages > 0
+                                ? '$vietnamese · Đã đọc $readPages/$totalPages trang'
+                                : '$vietnamese · ${isGuest ? "Có bài học thử miễn phí" : "8 phần học tương tác SGK"}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

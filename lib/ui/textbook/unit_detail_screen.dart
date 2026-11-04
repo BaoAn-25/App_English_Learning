@@ -3,6 +3,7 @@ import '../../data/app_repository.dart';
 import '../../data/textbook_repository.dart';
 import '../../data/trial_lesson_repository.dart';
 import '../../data/trial_policy.dart';
+import '../../navigation/main_shell.dart';
 import '../auth/auth_controller.dart';
 import '../listening/unit_listening_screen.dart';
 import '../theme/app_tokens.dart';
@@ -226,7 +227,14 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
       );
       if (res == true) {
         final ownerId = await _getEffectiveOwnerId();
+        final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
         await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+        if (prev != 'completed') {
+          await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
+        }
+        if (mounted) {
+          await MainShell.markFirstLessonCompleted(context);
+        }
       }
       await _loadSectionStatuses();
       return;
@@ -245,7 +253,14 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
       );
       if (res == true) {
         final ownerId = await _getEffectiveOwnerId();
+        final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
         await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+        if (prev != 'completed') {
+          await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
+        }
+        if (mounted) {
+          await MainShell.markFirstLessonCompleted(context);
+        }
       }
       await _loadSectionStatuses();
       return;
@@ -277,7 +292,14 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
       );
       if (res == true) {
         final ownerId = await _getEffectiveOwnerId();
+        final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
         await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+        if (prev != 'completed') {
+          await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
+        }
+        if (mounted) {
+          await MainShell.markFirstLessonCompleted(context);
+        }
       }
       await _loadSectionStatuses();
       return;
@@ -298,7 +320,14 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     );
     if (res == true) {
       final ownerId = await _getEffectiveOwnerId();
+      final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
       await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+      if (prev != 'completed') {
+        await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
+      }
+      if (mounted) {
+        await MainShell.markFirstLessonCompleted(context);
+      }
     }
     await _loadSectionStatuses();
   }

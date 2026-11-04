@@ -9,6 +9,8 @@ import '../../data/models/attempt_answer.dart';
 import '../../data/models/question.dart';
 import '../../data/models/topic.dart';
 import '../../data/models/wrong_book_entry.dart';
+import '../../navigation/main_shell.dart';
+import '../theme/components/engpass_mascot.dart';
 
 /// Màn hình kiểm tra nhanh trắc nghiệm từ vựng & đồng nghĩa - trái nghĩa cuối chủ đề
 /// Tận dụng bộ máy câu hỏi Question, ghi nhận Attempt & WrongBook
@@ -123,6 +125,15 @@ class _TopicQuizScreenState extends State<TopicQuizScreen> {
     try {
       final repo = context.read<AppRepository>();
       final duration = DateTime.now().difference(_startTime).inSeconds;
+      await repo.recordStudyReward(
+        xp: 20,
+        minutes: (duration ~/ 60).clamp(2, 20),
+        questionsDone: _questions.length,
+        correct: _score,
+      );
+      if (mounted) {
+        await MainShell.markFirstLessonCompleted(context);
+      }
       final attempt = Attempt(
         mode: 'practice',
         type: widget.topic.id,
@@ -504,20 +515,11 @@ class _TopicQuizScreenState extends State<TopicQuizScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: isPassed ? Colors.amber.withAlpha(30) : Colors.orange.withAlpha(30),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isPassed ? Icons.emoji_events_rounded : Icons.auto_stories_rounded,
-                  size: 56,
-                  color: isPassed ? Colors.amber[800] : Colors.orange[800],
-                ),
+              EngPassMascot(
+                mood: isPassed ? MascotMood.celebrate : MascotMood.cheer,
+                size: 100,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               Text(
                 isPassed ? 'Xuất Sắc!' : 'Cố Gắng Lên!',
                 style: theme.textTheme.headlineMedium?.copyWith(

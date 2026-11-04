@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/app_database.dart';
 import '../../data/app_repository.dart';
@@ -246,6 +247,7 @@ class AuthController extends ChangeNotifier {
         authProvider: 'email',
       );
 
+      await _markOnboardingCompleted();
       await _repository.saveAuthUser(_user);
       _successMessage = data['message'] as String? ?? 'Đăng ký tài khoản thành công!';
       _isLoading = false;
@@ -323,6 +325,7 @@ class AuthController extends ChangeNotifier {
       _hasGuestDataToMerge = hasGuestData;
 
       _user = loggedInUser;
+      await _markOnboardingCompleted();
       await _repository.saveAuthUser(_user);
 
       _successMessage = 'Đăng nhập thành công!';
@@ -402,6 +405,7 @@ class AuthController extends ChangeNotifier {
       _hasGuestDataToMerge = hasGuestData;
 
       _user = loggedInUser;
+      await _markOnboardingCompleted();
       await _repository.saveAuthUser(_user);
 
       _successMessage = 'Đăng nhập Google thành công!';
@@ -546,9 +550,17 @@ class AuthController extends ChangeNotifier {
     }
     _user = existingUser.copyWith(isLoggedIn: true);
     _hasGuestDataToMerge = false;
+    await _markOnboardingCompleted();
     await _repository.saveAuthUser(_user);
     notifyListeners();
     return result;
+  }
+
+  Future<void> _markOnboardingCompleted() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_completed_onboarding', true);
+    } catch (_) {}
   }
 
   /// Đăng xuất tài khoản an toàn

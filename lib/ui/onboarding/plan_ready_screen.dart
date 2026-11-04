@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/interest_repository.dart';
 import '../../data/models/interest_topic.dart';
@@ -6,6 +7,7 @@ import '../../navigation/main_shell.dart';
 import '../auth/auth_controller.dart';
 import '../interest/interest_topic_detail_screen.dart';
 import '../theme/components/app_button.dart';
+import '../theme/components/engpass_mascot.dart';
 import '../trial/trial_lesson_screen.dart';
 
 class PlanReadyScreen extends StatefulWidget {
@@ -119,42 +121,47 @@ class _PlanReadyScreenState extends State<PlanReadyScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 8),
-              // Huy hiệu Checkmark hoàn thành thiết lập
-              Center(
-                child: Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF22C55E), width: 2),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x1516A34A),
-                        offset: Offset(0, 4),
-                        blurRadius: 10,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 4),
+                // Linh vật ăn mừng hoàn thành thiết lập lộ trình + Huy hiệu Checkmark
+                Center(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      const EngPassMascot(
+                        mood: MascotMood.celebrate,
+                        size: 76,
+                      ),
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF22C55E), width: 2),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.check_rounded,
+                            color: Color(0xFF16A34A),
+                            size: 18,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.check_rounded,
-                      color: Color(0xFF16A34A),
-                      size: 36,
-                    ),
-                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 10),
 
               Text(
                 'Lộ trình của bạn đã sẵn sàng!',
@@ -354,20 +361,19 @@ class _PlanReadyScreenState extends State<PlanReadyScreen> {
                 onPressed: _matchedTopic == null
                     ? null
                     : () async {
+                        final navigator = Navigator.of(context);
+                        final targetTopic = _matchedTopic!;
                         await _completeOnboarding();
-                        if (context.mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (_) => const MainShell()),
-                            (route) => false,
-                          );
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => InterestTopicDetailScreen(topic: _matchedTopic!),
-                            ),
-                          );
-                        }
+                        if (!mounted) return;
+                        navigator.pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const MainShell()),
+                          (route) => false,
+                        );
+                        navigator.push(
+                          MaterialPageRoute(
+                            builder: (_) => InterestTopicDetailScreen(topic: targetTopic),
+                          ),
+                        );
                       },
               ),
               const SizedBox(height: 8),
@@ -379,18 +385,16 @@ class _PlanReadyScreenState extends State<PlanReadyScreen> {
                 variant: AppButtonVariant.outlined,
                 height: 44,
                 onPressed: () async {
+                  final navigator = Navigator.of(context);
                   await _completeOnboarding();
-                  if (context.mounted) {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainShell()),
-                      (route) => false,
-                    );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const TrialLessonScreen()),
-                    );
-                  }
+                  if (!mounted) return;
+                  navigator.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const MainShell()),
+                    (route) => false,
+                  );
+                  navigator.push(
+                    MaterialPageRoute(builder: (_) => const TrialLessonScreen()),
+                  );
                 },
               ),
               const SizedBox(height: 4),
@@ -398,14 +402,13 @@ class _PlanReadyScreenState extends State<PlanReadyScreen> {
               // Nút phụ 2: Về Trang chủ
               TextButton(
                 onPressed: () async {
+                  final navigator = Navigator.of(context);
                   await _completeOnboarding();
-                  if (context.mounted) {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainShell()),
-                      (route) => false,
-                    );
-                  }
+                  if (!mounted) return;
+                  navigator.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const MainShell()),
+                    (route) => false,
+                  );
                 },
                 child: Text(
                   'Về Trang chủ khám phá ứng dụng',
@@ -420,6 +423,7 @@ class _PlanReadyScreenState extends State<PlanReadyScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

@@ -2,8 +2,10 @@ import '../../navigation/main_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/app_repository.dart';
 import '../../data/models/minimal_pair_question.dart';
 import '../theme/components/app_button.dart';
+import '../theme/components/engpass_mascot.dart';
 import 'pronunciation_controller.dart';
 
 /// Màn hình làm bài tập luyện nghe cặp âm đối lập (Minimal Pairs) chuẩn Duolingo
@@ -25,8 +27,19 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
   bool _isSequentialPairSame = false;
   String _activeTargetWord = '';
   bool _isAudioPulsing = false;
+  bool _rewardRecorded = false;
 
   void _handleExit(BuildContext context) async {
+    if (_score > 0 && !_rewardRecorded) {
+      _rewardRecorded = true;
+      await AppRepository().recordStudyReward(
+        xp: _score,
+        minutes: 3,
+        questionsDone: _currentIndex,
+        correct: (_score ~/ 10),
+      );
+    }
+    if (!context.mounted) return;
     await MainShell.markFirstLessonCompleted(context);
     if (!context.mounted) return;
     final nav = Navigator.of(context);
@@ -72,26 +85,41 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
       create: (_) => PronunciationController(),
       child: Consumer<PronunciationController>(
         builder: (context, controller, child) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final bgColor = isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC);
+
           if (controller.isLoading) {
-            return const Scaffold(
-              backgroundColor: Color(0xFFF8FAFC),
-              body: Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
+            return Scaffold(
+              backgroundColor: bgColor,
+              body: const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
             );
           }
 
           final questions = controller.minimalPairs;
           if (questions.isEmpty) {
             return Scaffold(
-              backgroundColor: const Color(0xFFF8FAFC),
+              backgroundColor: bgColor,
               appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-              body: const Center(
-                child: Text('Chưa có câu hỏi luyện âm.', style: TextStyle(color: Color(0xFF0F172A))),
+              body: Center(
+                child: Text(
+                  'Chưa có câu hỏi luyện âm.',
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                ),
               ),
             );
           }
 
           // Kiểm tra khi làm xong hết câu hỏi
           if (_currentIndex >= questions.length) {
+            if (!_rewardRecorded) {
+              _rewardRecorded = true;
+              AppRepository().recordStudyReward(
+                xp: _score > 0 ? _score : 10,
+                minutes: 3,
+                questionsDone: questions.length,
+                correct: (_score ~/ 10),
+              );
+            }
             return _buildCompletionView(context, questions.length);
           }
 
@@ -110,7 +138,7 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
               _handleExit(context);
             },
             child: Scaffold(
-            backgroundColor: const Color(0xFFF8FAFC), // Nền sáng chuẩn EngPass
+            backgroundColor: bgColor,
             body: SafeArea(
               child: Column(
                 children: [
@@ -120,7 +148,11 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 24),
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            size: 24,
+                          ),
                           onPressed: () => _handleExit(context),
                         ),
                         const SizedBox(width: 8),
@@ -130,13 +162,19 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                             child: LinearProgressIndicator(
                               value: progress,
                               minHeight: 12,
-                              backgroundColor: const Color(0xFFE2E8F0),
+                              backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
                             ),
                           ),
                         ),
                         const SizedBox(width: 14),
-                        const Text('⚡ 10 XP', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
+                        Text(
+                          '⚡ 10 XP',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -145,9 +183,15 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: isDualSpeakerMode
-                          ? _buildDualSpeakerType(currentQ, controller)
-                          : _buildMinimalPairType(currentQ, controller),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: KeyedSubtree(
+                          key: ValueKey<int>(_currentIndex),
+                          child: isDualSpeakerMode
+                              ? _buildDualSpeakerType(currentQ, controller)
+                              : _buildMinimalPairType(currentQ, controller),
+                        ),
+                      ),
                     ),
                   ),
 
@@ -165,16 +209,17 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
 
   /// DẠNG BÀI 1 (Ảnh 4 Duolingo): "Bạn nghe được gì?" -> Loa to ở giữa -> Chọn dock hay deck
   Widget _buildMinimalPairType(MinimalPairQuestion q, PronunciationController controller) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           'Bạn nghe được gì?',
           style: TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w900,
             fontSize: 22,
-            color: Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 32),
@@ -244,31 +289,35 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
 
   /// DẠNG BÀI 2 (Ảnh 5 Duolingo): "Nghe và trả lời" -> 2 loa nối tiếp -> Cùng 1 từ hay 2 từ khác nhau
   Widget _buildDualSpeakerType(MinimalPairQuestion q, PronunciationController controller) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final firstWord = q.wordA;
     final secondWord = _isSequentialPairSame ? q.wordA : q.wordB;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           'Nghe và trả lời',
           style: TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w900,
             fontSize: 22,
-            color: Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 24),
 
-        // Khung 2 nút loa (Ảnh 5 - Tone sáng EngPass)
+        // Khung 2 nút loa (Ảnh 5 - Tone sáng/tối EngPass)
         Container(
           width: 120,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              width: 1.5,
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x0C0F172A),
@@ -280,12 +329,23 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
           child: Column(
             children: [
               IconButton(
-                icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB), size: 32),
+                icon: Icon(
+                  Icons.volume_up_rounded,
+                  color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                  size: 32,
+                ),
                 onPressed: () => controller.speakWord(firstWord),
               ),
-              const Divider(color: Color(0xFFE2E8F0), thickness: 1.5),
+              Divider(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                thickness: 1.5,
+              ),
               IconButton(
-                icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB), size: 32),
+                icon: Icon(
+                  Icons.volume_up_rounded,
+                  color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                  size: 32,
+                ),
                 onPressed: () => controller.speakWord(secondWord),
               ),
             ],
@@ -293,13 +353,13 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
         ),
         const SizedBox(height: 36),
 
-        const Text(
+        Text(
           'Bạn nghe thấy gì?',
           style: TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w700,
             fontSize: 16,
-            color: Color(0xFF334155),
+            color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
           ),
         ),
         const SizedBox(height: 16),
@@ -332,18 +392,23 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
     required String ipa,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedIndex == index;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 140),
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
+          color: isSelected
+              ? (isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.4) : const Color(0xFFEFF6FF))
+              : (isDark ? const Color(0xFF1E2430) : Colors.white),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? const Color(0xFF2563EB)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             width: isSelected ? 2.2 : 1.2,
           ),
           boxShadow: [
@@ -362,7 +427,9 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
-                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
+                color: isSelected
+                    ? (isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB))
+                    : (isDark ? Colors.white : const Color(0xFF0F172A)),
               ),
             ),
             const SizedBox(height: 4),
@@ -371,7 +438,9 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                color: isSelected
+                    ? (isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB))
+                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               ),
             ),
           ],
@@ -385,18 +454,23 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedIndex == index;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 140),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
+          color: isSelected
+              ? (isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.4) : const Color(0xFFEFF6FF))
+              : (isDark ? const Color(0xFF1E2430) : Colors.white),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? const Color(0xFF2563EB)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             width: isSelected ? 2.2 : 1.2,
           ),
           boxShadow: [
@@ -416,7 +490,9 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
-                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
+                color: isSelected
+                    ? (isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB))
+                    : (isDark ? Colors.white : const Color(0xFF0F172A)),
               ),
             ),
           ],
@@ -584,24 +660,10 @@ class _MinimalPairsQuizScreenState extends State<MinimalPairsQuizScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Center(
-                child: Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF2563EB).withAlpha(40),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Image.asset('assets/images/app_logo.png', fit: BoxFit.cover),
-                  ),
+              const Center(
+                child: EngPassMascot(
+                  mood: MascotMood.celebrate,
+                  size: 112,
                 ),
               ),
               const SizedBox(height: 20),

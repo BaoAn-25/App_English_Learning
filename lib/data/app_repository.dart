@@ -275,6 +275,30 @@ class AppRepository {
     return _db.upsertDailyStat(stat, ownerId: effectiveOwner);
   }
 
+  /// Ghi nhận điểm thưởng XP và thời gian học thực tế vào thống kê hằng ngày (Daily Stats)
+  /// để cập nhật ngay lập tức XP, Chuỗi ngày học (Streak) và Bảng xếp hạng trên Trang chủ.
+  Future<void> recordStudyReward({
+    required int xp,
+    int minutes = 3,
+    int questionsDone = 0,
+    int correct = 0,
+    String? ownerId,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final dateStr =
+          '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final stat = DailyStat(
+        date: dateStr,
+        xp: xp > 0 ? xp : 0,
+        questionsDone: questionsDone > 0 ? questionsDone : 0,
+        correct: correct > 0 ? correct : 0,
+        minutes: minutes > 0 ? minutes : 1,
+      );
+      await upsertDailyStat(stat, ownerId: ownerId);
+    } catch (_) {}
+  }
+
   Future<List<DailyStat>> getDailyStatsInRange(
     String startDate,
     String endDate, {
@@ -297,6 +321,8 @@ class AppRepository {
     if (words.isNotEmpty) return true;
     final wrongEntries = await getAllWrongBookEntries(ownerId: guestId);
     if (wrongEntries.isNotEmpty) return true;
+    final dailyStats = await getAllDailyStats(ownerId: guestId);
+    if (dailyStats.isNotEmpty) return true;
     return false;
   }
 

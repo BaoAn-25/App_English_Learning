@@ -65,6 +65,7 @@ flutter:
   # Khai bÃ¡o thÆ° má»¥c náº¡p dá»¯ liá»‡u máº«u
   assets:
     - assets/images/
+    - assets/images/mascot/
     - assets/data/
     - assets/data/curriculum/
     - assets/textbook/

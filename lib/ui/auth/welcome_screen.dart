@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../onboarding/onboarding_target_screen.dart';
 import '../theme/app_tokens.dart';
 import '../theme/components/app_button.dart';
+import '../theme/components/engpass_mascot.dart';
 import '../theme/components/prep_logo.dart';
 import 'login_screen.dart';
 
@@ -12,21 +14,29 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              // Logo
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: PrepLogo(size: 44),
-              ),
-              const SizedBox(height: 20),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                // Logo & Mascot chào mừng
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    PrepLogo(size: 44),
+                    EngPassMascot(
+                      mood: MascotMood.cheer,
+                      size: 56,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
               // Tiêu đề & phụ đề
               Text(
                 'Ôn thi tiếng Anh 12,\nđúng chỗ bạn đang yếu',
@@ -111,17 +121,18 @@ class WelcomeScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  'Khi tiếp tục nghĩa là bạn đã đồng ý với Điều khoản của EngPass',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                Center(
+                  child: Text(
+                    'Khi tiếp tục nghĩa là bạn đã đồng ý với Điều khoản của EngPass',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

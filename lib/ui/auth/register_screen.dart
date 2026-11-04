@@ -113,10 +113,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _showTermsDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -137,23 +138,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       width: 48,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFCBD5E1),
+                        color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Điều khoản dịch vụ & Chính sách bảo mật',
                     style: TextStyle(
                       fontFamily: 'BeVietnamPro',
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF0F172A),
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const Text(
+                  Text(
                     '1. Mục đích sử dụng\n'
                     'Ứng dụng EngPass phục vụ học sinh lớp 12 ôn thi Tốt nghiệp THPT theo chương trình GDPT SGK Global Success. '
                     'Tài khoản học viên được sử dụng để lưu trữ tiến độ học tập, kết quả làm bài thi thử và đồng bộ hóa qua đám mây.\n\n'
@@ -165,7 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'Người học có trách nhiệm bảo mật thông tin đăng nhập của mình và không sử dụng tài khoản vào các mục đích gây hại cho hệ thống.',
                     style: TextStyle(
                       fontSize: 13.5,
-                      color: Color(0xFF475569),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
                       height: 1.5,
                     ),
                   ),

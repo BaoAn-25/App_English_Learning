@@ -177,25 +177,33 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.explore_rounded, color: AppTokens.primary, size: 22),
+                      Icon(
+                        Icons.explore_rounded,
+                        color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                        size: 22,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'Tự do chọn bài học thử bạn yêu thích',
                               style: TextStyle(
                                 fontFamily: 'BeVietnamPro',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 13.5,
-                                color: Color(0xFF1E40AF),
+                                color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E40AF),
                               ),
                             ),
-                            SizedBox(height: 3),
+                            const SizedBox(height: 3),
                             Text(
                               'Bạn có thể học thử bất kỳ Unit nào trong các bài đã sẵn sàng. Mỗi bài đều có bài đọc kèm tra từ, dịch đoạn và bộ câu hỏi đối chiếu SGK thực tế.',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF334155), height: 1.35),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                                height: 1.35,
+                              ),
                             ),
                           ],
                         ),
@@ -210,15 +218,15 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                   final isCurrent = widget.currentLessonId == lesson.lessonId;
                   final isCompleted = _completedLessonId == lesson.lessonId;
 
-                  Color cardBg = Colors.white;
-                  Color borderColor = const Color(0xFFE2E8F0);
+                  Color cardBg = isDark ? const Color(0xFF1E2430) : Colors.white;
+                  Color borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
                   if (isCurrent) {
-                    cardBg = const Color(0xFFF0FDF4);
-                    borderColor = const Color(0xFF86EFAC);
+                    cardBg = isDark ? const Color(0xFF14532D).withValues(alpha: 0.35) : const Color(0xFFF0FDF4);
+                    borderColor = isDark ? const Color(0xFF22C55E) : const Color(0xFF86EFAC);
                   } else if (!lesson.isReady) {
-                    cardBg = const Color(0xFFF8FAFC);
-                    borderColor = const Color(0xFFE2E8F0);
+                    cardBg = isDark ? const Color(0xFF171C26) : const Color(0xFFF8FAFC);
+                    borderColor = isDark ? const Color(0xFF2D3748) : const Color(0xFFE2E8F0);
                   }
 
                   return Container(
@@ -282,15 +290,15 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFDCFCE7),
+                                      color: isDark ? const Color(0xFF14532D).withValues(alpha: 0.6) : const Color(0xFFDCFCE7),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       'Sẵn sàng',
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w800,
-                                        color: Color(0xFF15803D),
+                                        color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D),
                                       ),
                                     ),
                                   )
@@ -298,15 +306,15 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF1F5F9),
+                                      color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       'Đang biên soạn',
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF64748B),
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                                       ),
                                     ),
                                   ),
@@ -320,8 +328,8 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
                                 color: lesson.isReady
-                                    ? const Color(0xFF0F172A)
-                                    : const Color(0xFF64748B),
+                                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -329,7 +337,10 @@ class _TrialLessonPickerScreenState extends State<TrialLessonPickerScreen> {
                               lesson.isReady
                                   ? '${lesson.textbookSource} • ${lesson.questions.length} câu hỏi • ${lesson.estimatedDuration}'
                                   : lesson.unreadyReason,
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              ),
                             ),
                             if (isCurrent) ...[
                               const SizedBox(height: 8),

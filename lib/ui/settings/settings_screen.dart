@@ -631,8 +631,13 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
 
   // --- Khối 4: Giao diện Sáng / Tối ---
   Widget _buildThemeModeCard(BuildContext context) {
-    final themeCtrl = context.watch<ThemeController>();
-    final currentMode = themeCtrl.themeMode;
+    ThemeController? themeCtrl;
+    try {
+      themeCtrl = context.watch<ThemeController>();
+    } catch (_) {
+      themeCtrl = null;
+    }
+    final currentMode = themeCtrl?.themeMode ?? ThemeMode.system;
 
     return AppCard(
       child: Column(
@@ -656,7 +661,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 subtitle: 'Hệ thống',
                 icon: Icons.brightness_auto_rounded,
                 isSelected: currentMode == ThemeMode.system,
-                onTap: () => themeCtrl.setThemeMode(ThemeMode.system),
+                onTap: () => themeCtrl?.setThemeMode(ThemeMode.system),
               ),
               const SizedBox(width: 8),
               _buildThemeOption(
@@ -665,7 +670,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 subtitle: 'Light',
                 icon: Icons.light_mode_rounded,
                 isSelected: currentMode == ThemeMode.light,
-                onTap: () => themeCtrl.setThemeMode(ThemeMode.light),
+                onTap: () => themeCtrl?.setThemeMode(ThemeMode.light),
               ),
               const SizedBox(width: 8),
               _buildThemeOption(
@@ -674,7 +679,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 subtitle: 'Dark',
                 icon: Icons.dark_mode_rounded,
                 isSelected: currentMode == ThemeMode.dark,
-                onTap: () => themeCtrl.setThemeMode(ThemeMode.dark),
+                onTap: () => themeCtrl?.setThemeMode(ThemeMode.dark),
               ),
             ],
           ),
@@ -731,7 +736,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 style: TextStyle(
                   fontSize: 10.5,
                   color: isSelected
-                      ? AppTokens.primary.withAlpha(200)
+                      ? (isDark ? const Color(0xFF93C5FD) : AppTokens.primary.withAlpha(200))
                       : (isDark ? Colors.white54 : const Color(0xFF94A3B8)),
                 ),
               ),

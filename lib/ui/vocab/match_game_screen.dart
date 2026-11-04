@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import '../../data/app_repository.dart';
 import '../../data/models/word.dart';
 import '../../data/trial_lesson_repository.dart';
+import '../../navigation/main_shell.dart';
 import '../auth/auth_controller.dart';
 import '../theme/app_tokens.dart';
+import '../theme/components/engpass_mascot.dart';
 
 enum MatchCardType { english, vietnamese }
 enum MatchCardStatus { normal, selected, matched, wrong }
@@ -266,31 +268,40 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
       'match_game_best_${ownerId}_u$_selectedUnitFilter',
       _elapsedSeconds.toString(),
     );
+    await _repo.recordStudyReward(
+      xp: 15,
+      minutes: 2,
+      questionsDone: _totalPairsCount,
+      correct: _totalPairsCount,
+      ownerId: ownerId,
+    );
 
     if (!mounted) return;
+    await MainShell.markFirstLessonCompleted(context);
+    if (!mounted) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
         return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE6F7F0),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.check_circle_rounded, color: AppTokens.successGreen, size: 28),
+              const EngPassMascot(
+                mood: MascotMood.celebrate,
+                size: 48,
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Hoàn thành!',
+              Text(
+                'Hoàn thành! (+15 XP)',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w800,
                   fontSize: 18,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
             ],
@@ -301,38 +312,42 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
             children: [
               Text(
                 'Bạn đã ghép chính xác toàn bộ $_totalPairsCount cặp từ vựng Unit $_selectedUnitFilter!',
-                style: const TextStyle(fontSize: 13.5, height: 1.4),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.4,
+                  color: isDark ? Colors.white70 : const Color(0xFF334155),
+                ),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Column(
                       children: [
-                        const Text('Thời gian', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                        Text('Thời gian', style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
                         const SizedBox(height: 2),
                         Text(
                           '${_elapsedSeconds}s',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'BeVietnamPro',
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppTokens.primary,
+                            color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
                           ),
                         ),
                       ],
                     ),
-                    Container(width: 1, height: 28, color: const Color(0xFFCBD5E1)),
+                    Container(width: 1, height: 28, color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
                     Column(
                       children: [
-                        const Text('Số lần thử lại', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                        Text('Số lần thử lại', style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
                         const SizedBox(height: 2),
                         Text(
                           '$_wrongAttempts',
@@ -387,24 +402,25 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: widget.isEmbedded
           ? null
           : AppBar(
-              backgroundColor: Colors.white,
+              backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
               elevation: 0.5,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF1E293B)),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text(
+              title: Text(
                 'Ghép Thẻ Từ Vựng (Match Game)',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
-                  color: Color(0xFF0F172A),
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
             ),
@@ -413,22 +429,22 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
           children: [
             // Bộ lọc chọn Unit
             Container(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2430) : Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildFilterChip('Tất cả', 0),
+                    _buildFilterChip('Tất cả', 0, isDark),
                     ...List.generate(10, (idx) {
                       final u = idx + 1;
-                      return _buildFilterChip('Unit $u', u);
+                      return _buildFilterChip('Unit $u', u, isDark);
                     }),
                   ],
                 ),
               ),
             ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+            Divider(height: 1, thickness: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
 
             // Thanh trạng thái: Thời gian + Nút Trộn lại
             Padding(
@@ -437,15 +453,15 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.timer_outlined, size: 18, color: Color(0xFF475569)),
+                      Icon(Icons.timer_outlined, size: 18, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
                       const SizedBox(width: 6),
                       Text(
                         'Thời gian: ${_elapsedSeconds}s',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontSize: 13.5,
                           fontWeight: FontWeight.w700,
-                          color: AppTokens.primary,
+                          color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
                         ),
                       ),
                     ],
@@ -453,7 +469,7 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
                   const Spacer(),
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF475569),
+                      foregroundColor: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     ),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
@@ -480,7 +496,7 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
                         ),
                         itemBuilder: (ctx, idx) {
                           final card = _cards[idx];
-                          return _buildCardWidget(card);
+                          return _buildCardWidget(card, isDark);
                         },
                       ),
                     ),
@@ -492,7 +508,7 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, int unit) {
+  Widget _buildFilterChip(String label, int unit, bool isDark) {
     final isSelected = _selectedUnitFilter == unit;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -500,11 +516,11 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
         label: Text(label),
         selected: isSelected,
         selectedColor: AppTokens.primary,
-        backgroundColor: const Color(0xFFF1F5F9),
+        backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: isSelected ? Colors.white : const Color(0xFF475569),
+          color: isSelected ? Colors.white : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
         ),
         onSelected: (val) {
           if (val && _selectedUnitFilter != unit) {
@@ -518,33 +534,33 @@ class _MatchGameScreenState extends State<MatchGameScreen> {
     );
   }
 
-  Widget _buildCardWidget(MatchCardItem card) {
-    Color bg = Colors.white;
-    Color border = const Color(0xFFCBD5E1);
-    Color textColor = const Color(0xFF0F172A);
+  Widget _buildCardWidget(MatchCardItem card, bool isDark) {
+    Color bg = isDark ? const Color(0xFF1E2430) : Colors.white;
+    Color border = isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
+    Color textColor = isDark ? Colors.white : const Color(0xFF0F172A);
     Widget? trailingIcon;
 
     switch (card.status) {
       case MatchCardStatus.normal:
-        bg = Colors.white;
-        border = const Color(0xFFE2E8F0);
-        textColor = const Color(0xFF0F172A);
+        bg = isDark ? const Color(0xFF1E2430) : Colors.white;
+        border = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+        textColor = isDark ? Colors.white : const Color(0xFF0F172A);
         break;
       case MatchCardStatus.selected:
-        bg = const Color(0xFFEFF6FF);
-        border = AppTokens.primary;
-        textColor = AppTokens.primary;
+        bg = isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF);
+        border = isDark ? const Color(0xFF60A5FA) : AppTokens.primary;
+        textColor = isDark ? const Color(0xFF93C5FD) : AppTokens.primary;
         break;
       case MatchCardStatus.matched:
-        bg = const Color(0xFFF0FDF4);
-        border = const Color(0xFF86EFAC);
-        textColor = const Color(0xFF166534);
-        trailingIcon = const Icon(Icons.check_circle_rounded, color: AppTokens.successGreen, size: 24);
+        bg = isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4);
+        border = isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC);
+        textColor = isDark ? const Color(0xFF4ADE80) : const Color(0xFF166534);
+        trailingIcon = Icon(Icons.check_circle_rounded, color: isDark ? const Color(0xFF4ADE80) : AppTokens.successGreen, size: 24);
         break;
       case MatchCardStatus.wrong:
-        bg = const Color(0xFFFFF1F2);
-        border = const Color(0xFFFDA4AF);
-        textColor = const Color(0xFFBE123C);
+        bg = isDark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2);
+        border = isDark ? const Color(0xFFE11D48) : const Color(0xFFFDA4AF);
+        textColor = isDark ? const Color(0xFFFDA4AF) : const Color(0xFFBE123C);
         trailingIcon = const Icon(Icons.cancel_rounded, color: AppTokens.errorRed, size: 20);
         break;
     }

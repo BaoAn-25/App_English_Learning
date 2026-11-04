@@ -18,6 +18,7 @@ import '../audio/app_audio_controller.dart';
 import '../audio/app_audio_player_widget.dart';
 import '../theme/app_tokens.dart';
 import '../theme/components/app_button.dart';
+import '../theme/components/engpass_mascot.dart';
 import 'interactive_reading_text.dart';
 import 'trial_lesson_picker_screen.dart';
 
@@ -456,6 +457,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
 
   // --- MỞ MODAL XEM LẠI BÀI ĐỌC (CÓ ĐỦ HỖ TRỢ ĐỌC HIỂU TƯƠNG TÁC) ---
   void _openReadingBottomSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -467,9 +469,9 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
           maxChildSize: 0.95,
           builder: (sheetCtx, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 children: [
@@ -478,7 +480,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                     width: 44,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
+                      color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -486,7 +488,11 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                     child: Row(
                       children: [
-                        const Icon(Icons.menu_book_rounded, color: AppTokens.primary, size: 22),
+                        Icon(
+                          Icons.menu_book_rounded,
+                          color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                          size: 22,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -494,28 +500,37 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                             children: [
                               Text(
                                 'Bài đọc: ${_lesson.lessonTitle}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'BeVietnamPro',
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0F172A),
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                                 ),
                               ),
                               Text(
                                 'Unit ${_lesson.unitNumber}: ${_lesson.unitTitle} · ${_lesson.textbookSource}',
-                                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                ),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
                           onPressed: () => Navigator.pop(sheetCtx),
                         ),
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                  Divider(
+                    height: 1,
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  ),
                   Expanded(
                     child: ListView(
                       controller: scrollController,
@@ -570,6 +585,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -577,12 +593,16 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
         _safeExit();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
           elevation: 0.5,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 20,
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
+            ),
             onPressed: _safeExit,
           ),
           title: Column(
@@ -594,20 +614,20 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                     : (_currentStep == 1
                         ? '2. Câu hỏi đọc hiểu SGK'
                         : '3. Kết quả bài học'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppTokens.primary,
+                  color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
                 ),
               ),
               Text(
                 'Unit ${_lesson.unitNumber}: ${_lesson.lessonTitle}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -921,9 +941,17 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
         // Nút chuyển sang làm bài tập
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF1E2430)
+                : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
           ),
           child: AppButton(
             label: 'Làm bài tập đọc hiểu (${_questions.length} câu) →',
@@ -944,12 +972,13 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
 
   /// Thẻ hiển thị đoạn văn bản có hỗ trợ tra từ & dịch đoạn trọn vẹn
   Widget _buildParagraphCard(LessonParagraph p) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E2430) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -957,16 +986,16 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: isDark ? const Color(0xFF2D3748) : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               p.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF475569),
+                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
               ),
             ),
           ),
@@ -1018,6 +1047,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final question = _questions[_currentQuestionIndex];
     final selectedOption = _selectedAnswers[_currentQuestionIndex];
     final isChecked = _checkedStates[_currentQuestionIndex];
@@ -1028,7 +1058,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
         LinearProgressIndicator(
           value: (_currentQuestionIndex + 1) / _questions.length,
           minHeight: 4,
-          backgroundColor: const Color(0xFFE2E8F0),
+          backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           valueColor: const AlwaysStoppedAnimation<Color>(AppTokens.primary),
         ),
 
@@ -1041,9 +1071,9 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                   Expanded(
                     child: Text(
                       '${_lesson.activityName} (${question.pageLabel}):',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
-                        color: Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1053,13 +1083,17 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       visualDensity: VisualDensity.compact,
                     ),
-                    icon: const Icon(Icons.menu_book_outlined, size: 16, color: AppTokens.primary),
-                    label: const Text(
+                    icon: Icon(
+                      Icons.menu_book_outlined,
+                      size: 16,
+                      color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                    ),
+                    label: Text(
                       'Đọc lại bài',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: AppTokens.primary,
+                        color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
                       ),
                     ),
                     onPressed: _openReadingBottomSheet,
@@ -1072,20 +1106,22 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF1E2430) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       question.word,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'BeVietnamPro',
                         fontSize: 16.5,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1093,24 +1129,30 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(Icons.format_quote_rounded, size: 16, color: Color(0xFF64748B)),
-                              SizedBox(width: 6),
+                              Icon(
+                                Icons.format_quote_rounded,
+                                size: 16,
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              ),
+                              const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   'Ngữ cảnh trong bài đọc (Chạm từ để tra hoặc bôi đen dịch):',
                                   style: TextStyle(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF475569),
+                                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                                   ),
                                 ),
                               ),
@@ -1124,10 +1166,10 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                             highlightWords: [question.targetWord],
                             translateButtonLabel: 'Dịch câu ngữ cảnh',
                             currentLesson: _lesson,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13.5,
                               fontStyle: FontStyle.italic,
-                              color: Color(0xFF1E293B),
+                              color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
                               height: 1.45,
                             ),
                             onAssistanceUsed: (type) {
@@ -1150,8 +1192,8 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                 final optionText = entry.value;
                 final isSelected = selectedOption == optionIdx;
 
-                Color itemBg = Colors.white;
-                Color itemBorder = const Color(0xFFE2E8F0);
+                Color itemBg = isDark ? const Color(0xFF1E2430) : Colors.white;
+                Color itemBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
                 Widget leadingIcon = Icon(
                   isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
                   color: isSelected ? AppTokens.primary : const Color(0xFF94A3B8),
@@ -1160,18 +1202,24 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
 
                 if (isChecked) {
                   if (optionIdx == question.correctIndex) {
-                    itemBg = const Color(0xFFF0FDF4);
+                    itemBg = isDark
+                        ? const Color(0xFF14532D).withValues(alpha: 0.4)
+                        : const Color(0xFFF0FDF4);
                     itemBorder = const Color(0xFF22C55E);
                     leadingIcon = const Icon(Icons.check_circle_rounded,
                         color: Color(0xFF16A34A), size: 20);
                   } else if (isSelected && optionIdx != question.correctIndex) {
-                    itemBg = const Color(0xFFFEF2F2);
+                    itemBg = isDark
+                        ? const Color(0xFF7F1D1D).withValues(alpha: 0.4)
+                        : const Color(0xFFFEF2F2);
                     itemBorder = AppTokens.errorRed;
                     leadingIcon = const Icon(Icons.cancel_rounded,
                         color: AppTokens.errorRed, size: 20);
                   }
                 } else if (isSelected) {
-                  itemBg = const Color(0xFFEFF6FF);
+                  itemBg = isDark
+                      ? const Color(0xFF1E3A8A).withValues(alpha: 0.4)
+                      : const Color(0xFFEFF6FF);
                   itemBorder = AppTokens.primary;
                 }
 
@@ -1210,7 +1258,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                                 fontFamily: 'BeVietnamPro',
                                 fontSize: 14,
                                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                color: const Color(0xFF0F172A),
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
                               ),
                               onInteractionStart: () {
                                 _isInteractingWithText = true;
@@ -1314,9 +1362,13 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
         // Nút hành động đáy màn hình
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              ),
+            ),
           ),
           child: !isChecked
               ? AppButton(
@@ -1363,6 +1415,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
   // BƯỚC 3: KẾT QUẢ THẬT & ĐỊNH HƯỚNG ÔN TẬP
   // ==========================================
   Widget _buildResultStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     int correctCount = 0;
     for (int i = 0; i < _questions.length; i++) {
       if (_selectedAnswers[i] == _questions[i].correctIndex) {
@@ -1430,7 +1483,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: score >= 6.0 ? const Color(0xFF86EFAC) : const Color(0xFFFECACA),
@@ -1446,10 +1499,9 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
           ),
           child: Column(
             children: [
-              Icon(
-                score >= 6.0 ? Icons.emoji_events_rounded : Icons.psychology_rounded,
-                color: score >= 6.0 ? const Color(0xFF16A34A) : const Color(0xFFF59E0B),
-                size: 48,
+              EngPassMascot(
+                mood: score >= 6.0 ? MascotMood.celebrate : MascotMood.study,
+                size: 82,
               ),
               const SizedBox(height: 8),
               Text(
@@ -1458,13 +1510,18 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                   fontFamily: 'BeVietnamPro',
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
-                  color: score >= 6.0 ? const Color(0xFF15803D) : const Color(0xFFB45309),
+                  color: score >= 6.0
+                      ? (isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D))
+                      : (isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309)),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Bạn đã hoàn thành chính xác $correctCount / ${_questions.length} câu hỏi theo SGK.',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
               ),
               const SizedBox(height: 8),
 
@@ -1472,25 +1529,31 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  ),
                 ),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.timer_outlined, size: 16, color: Color(0xFF475569)),
+                        Icon(
+                          Icons.timer_outlined,
+                          size: 16,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                        ),
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
                             'Thời gian học thực tế: ${_formatDuration(_actualDurationSeconds)}',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF334155),
+                              color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                             ),
                           ),
                         ),
@@ -1509,8 +1572,8 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                                 : Icons.verified_user_rounded,
                             size: 15,
                             color: _assistedQuestionsBeforeCheck.isNotEmpty
-                                ? const Color(0xFF2563EB)
-                                : const Color(0xFF16A34A),
+                                ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB))
+                                : (isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A)),
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -1526,8 +1589,8 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: _assistedQuestionsBeforeCheck.isNotEmpty
-                                  ? const Color(0xFF1E40AF)
-                                  : const Color(0xFF15803D),
+                                  ? (isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E40AF))
+                                  : (isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D)),
                             ),
                           ),
                         ),
@@ -1537,9 +1600,13 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Học thử là cơ hội làm quen với học liệu SGK 12. Việc dùng hỗ trợ tra từ giúp bạn tích lũy từ vựng nhanh hơn!',
-                style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  fontStyle: FontStyle.italic,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -1548,13 +1615,13 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
         const SizedBox(height: 20),
 
         // Chi tiết từng câu hỏi & giải thích
-        const Text(
+        Text(
           'Chi tiết bài làm & Giải thích đáp án:',
           style: TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w800,
             fontSize: 15,
-            color: Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 10),
@@ -1570,10 +1637,10 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2430) : Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isCorrect ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+                color: isCorrect ? const Color(0xFF22C55E) : const Color(0xFFFECDD3),
               ),
             ),
             child: Column(
@@ -1590,11 +1657,11 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                     Expanded(
                       child: Text(
                         q.word,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w700,
                           fontSize: 14.5,
-                          color: Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                     ),
@@ -1602,15 +1669,15 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.5) : const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Có tra nghĩa',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF2563EB),
+                            color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB),
                           ),
                         ),
                       ),
@@ -1630,9 +1697,9 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       'Đáp án đúng: ${q.options[q.correctIndex]}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF15803D),
+                        color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1641,7 +1708,7 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -1649,15 +1716,18 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
                     children: [
                       Text(
                         'Trích dẫn SGK: "${q.textbookQuote}"',
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Giải nghĩa biên soạn: ${q.explanation}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF334155),
+                          color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                         ),
                       ),
                     ],

@@ -6,6 +6,7 @@ import '../data/app_repository.dart';
 import '../data/asset_seeder.dart';
 import '../data/question_sync_service.dart';
 import '../data/remote/api_client.dart';
+import '../ui/auth/auth_controller.dart';
 import '../ui/auth/welcome_screen.dart';
 import 'main_shell.dart';
 
@@ -40,6 +41,9 @@ class _AppStartupState extends State<AppStartup> {
       final initialize = widget.initialize;
       if (initialize != null) {
         await initialize();
+        if (widget.startWithOnboarding == null) {
+          _hasCompletedOnboarding = true;
+        }
       } else {
         final repository = context.read<AppRepository>();
         await ApiClient.sanitizeOrMigrateApiUrl(repository);
@@ -47,10 +51,17 @@ class _AppStartupState extends State<AppStartup> {
         await AssetSeeder.syncVocabulary();
         await AssetSeeder.syncInterestWords();
         await QuestionSyncService.syncQuestions(repository);
+        await AuthController.instance.restoreSession();
 
         try {
           final prefs = await SharedPreferences.getInstance();
-          _hasCompletedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
+          final savedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
+          final isLoggedInStudent = AuthController.instance.isAuthenticated &&
+              !AuthController.instance.user.isGuest;
+          _hasCompletedOnboarding = savedOnboarding || isLoggedInStudent;
+          if (isLoggedInStudent && !savedOnboarding) {
+            await prefs.setBool('has_completed_onboarding', true);
+          }
         } catch (_) {
           _hasCompletedOnboarding = true;
         }

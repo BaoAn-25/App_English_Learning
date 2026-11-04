@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'app_tokens.dart';
 
 /// Định nghĩa ThemeData cho ứng dụng theo chuẩn Material 3.
@@ -28,6 +29,7 @@ class AppTheme {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: AppTokens.textMain,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         titleTextStyle: TextStyle(
           fontFamily: AppTokens.fontFamily,
           fontSize: 18,
@@ -193,6 +195,7 @@ class AppTheme {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Color(0xFFF3F4F6),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         titleTextStyle: TextStyle(
           fontFamily: AppTokens.fontFamily,
           fontSize: 18,
@@ -211,8 +214,8 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 2,
-          backgroundColor: const Color(0xFF5390F5),
-          foregroundColor: const Color(0xFF121620),
+          backgroundColor: AppTokens.primary,
+          foregroundColor: Colors.white,
           minimumSize: const Size(88, AppTokens.minTouchTargetSize),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(

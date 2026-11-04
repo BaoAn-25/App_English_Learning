@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/app_repository.dart';
 import '../../data/remote/api_client.dart';
 import '../../data/trial_lesson_repository.dart';
+import '../theme/components/engpass_mascot.dart';
 
 class AiChatMessage {
   final String text;
@@ -238,57 +239,55 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       padding: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
           // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
             ),
             child: Row(
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.psychology_rounded, color: Color(0xFFF59E36), size: 20),
+                const EngPassMascot(
+                  mood: MascotMood.study,
+                  size: 40,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Gia sư AI EngPass',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                       Text(
                         widget.unitNumber != null
                             ? 'Đang hỗ trợ Unit ${widget.unitNumber}: ${widget.unitTitle ?? ""}'
                             : 'Hỗ trợ giải đáp kiến thức SGK 12 Global Success',
-                        style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                        style: TextStyle(fontSize: 11.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  icon: Icon(Icons.close_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -303,25 +302,25 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
-                return _buildMessageBubble(msg);
+                return _buildMessageBubble(msg, isDark);
               },
             ),
           ),
 
           if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Row(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 14,
                     height: 14,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'Gia sư AI đang soạn câu trả lời...',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B), fontStyle: FontStyle.italic),
+                    style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
@@ -333,9 +332,9 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Row(
               children: [
-                _buildQuickChip('Trọng tâm ngữ pháp Unit'),
-                _buildQuickChip('Mẹo làm bài đọc hiểu'),
-                _buildQuickChip('Cấu trúc câu hỏi hay gặp'),
+                _buildQuickChip('Trọng tâm ngữ pháp Unit', isDark),
+                _buildQuickChip('Mẹo làm bài đọc hiểu', isDark),
+                _buildQuickChip('Cấu trúc câu hỏi hay gặp', isDark),
               ],
             ),
           ),
@@ -343,9 +342,9 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
           // Input bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              border: Border(top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
             ),
             child: Row(
               children: [
@@ -354,31 +353,31 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
                     controller: _inputController,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 14, color: isDark ? Colors.white : const Color(0xFF0F172A)),
                     decoration: InputDecoration(
                       hintText: 'Nhập câu hỏi bài học hoặc từ cần tra...',
-                      hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                      hintStyle: TextStyle(fontSize: 13, color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
+                      fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A), width: 1.5),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.send_rounded, color: Color(0xFF0F172A)),
+                  icon: Icon(Icons.send_rounded, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A)),
                   onPressed: _sendMessage,
                 ),
               ],
@@ -389,19 +388,26 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
     );
   }
 
-  Widget _buildQuickChip(String label) {
+  Widget _buildQuickChip(String label, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: ActionChip(
-        label: Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
-        backgroundColor: const Color(0xFFF1F5F9),
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+          ),
+        ),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () => _sendMessage(label),
       ),
     );
   }
 
-  Widget _buildMessageBubble(AiChatMessage msg) {
+  Widget _buildMessageBubble(AiChatMessage msg, bool isDark) {
     return Align(
       alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -410,8 +416,10 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: msg.isUser
-              ? const Color(0xFF0F172A)
-              : (msg.isOfflineNotice ? const Color(0xFFFFFBEB) : const Color(0xFFF8FAFC)),
+              ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF0F172A))
+              : (msg.isOfflineNotice
+                  ? (isDark ? const Color(0xFF2E1E0F) : const Color(0xFFFFFBEB))
+                  : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC))),
           borderRadius: BorderRadius.circular(16).copyWith(
             bottomRight: msg.isUser ? const Radius.circular(4) : const Radius.circular(16),
             bottomLeft: !msg.isUser ? const Radius.circular(4) : const Radius.circular(16),
@@ -419,7 +427,9 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
           border: Border.all(
             color: msg.isUser
                 ? Colors.transparent
-                : (msg.isOfflineNotice ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0)),
+                : (msg.isOfflineNotice
+                    ? (isDark ? const Color(0xFF92400E) : const Color(0xFFFDE68A))
+                    : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
           ),
         ),
         child: Text(
@@ -429,7 +439,9 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
             height: 1.45,
             color: msg.isUser
                 ? Colors.white
-                : (msg.isOfflineNotice ? const Color(0xFF92400E) : const Color(0xFF1E293B)),
+                : (msg.isOfflineNotice
+                    ? (isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E))
+                    : (isDark ? Colors.white : const Color(0xFF1E293B))),
           ),
         ),
       ),

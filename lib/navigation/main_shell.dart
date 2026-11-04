@@ -16,34 +16,48 @@ class MainShell extends StatefulWidget {
 
   const MainShell({super.key, this.initialIndex = 0});
 
+  /// Thông báo thời gian thực khi hoàn thành bài học đầu tiên để mở khóa Tab Luyện đề & Ôn tập ngay lập tức
+  static final ValueNotifier<bool> firstLessonUnlockedNotifier = ValueNotifier<bool>(false);
+
+  /// Chuyển tab trực tiếp trên MainShell từ các màn hình con (ví dụ nút "Xem Sách" trên Trang chủ)
+  static void switchToTab(BuildContext context, int index) {
+    final state = context.findAncestorStateOfType<_MainShellState>();
+    if (state != null) {
+      state.selectTab(index);
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => MainShell(initialIndex: index)),
+      );
+    }
+  }
+
   /// Đánh dấu đã hoàn thành bài học đầu tiên và mở khóa toàn bộ tính năng
   static Future<void> markFirstLessonCompleted(BuildContext context) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final alreadyCompleted = prefs.getBool('has_completed_first_lesson') ?? false;
-      if (!alreadyCompleted) {
-        await prefs.setBool('has_completed_first_lesson', true);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Text('🎉', style: TextStyle(fontSize: 20)),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Tuyệt vời! Bạn đã mở khóa toàn bộ tab Luyện đề & Ôn tập!',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
+      await prefs.setBool('has_completed_first_lesson', true);
+      firstLessonUnlockedNotifier.value = true;
+      if (!alreadyCompleted && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Text('🎉', style: TextStyle(fontSize: 20)),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Tuyệt vời! Bạn đã mở khóa toàn bộ tab Luyện đề & Ôn tập!',
+                    style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                ],
-              ),
-              backgroundColor: Color(0xFF16A34A),
-              duration: Duration(seconds: 4),
-              behavior: SnackBarBehavior.floating,
+                ),
+              ],
             ),
-          );
-        }
+            backgroundColor: Color(0xFF16A34A),
+            duration: Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (_) {}
   }
@@ -69,12 +83,51 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _checkFirstLessonStatus();
+    MainShell.firstLessonUnlockedNotifier.addListener(_onFirstLessonUnlockedChanged);
+    AuthController.instance.addListener(_onAuthChanged);
+  }
+
+  @override
+  void dispose() {
+    MainShell.firstLessonUnlockedNotifier.removeListener(_onFirstLessonUnlockedChanged);
+    AuthController.instance.removeListener(_onAuthChanged);
+    super.dispose();
+  }
+
+  void _onFirstLessonUnlockedChanged() {
+    if (mounted && MainShell.firstLessonUnlockedNotifier.value && !_hasCompletedFirstLesson) {
+      setState(() {
+        _hasCompletedFirstLesson = true;
+      });
+    }
+  }
+
+  void _onAuthChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void selectTab(int index) {
+    final isGuest = !AuthController.instance.isAuthenticated || AuthController.instance.user.isGuest;
+    final isLockedForGuest = isGuest && !_hasCompletedFirstLesson;
+    if (isLockedForGuest && (index == 2 || index == 3)) {
+      final name = index == 2 ? 'Luyện đề thi THPT' : 'Ôn tập Flashcard SRS';
+      _showUnlockFeatureDialog(name);
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   Future<void> _checkFirstLessonStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isCompleted = prefs.getBool('has_completed_first_lesson') ?? false;
+      MainShell.firstLessonUnlockedNotifier.value = isCompleted;
       if (mounted) {
         setState(() {
           _hasCompletedFirstLesson = isCompleted;
@@ -200,16 +253,7 @@ class _MainShellState extends State<MainShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (int index) {
-          if (isLockedForGuest && (index == 2 || index == 3)) {
-            final name = index == 2 ? 'Luyện đề thi THPT' : 'Ôn tập Flashcard SRS';
-            _showUnlockFeatureDialog(name);
-            return;
-          }
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onDestinationSelected: selectTab,
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         elevation: 3,
         indicatorColor: isDark ? const Color(0xFF2563EB).withAlpha(60) : const Color(0xFFEFF6FF),

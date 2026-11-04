@@ -5,12 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../data/app_repository.dart';
 import '../../data/asset_seeder.dart';
 import '../../data/interest_repository.dart';
 import '../../data/models/interest_topic.dart';
 import '../../data/models/interest_word.dart';
 import '../../navigation/main_shell.dart';
 import '../theme/components/app_button.dart';
+import '../theme/components/engpass_mascot.dart';
 
 /// Màn hình Chi tiết Lộ trình Học theo Chủ đề Sở thích (Tree Path kiểu EngPass)
 /// Tích hợp:
@@ -433,6 +435,12 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
               _totalXpEarned = newXp;
             });
             _saveProgress(nextNode, newXp);
+            AppRepository().recordStudyReward(
+              xp: 20,
+              minutes: 3,
+              questionsDone: 8,
+              correct: 8,
+            );
             MainShell.markFirstLessonCompleted(context);
           },
         ),
@@ -517,6 +525,12 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                   _totalXpEarned = newXp;
                 });
                 _saveProgress(nextNode, newXp);
+                AppRepository().recordStudyReward(
+                  xp: 20,
+                  minutes: 2,
+                  questionsDone: 1,
+                  correct: 1,
+                );
                 MainShell.markFirstLessonCompleted(context);
               },
               child: const Text('NHẬN THƯỞNG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -695,23 +709,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-                                        Container(
-                                          width: 62,
-                                          height: 62,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(color: Colors.white, width: 2),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color: Color(0x202563EB),
-                                                offset: Offset(0, 4),
-                                                blurRadius: 10,
-                                              ),
-                                            ],
-                                          ),
-                                          child: ClipOval(
-                                            child: Image.asset('assets/images/app_logo.png', fit: BoxFit.cover),
-                                          ),
+                                        const EngPassMascot(
+                                          mood: MascotMood.cheer,
+                                          size: 64,
                                         ),
                                       ],
                                     ),
@@ -1787,16 +1787,29 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: const BoxDecoration(
-              color: Color(0xFFDCFCE7),
-              shape: BoxShape.circle,
-            ),
-            child: const Center(
-              child: Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 64),
-            ),
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              const EngPassMascot(
+                mood: MascotMood.celebrate,
+                size: 112,
+              ),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    width: 2.5,
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 22),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Text(
@@ -1812,7 +1825,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
           Text(
             'Bạn đã hoàn thành xuất sắc toàn bộ ${_questions.length} câu hỏi luyện tập của Cửa ${widget.stepNumber}.',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13.5, color: Color(0xFF64748B), height: 1.4),
+            style: TextStyle(
+              fontSize: 13.5,
+              color: isDark ? Colors.white70 : const Color(0xFF64748B),
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 24),
           Container(
@@ -1820,7 +1837,7 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1829,7 +1846,7 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                 SizedBox(width: 8),
                 Text(
                   '+20 XP KINH NGHIỆM',
-                  style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFFD97706)),
+                  style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFFF59E0B)),
                 ),
               ],
             ),

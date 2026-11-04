@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Logo chuẩn của ứng dụng EngPass.
-/// Tông màu Xanh Navy (#0F172A) & Vàng Kim (#F59E0B) đồng bộ tuyệt đối với giao diện chính.
-/// Hiển thị hình ảnh linh vật chú chim xanh EngPass cầm sách điểm A.
+/// Tông màu Xanh Thương Hiệu (#2168DC) tràn viền vừa khít (Full-Bleed)
+/// và tự động đồng bộ màu chữ trên cả chế độ Sáng (Light) và Tối (Dark).
 class PrepLogo extends StatelessWidget {
   final double size;
   final bool showText;
@@ -19,32 +19,41 @@ class PrepLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final radius = BorderRadius.circular(size * 0.24);
+
     final iconBox = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.22),
+        color: const Color(0xFF2168DC),
+        borderRadius: radius,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.15),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
+            color: const Color(0xFF2168DC).withValues(alpha: isDark ? 0.32 : 0.22),
+            offset: const Offset(0, 3),
+            blurRadius: 8,
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(size * 0.22),
-        child: Image.asset(
-          'assets/images/app_logo.png',
-          width: size,
-          height: size,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => _buildFallback(size),
-        ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        'assets/images/app_logo.png',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (context, error, stackTrace) => _buildFallback(size),
       ),
     );
 
     if (!showText) return iconBox;
+
+    final effectiveTitleColor =
+        textColor ?? (isDark ? Colors.white : const Color(0xFF0F172A));
+    final effectiveSubtitleColor = textColor != null
+        ? textColor!.withValues(alpha: 0.85)
+        : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -61,18 +70,20 @@ class PrepLogo extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w900,
-                fontSize: size * 0.46,
+                fontSize: size * 0.45,
                 letterSpacing: -0.5,
-                color: textColor ?? const Color(0xFF0F172A),
+                height: 1.1,
+                color: effectiveTitleColor,
               ),
             ),
+            const SizedBox(height: 2),
             Text(
               'Luyện Thi THPT',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w700,
                 fontSize: size * 0.23,
-                color: (textColor ?? const Color(0xFF64748B)).withValues(alpha: 0.9),
+                color: effectiveSubtitleColor,
               ),
             ),
           ],
@@ -86,9 +97,8 @@ class PrepLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: BorderRadius.circular(size * 0.22),
-        border: Border.all(color: const Color(0xFFFBBF24), width: 1.5),
+        color: const Color(0xFF2168DC),
+        borderRadius: BorderRadius.circular(size * 0.24),
       ),
       child: Center(
         child: Icon(

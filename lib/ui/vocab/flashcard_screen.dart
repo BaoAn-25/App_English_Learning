@@ -4,8 +4,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/app_repository.dart';
 import '../../data/models/topic.dart';
 import '../../data/models/word.dart';
+import '../../navigation/main_shell.dart';
+import '../theme/components/engpass_mascot.dart';
 import 'match_game_screen.dart';
 import 'topic_quiz_screen.dart';
 import 'vocab_provider.dart';
@@ -117,6 +120,13 @@ class _FlashcardScreenState extends State<FlashcardScreen>
   }
 
   void _showFinished() {
+    AppRepository().recordStudyReward(
+      xp: 15,
+      minutes: 3,
+      questionsDone: _deck.length,
+      correct: _deck.length,
+    );
+    MainShell.markFirstLessonCompleted(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -127,8 +137,19 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             Text('Hoàn thành!'),
           ],
         ),
-        content: Text(
-          'Bạn đã ôn xong ${_deck.length} thẻ của chủ đề\n"${widget.topicTitle}".',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const EngPassMascot(
+              mood: MascotMood.celebrate,
+              size: 88,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Bạn đã ôn xong ${_deck.length} thẻ của chủ đề\n"${widget.topicTitle}" (+15 XP).',
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
         actions: [
           TextButton(

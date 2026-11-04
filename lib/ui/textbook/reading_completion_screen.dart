@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/components/app_button.dart';
+import '../theme/components/engpass_mascot.dart';
 
 class ReadingCompletionScreen extends StatelessWidget {
   final int unitNumber;
@@ -21,10 +22,11 @@ class ReadingCompletionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final double accuracy = totalQuestions > 0 ? (correctCount / totalQuestions * 100) : 0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -32,52 +34,30 @@ class ReadingCompletionScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 16),
 
-              // Cúp Trophy Vàng toả sáng Duolingo
-              Container(
-                width: 108,
-                height: 108,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFEF08A), Color(0xFFFACC15), Color(0xFFEAB308)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFEAB308).withValues(alpha: 0.35),
-                      offset: const Offset(0, 8),
-                      blurRadius: 20,
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.emoji_events_rounded,
-                    size: 64,
-                    color: Color(0xFF854D0E),
-                  ),
-                ),
+              // Linh vật đội mũ tốt nghiệp giơ cúp vàng ăn mừng
+              const EngPassMascot(
+                mood: MascotMood.celebrate,
+                size: 112,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              const Text(
+              Text(
                 'Hoàn thành Reading!',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Bạn đã hoàn thành bài luyện tập đọc hiểu với kết quả $correctCount/$totalQuestions câu đúng.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontSize: 14,
-                  color: Color(0xFF64748B),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   height: 1.4,
                 ),
               ),
@@ -90,8 +70,8 @@ class ReadingCompletionScreen extends StatelessWidget {
                     child: _buildStatCard(
                       badge: xpEarned > 0 ? '+$xpEarned' : '0',
                       label: 'XP',
-                      color: const Color(0xFF2563EB),
-                      bgColor: const Color(0xFFEFF6FF),
+                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                      bgColor: isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.35) : const Color(0xFFEFF6FF),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -99,8 +79,8 @@ class ReadingCompletionScreen extends StatelessWidget {
                     child: _buildStatCard(
                       badge: '${accuracy.toInt()}%',
                       label: 'Chính xác',
-                      color: const Color(0xFF16A34A),
-                      bgColor: const Color(0xFFDCFCE7),
+                      color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+                      bgColor: isDark ? const Color(0xFF14532D).withValues(alpha: 0.35) : const Color(0xFFDCFCE7),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -108,8 +88,8 @@ class ReadingCompletionScreen extends StatelessWidget {
                     child: _buildStatCard(
                       badge: currentStreak > 0 ? '$currentStreak ngày' : '0 ngày',
                       label: 'Streak 🔥',
-                      color: const Color(0xFFEA580C),
-                      bgColor: const Color(0xFFFFEDD5),
+                      color: isDark ? const Color(0xFFFB923C) : const Color(0xFFEA580C),
+                      bgColor: isDark ? const Color(0xFF7C2D12).withValues(alpha: 0.35) : const Color(0xFFFFEDD5),
                     ),
                   ),
                 ],
@@ -121,9 +101,11 @@ class ReadingCompletionScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                    ),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x06000000),
@@ -134,7 +116,11 @@ class ReadingCompletionScreen extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.collections_bookmark_rounded, color: Color(0xFF2563EB), size: 24),
+                      Icon(
+                        Icons.collections_bookmark_rounded,
+                        color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                        size: 24,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -142,19 +128,19 @@ class ReadingCompletionScreen extends StatelessWidget {
                           children: [
                             Text(
                               'Đã lưu $newWordsCount từ mới vào sổ từ',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'BeVietnamPro',
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
-                                color: Color(0xFF0F172A),
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
                               ),
                             ),
                             const SizedBox(height: 2),
-                            const Text(
+                            Text(
                               'Các từ này sẽ được nhắc ôn tập theo lịch SRS.',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF64748B),
+                                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                               ),
                             ),
                           ],

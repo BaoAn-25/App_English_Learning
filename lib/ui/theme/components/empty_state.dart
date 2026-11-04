@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_tokens.dart';
 import 'app_button.dart';
+import 'engpass_mascot.dart';
 
 /// Giao diện hiển thị khi danh sách hoặc màn hình chưa có dữ liệu.
 ///
@@ -40,17 +41,31 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(AppTokens.space20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha(20),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.bottomRight,
+              children: [
+                const EngPassMascot(
+                  mood: MascotMood.study,
+                  size: 96,
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(30),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.scaffoldBackgroundColor,
+                      width: 2,
+                    ),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppTokens.space16),
             Text(
