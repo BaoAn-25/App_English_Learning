@@ -54,40 +54,49 @@ class _AdminMainShellState extends State<AdminMainShell> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        titleSpacing: 16,
+        titleSpacing: 8,
+        leadingWidth: 46,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
+          padding: const EdgeInsets.only(left: 10),
           child: CircleAvatar(
+            radius: 16,
             backgroundColor: const Color(0xFF1E3A8A).withValues(alpha: 0.12),
-            child: const Icon(Icons.admin_panel_settings, color: Color(0xFF1E3A8A), size: 22),
+            child: const Icon(Icons.admin_panel_settings, color: Color(0xFF1E3A8A), size: 19),
           ),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Trung Tâm Quản Trị',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                const Flexible(
+                  child: Text(
+                    'Trung Tâm Quản Trị',
+                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold, color: Colors.black87),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E3A8A),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(
                     'ADMIN',
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
               ],
             ),
             Text(
               user.displayName.isNotEmpty ? user.displayName : user.email,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -99,16 +108,18 @@ class _AdminMainShellState extends State<AdminMainShell> {
                 foregroundColor: const Color(0xFF15803D),
                 backgroundColor: const Color(0xFFDCFCE7),
                 visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               onPressed: () {
                 StudentPreviewMode.instance.enterPreview();
               },
-              icon: const Icon(Icons.remove_red_eye, size: 16),
-              label: const Text('Xem HS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              icon: const Icon(Icons.remove_red_eye, size: 15),
+              label: const Text('Xem HS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.black87),
             onSelected: (val) {

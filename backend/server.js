@@ -839,8 +839,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     await client.query('COMMIT');
 
-    if (isSystemAdminEmail(user.email)) user.role = 'admin';
-    const token = generateToken({ id: userId, email, role: 'student' });
+    const userRole = isSystemAdminEmail(email) ? 'admin' : 'student';
+    const token = generateToken({ id: userId, email, role: userRole });
 
     // Gửi email xác minh nếu có cấu hình SMTP
     let emailSent = false;
@@ -879,7 +879,7 @@ app.post('/api/auth/register', async (req, res) => {
         email,
         displayName: name,
         authProvider: 'email',
-        role: 'student',
+        role: userRole,
         emailVerified: false,
       },
       token,

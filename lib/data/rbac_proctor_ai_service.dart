@@ -1531,25 +1531,6 @@ class RbacProctorAiService {
       }
     }
 
-    // Xóa sạch toàn bộ tài khoản mock/test ảo cũ nếu còn tồn lưu trong bộ nhớ cache
-    final origLen = users.length;
-    users.removeWhere((u) {
-      final em = (u['email'] ?? '').toString().trim().toLowerCase();
-      final id = (u['id'] ?? '').toString().trim().toLowerCase();
-      final name = (u['display_name'] ?? u['displayName'] ?? '').toString().toLowerCase();
-      if (UserProfile.isSystemAdmin(em)) return false;
-      return id.contains('mock') ||
-          id.contains('fake') ||
-          id.contains('teacher_pending') ||
-          em.contains('mock') ||
-          em.contains('fake') ||
-          em.contains('example.com') ||
-          name.contains('mẫu') ||
-          name.contains('mock');
-    });
-    if (users.length != origLen) {
-      await _repo.setSetting('admin_cached_users_json', jsonEncode(users));
-    }
 
     // Xóa sạch toàn bộ tài khoản mock/test ảo cũ nếu còn tồn lưu trong bộ nhớ cache
     final origLen = users.length;

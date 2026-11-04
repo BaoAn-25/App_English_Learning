@@ -712,6 +712,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
 
+                // Vào học thử với vai trò Khách
+                Center(
+                  child: TextButton.icon(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('has_completed_onboarding', true);
+                            if (!context.mounted) return;
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => const RoleRoutingShell()),
+                              (route) => false,
+                            );
+                          },
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                    label: const Text(
+                      'Học thử ngay với vai trò Khách',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
                 // Link chuyển sang Đăng nhập
                 Wrap(
                   alignment: WrapAlignment.center,

@@ -141,6 +141,9 @@ class AppRepository {
 
   // --- Từ vựng (Words) ---
   Future<void> insertWords(List<Word> words) => _db.insertWords(words);
+  Future<void> insertWord(Word word) => _db.insertWord(word);
+  Future<void> updateWord(Word word) => _db.updateWord(word);
+  Future<void> deleteWord(String wordId) => _db.deleteWord(wordId);
   Future<List<Word>> getAllWords() => _db.getAllWords();
   Future<List<Word>> getWordsByGrade(int grade) => _db.getWordsByGrade(grade);
   Future<List<Word>> getWordsByTopicId(String topicId) =>
