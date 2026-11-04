@@ -1,10 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../../theme/app_tokens.dart';
 import '../components/admin_kpi_card.dart';
 
-/// TAB 1: Tá»•ng quan Há»‡ thá»‘ng (Admin Dashboard Overview)
-/// Hiá»ƒn thá»‹ KPI thá»±c táº¿, danh sÃ¡ch viá»‡c cáº§n lÃ m, phÃ­m táº¯t nhanh vÃ  dÃ²ng hoáº¡t Ä‘á»™ng gáº§n nháº¥t.
+/// TAB 1: Tổng quan Hệ thống (Admin Dashboard Overview)
+/// Hiển thị KPI thực tế, danh sách việc cần làm, phím tắt nhanh và dòng hoạt động gần nhất.
 class AdminDashboardTab extends StatefulWidget {
   final void Function(int tabIndex)? onNavigateTab;
 
@@ -64,7 +64,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Header chÃ o má»«ng Quáº£n trá»‹ viÃªn
+          // Header chào mừng Quản trị viên
           Row(
             children: [
               CircleAvatar(
@@ -78,11 +78,11 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Admin: sá»‘ liá»‡u há»‡ thá»‘ng',
+                      'Admin: số liệu hệ thống',
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textSub),
                     ),
                     Text(
-                      'Tá»•ng quan Há»‡ Thá»‘ng',
+                      'Tổng quan Hệ Thống',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: textMain),
                     ),
                   ],
@@ -91,34 +91,34 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
               IconButton(
                 icon: const Icon(Icons.refresh_rounded),
                 onPressed: _loadDashboardData,
-                tooltip: 'LÃ m má»›i dá»¯ liá»‡u',
+                tooltip: 'Làm mới dữ liệu',
               ),
             ],
           ),
           const SizedBox(height: 14),
 
-          // LÆ°á»›i 4 tháº» KPI Dá»¯ liá»‡u tháº­t
+          // Lưới 4 thẻ KPI Dữ liệu thật
           Row(
             children: [
               Expanded(
                 child: AdminKpiCard(
-                  title: 'NgÆ°á»i dÃ¹ng',
+                  title: 'Người dùng',
                   value: totalUsers > 0 ? '$totalUsers' : '1',
-                  subtitle: '$studentCount há»c sinh â€¢ $teacherCount GV',
+                  subtitle: '$studentCount học sinh • $teacherCount GV',
                   icon: Icons.people_alt_rounded,
                   iconColor: AppTokens.primary,
-                  onTap: () => widget.onNavigateTab?.call(2), // Sang Tab NgÆ°á»i dÃ¹ng
+                  onTap: () => widget.onNavigateTab?.call(2), // Sang Tab Người dùng
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: AdminKpiCard(
-                  title: 'Äá» thi & GiÃ¡m sÃ¡t',
+                  title: 'Đề thi & Giám sát',
                   value: '$activeExams',
-                  subtitle: 'Äang má»Ÿ trÃªn lá»›p',
+                  subtitle: 'Đang mở trên lớp',
                   icon: Icons.shield_rounded,
                   iconColor: const Color(0xFFEA580C),
-                  onTap: () => widget.onNavigateTab?.call(3), // Sang Tab Lá»›p & Thi
+                  onTap: () => widget.onNavigateTab?.call(3), // Sang Tab Lớp & Thi
                 ),
               ),
             ],
@@ -128,9 +128,9 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             children: [
               Expanded(
                 child: AdminKpiCard(
-                  title: 'TÃ i khoáº£n bá»‹ khÃ³a',
+                  title: 'Tài khoản bị khóa',
                   value: '$lockedCount',
-                  subtitle: lockedCount > 0 ? 'Vi pháº¡m quy Ä‘á»‹nh' : 'Há»‡ thá»‘ng an toÃ n',
+                  subtitle: lockedCount > 0 ? 'Vi phạm quy định' : 'Hệ thống an toàn',
                   icon: Icons.lock_person_rounded,
                   iconColor: lockedCount > 0 ? AppTokens.danger : AppTokens.success,
                   onTap: () => widget.onNavigateTab?.call(2),
@@ -139,19 +139,19 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
               const SizedBox(width: 12),
               Expanded(
                 child: AdminKpiCard(
-                  title: 'Nháº­t kÃ½ kiá»ƒm toÃ¡n',
+                  title: 'Nhật ký kiểm toán',
                   value: '${_auditLogs.length}',
-                  subtitle: 'Sá»± kiá»‡n há»‡ thá»‘ng',
+                  subtitle: 'Sự kiện hệ thống',
                   icon: Icons.history_rounded,
                   iconColor: const Color(0xFF8B5CF6),
-                  onTap: () => widget.onNavigateTab?.call(4), // Sang Tab Quáº£n trá»‹
+                  onTap: () => widget.onNavigateTab?.call(4), // Sang Tab Quản trị
                 ),
               ),
             ],
           ),
           const SizedBox(height: 18),
 
-          // Khá»‘i "Viá»‡c Cáº§n LÃ m" (Actionable Tasks)
+          // Khối "Việc Cần Làm" (Actionable Tasks)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -166,7 +166,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Viá»‡c cáº§n lÃ m',
+                      'Việc cần làm',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textMain),
                     ),
                     Container(
@@ -176,7 +176,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        'Æ¯u tiÃªn cao',
+                        'Ưu tiên cao',
                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTokens.primary),
                       ),
                     ),
@@ -184,36 +184,36 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 ),
                 const SizedBox(height: 12),
 
-                // Má»¥c 1: Duyá»‡t giÃ¡o viÃªn
+                // Mục 1: Duyệt giáo viên
                 _buildActionItem(
                   icon: Icons.verified_user_rounded,
                   iconColor: const Color(0xFFD97706),
-                  title: 'Quáº£n lÃ½ & Duyá»‡t phÃ¢n quyá»n GiÃ¡o viÃªn',
-                  subtitle: 'Kiá»ƒm tra vÃ  cáº¥p quyá»n ra Ä‘á», táº¡o phÃ²ng thi cÃ³ giÃ¡m sÃ¡t 10s',
+                  title: 'Quản lý & Duyệt phân quyền Giáo viên',
+                  subtitle: 'Kiểm tra và cấp quyền ra đề, tạo phòng thi có giám sát 10s',
                   onTap: () => widget.onNavigateTab?.call(2),
                   textMain: textMain,
                   textSub: textSub,
                 ),
                 const Divider(height: 16),
 
-                // Má»¥c 2: Kiá»ƒm tra ká»³ thi Ä‘ang thi trá»±c tiáº¿p
+                // Mục 2: Kiểm tra kỳ thi đang thi trực tiếp
                 _buildActionItem(
                   icon: Icons.videocam_rounded,
                   iconColor: const Color(0xFFDC2626),
-                  title: 'Theo dÃµi PhÃ²ng thi Trá»±c tiáº¿p (10s Live Proctoring)',
-                  subtitle: 'Báº¯t cÃ¡c ca há»c sinh thoÃ¡t app sang ChatGPT quÃ¡ 10 giÃ¢y',
+                  title: 'Theo dõi Phòng thi Trực tiếp (10s Live Proctoring)',
+                  subtitle: 'Bắt các ca học sinh thoát app sang ChatGPT quá 10 giây',
                   onTap: () => widget.onNavigateTab?.call(3),
                   textMain: textMain,
                   textSub: textSub,
                 ),
                 const Divider(height: 16),
 
-                // Má»¥c 3: Quáº£n lÃ½ há»c liá»‡u SGK 12
+                // Mục 3: Quản lý học liệu SGK 12
                 _buildActionItem(
                   icon: Icons.auto_stories_rounded,
                   iconColor: AppTokens.primary,
-                  title: 'RÃ  soÃ¡t 10 Unit SÃ¡ch GiÃ¡o Khoa Global Success 12',
-                  subtitle: 'Chá»‰nh sá»­a bÃ i Ä‘á»c, tá»« vá»±ng IPA hoáº·c nháº­p sÃ¡ch má»›i báº±ng AI',
+                  title: 'Rà soát 10 Unit Sách Giáo Khoa Global Success 12',
+                  subtitle: 'Chỉnh sửa bài đọc, từ vựng IPA hoặc nhập sách mới bằng AI',
                   onTap: () => widget.onNavigateTab?.call(1),
                   textMain: textMain,
                   textSub: textSub,
@@ -223,9 +223,9 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           ),
           const SizedBox(height: 18),
 
-          // Lá»‘i táº¯t nhanh
+          // Lối tắt tác vụ
           Text(
-            'Lá»‘i táº¯t tÃ¡c vá»¥',
+            'Lối tắt tác vụ',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textMain),
           ),
           const SizedBox(height: 10),
@@ -239,7 +239,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   ),
                   onPressed: () => widget.onNavigateTab?.call(1),
                   icon: const Icon(Icons.post_add_rounded, size: 18),
-                  label: const Text('Soáº¡n cÃ¢u há»i', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                  label: const Text('Soạn câu hỏi', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -251,7 +251,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   ),
                   onPressed: () => widget.onNavigateTab?.call(1),
                   icon: const Icon(Icons.document_scanner_rounded, size: 18),
-                  label: const Text('Nháº­p sÃ¡ch AI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                  label: const Text('Nhập sách AI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
                 ),
               ),
             ],
@@ -267,7 +267,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   ),
                   onPressed: () => widget.onNavigateTab?.call(3),
                   icon: const Icon(Icons.shield_outlined, size: 18),
-                  label: const Text('Táº¡o thi 10s', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                  label: const Text('Tạo thi 10s', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -279,16 +279,16 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   ),
                   onPressed: () => widget.onNavigateTab?.call(2),
                   icon: const Icon(Icons.verified_user_outlined, size: 18),
-                  label: const Text('Duyá»‡t giÃ¡o viÃªn', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+                  label: const Text('Duyệt giáo viên', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
 
-          // DÃ²ng hoáº¡t Ä‘á»™ng gáº§n nháº¥t (Recent Audit Feed)
+          // Dòng hoạt động gần nhất (Recent Audit Feed)
           Text(
-            'Nháº­t kÃ½ hoáº¡t Ä‘á»™ng gáº§n nháº¥t',
+            'Nhật ký hoạt động gần nhất',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textMain),
           ),
           const SizedBox(height: 10),
@@ -301,7 +301,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 border: Border.all(color: borderColor),
               ),
               child: Center(
-                child: Text('ChÆ°a cÃ³ hoáº¡t Ä‘á»™ng quáº£n trá»‹ nÃ o phÃ¡t sinh.', style: TextStyle(color: textSub)),
+                child: Text('Chưa có hoạt động quản trị nào phát sinh.', style: TextStyle(color: textSub)),
               ),
             )
           else
@@ -330,7 +330,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            (log['action'] ?? 'THAO TÃC Há»† THá»NG').toString(),
+                            (log['action'] ?? 'THAO TÁC HỆ THỐNG').toString(),
                             style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: textMain),
                           ),
                           Text(
