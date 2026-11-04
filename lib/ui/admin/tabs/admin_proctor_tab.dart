@@ -66,6 +66,8 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
           _isLoading = false;
         });
       }
+      // Tự động đồng bộ ngầm các lớp lên Cloud Render
+      _service.syncAllClassesToCloud().catchError((_) => <String, dynamic>{});
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -301,10 +303,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   children: [
                     const Icon(Icons.shield_outlined, color: Color(0xFF1E3A8A)),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Admin: Tạo bài thi có giám sát 10s',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        'Admin: Tạo bài thi có giám sát ${graceSeconds}s',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                     IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
@@ -403,9 +405,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Quy chế giám sát chống gian lận (10s Live Proctoring)',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E3A8A)),
+                      Text(
+                        'Quy chế giám sát chống gian lận (${graceSeconds}s Live Proctoring)',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E3A8A)),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -430,8 +432,8 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Tự nộp và tính điểm khi quá 10 giây', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                        subtitle: const Text('Tự thu bài và ghi nhận log vi phạm', style: TextStyle(fontSize: 11)),
+                        title: Text('Tự nộp và tính điểm khi quá $graceSeconds giây', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        subtitle: Text('Tự thu bài và ghi nhận log vi phạm sau $graceSeconds giây rời app', style: const TextStyle(fontSize: 11)),
                         value: autoSubmitOnTimeout,
                         onChanged: (v) => setSheetState(() => autoSubmitOnTimeout = v),
                       ),
@@ -485,7 +487,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       }
                     },
                     icon: const Icon(Icons.verified_user_outlined),
-                    label: const Text('Phát hành đề thi giám sát 10s'),
+                    label: Text('Phát hành đề thi giám sát ${graceSeconds}s'),
                   ),
                 ),
               ],
@@ -685,57 +687,81 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
           title: const Text('Thêm học sinh vào lớp'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (studentUsers.isNotEmpty) ...[
-                  const Text('Chọn nhanh học sinh đã đăng ký:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Danh sách học sinh', border: OutlineInputBorder(), isDense: true),
-                    items: studentUsers
-                        .map(
-                          (u) => DropdownMenuItem(
-                            value: u['email'].toString(),
-                            child: Text(
-                              '${u['display_name'] ?? u['displayName'] ?? u['email']} (${u['email']})',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (v) {
-                      if (v != null) {
-                        final found = studentUsers.where((u) => u['email'] == v).firstOrNull;
-                        if (found != null) {
-                          setDlgState(() {
-                            nameCtrl.text = (found['display_name'] ?? found['displayName'] ?? '').toString();
-                            emailCtrl.text = v;
-                          });
+          content: SizedBox(
+            width: MediaQuery.of(ctx).size.width.clamp(280.0, 380.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (studentUsers.isNotEmpty) ...[
+                    const Text('Chọn nhanh học sinh đã đăng ký:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Danh sách học sinh',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
+                      selectedItemBuilder: (context) {
+                        return studentUsers.map((u) {
+                          final name = (u['display_name'] ?? u['displayName'] ?? u['email'] ?? '').toString();
+                          final email = (u['email'] ?? '').toString();
+                          return Text(
+                            '$name ($email)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13),
+                          );
+                        }).toList();
+                      },
+                      items: studentUsers
+                          .map(
+                            (u) {
+                              final name = (u['display_name'] ?? u['displayName'] ?? u['email'] ?? '').toString();
+                              final email = (u['email'] ?? '').toString();
+                              return DropdownMenuItem(
+                                value: email,
+                                child: Text(
+                                  '$name ($email)',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              );
+                            },
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) {
+                          final found = studentUsers.where((u) => u['email'] == v).firstOrNull;
+                          if (found != null) {
+                            setDlgState(() {
+                              nameCtrl.text = (found['display_name'] ?? found['displayName'] ?? '').toString();
+                              emailCtrl.text = v;
+                            });
+                          }
                         }
-                      }
-                    },
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('hoặc nhập mới', style: TextStyle(fontSize: 11, color: Colors.grey))), Expanded(child: Divider())]),
+                    const SizedBox(height: 10),
+                  ],
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(labelText: 'Họ và tên học sinh', border: OutlineInputBorder(), isDense: true),
                   ),
-                  const SizedBox(height: 12),
-                  const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('hoặc nhập mới', style: TextStyle(fontSize: 11, color: Colors.grey))), Expanded(child: Divider())]),
                   const SizedBox(height: 10),
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(labelText: 'Email học sinh', border: OutlineInputBorder(), isDense: true),
+                  ),
                 ],
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Họ và tên học sinh', border: OutlineInputBorder(), isDense: true),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email học sinh', border: OutlineInputBorder(), isDense: true),
-                ),
-              ],
+              ),
             ),
           ),
           actions: [

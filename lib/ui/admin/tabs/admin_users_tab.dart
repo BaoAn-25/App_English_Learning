@@ -1309,26 +1309,34 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
           title: Text('Xếp "$studentName" vào lớp'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Chọn lớp học để thêm học sinh này:', style: TextStyle(fontSize: 13, color: Colors.black54)),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedClassId,
-                decoration: const InputDecoration(labelText: 'Lớp học', border: OutlineInputBorder()),
-                items: classes
-                    .map((c) => DropdownMenuItem(
-                          value: c['id'].toString(),
-                          child: Text('${c['name']} (Mã: ${c['code']})'),
-                        ))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setDlgState(() => selectedClassId = v);
-                },
-              ),
-            ],
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Chọn lớp học để thêm học sinh này:', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: selectedClassId,
+                  decoration: const InputDecoration(labelText: 'Lớp học', border: OutlineInputBorder()),
+                  items: classes
+                      .map((c) => DropdownMenuItem(
+                            value: c['id'].toString(),
+                            child: Text(
+                              '${c['name']} (Mã: ${c['code']})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setDlgState(() => selectedClassId = v);
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),

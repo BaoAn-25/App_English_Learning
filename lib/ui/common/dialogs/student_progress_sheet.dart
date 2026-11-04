@@ -4,6 +4,7 @@ import '../../../data/app_repository.dart';
 import '../../../data/models/learning_session.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../../../data/trial_lesson_repository.dart';
+import '../../settings/notification_service.dart';
 
 /// Đại diện trạng thái của một phần học (Section) trong Unit SGK 12
 class SectionProgressInfo {
@@ -111,6 +112,9 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
   double _readingPercent = 0.0;
   double _grammarPercent = 0.0;
   double _listeningPercent = 0.0;
+
+  int? _cloudStreak;
+  double? _cloudAvgScore;
 
   // Bộ lọc danh sách Unit: 'all' | 'in_progress' | 'completed' | 'not_started'
   String _unitFilter = 'all';
@@ -252,6 +256,25 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
     // Xác định ownerId hiệu lực trong SQLite
     _effectiveOwnerId = rawId.isNotEmpty ? rawId : rawEmail;
 
+    // 0. Thử đồng bộ tiến độ thực tế từ Cloud Render
+    Map<String, dynamic>? cloudProgress;
+    try {
+      final queryKey = rawEmail.isNotEmpty ? rawEmail : rawId;
+      cloudProgress = await _service.getStudentCloudProgress(queryKey);
+    } catch (_) {}
+
+    final cloudSections = <String, String>{};
+    if (cloudProgress?['completedSections'] is List) {
+      _cloudStreak = (cloudProgress?['streakDays'] as num?)?.toInt();
+      _cloudAvgScore = (cloudProgress?['avgScore'] as num?)?.toDouble();
+      for (final cs in (cloudProgress!['completedSections'] as List)) {
+        final uNum = cs['unit_number'];
+        final sName = cs['section_name'];
+        final st = cs['status'] ?? 'completed';
+        cloudSections['u${uNum}_$sName'] = st.toString();
+      }
+    }
+
     // 1. Tìm phiên học gần nhất
     LearningSession? session = await _repo.getLearningSession(_effectiveOwnerId);
     if (session == null && rawEmail.isNotEmpty && rawEmail != _effectiveOwnerId) {
@@ -295,9 +318,11 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
         bool isInProg = false;
         String? note;
 
+        final isCloudDone = cloudSections['u${unitNum}_$secKey'] == 'completed';
+
         if (secKey == 'reading') {
           final p = await _repo.getSetting('unit_section_progress_${_effectiveOwnerId}_u${unitNum}_$secKey');
-          if (p == 'completed' || (readingSession != null && readingSession.isCompleted)) {
+          if (isCloudDone || p == 'completed' || (readingSession != null && readingSession.isCompleted)) {
             isDone = true;
             totalCompletedReading++;
           } else if (readingSession != null && readingSession.isInProgress) {
@@ -306,7 +331,7 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
           }
         } else {
           final p = await _repo.getSetting('unit_section_progress_${_effectiveOwnerId}_u${unitNum}_$secKey');
-          if (p == 'completed') {
+          if (isCloudDone || p == 'completed') {
             isDone = true;
             if (secKey == 'language') totalCompletedLanguage++;
             if (secKey == 'listening') totalCompletedListening++;
@@ -442,26 +467,34 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
           title: Text('Xếp "$studentName" vào lớp'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Chọn lớp học để thêm học sinh này:', style: TextStyle(fontSize: 13, color: Colors.black54)),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedClassId,
-                decoration: const InputDecoration(labelText: 'Lớp học', border: OutlineInputBorder()),
-                items: _allClasses
-                    .map((c) => DropdownMenuItem(
-                          value: c['id'].toString(),
-                          child: Text('${c['name']} (${c['code']})'),
-                        ))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setDlgState(() => selectedClassId = v);
-                },
-              ),
-            ],
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Chọn lớp học để thêm học sinh này:', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: selectedClassId,
+                  decoration: const InputDecoration(labelText: 'Lớp học', border: OutlineInputBorder()),
+                  items: _allClasses
+                      .map((c) => DropdownMenuItem(
+                            value: c['id'].toString(),
+                            child: Text(
+                              '${c['name']} (${c['code']})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setDlgState(() => selectedClassId = v);
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
@@ -497,8 +530,8 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
     final s = widget.student;
     final name = (s['studentName'] ?? s['display_name'] ?? s['displayName'] ?? s['email']?.toString().split('@').first ?? 'Học sinh').toString();
     final email = (s['studentEmail'] ?? s['email'] ?? '').toString();
-    final streak = (s['streakDays'] ?? s['streak_days'] as num?)?.toInt() ?? 5;
-    final avgScore = (s['avgScore'] ?? s['avg_score'] as num?)?.toDouble() ?? 7.5;
+    final streak = _cloudStreak ?? (s['streakDays'] ?? s['streak_days'] as num?)?.toInt() ?? 0;
+    final avgScore = _cloudAvgScore ?? (s['avgScore'] ?? s['avg_score'] as num?)?.toDouble() ?? 0.0;
     final overdue = (s['overdueCount'] ?? s['overdue_count'] as num?)?.toInt() ?? 0;
     final className = widget.currentClassName ?? s['className']?.toString() ?? s['class_name']?.toString() ?? 'Chưa phân lớp';
 
@@ -589,6 +622,19 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, size: 20),
+                tooltip: 'Làm mới từ Cloud',
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  await _loadAllData();
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('Đã cập nhật tiến độ học tập mới nhất!'), duration: Duration(seconds: 1)),
+                    );
+                  }
+                },
               ),
               IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
             ],
@@ -766,11 +812,31 @@ class _StudentProgressSheetState extends State<StudentProgressSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Đã gửi thông báo nhắc nhở học tập đến $name!')),
+                    // Bắn notification thật lên thanh trạng thái điện thoại
+                    final notifId = DateTime.now().millisecondsSinceEpoch % 100000 + 3000;
+                    await NotificationService().showInstantNotification(
+                      id: notifId,
+                      title: '🔔 Nhắc học tập từ Giáo viên',
+                      body: 'Thầy/Cô vừa nhắc nhở bạn $name: Hãy vào hoàn thành bài học và duy trì chuỗi Streak hôm nay nhé!',
                     );
+
+                    await RbacProctorAiService.instance.recordAuditLog(
+                      action: 'SEND_STUDENT_REMINDER',
+                      targetType: 'student',
+                      targetId: email,
+                      details: 'Giáo viên gửi thông báo nhắc nhở học tập đến $name ($email)',
+                    );
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Đã gửi thông báo nhắc nhở học tập đến $name (Đã đẩy Notification)!'),
+                          backgroundColor: const Color(0xFF1B5E20),
+                        ),
+                      );
+                    }
                   },
                   icon: const Icon(Icons.notifications_active_outlined, size: 18),
                   label: const Text('Nhắc học tập'),

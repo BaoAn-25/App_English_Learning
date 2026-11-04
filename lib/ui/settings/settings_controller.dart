@@ -40,13 +40,20 @@ class SettingsController extends ChangeNotifier {
   double? _targetScore;
   int _dailyGoal = 20;
 
-  // Trạng thái thông báo nhắc nhở
+  // Trạng thái thông báo nhắc nhở & Trung tâm thông báo dự án
   bool _reminderEnabled = false; // Mong muốn của người dùng
   TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
   bool _hasNotificationPermission = true; // Trạng thái quyền thực tế của hệ điều hành
   bool _isReminderScheduled = false; // Lịch có đang chờ trên hệ thống hay không
   bool _isProcessingReminder = false; // Khóa chống thao tác chồng nhau (race condition)
   String? _reminderStatusMessage; // Thông báo trạng thái/lỗi phản ánh trung thực
+
+  // Các kênh thông báo phân nhóm dự án
+  bool _notifyAnnouncements = true; // Thông báo chung & bảo trì từ nhà trường/hệ thống
+  bool _notifyAssignments = true; // Bài tập, bài thi mới & nhắc hạn chót
+  bool _notifyStreak = true; // Cảnh báo nguy cơ mất chuỗi streak
+  bool _notifyLeaderboard = true; // Xếp hạng, vinh danh & thăng hạng
+  bool _soundEnabled = true; // Hiệu ứng âm thanh thông báo
 
   // Trạng thái đồng bộ (Offline-first: lưu trên thiết bị)
   SyncState _syncState = SyncState.offline;
@@ -66,6 +73,11 @@ class SettingsController extends ChangeNotifier {
   bool get isReminderScheduled => _isReminderScheduled;
   bool get isProcessingReminder => _isProcessingReminder;
   String? get reminderStatusMessage => _reminderStatusMessage;
+  bool get notifyAnnouncements => _notifyAnnouncements;
+  bool get notifyAssignments => _notifyAssignments;
+  bool get notifyStreak => _notifyStreak;
+  bool get notifyLeaderboard => _notifyLeaderboard;
+  bool get soundEnabled => _soundEnabled;
   SyncState get syncState => _syncState;
   DateTime? get lastSyncedAt => _lastSyncedAt;
   bool get hasPendingSync => _hasPendingSync;
@@ -132,6 +144,22 @@ class SettingsController extends ChangeNotifier {
           minute: int.tryParse(parts[1]) ?? 0,
         );
       }
+
+      // Tải các cài đặt thông báo phân nhóm dự án
+      final savedAnnouncements = await _repository.getSetting('notify_announcements');
+      if (savedAnnouncements != null) _notifyAnnouncements = savedAnnouncements == 'true';
+
+      final savedAssignments = await _repository.getSetting('notify_assignments');
+      if (savedAssignments != null) _notifyAssignments = savedAssignments == 'true';
+
+      final savedStreak = await _repository.getSetting('notify_streak');
+      if (savedStreak != null) _notifyStreak = savedStreak == 'true';
+
+      final savedLeaderboard = await _repository.getSetting('notify_leaderboard');
+      if (savedLeaderboard != null) _notifyLeaderboard = savedLeaderboard == 'true';
+
+      final savedSound = await _repository.getSetting('sound_enabled');
+      if (savedSound != null) _soundEnabled = savedSound == 'true';
 
       final savedLastSync = await _repository.getSetting('last_synced_at');
       if (savedLastSync != null) {
@@ -215,6 +243,65 @@ class SettingsController extends ChangeNotifier {
 
     // 2. Kích hoạt đồng bộ nền nếu có mạng
     await _syncInBackground();
+  }
+
+  /// Cập nhật ảnh đại diện (Avatar): Lưu local và đồng bộ lên server nếu đã đăng nhập
+  Future<bool> updateAvatar(String newAvatarUrl) async {
+    try {
+      final auth = AuthController.instance;
+      auth.updateProfile(auth.user.copyWith(avatarUrl: newAvatarUrl));
+
+      await _repository.setSetting('user_avatar_url', newAvatarUrl);
+      await _repository.setSetting('has_pending_sync', 'true');
+
+      if (auth.isAuthenticated && !auth.user.isGuest) {
+        final token = await _repository.getAuthToken();
+        final client = ApiClient(tokenProvider: () => token);
+        await client.updateProfile({
+          'avatarUrl': newAvatarUrl,
+        });
+      }
+      _notifyIfActive();
+      return true;
+    } catch (_) {
+      _notifyIfActive();
+      return false;
+    }
+  }
+
+  /// Bật / tắt thông báo chung từ hệ thống & nhà trường
+  Future<void> toggleNotifyAnnouncements(bool val) async {
+    _notifyAnnouncements = val;
+    await _repository.setSetting('notify_announcements', val.toString());
+    _notifyIfActive();
+  }
+
+  /// Bật / tắt thông báo bài tập & hạn thi mới
+  Future<void> toggleNotifyAssignments(bool val) async {
+    _notifyAssignments = val;
+    await _repository.setSetting('notify_assignments', val.toString());
+    _notifyIfActive();
+  }
+
+  /// Bật / tắt cảnh báo duy trì chuỗi Streak
+  Future<void> toggleNotifyStreak(bool val) async {
+    _notifyStreak = val;
+    await _repository.setSetting('notify_streak', val.toString());
+    _notifyIfActive();
+  }
+
+  /// Bật / tắt thông báo bảng xếp hạng & thăng hạng
+  Future<void> toggleNotifyLeaderboard(bool val) async {
+    _notifyLeaderboard = val;
+    await _repository.setSetting('notify_leaderboard', val.toString());
+    _notifyIfActive();
+  }
+
+  /// Bật / tắt âm thanh thông báo
+  Future<void> toggleSoundEnabled(bool val) async {
+    _soundEnabled = val;
+    await _repository.setSetting('sound_enabled', val.toString());
+    _notifyIfActive();
   }
 
   /// Cập nhật mục tiêu luyện tập mỗi ngày (10 / 20 / 30 / 45 phút)
