@@ -5,6 +5,7 @@ import '../../../data/app_repository.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../components/admin_kpi_card.dart';
 import '../components/class_code_dialog.dart';
+import '../../common/dialogs/student_progress_sheet.dart';
 
 /// Tab 4: Quản lý Lớp học, Giám sát Phòng thi 10s Live & Thông báo Hệ thống
 class AdminProctorTab extends StatefulWidget {
@@ -201,6 +202,498 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
         await _loadData();
         return anotherCode;
       },
+    );
+  }
+
+  void _showCreateSupervisedExamModal() {
+    final titleCtrl = TextEditingController(text: 'Kỳ thi Giám sát Khối 12: Đề Ôn tập Trọng điểm');
+    String selectedClassId = _classes.isNotEmpty ? _classes.first['id'].toString() : '';
+    String selectedClassName = _classes.isNotEmpty ? _classes.first['name'].toString() : 'Toàn trường';
+    int durationMinutes = 45;
+    int maxAttempts = 1;
+    int graceSeconds = 10;
+    bool autoSubmitOnTimeout = true;
+    bool shuffleQuestions = true;
+    int unitForExam = 1;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.shield_outlined, color: Color(0xFF1E3A8A)),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Admin: Tạo bài thi có giám sát 10s',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Tên bài thi kiểm tra',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (_classes.isNotEmpty)
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedClassId,
+                    decoration: const InputDecoration(
+                      labelText: 'Giao cho lớp học',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem(value: 'ALL', child: Text('Tất cả các lớp (Toàn trường)')),
+                      ..._classes.map(
+                        (c) => DropdownMenuItem(
+                          value: c['id'].toString(),
+                          child: Text('Lớp ${c['name']} (Mã: ${c['code']})'),
+                        ),
+                      ),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        final found = _classes.where((c) => c['id'].toString() == v).firstOrNull;
+                        setSheetState(() {
+                          selectedClassId = v;
+                          selectedClassName = v == 'ALL' ? 'Toàn trường' : (found?['name']?.toString() ?? '12A1');
+                        });
+                      }
+                    },
+                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: durationMinutes,
+                        decoration: const InputDecoration(labelText: 'Thời gian làm bài', border: OutlineInputBorder()),
+                        items: const [
+                          DropdownMenuItem(value: 15, child: Text('15 phút')),
+                          DropdownMenuItem(value: 30, child: Text('30 phút')),
+                          DropdownMenuItem(value: 45, child: Text('45 phút')),
+                          DropdownMenuItem(value: 60, child: Text('60 phút')),
+                        ],
+                        onChanged: (v) => setSheetState(() => durationMinutes = v ?? 45),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: maxAttempts,
+                        decoration: const InputDecoration(labelText: 'Số lần làm', border: OutlineInputBorder()),
+                        items: const [
+                          DropdownMenuItem(value: 1, child: Text('1 lần')),
+                          DropdownMenuItem(value: 2, child: Text('2 lần')),
+                        ],
+                        onChanged: (v) => setSheetState(() => maxAttempts = v ?? 1),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: unitForExam,
+                  decoration: const InputDecoration(
+                    labelText: 'Trích xuất đề từ Ngân hàng SGK 12',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: List.generate(
+                    10,
+                    (i) => DropdownMenuItem(value: i + 1, child: Text('Unit ${i + 1} (SGK Global Success 12)')),
+                  ),
+                  onChanged: (v) => setSheetState(() => unitForExam = v ?? 1),
+                ),
+                const SizedBox(height: 14),
+
+                // Khối Chống gian lận
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Quy chế giám sát chống gian lận (10s Live Proctoring)',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E3A8A)),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Thời gian cho phép quay lại khi rời ứng dụng:',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          for (final sec in [5, 10, 15, 20])
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                child: ChoiceChip(
+                                  label: Text('$sec s'),
+                                  selected: graceSeconds == sec,
+                                  onSelected: (_) => setSheetState(() => graceSeconds = sec),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Tự nộp và tính điểm khi quá 10 giây', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        subtitle: const Text('Tự thu bài và ghi nhận log vi phạm', style: TextStyle(fontSize: 11)),
+                        value: autoSubmitOnTimeout,
+                        onChanged: (v) => setSheetState(() => autoSubmitOnTimeout = v),
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Xáo trộn thứ tự câu và đáp án', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        value: shuffleQuestions,
+                        onChanged: (v) => setSheetState(() => shuffleQuestions = v),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+                    onPressed: () async {
+                      if (titleCtrl.text.trim().isEmpty) return;
+                      Navigator.pop(ctx);
+                      final qs = await _service.generateQuestionsWithAi(
+                        unitNumber: unitForExam,
+                        skill: 'grammar',
+                        difficulty: 2,
+                        count: 10,
+                        topicPrompt: titleCtrl.text.trim(),
+                      );
+                      final created = await _service.saveSupervisedExam(
+                        title: titleCtrl.text.trim(),
+                        description: 'Kỳ thi do Admin phát hành: $selectedClassName (Ân hạn rời app: $graceSeconds giây)',
+                        classId: selectedClassId,
+                        className: selectedClassName,
+                        durationMinutes: durationMinutes,
+                        deadlineAt: DateTime.now().add(const Duration(days: 7)),
+                        graceSeconds: graceSeconds,
+                        maxViolations: 2,
+                        maxAttempts: maxAttempts,
+                        shuffleQuestions: shuffleQuestions,
+                        violationAction: autoSubmitOnTimeout ? 'force_submit' : 'invalidate',
+                        questions: qs,
+                      );
+                      await _loadData();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Admin đã phát hành bài thi giám sát "${created.title}"!'),
+                            backgroundColor: const Color(0xFF1B5E20),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.verified_user_outlined),
+                    label: const Text('Phát hành đề thi giám sát 10s'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showClassMembersModal(Map<String, dynamic> cls) async {
+    final classId = cls['id'].toString();
+    final className = (cls['name'] ?? 'Lớp học').toString();
+    List<Map<String, dynamic>> members = await _service.getClassMembers(classId);
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final approvedList = members.where((m) => m['status'] != 'pending').toList();
+          final pendingList = members.where((m) => m['status'] == 'pending').toList();
+
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.85,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.groups_rounded, color: Color(0xFF1E3A8A)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Lớp $className', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text('Giáo viên: ${cls['teacherName'] ?? "Chưa có GV"} • Mã: ${cls['code']}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        ],
+                      ),
+                    ),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // Nút thêm học sinh vào lớp
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+                    onPressed: () => _showAddStudentToClassDialog(classId, () async {
+                      final updated = await _service.getClassMembers(classId);
+                      setSheetState(() => members = updated);
+                      _loadData();
+                    }),
+                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                    label: const Text('Thêm học sinh vào lớp này'),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                if (pendingList.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[50],
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.amber[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.hourglass_top_rounded, size: 16, color: Colors.amber),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text('Có ${pendingList.length} yêu cầu vào lớp cần duyệt', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: pendingList.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 6),
+                    itemBuilder: (ctx, idx) {
+                      final p = pendingList[idx];
+                      return ListTile(
+                        dense: true,
+                        tileColor: Colors.amber[50]?.withValues(alpha: 0.5),
+                        title: Text(p['studentName']?.toString() ?? 'Học sinh', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(p['studentEmail']?.toString() ?? ''),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.check_circle, color: Colors.green),
+                              onPressed: () async {
+                                await _service.decideClassMember(classId: classId, memberId: p['id'].toString(), status: 'approved');
+                                final updated = await _service.getClassMembers(classId);
+                                setSheetState(() => members = updated);
+                                _loadData();
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.cancel, color: Colors.red),
+                              onPressed: () async {
+                                await _service.decideClassMember(classId: classId, memberId: p['id'].toString(), status: 'rejected');
+                                final updated = await _service.getClassMembers(classId);
+                                setSheetState(() => members = updated);
+                                _loadData();
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 20),
+                ],
+
+                Text('Danh sách học sinh chính thức (${approvedList.length}):', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 8),
+
+                Expanded(
+                  child: approvedList.isEmpty
+                      ? Center(
+                          child: Text('Lớp này chưa có học sinh nào.\nBấm nút phía trên để thêm học sinh!', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500])),
+                        )
+                      : ListView.separated(
+                          itemCount: approvedList.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 8),
+                          itemBuilder: (ctx, idx) {
+                            final m = approvedList[idx];
+                            final name = (m['studentName'] ?? 'Học sinh').toString();
+                            final email = (m['studentEmail'] ?? '').toString();
+                            final streak = (m['streakDays'] as num?)?.toInt() ?? 0;
+                            final avg = (m['avgScore'] as num?)?.toDouble() ?? 0.0;
+
+                            return ListTile(
+                              tileColor: Colors.grey[50],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
+                                child: Text(name.isNotEmpty ? name[0].toUpperCase() : 'H', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+                              ),
+                              title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              subtitle: Text('$email • Streak: $streak ngày • Điểm: ${avg.toStringAsFixed(1)}', style: const TextStyle(fontSize: 11)),
+                              trailing: IconButton(
+                                tooltip: 'Xem tiến độ học tập',
+                                icon: const Icon(Icons.insights_rounded, color: Color(0xFF1E3A8A), size: 20),
+                                onPressed: () {
+                                  StudentProgressSheet.show(ctx, student: m, currentClassName: className, onUpdated: () async {
+                                    final updated = await _service.getClassMembers(classId);
+                                    setSheetState(() => members = updated);
+                                  });
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showAddStudentToClassDialog(String classId, VoidCallback onAdded) async {
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+
+    // Lấy danh sách học sinh toàn hệ thống để Admin chọn nhanh nếu muốn
+    final allUsers = await _service.getAdminUsers();
+    final studentUsers = allUsers.where((u) => u['role'] == 'student').toList();
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: const Text('Thêm học sinh vào lớp'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (studentUsers.isNotEmpty) ...[
+                  const Text('Chọn nhanh học sinh đã đăng ký:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: 'Danh sách học sinh', border: OutlineInputBorder(), isDense: true),
+                    items: studentUsers
+                        .map(
+                          (u) => DropdownMenuItem(
+                            value: u['email'].toString(),
+                            child: Text('${u['display_name'] ?? u['displayName'] ?? u['email']} (${u['email']})', overflow: TextOverflow.ellipsis),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        final found = studentUsers.where((u) => u['email'] == v).firstOrNull;
+                        if (found != null) {
+                          setDlgState(() {
+                            nameCtrl.text = (found['display_name'] ?? found['displayName'] ?? '').toString();
+                            emailCtrl.text = v;
+                          });
+                        }
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('hoặc nhập mới', style: TextStyle(fontSize: 11, color: Colors.grey))), Expanded(child: Divider())]),
+                  const SizedBox(height: 10),
+                ],
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Họ và tên học sinh', border: OutlineInputBorder(), isDense: true),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email học sinh', border: OutlineInputBorder(), isDense: true),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) return;
+                Navigator.pop(ctx);
+                await _service.addStudentToClass(
+                  classId: classId,
+                  studentName: nameCtrl.text.trim(),
+                  studentEmail: emailCtrl.text.trim(),
+                );
+                onAdded();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Đã thêm học sinh "${nameCtrl.text.trim()}" vào lớp thành công!'), backgroundColor: Colors.green[800]),
+                  );
+                }
+              },
+              child: const Text('Thêm vào lớp'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -650,14 +1143,26 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Danh sách lớp học:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                FilledButton.icon(
-                  onPressed: _showAddClassModal,
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Thêm lớp'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E3A8A),
-                    visualDensity: VisualDensity.compact,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: _showCreateSupervisedExamModal,
+                      icon: const Icon(Icons.shield_outlined, size: 16),
+                      label: const Text('Tạo thi 10s'),
+                      style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      onPressed: _showAddClassModal,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Thêm lớp'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E3A8A),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -670,16 +1175,21 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
               itemBuilder: (ctx, idx) {
                 final c = _classes[idx];
                 final needsTeacher = c['status'] == 'needs_teacher';
-                return Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: needsTeacher ? Colors.orange[300]! : Colors.grey[200]!,
-                    ),
-                  ),
-                  child: Column(
+                    onTap: () => _showClassMembersModal(c),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: needsTeacher ? Colors.orange[300]! : Colors.grey[200]!,
+                        ),
+                      ),
+                      child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
@@ -731,11 +1241,18 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         children: [
                           OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+                            onPressed: () => _showClassMembersModal(c),
+                            icon: const Icon(Icons.group_outlined, size: 14),
+                            label: const Text('Học sinh'),
+                          ),
+                          const SizedBox(width: 6),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
                             onPressed: () => _showAssignTeacherModal(c),
                             icon: const Icon(Icons.person_add_alt, size: 14),
-                            label: Text(needsTeacher ? 'Gán giáo viên' : 'Đổi giáo viên'),
+                            label: Text(needsTeacher ? 'Gán GV' : 'Đổi GV'),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
                             onPressed: () => _handleRegenerateClassCode(c),
@@ -746,9 +1263,11 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+            );
+          },
+        ),
           ],
         ),
       ),
@@ -784,9 +1303,23 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Các kỳ thi có giám sát trong hệ thống:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Kỳ thi giám sát hệ thống:',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                FilledButton.icon(
+                  onPressed: _showCreateSupervisedExamModal,
+                  icon: const Icon(Icons.shield_outlined, size: 15),
+                  label: const Text('Tạo thi 10s', style: TextStyle(fontSize: 12.5)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E3A8A),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 10),
             if (_exams.isEmpty)

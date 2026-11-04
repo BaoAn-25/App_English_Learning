@@ -4,6 +4,7 @@ import '../../../data/app_repository.dart';
 import '../../../data/models/user_profile.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../components/admin_kpi_card.dart';
+import '../../common/dialogs/student_progress_sheet.dart';
 
 /// Tab 3: Quản lý Người dùng, Phân quyền RBAC & Duyệt hồ sơ Giáo viên
 class AdminUsersTab extends StatefulWidget {
@@ -882,16 +883,25 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       roleName = 'Giáo viên';
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isLocked ? Colors.red[50]?.withValues(alpha: 0.5) : Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isLocked ? Colors.red[200]! : Colors.grey[200]!,
-        ),
-      ),
-      child: Row(
+        onTap: () {
+          if (role == 'student') {
+            _showStudentProgress(user);
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isLocked ? Colors.red[50]?.withValues(alpha: 0.5) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isLocked ? Colors.red[200]! : Colors.grey[200]!,
+            ),
+          ),
+          child: Row(
         children: [
           CircleAvatar(
             radius: 20,
@@ -968,7 +978,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.grey),
             onSelected: (action) {
-              if (action == 'role') {
+              if (action == 'progress') {
+                _showStudentProgress(user);
+              } else if (action == 'assign_class') {
+                _showAssignStudentToClassDialog(user);
+              } else if (action == 'role') {
                 _showChangeRoleDialog(user);
               } else if (action == 'lock') {
                 _showLockUserDialog(user);
@@ -979,6 +993,28 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               }
             },
             itemBuilder: (ctx) => [
+              if (role == 'student') ...[
+                const PopupMenuItem(
+                  value: 'progress',
+                  child: Row(
+                    children: [
+                      Icon(Icons.insights_rounded, size: 18, color: Color(0xFF1E3A8A)),
+                      SizedBox(width: 8),
+                      Text('Tiến độ học tập'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'assign_class',
+                  child: Row(
+                    children: [
+                      Icon(Icons.school_outlined, size: 18, color: Color(0xFF059669)),
+                      SizedBox(width: 8),
+                      Text('Xếp vào lớp'),
+                    ],
+                  ),
+                ),
+              ],
               if (!isSuperAdmin) ...[
                 const PopupMenuItem(
                   value: 'role',
@@ -1032,6 +1068,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           ),
         ],
       ),
+        ),
+      ),
     );
   }
 
@@ -1061,6 +1099,84 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
             child: const Text('Xóa'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showStudentProgress(Map<String, dynamic> user) {
+    StudentProgressSheet.show(
+      context,
+      student: user,
+      onUpdated: _loadData,
+    );
+  }
+
+  void _showAssignStudentToClassDialog(Map<String, dynamic> user) async {
+    final classes = await _service.getClasses();
+    if (!mounted) return;
+
+    if (classes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Hệ thống chưa có lớp học nào. Hãy tạo lớp trước!')),
+      );
+      return;
+    }
+
+    String selectedClassId = classes.first['id'].toString();
+    final studentName = (user['display_name'] ?? user['displayName'] ?? user['email']?.toString().split('@').first ?? 'Học sinh').toString();
+    final studentEmail = (user['email'] ?? '').toString();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: Text('Xếp "$studentName" vào lớp'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Chọn lớp học để thêm học sinh này:', style: TextStyle(fontSize: 13, color: Colors.black54)),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: selectedClassId,
+                decoration: const InputDecoration(labelText: 'Lớp học', border: OutlineInputBorder()),
+                items: classes
+                    .map((c) => DropdownMenuItem(
+                          value: c['id'].toString(),
+                          child: Text('${c['name']} (Mã: ${c['code']})'),
+                        ))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setDlgState(() => selectedClassId = v);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await _service.addStudentToClass(
+                  classId: selectedClassId,
+                  studentName: studentName,
+                  studentEmail: studentEmail,
+                );
+                await _loadData();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã thêm học sinh "$studentName" vào lớp thành công!'),
+                      backgroundColor: Colors.green[800],
+                    ),
+                  );
+                }
+              },
+              child: const Text('Xác nhận xếp lớp'),
+            ),
+          ],
+        ),
       ),
     );
   }

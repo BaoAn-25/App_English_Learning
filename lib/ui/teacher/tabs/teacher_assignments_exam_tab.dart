@@ -690,33 +690,100 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                 ),
               ),
 
-            Row(
-              children: [
-                ChoiceChip(
-                  label: const Text('Đang mở'),
-                  selected: _assignmentFilter == 'open',
-                  onSelected: (_) => setState(() => _assignmentFilter = 'open'),
-                ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  label: const Text('Đã đóng'),
-                  selected: _assignmentFilter == 'closed',
-                  onSelected: (_) => setState(() => _assignmentFilter = 'closed'),
-                ),
-                const Spacer(),
-                FilledButton.tonalIcon(
-                  onPressed: _showCreateSupervisedExamModal,
-                  icon: const Icon(Icons.shield_outlined, size: 16),
-                  label: const Text('Tạo thi 10s'),
-                ),
-                const SizedBox(width: 6),
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
-                  onPressed: _showCreateAssignmentModal,
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Giao bài'),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 430;
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          ChoiceChip(
+                            visualDensity: VisualDensity.compact,
+                            label: const Text('Đang mở'),
+                            selected: _assignmentFilter == 'open',
+                            onSelected: (_) => setState(() => _assignmentFilter = 'open'),
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            visualDensity: VisualDensity.compact,
+                            label: const Text('Đã đóng'),
+                            selected: _assignmentFilter == 'closed',
+                            onSelected: (_) => setState(() => _assignmentFilter = 'closed'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: _showCreateSupervisedExamModal,
+                              icon: const Icon(Icons.shield_outlined, size: 16),
+                              label: const Text('Tạo thi 10s', style: TextStyle(fontSize: 12.5)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF283593),
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: _showCreateAssignmentModal,
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Giao bài', style: TextStyle(fontSize: 12.5)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    ChoiceChip(
+                      visualDensity: VisualDensity.compact,
+                      label: const Text('Đang mở'),
+                      selected: _assignmentFilter == 'open',
+                      onSelected: (_) => setState(() => _assignmentFilter = 'open'),
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      visualDensity: VisualDensity.compact,
+                      label: const Text('Đã đóng'),
+                      selected: _assignmentFilter == 'closed',
+                      onSelected: (_) => setState(() => _assignmentFilter = 'closed'),
+                    ),
+                    const Spacer(),
+                    FilledButton.tonalIcon(
+                      style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                      onPressed: _showCreateSupervisedExamModal,
+                      icon: const Icon(Icons.shield_outlined, size: 16),
+                      label: const Text('Tạo thi 10s'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF283593),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: _showCreateAssignmentModal,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Giao bài'),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 14),
 
