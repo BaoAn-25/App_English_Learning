@@ -1084,6 +1084,11 @@ class AppDatabase {
     return maps.map(DailyStat.fromMap).toList();
   }
 
+  Future<DailyStat?> getDailyStat(String date, {String? ownerId}) async {
+    final list = await getDailyStatsInRange(date, date, ownerId: ownerId);
+    return list.isNotEmpty ? list.first : null;
+  }
+
   /// Lưu toàn bộ kết quả hoặc không lưu gì nếu có lỗi.
   /// Giữ cùng giao diện với luồng luyện tập/thi thử của nhóm.
   Future<void> savePracticeResult({

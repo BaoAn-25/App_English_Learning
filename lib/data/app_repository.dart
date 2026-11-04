@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'app_database.dart';
+import 'remote/api_client.dart';
 import 'models/attempt.dart';
 import 'models/attempt_answer.dart';
 import 'models/daily_stat.dart';
@@ -275,7 +277,24 @@ class AppRepository {
     final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
         ? ownerId
         : await getCurrentOwnerId();
-    return _db.upsertDailyStat(stat, ownerId: effectiveOwner);
+    await _db.upsertDailyStat(stat, ownerId: effectiveOwner);
+
+    // Tự động đồng bộ điểm XP và số câu đã làm lên máy chủ Render để ghi nhận vào Bảng xếp hạng chung
+    try {
+      final token = await getAuthToken();
+      if (token != null && token.isNotEmpty) {
+        final client = ApiClient(tokenProvider: () => token);
+        final todayStat = await _db.getDailyStat(stat.date, ownerId: effectiveOwner);
+        if (todayStat != null) {
+          unawaited(client.syncDailyStat(
+            statDate: todayStat.date,
+            questionsDone: todayStat.questionsDone,
+            correctCount: todayStat.correct,
+            xpEarned: todayStat.xp,
+          ));
+        }
+      }
+    } catch (_) {}
   }
 
   /// Ghi nhận điểm thưởng XP và thời gian học thực tế vào thống kê hằng ngày (Daily Stats)
