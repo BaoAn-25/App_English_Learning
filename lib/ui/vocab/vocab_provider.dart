@@ -66,7 +66,7 @@ class VocabProvider extends ChangeNotifier {
   // ── Load dữ liệu ──────────────────────────────────────────────────────────
   Future<void> loadTopics() async {
     _isLoading = true;
-    notifyListeners();
+    Future.microtask(() => notifyListeners());
     try {
       _topics = await _repo.getTopicsByGrade(12);
       final allProgress = await _repo.getAllWordProgress();
@@ -82,7 +82,7 @@ class VocabProvider extends ChangeNotifier {
   Future<void> loadWordsByTopic(String topicId) async {
     _isLoading = true;
     _selectedTopicId = topicId;
-    notifyListeners();
+    Future.microtask(() => notifyListeners());
     try {
       _words = await _repo.getWordsByTopicId(topicId);
     } catch (e) {
@@ -95,7 +95,7 @@ class VocabProvider extends ChangeNotifier {
 
   Future<void> loadDueWords() async {
     _isLoading = true;
-    notifyListeners();
+    Future.microtask(() => notifyListeners());
     try {
       final dueProgress = await _repo.getDueWordProgress();
       final dueIds = dueProgress.map((p) => p.wordId).toSet();

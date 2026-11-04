@@ -30,24 +30,27 @@ class _ReviewScreenState extends State<ReviewScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
         elevation: 0.5,
-        title: const Text(
+        title: Text(
           'Ôn tập & Tiến độ',
           style: TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w900,
             fontSize: 20,
-            color: Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
         ),
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF2563EB),
-          unselectedLabelColor: const Color(0xFF64748B),
+          unselectedLabelColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
           labelStyle: const TextStyle(
             fontFamily: 'BeVietnamPro',
             fontWeight: FontWeight.w800,

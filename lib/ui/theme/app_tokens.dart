@@ -1,21 +1,45 @@
 import 'package:flutter/material.dart';
 
-/// Design tokens quy định khoảng cách, bo góc, màu sắc palette chuẩn và đổ bóng.
-/// Dùng thống nhất trong toàn bộ ứng dụng để giao diện hài hòa, hiện đại.
+/// Design tokens quy định màu sắc chuẩn, khoảng cách, bo góc và đổ bóng.
+/// Được chiết xuất chính xác từ bộ nhận diện thương hiệu `assets/images/app_logo.png`:
+/// - Nền Navy thương hiệu: `#0F172A` / `#162846`
+/// - Điểm nhấn Vàng/Cam hổ phách: `#F59E36` (Streak, XP, badges)
+/// - Màu kem dịu mắt: `#FEEAC5` (Highlight, container, surfaces)
+/// - Nền sáng trung tính: `#F8FAFC` (dễ đọc sách lâu không mỏi mắt)
 class AppTokens {
   AppTokens._();
 
-  // Font family
+  // Font chữ chuẩn SGK
   static const String fontFamily = 'BeVietnamPro';
 
-  // Palette màu theo yêu cầu thiết kế
-  static const Color primary = Color(0xFF1E6FE8); // Xanh chủ đạo
-  static const Color accentYellow = Color(0xFFFFC53D); // Nhấn vàng (Streak, XP)
-  static const Color backgroundLight = Color(0xFFF3F8FF); // Nền sáng
-  static const Color textMain = Color(0xFF1F2A44); // Màu chữ chính
-  static const Color successGreen = Color(0xFF1FA971); // Màu thành công / đúng
-  static const Color errorRed = Color(0xFFE53935); // Màu báo lỗi / sai
-  static const Color cardShadowColor = Color(0x0D000000); // Bóng nhẹ tinh tế
+  // Palette màu sắc thương hiệu (Dựa theo logo EngPass)
+  static const Color navyDark = Color(0xFF0F172A); // Navy đen sâu
+  static const Color primary = Color(0xFF1E3A8A); // Navy chủ đạo (Action, Header)
+  static const Color primaryLight = Color(0xFF2563EB); // Navy sáng
+  static const Color accentYellow = Color(0xFFF59E36); // Vàng/Cam hổ phách (từ chi tiết logo)
+  static const Color accentCream = Color(0xFFFEEAC5); // Màu kem nhẹ (từ logo)
+  static const Color backgroundLight = Color(0xFFF8FAFC); // Nền sáng trung tính
+  static const Color surfaceWarm = Color(0xFFFFFDF8); // Nền thẻ kem ấm
+  static const Color textMain = Color(0xFF0F172A); // Màu chữ chính
+  static const Color textSecondary = Color(0xFF64748B); // Màu chữ phụ
+  static const Color successGreen = Color(0xFF16A34A); // Màu thành công / đúng
+  static const Color errorRed = Color(0xFFDC2626); // Màu báo lỗi / sai
+  static const Color borderLight = Color(0xFFE2E8F0); // Viền nhẹ
+  static const Color cardShadowColor = Color(0x0A0F172A); // Đổ bóng nhẹ tinh tế
+
+  // Semantic & Dark Mode aliases đồng bộ cho toàn bộ màn hình (Student / Teacher / Admin)
+  static const Color danger = errorRed;
+  static const Color success = successGreen;
+  static const Color warning = accentYellow;
+  static const Color background = backgroundLight;
+  static const Color darkBackground = Color(0xFF0B1120);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color darkSurface = Color(0xFF162032);
+  static const Color darkTextMain = Color(0xFFF8FAFC);
+  static const Color textSub = textSecondary;
+  static const Color darkTextSub = Color(0xFF94A3B8);
+  static const Color border = borderLight;
+  static const Color darkBorder = Color(0xFF1E293B);
 
   // Khoảng cách (Spacing)
   static const double space4 = 4.0;
@@ -26,7 +50,7 @@ class AppTokens {
   static const double space24 = 24.0;
   static const double space32 = 32.0;
 
-  // Bo góc (Radius lớn 16 - 24)
+  // Bo góc (Radius lớn 12 - 24)
   static const double radiusSmall = 12.0;
   static const double radiusMedium = 16.0;
   static const double radiusLarge = 20.0;
@@ -39,12 +63,12 @@ class AppTokens {
   // Kích thước tương tác tối thiểu theo chuẩn khả năng tiếp cận (Accessibility)
   static const double minTouchTargetSize = 48.0;
 
-  // Đổ bóng thẻ nhẹ nhàng (Soft card elevation)
+  // Đổ bóng thẻ mềm (Soft card elevation)
   static const List<BoxShadow> softCardShadow = [
     BoxShadow(
-      color: Color(0x0A1F2A44),
-      blurRadius: 16,
-      offset: Offset(0, 6),
+      color: Color(0x080F172A),
+      blurRadius: 14,
+      offset: Offset(0, 4),
       spreadRadius: 0,
     ),
   ];

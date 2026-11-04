@@ -5,8 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/app_repository.dart';
 import '../data/asset_seeder.dart';
 import '../data/question_sync_service.dart';
-import '../ui/auth/splash_screen.dart';
-import 'main_shell.dart';
+import '../data/remote/api_client.dart';
+import '../ui/auth/auth_controller.dart';
+import '../ui/auth/welcome_screen.dart';
+import 'role_routing_shell.dart';
 
 class AppStartup extends StatefulWidget {
   final Future<void> Function()? initialize;
@@ -39,15 +41,27 @@ class _AppStartupState extends State<AppStartup> {
       final initialize = widget.initialize;
       if (initialize != null) {
         await initialize();
+        if (widget.startWithOnboarding == null) {
+          _hasCompletedOnboarding = true;
+        }
       } else {
         final repository = context.read<AppRepository>();
+        await ApiClient.sanitizeOrMigrateApiUrl(repository);
         await AssetSeeder.seedIfEmpty();
         await AssetSeeder.syncVocabulary();
+        await AssetSeeder.syncInterestWords();
         await QuestionSyncService.syncQuestions(repository);
+        await AuthController.instance.restoreSession();
 
         try {
           final prefs = await SharedPreferences.getInstance();
-          _hasCompletedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
+          final savedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
+          final isLoggedInStudent = AuthController.instance.isAuthenticated &&
+              !AuthController.instance.user.isGuest;
+          _hasCompletedOnboarding = savedOnboarding || isLoggedInStudent;
+          if (isLoggedInStudent && !savedOnboarding) {
+            await prefs.setBool('has_completed_onboarding', true);
+          }
         } catch (_) {
           _hasCompletedOnboarding = true;
         }
@@ -70,21 +84,22 @@ class _AppStartupState extends State<AppStartup> {
     builder: (context, snapshot) {
       final loading = snapshot.connectionState != ConnectionState.done;
       if (!loading && !snapshot.hasError) {
-        // Trong môi trường flutter test tự động: trả về MainShell để thỏa mãn test contract
-        final isAutomatedTest = widget.initialize != null ||
-            WidgetsBinding.instance.runtimeType
-                .toString()
-                .contains('TestWidgetsFlutterBinding');
-
+        // Cơ chế điều hướng minh bạch:
+        // 1. Nếu có chỉ định rõ ràng qua startWithOnboarding
         if (widget.startWithOnboarding == true) {
-          return const SplashScreen();
+          return const WelcomeScreen();
+        }
+        if (widget.startWithOnboarding == false) {
+          return const RoleRoutingShell();
         }
 
-        if (isAutomatedTest || _hasCompletedOnboarding) {
-          return const MainShell();
+        // 2. Mặc định theo trạng thái người học thực tế đã hoàn thành Onboarding hay chưa
+        if (_hasCompletedOnboarding) {
+          return const RoleRoutingShell();
         }
-        // Khi người dùng chạy thật (flutter run): mở luồng Khách & Onboarding setup học thử
-        return const SplashScreen();
+
+        // Chưa hoàn thành onboarding -> vào thẳng màn hình chào mừng & học thử (Ảnh 1)
+        return const WelcomeScreen();
       }
       return Scaffold(
         body: SafeArea(

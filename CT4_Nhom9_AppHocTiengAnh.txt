@@ -1,0 +1,209 @@
+CT4 - NHÓM 9 - APP HỌC TIẾNG ANH
+DANH SÁCH CHỨC NĂNG ĐÃ TRIỂN KHAI TRONG MÃ NGUỒN
+
+Tên ứng dụng: EngPass
+Đề tài: Xây dựng ứng dụng hỗ trợ học tiếng Anh lớp 12 trên thiết bị di động.
+Ngày đối chiếu mã nguồn: 04/11/2026.
+
+PHẠM VI XÁC NHẬN
+Danh sách dưới đây ghi nhận các chức năng có giao diện và/hoặc logic xử lý trong mã nguồn hiện tại. Đây không phải biên bản nghiệm thu: chưa chạy thử ứng dụng, chưa kiểm thử API Render và database Neon trong lần rà soát này. Các chức năng cần mạng, cấu hình dịch vụ hoặc còn giới hạn được nêu riêng ở cuối tài liệu.
+
+I. CHỨC NĂNG CHUNG VÀ TÀI KHOẢN
+
+1. Khởi động và điều hướng ứng dụng
+- Chuẩn bị học liệu, nạp dữ liệu và khôi phục phiên đăng nhập.
+- Điều hướng tới màn hình chào mừng hoặc giao diện chính theo trạng thái sử dụng.
+- Có các giao diện điều hướng cho học viên, giáo viên và quản trị viên.
+
+2. Thiết lập mục tiêu học tập
+- Chọn mục tiêu điểm, ngày thi, thời lượng học và chủ đề quan tâm.
+- Thiết lập thời điểm nhắc học.
+- Lưu các lựa chọn để sử dụng trong giao diện và kế hoạch học tập.
+
+3. Đăng ký và đăng nhập
+- Đăng ký bằng tên, email và mật khẩu qua API.
+- Đăng nhập bằng email và mật khẩu; đăng xuất và khôi phục phiên.
+- Đăng nhập Google, lấy thông tin xác thực và gửi backend kiểm tra.
+- Gửi yêu cầu quên mật khẩu và đặt lại mật khẩu qua đường dẫn email.
+- Có xử lý xác minh email và gửi lại yêu cầu xác minh.
+- Backend có kiểm tra thông tin đăng nhập, giới hạn thử đăng nhập và trạng thái khóa tài khoản.
+
+4. Phân quyền sử dụng
+- Có các vai trò khách, học viên, giáo viên và quản trị viên.
+- Các API quản lý có kiểm tra xác thực và vai trò theo chức năng.
+- Có chế độ xem trước giao diện học viên trong phân hệ quản trị.
+
+II. CHỨC NĂNG DÀNH CHO KHÁCH HỌC THỬ
+
+5. Chọn và thực hiện bài học thử
+- Xem danh sách bài học thử theo Unit và chọn bài có nội dung sẵn sàng.
+- Đọc nội dung, xem từ vựng, sử dụng hỗ trợ tra cứu và trả lời câu hỏi.
+- Kiểm tra đáp án, xem phản hồi và kết quả tính từ câu trả lời.
+- Lưu trạng thái đang học và kết quả theo định danh phiên khách.
+- Có thông báo khi lưu kết quả thất bại và thao tác thử lưu lại.
+
+6. Tiếp tục sử dụng sau bài học đầu tiên
+- Có logic ghi nhận hoàn thành bài đầu tiên để mở tab Luyện đề và Ôn tập cho khách.
+- Quyền vào một tab không đồng nghĩa mọi tính năng bên trong đều được mở; từng chức năng có thể kiểm tra điều kiện riêng.
+
+7. Chuyển tiếp từ khách sang tài khoản
+- Luồng đăng ký mới có gọi xử lý chuyển dữ liệu học thử sang tài khoản.
+- Luồng đăng nhập tài khoản có sẵn kiểm tra dữ liệu khách cần gộp.
+- Có phương thức gộp dữ liệu khách vào tài khoản; cần kiểm thử việc chống trùng và bảo toàn dữ liệu trong các trường hợp lỗi.
+
+III. CHỨC NĂNG HỌC VÀ ÔN TẬP
+
+8. Học theo sách giáo khoa
+- Có danh sách Unit, trang chi tiết Unit và các phần Review của Tiếng Anh 12 Global Success.
+- Điều hướng tới các màn hình Getting Started, Language, Reading, Listening và các phần kỹ năng.
+- Có chức năng xem trang sách gốc để tham khảo, đối chiếu nội dung.
+- Có cơ chế lưu trạng thái hoặc tiến độ phần học theo người sở hữu.
+- Phạm vi hoạt động tương tác phụ thuộc học liệu của từng phần; danh sách này không xác nhận toàn bộ hoạt động của cả 10 Unit đã được số hóa đầy đủ.
+
+9. Reading và bài tập đọc hiểu
+- Hiển thị đoạn đọc, từ vựng và câu hỏi liên quan.
+- Chọn đáp án, kiểm tra kết quả, xem giải thích và đọc lại ngữ cảnh.
+- Ghi nhận bài làm, câu trả lời, thời gian và kết quả của phiên học.
+
+10. Listening và phát tài nguyên âm thanh
+- Có màn hình bài nghe theo Unit và hoạt động.
+- Phát âm thanh, thực hiện câu hỏi và lưu kết quả bài nghe.
+- Đã khai báo tài nguyên audio Listening, Reading và Vocabulary trong ứng dụng.
+- Có thành phần điều khiển phát âm thanh dùng chung.
+
+11. Speaking, Writing và các hoạt động mở
+- Có màn hình dùng cho các phần kỹ năng, Communication & Culture/CLIL và Looking Back & Project.
+- Có hướng dẫn, nội dung gợi ý và thành phần hỗ trợ bài làm theo phần được triển khai.
+- Cho phép nhập, lưu nháp và tải lại nội dung theo người dùng, Unit và phần học.
+- Có bộ đếm từ và danh sách tiêu chí tự kiểm tra trong màn hình kỹ năng.
+- Không đồng nghĩa đã có hệ thống tự động chấm chuyên sâu mọi bài nói, bài viết hoặc dự án.
+
+12. Học và ôn từ vựng
+- Xem chủ đề, danh sách từ, nghĩa, phiên âm và ví dụ theo dữ liệu hiện có.
+- Nghe đọc từ bằng chức năng phát âm thanh hoặc đọc văn bản.
+- Lưu từ vào dữ liệu ôn tập cá nhân.
+- Ôn bằng flashcard và thực hiện lượt ôn đến hạn theo cơ chế SRS.
+
+13. Trò chơi ghép thẻ từ vựng
+- Chọn phạm vi Unit và tạo bộ thẻ từ dữ liệu từ vựng.
+- Xáo trộn thẻ, chọn cặp từ và nghĩa, phản hồi đúng hoặc sai.
+- Theo dõi quá trình hoàn thành và lưu thành tích phiên chơi theo người dùng, phạm vi Unit.
+
+14. Luyện âm IPA và cặp âm
+- Xem các nhóm âm, ký hiệu IPA và từ ví dụ.
+- Nghe từ ví dụ bằng giọng đọc tổng hợp.
+- Thực hiện bài tập phân biệt cặp âm và cập nhật chỉ số luyện tập.
+- Chỉ số luyện âm hiện dựa trên hoạt động bài tập; không phải kết quả chấm phát âm chuyên sâu từ giọng nói.
+
+15. Học theo chủ đề sở thích
+- Xem danh sách chủ đề và từ/cụm từ tương ứng.
+- Hiển thị nghĩa, phiên âm và ví dụ theo dữ liệu chủ đề.
+- Nội dung này là nhóm bổ trợ, cần phân biệt với hoạt động nguyên bản trong SGK.
+
+16. Luyện tập và đề xuất hoạt động
+- Chọn và thực hiện câu hỏi luyện tập từ ngân hàng câu hỏi.
+- Có dịch vụ lựa chọn câu hỏi, lập kế hoạch và chẩn đoán theo dữ liệu kết quả.
+- Có màn hình xem lại bài làm và lịch sử luyện tập.
+- Đề xuất hiện được xử lý bằng thuật toán/quy tắc trong mã; không mặc định là mô hình AI đã huấn luyện.
+
+17. Thi thử và xem kết quả
+- Có giao diện chọn bài thi, thực hiện câu hỏi, nộp bài và xem kết quả.
+- Có bộ tạo đề, xử lý đáp án, phân tích kết quả và lịch sử thi thử.
+- Có API tiếp nhận kết quả bài thi.
+- Từ “mock exam” trong tên file chỉ bài thi thử, không tự nó có nghĩa dữ liệu người học giả.
+
+18. Sổ câu sai
+- Ghi nhận câu trả lời sai trong các luồng đã tích hợp lưu kết quả.
+- Xem lại câu sai và thực hiện hoạt động ôn tập.
+- Có dữ liệu số lần sai và lịch ôn theo người sở hữu.
+
+19. Thống kê và động lực học tập
+- Có các màn hình thống kê, lịch sử, số câu làm, tỷ lệ đúng, thời gian và dữ liệu XP/streak.
+- Có màn hình bảng xếp hạng gọi API lấy danh sách người học.
+- Có trò trả lời nhanh trong 60 giây, tính điểm và chuỗi trả lời đúng.
+- Một số thành phần phân hạng trong giao diện còn đặt sẵn; chưa xác nhận cơ chế thăng/hạ hạng hoàn chỉnh.
+
+IV. TIỆN ÍCH HỖ TRỢ
+
+20. Tra từ và dịch văn bản
+- Tra cứu từ trong bài học và hỗ trợ dịch phần văn bản được chọn.
+- Có giao diện dịch Anh–Việt và Việt–Anh.
+- Kết hợp dữ liệu tra cứu đi kèm, bộ nhớ đệm và dịch vụ trực tuyến theo đường xử lý.
+- Có thao tác lưu từ tra cứu vào dữ liệu ôn tập.
+
+21. Dịch bằng giọng nói và hình ảnh
+- Có giao diện và lời gọi nhận diện lời nói Android để lấy văn bản cần dịch.
+- Có thao tác chụp/chọn ảnh và luồng yêu cầu nhận diện chữ, dịch nội dung.
+- Phụ thuộc quyền thiết bị, phần tích hợp nền tảng và dịch vụ xử lý; chưa xác nhận độ ổn định qua thử nghiệm thiết bị trong lần rà soát này.
+
+22. Trợ lý AI
+- Có giao diện hỏi trợ lý và service gửi câu hỏi theo vai trò.
+- Có API và phần xử lý kết nối dịch vụ AI.
+- Có logic hỗ trợ tạo câu hỏi và xử lý học liệu trong phân hệ quản lý.
+- Một số nhánh có phản hồi dự phòng khi không kết nối được AI; không xem các phản hồi này là kết quả từ mô hình AI trực tuyến.
+
+23. Nhắc học và cài đặt
+- Bật/tắt nhắc học, chọn giờ và cập nhật lịch.
+- Có xin quyền thông báo, xử lý múi giờ, đặt thông báo lặp hằng ngày và hủy lịch.
+- Có giao diện quản lý mục tiêu và chủ đề giao diện.
+- Khả năng nhận thông báo thực tế còn phụ thuộc quyền và cơ chế chạy nền của thiết bị.
+
+V. PHÂN HỆ GIÁO VIÊN VÀ LỚP HỌC
+
+24. Quản lý lớp
+- Có giao diện và API tạo, cập nhật, xem lớp học.
+- Học viên có thể gửi yêu cầu vào lớp bằng mã.
+- Có danh sách thành viên và thao tác duyệt yêu cầu tham gia.
+
+25. Giao bài và theo dõi bài nộp
+- Có tạo, xem và xóa bài giao theo lớp.
+- Có chức năng gửi bài nộp và xem dữ liệu bài nộp theo lớp.
+- Có các tab tổng quan, lớp học, bài giao/kỳ thi và báo cáo dành cho giáo viên.
+
+26. Quản lý học liệu và câu hỏi
+- Có thao tác xem, thêm, sửa và xóa câu hỏi qua service/phân hệ tương ứng.
+- Có quản lý tài liệu học tập.
+- Có luồng hỗ trợ tạo câu hỏi bằng AI khi dịch vụ đáp ứng.
+
+27. Thi có giám sát trong ứng dụng
+- Có tạo và quản lý kỳ thi, thời lượng và hạn nộp.
+- Có khởi tạo phiên thi, gửi tín hiệu cập nhật phiên và nộp bài.
+- Giáo viên có thể xem phiên thi và thực hiện hành động giám sát theo phần đã triển khai.
+- Có trạng thái khóa tiện ích dịch/AI trong phiên thi có giám sát.
+- Đây là cơ chế theo dõi và hạn chế trong ứng dụng; không khẳng định ngăn chặn được mọi hình thức gian lận.
+
+VI. PHÂN HỆ QUẢN TRỊ VIÊN
+
+28. Quản lý người dùng
+- Có danh sách, tìm/lọc và thao tác quản lý tài khoản qua giao diện và API.
+- Có xử lý vai trò, trạng thái tài khoản và kiểm tra quyền quản trị ở backend.
+
+29. Quản lý nội dung và phiên bản học liệu
+- Có xem, tạo, cập nhật, xóa và kích hoạt phiên bản học liệu.
+- Có cơ chế áp dụng dữ liệu học liệu vào lưu trữ cục bộ.
+
+30. Quản lý vận hành
+- Có màn hình tổng quan, quản lý nội dung và theo dõi phiên thi.
+- Có dữ liệu/luồng xử lý nhật ký thao tác, báo lỗi, thông báo và yêu cầu liên quan giáo viên trong service.
+- Mức độ đồng bộ và quyền của từng thao tác cần được kiểm thử cùng backend triển khai.
+
+VII. LƯU TRỮ, KẾT NỐI VÀ GIỚI HẠN HIỆN TẠI
+
+31. Lưu trữ và kết nối
+- Ứng dụng Flutter sử dụng SQLite cho học liệu, bài làm, câu trả lời, thống kê và tiến độ ôn tập.
+- Có định danh người sở hữu và phương thức truy xuất dữ liệu theo tài khoản/phiên khách.
+- Có lưu cấu hình, dữ liệu đệm và trạng thái phiên.
+- Backend Node.js/Express có API xác thực, hồ sơ, thống kê, bài thi và các API quản lý mở rộng.
+- API được cấu hình sử dụng dịch vụ Render; cơ sở dữ liệu phía server dùng PostgreSQL theo cấu hình dự án.
+
+32. Những nội dung chưa được khẳng định hoàn tất
+- Chưa đối chiếu đầy đủ từng hoạt động, đáp án và audio của toàn bộ 10 Unit trong lần rà soát này.
+- Chưa xác nhận mọi nội dung SGK đều có bài tương tác đầy đủ; ứng dụng vẫn có chức năng mở sách gốc.
+- Chưa xác nhận đăng nhập Google, email, AI, dịch thuật và OCR hoạt động trên bản triển khai hiện tại; các chức năng này cần cấu hình và kiểm thử thực tế.
+- Một số service quản lý có cơ chế lưu hoặc dùng dữ liệu cục bộ khi API không đáp ứng; không đồng nghĩa thao tác đó đã được lưu lên server hoặc xuất hiện trên thiết bị khác.
+- Chưa xác nhận đồng bộ đầy đủ hai chiều cho mọi nhóm dữ liệu, chống trùng trong mọi tình huống và phân lập dữ liệu hoàn toàn qua kiểm thử.
+- Phần cấu hình AI hiện có nhánh lưu khóa trên thiết bị và gọi trực tiếp dịch vụ; không mô tả rằng toàn bộ khóa AI đã được bảo vệ duy nhất ở backend.
+- Chưa có căn cứ xác nhận chấm phát âm chuyên sâu, chấm mọi bài viết tự động hoặc cơ chế phân hạng thi đua hoàn chỉnh.
+
+KẾT LUẬN
+Dự án đã có mã triển khai cho các nhóm học thử, tài khoản, học theo sách, bài nghe, từ vựng, ghép thẻ, luyện âm, luyện đề, thống kê, tra cứu, nhắc học và các phân hệ giáo viên/quản trị. Danh sách này phản ánh phạm vi chức năng trong mã nguồn, không thay thế kết quả kiểm thử và nghiệm thu trên ứng dụng thực tế.

@@ -104,3 +104,4 @@ app.*.map.json
 # Temporary extracted assets and scripts
 output/
 tmp-*
+scratch/

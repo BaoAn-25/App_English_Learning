@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'app_tokens.dart';
 
 /// Định nghĩa ThemeData cho ứng dụng theo chuẩn Material 3.
@@ -28,6 +29,7 @@ class AppTheme {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: AppTokens.textMain,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         titleTextStyle: TextStyle(
           fontFamily: AppTokens.fontFamily,
           fontSize: 18,
@@ -97,6 +99,78 @@ class AppTheme {
           );
         }),
       ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        ),
+        dayPeriodColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTokens.primary;
+          }
+          return const Color(0xFFF1F5F9);
+        }),
+        dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return const Color(0xFF475569);
+        }),
+        dayPeriodBorderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+        dayPeriodShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        hourMinuteColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(0xFFEFF6FF);
+          }
+          return const Color(0xFFF8FAFC);
+        }),
+        hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTokens.primary;
+          }
+          return AppTokens.textMain;
+        }),
+        entryModeIconColor: AppTokens.primary,
+        confirmButtonStyle: ButtonStyle(
+          foregroundColor: WidgetStateProperty.all(AppTokens.primary),
+          textStyle: WidgetStateProperty.all(
+            const TextStyle(
+              fontFamily: AppTokens.fontFamily,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        cancelButtonStyle: ButtonStyle(
+          foregroundColor: WidgetStateProperty.all(const Color(0xFF64748B)),
+          textStyle: WidgetStateProperty.all(
+            const TextStyle(
+              fontFamily: AppTokens.fontFamily,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+        titleTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF0F172A),
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 14,
+          color: Color(0xFF334155),
+        ),
+      ),
     );
   }
 
@@ -121,6 +195,7 @@ class AppTheme {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Color(0xFFF3F4F6),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         titleTextStyle: TextStyle(
           fontFamily: AppTokens.fontFamily,
           fontSize: 18,
@@ -139,8 +214,8 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 2,
-          backgroundColor: const Color(0xFF5390F5),
-          foregroundColor: const Color(0xFF121620),
+          backgroundColor: AppTokens.primary,
+          foregroundColor: Colors.white,
           minimumSize: const Size(88, AppTokens.minTouchTargetSize),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
@@ -189,6 +264,78 @@ class AppTheme {
             color: Color(0xFF9CA3AF),
           );
         }),
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: const Color(0xFF1E2430),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        ),
+        dayPeriodColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(0xFF5390F5);
+          }
+          return const Color(0xFF2D3748);
+        }),
+        dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(0xFF121620);
+          }
+          return const Color(0xFFE2E8F0);
+        }),
+        dayPeriodBorderSide: const BorderSide(color: Color(0xFF4A5568), width: 1.0),
+        dayPeriodShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        hourMinuteColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(0xFF2A364F);
+          }
+          return const Color(0xFF232A38);
+        }),
+        hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(0xFF5390F5);
+          }
+          return const Color(0xFFF3F4F6);
+        }),
+        entryModeIconColor: const Color(0xFF5390F5),
+        confirmButtonStyle: ButtonStyle(
+          foregroundColor: WidgetStateProperty.all(const Color(0xFF5390F5)),
+          textStyle: WidgetStateProperty.all(
+            const TextStyle(
+              fontFamily: AppTokens.fontFamily,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        cancelButtonStyle: ButtonStyle(
+          foregroundColor: WidgetStateProperty.all(const Color(0xFF94A3B8)),
+          textStyle: WidgetStateProperty.all(
+            const TextStyle(
+              fontFamily: AppTokens.fontFamily,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: Color(0xFF1E293B),
+        surfaceTintColor: Colors.transparent,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+        titleTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+        contentTextStyle: TextStyle(
+          fontFamily: AppTokens.fontFamily,
+          fontSize: 14,
+          color: Colors.white70,
+        ),
       ),
     );
   }

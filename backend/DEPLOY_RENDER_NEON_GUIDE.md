@@ -34,7 +34,7 @@ Tài liệu này hướng dẫn bạn cấu hình hoàn chỉnh hệ thống Bac
    - Đảm bảo có checkbox **Pooled connection** hoặc chuỗi kết thúc bằng `?sslmode=require`.
    - Bấm nút **Copy** (chuỗi kết nối có dạng):
      ```text
-     postgresql://alex_owner:abc123xyz@ep-weathered-wind-a123.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+     postgresql://your_user:your_password@ep-your-database.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
      ```
    *(Hãy lưu lại chuỗi này vào Notepad để dùng ở Bước 2)*.
 

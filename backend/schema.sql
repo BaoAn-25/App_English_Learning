@@ -5,11 +5,18 @@
 -- 1. Bảng Người dùng (Tài khoản)
 CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(64) PRIMARY KEY,
+    google_id VARCHAR(128) UNIQUE,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
+    password_salt VARCHAR(64),
     display_name VARCHAR(120) NOT NULL DEFAULT 'Học sinh English 12',
     avatar_url TEXT,
     auth_provider VARCHAR(32) NOT NULL DEFAULT 'email', -- 'email', 'google', 'guest'
+    role VARCHAR(32) NOT NULL DEFAULT 'student', -- 'student', 'teacher', 'admin'
+    email_verified BOOLEAN DEFAULT FALSE,
+    verification_token VARCHAR(128),
+    reset_password_token VARCHAR(128),
+    reset_password_expires TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -81,6 +88,19 @@ CREATE TABLE IF NOT EXISTS wrong_book (
 
 -- Index tối ưu truy vấn
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_daily_stats_user_date ON daily_stats(user_id, stat_date);
 CREATE INDEX IF NOT EXISTS idx_textbook_progress_user ON textbook_progress(user_id, unit_number);
+
+-- Bổ sung các cột mới nếu bảng users đã được tạo từ trước
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_salt VARCHAR(64);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(32) NOT NULL DEFAULT 'email';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(32) NOT NULL DEFAULT 'student';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(128);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token VARCHAR(128);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 

@@ -5,8 +5,11 @@ import '../../data/app_repository.dart';
 import '../../data/models/attempt.dart';
 import '../../data/models/attempt_answer.dart';
 import '../../data/models/daily_stat.dart';
+import '../../data/models/learning_session.dart';
 import '../../data/models/question.dart';
 import '../../data/models/wrong_book_entry.dart';
+import '../auth/auth_controller.dart';
+import '../auth/register_screen.dart';
 import 'services/option_shuffler.dart';
 import 'widgets/question_stem_view.dart';
 import 'widgets/quiz_option_card.dart';
@@ -15,6 +18,10 @@ class PracticeQuizScreen extends StatefulWidget {
   final String title;
   final List<Question> questions;
   final String mode;
+  final int initialIndex;
+  final List<int?>? initialAnswers;
+  final String? lessonId;
+  final String? nextLessonTitle;
 
   /// Ánh xạ thứ tự hiển thị phương án (tùy chọn, mặc định xáo trộn ngẫu nhiên).
   final List<QuestionOptionMapping>? optionMappings;
@@ -24,6 +31,10 @@ class PracticeQuizScreen extends StatefulWidget {
     required this.title,
     required this.questions,
     this.mode = 'practice',
+    this.initialIndex = 0,
+    this.initialAnswers,
+    this.lessonId,
+    this.nextLessonTitle,
     this.optionMappings,
   });
 
@@ -37,6 +48,7 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
   late final List<QuestionOptionMapping> optionMappings;
   bool submitted = false;
   bool isSaving = false;
+  bool _dismissedRegisterInvitation = false;
   late final DateTime startedAt;
 
   @override
@@ -44,7 +56,13 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
     super.initState();
 
     startedAt = DateTime.now();
-    selectedAnswers = List<int?>.filled(widget.questions.length, null);
+    currentIndex = widget.initialIndex.clamp(
+      0,
+      widget.questions.isNotEmpty ? widget.questions.length - 1 : 0,
+    );
+    selectedAnswers = widget.initialAnswers != null
+        ? List<int?>.from(widget.initialAnswers!)
+        : List<int?>.filled(widget.questions.length, null);
     optionMappings =
         widget.optionMappings ??
         List.generate(
@@ -53,6 +71,72 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
             widget.questions[i].options.length,
           ),
         );
+
+    // Lưu trạng thái làm bài dở nếu có câu hỏi
+    if (widget.questions.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _persistSession(isCompleted: false);
+      });
+    }
+  }
+
+  Future<void> _persistSession({bool isCompleted = false, int? completedScore}) async {
+    try {
+      final repository = context.read<AppRepository>();
+      String ownerId;
+      try {
+        final auth = AuthController.instance;
+        if (auth.isAuthenticated) {
+          ownerId = auth.user.id;
+        } else {
+          ownerId = await repository.getOrCreateGuestSessionId();
+        }
+      } catch (_) {
+        return;
+      }
+
+      final currentType = widget.questions.isNotEmpty ? widget.questions.first.type : 'practice';
+      final lessonId = widget.lessonId ?? 'type_$currentType';
+      final (nextId, nextTitle) = _determineNextLesson(currentType);
+
+      final session = LearningSession(
+        ownerId: ownerId,
+        lessonId: lessonId,
+        lessonTitle: widget.title,
+        lessonType: 'question_type',
+        status: isCompleted ? 'completed' : 'in_progress',
+        currentQuestionIndex: currentIndex,
+        totalQuestions: widget.questions.length,
+        score: completedScore,
+        questionIds: widget.questions.map((q) => q.id).toList(),
+        selectedAnswers: selectedAnswers,
+        nextLessonId: nextId,
+        nextLessonTitle: nextTitle,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      await repository.saveLearningSession(session);
+    } catch (_) {}
+  }
+
+  (String, String) _determineNextLesson(String currentType) {
+    const sequence = [
+      ('grammar', 'Ngữ pháp', 'vocab', 'Luyện tập Từ vựng'),
+      ('vocab', 'Từ vựng', 'arrange', 'Sắp xếp câu'),
+      ('arrange', 'Sắp xếp câu', 'synonym_antonym', 'Đồng nghĩa - Trái nghĩa'),
+      ('synonym_antonym', 'Đồng nghĩa - Trái nghĩa', 'communication', 'Giao tiếp'),
+      ('communication', 'Giao tiếp', 'signs', 'Biển báo'),
+      ('signs', 'Biển báo', 'cloze', 'Điền từ'),
+      ('cloze', 'Điền từ', 'reading', 'Đọc hiểu'),
+      ('reading', 'Đọc hiểu', 'grammar', 'Luyện tập Ngữ pháp'),
+    ];
+
+    for (final s in sequence) {
+      if (s.$1 == currentType) {
+        return (s.$3, s.$4);
+      }
+    }
+    return ('type_vocab', 'Luyện tập Từ vựng');
   }
 
   int get score {
@@ -73,17 +157,20 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
     setState(() {
       selectedAnswers[currentIndex] = optionIndex;
     });
+    _persistSession(isCompleted: false);
   }
 
   void nextQuestion() {
     if (currentIndex < widget.questions.length - 1) {
       setState(() => currentIndex++);
+      _persistSession(isCompleted: false);
     }
   }
 
   void previousQuestion() {
     if (currentIndex > 0) {
       setState(() => currentIndex--);
+      _persistSession(isCompleted: false);
     }
   }
 
@@ -126,6 +213,18 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
 
     try {
       final repository = context.read<AppRepository>();
+      String? ownerId;
+      try {
+        final auth = AuthController.instance;
+        if (auth.isAuthenticated) {
+          ownerId = auth.user.id;
+        } else {
+          ownerId = await repository.getOrCreateGuestSessionId();
+        }
+      } catch (_) {
+        ownerId = null;
+      }
+
       final finishedAt = DateTime.now();
       final durationSec = finishedAt.difference(startedAt).inSeconds;
 
@@ -199,7 +298,10 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
         },
         wrongEntries: wrongEntries,
         dailyStat: dailyStat,
+        ownerId: ownerId,
       );
+
+      await _persistSession(isCompleted: true, completedScore: score);
 
       if (!mounted) return;
 
@@ -485,6 +587,10 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
               ),
             ),
 
+          // Lời mời tạo tài khoản sau khi xem kết quả (dành riêng cho khách, không che kết quả)
+          if (submitted && !AuthController.instance.isAuthenticated && !_dismissedRegisterInvitation)
+            _buildGuestRegisterPrompt(context, colorScheme),
+
           // Thanh điều hướng phía dưới - Tương thích an toàn tuyệt đối với SafeArea
           Container(
             decoration: BoxDecoration(
@@ -663,6 +769,99 @@ class _PracticeQuizScreenState extends State<PracticeQuizScreen> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuestRegisterPrompt(BuildContext context, ColorScheme colorScheme) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF93C5FD)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bookmark_added_rounded, color: Color(0xFF2563EB), size: 18),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Lưu kết quả học thử vào tài khoản',
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: Color(0xFF1E40AF),
+                  ),
+                ),
+              ),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF64748B)),
+                tooltip: 'Đóng lời mời',
+                onPressed: () {
+                  setState(() {
+                    _dismissedRegisterInvitation = true;
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Kết quả $score/${widget.questions.length} câu đúng đang được lưu trên thiết bị này. Tạo tài khoản để gắn kết quả bài làm vào tài khoản của bạn.',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF334155),
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  );
+                },
+                child: const Text(
+                  'Tạo tài khoản',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _dismissedRegisterInvitation = true;
+                  });
+                },
+                child: const Text(
+                  'Để sau',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+              ),
+            ],
           ),
         ],
       ),

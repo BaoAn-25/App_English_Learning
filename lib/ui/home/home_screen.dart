@@ -3,16 +3,52 @@ import 'package:provider/provider.dart';
 
 import '../../data/app_repository.dart';
 import '../../data/models/topic.dart';
+import '../../data/trial_lesson_repository.dart';
+import '../../navigation/main_shell.dart';
+import '../ai/ai_tutor_sheet.dart';
 import '../auth/auth_controller.dart';
+import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
-import '../auth/welcome_screen.dart';
 import '../onboarding/onboarding_target_screen.dart';
-import '../textbook/reading_study_screen.dart';
+import '../practice/practice_quiz_screen.dart';
+import '../practice/practice_screen.dart';
+import '../textbook/review_detail_screen.dart';
+import '../textbook/textbook_hub_screen.dart';
 import '../textbook/unit_detail_screen.dart';
+import '../theme/app_tokens.dart';
 import '../theme/components/app_button.dart';
 import '../theme/components/sync_status_badge.dart';
 import '../theme/components/prep_logo.dart';
+import '../pronunciation/pronunciation_screen.dart';
+import '../interest/interest_topics_screen.dart';
+import '../trial/trial_lesson_picker_screen.dart';
+import '../trial/trial_lesson_screen.dart';
 import 'home_controller.dart';
+import '../leaderboard/leaderboard_screen.dart';
+import '../translation/translation_hub_screen.dart';
+import '../practice/supervised_exam_screen.dart';
+import '../teacher/teacher_portal_screen.dart';
+import '../admin/admin_portal_screen.dart';
+
+class RoadmapUnitItem {
+  final int number; // 0 for Review
+  final int reviewNumber; // 1, 2, 3, 4 if review
+  final String title;
+  final String bookPages;
+  final String readingTitle;
+  final String scopeDescription;
+
+  const RoadmapUnitItem({
+    required this.number,
+    this.reviewNumber = 0,
+    required this.title,
+    required this.bookPages,
+    required this.readingTitle,
+    required this.scopeDescription,
+  });
+
+  bool get isReview => reviewNumber > 0;
+}
 
 class HomeScreen extends StatefulWidget {
   final AppRepository? repository;
@@ -31,11 +67,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Trạng thái nhiệm vụ hôm nay
-  bool _task1Done = true;
-  bool _task2Done = false;
-  bool _task3Done = false;
-
   @override
   Widget build(BuildContext context) {
     AppRepository repo;
@@ -47,27 +78,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final auth = AuthController.instance;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return ChangeNotifierProvider<HomeController>(
       create: (_) => HomeController(repo: repo),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: isDark ? const Color(0xFF121620) : const Color(0xFFF8FAFC),
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1E2430) : Colors.white,
           elevation: 0.5,
           title: Row(
             children: [
               const PrepLogo(size: 34, showText: false),
               const SizedBox(width: 10),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'English 12',
+                    'EngPass',
                     style: TextStyle(
                       fontFamily: 'BeVietnamPro',
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
-                      color: Color(0xFF0F172A),
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   Text(
@@ -76,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontFamily: 'BeVietnamPro',
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -84,14 +118,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           actions: [
-            // Nút Khám phá Onboarding / Chào mừng
             IconButton(
-              tooltip: 'Xem luồng Khách & Onboarding',
-              icon: const Icon(Icons.explore_outlined, color: Color(0xFF2563EB)),
+              tooltip: 'Bảng xếp hạng & Đấu trường',
+              icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFFD97706), size: 24),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                  MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+                );
+              },
+            ),
+            // Nút mở nhanh Trợ lý AI EngPass
+            IconButton(
+              tooltip: 'Hỏi Trợ lý AI EngPass',
+              icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB)),
+              onPressed: () {
+                AiTutorSheet.show(
+                  context,
+                  unitNumber: 1,
+                  unitTitle: 'Life Stories We Admire',
+                  sectionTitle: 'Hỏi đáp & Giải thích tiếng Anh 12',
                 );
               },
             ),
@@ -120,29 +166,45 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 children: [
-                  // 1. Header: Lời chào, Streak & XP badge
-                  _buildHeaderStats(context, controller, auth),
-                  const SizedBox(height: 14),
+                  // 1. Thông báo lỗi tải dữ liệu nếu có
+                  if (controller.hasError) ...[
+                    _buildErrorBanner(context, controller),
+                    const SizedBox(height: 12),
+                  ],
 
-                  // 2. Banner nhắc lưu tài khoản (nếu chưa đăng nhập)
+                  // 2. Header: GB LỚP 12, Streak, XP thực tế
+                  _buildHeaderStats(context, controller, auth),
+                  const SizedBox(height: 12),
+
+                  // 3. Banner dành cho Khách (Lưu trên thiết bị)
                   if (!auth.isAuthenticated) ...[
-                    _buildGuestBanner(context),
+                    _buildGuestBanner(context, controller),
                     const SizedBox(height: 14),
                   ],
 
-                  // 3. Card Đếm ngược kỳ thi THPT & Mục tiêu
-                  _buildCountdownCard(context, auth),
+                  // 3.5. Khu vực Khám phá Duolingo x Quizlet (Phát âm IPA & Chủ đề sở thích)
+                  _buildExploreDuolingoHub(context),
+                  const SizedBox(height: 16),
+
+                  // 4. Khối Tiếp tục học / Bài học dở (chỉ hiện khi có phiên học thực tế)
+                  if (controller.learningSession != null) ...[
+                    _buildContinueLearningCard(context, controller, auth),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 5. Lộ trình học tập SGK Tiếng Anh 12 chuẩn mục lục
+                  _buildRoadmapTimeline(context, controller, auth),
+                  const SizedBox(height: 16),
+
+                  // 6. Card Đếm ngược kỳ thi THPT & Mục tiêu
+                  _buildCountdownCard(context, controller, auth),
                   const SizedBox(height: 14),
 
-                  // 4. Card Tiếp tục học (Unit 3 - Reading)
-                  _buildContinueLearningCard(context),
-                  const SizedBox(height: 18),
+                  // 7. Checklist Nhiệm vụ hôm nay
+                  _buildDailyTasksCard(context, controller, auth),
+                  const SizedBox(height: 14),
 
-                  // 5. Checklist Nhiệm vụ hôm nay
-                  _buildDailyTasksCard(context),
-                  const SizedBox(height: 18),
-
-                  // 6. Phím tắt nhanh
+                  // 8. Phím tắt nhanh
                   _buildQuickActionButtons(context),
                   const SizedBox(height: 24),
                 ],
@@ -154,87 +216,872 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 1. Lời chào & Chỉ số Streak, XP ---
-  Widget _buildHeaderStats(BuildContext context, HomeController controller, AuthController auth) {
-    final streak = controller.streak > 0 ? controller.streak : auth.user.streakDays;
-    final xp = controller.totalXp > 0 ? controller.totalXp : auth.user.xp;
-    final name = auth.isAuthenticated ? auth.user.displayName : 'Chào bạn';
+  // --- Khu vực Khám phá Duolingo x Quizlet (Phát âm IPA & Chủ đề sở thích) ---
+  Widget _buildExploreDuolingoHub(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentUser = AuthController.instance.user;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$name,',
-                style: const TextStyle(
-                  fontFamily: 'BeVietnamPro',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF64748B),
-                ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Góc luyện tập & Khám phá',
+              style: TextStyle(
+                fontFamily: 'BeVietnamPro',
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
-              const Text(
-                'Hôm nay học gì?',
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const InterestTopicsScreen()),
+                );
+              },
+              child: const Text(
+                'Xem tất cả >',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
-                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                  color: Color(0xFF2563EB),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            // Card 1: Phát âm IPA 44 âm (Thiết kế sáng đồng bộ EngPass)
+            Expanded(
+              child: GestureDetector(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PronunciationScreen()),
+                  );
+                  if (context.mounted) {
+                    Provider.of<HomeController>(context, listen: false).refresh();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? const Color(0x20000000) : const Color(0x0C0F172A),
+                        offset: const Offset(0, 4),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0369A1).withAlpha(80) : const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.mic_none_rounded, color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Phát âm IPA',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '44 âm & Cặp đối lập',
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0369A1).withAlpha(100) : const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? const Color(0xFF38BDF8).withAlpha(140) : const Color(0xFFBAE6FD)),
+                        ),
+                        child: Text(
+                          '+10 XP',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: isDark ? const Color(0xFF7DD3FC) : const Color(0xFF0284C7)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Card 2: Chủ đề sở thích (Bóng đá, Cafe, Du lịch...)
+            Expanded(
+              child: GestureDetector(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const InterestTopicsScreen()),
+                  );
+                  if (context.mounted) {
+                    Provider.of<HomeController>(context, listen: false).refresh();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? const Color(0x20000000) : const Color(0x0C0F172A),
+                        offset: const Offset(0, 4),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFFB45309).withAlpha(80) : const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.sports_soccer_rounded, color: Color(0xFFD97706), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Theo sở thích',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Bóng đá, Cafe, Du lịch...',
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? const Color(0xFF3B82F6).withAlpha(150) : const Color(0xFFBFDBFE)),
+                        ),
+                        child: Text(
+                          'Flashcard & Match',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Hàng 2: Trung tâm Dịch thuật 3-in-1 & Phòng thi Giám sát 10s
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TranslationHubScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF065F46).withAlpha(90) : const Color(0xFFD1FAE5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.translate_rounded, color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Dịch thuật 3-in-1',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Text • Giọng nói • Ảnh OCR',
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SupervisedExamListScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF7C2D12).withAlpha(90) : const Color(0xFFFFEDD5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.shield_rounded, color: isDark ? const Color(0xFFFB923C) : const Color(0xFFEA580C), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Phòng thi Giám sát',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Chống gian lận 10s • Hạn nộp',
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Thanh truy cập nhanh Trợ lý AI Cá nhân & Cổng Giáo viên / Admin
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => AiTutorSheet.show(context),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Trợ lý AI Cá nhân',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (currentUser.isTeacher || currentUser.isAdmin)
+                TextButton.icon(
+                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.school_rounded, size: 16),
+                  label: const Text('Giáo viên', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
+              if (currentUser.isAdmin)
+                TextButton.icon(
+                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.admin_panel_settings_rounded, size: 16),
+                  label: const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Banner thông báo lỗi tải dữ liệu ---
+  Widget _buildErrorBanner(BuildContext context, HomeController controller) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppTokens.errorRed, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              controller.errorMessage ?? 'Không thể tải dữ liệu trang chủ',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF991B1B)),
+            ),
+          ),
+          TextButton(
+            onPressed: () => controller.refresh(),
+            child: const Text(
+              'Thử lại',
+              style: TextStyle(fontWeight: FontWeight.bold, color: AppTokens.errorRed),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- 1. Header: GB LỚP 12, Streak, XP thực tế (Không gán tim cố định) ---
+  Widget _buildHeaderStats(BuildContext context, HomeController controller, AuthController auth) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Không dùng fallback > 0 để tránh hiển thị nhầm dữ liệu tài khoản cũ khi điểm/streak thực tế là 0
+    final streak = controller.streak;
+    final xp = controller.totalXp;
+
+    return Row(
+      children: [
+        // Badge Lớp 12 xanh lá
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'GB ',
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF15803D),
+                ),
+              ),
+              Text(
+                'LỚP 12',
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
+                  fontSize: 12,
+                  color: isDark ? const Color(0xFF34D399) : const Color(0xFF16A34A),
                 ),
               ),
             ],
           ),
         ),
-        // Badge Streak Ngọn lửa Duolingo
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFEDD5),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFED7AA)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+        const Spacer(),
+        // Ngọn lửa Streak thực tế
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🔥', style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 4),
+            Text(
+              '$streak',
+              style: TextStyle(
+                fontFamily: 'BeVietnamPro',
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: isDark ? const Color(0xFFFB923C) : const Color(0xFFC2410C),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 14),
+        // Tia sét XP thực tế
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.bolt_rounded, size: 18, color: Color(0xFFEAB308)),
+            const SizedBox(width: 2),
+            Text(
+              '$xp XP',
+              style: TextStyle(
+                fontFamily: 'BeVietnamPro',
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: isDark ? const Color(0xFFFACC15) : const Color(0xFF854D0E),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // --- 2. Banner nhắc lưu tài khoản (Dành cho Khách) ---
+  Widget _buildGuestBanner(BuildContext context, HomeController controller) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final xp = controller.totalXp;
+    final words = controller.savedWordsCount;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFBFDBFE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              const Text('🔥', style: TextStyle(fontSize: 16)),
-              const SizedBox(width: 4),
-              Text(
-                '$streak',
-                style: const TextStyle(
-                  fontFamily: 'BeVietnamPro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                  color: Color(0xFFC2410C),
+              Icon(Icons.storage_rounded, size: 18, color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  words > 0 || xp > 0
+                      ? 'Lưu trên thiết bị: $xp XP${words > 0 ? ' • $words từ đã lưu' : ''}'
+                      : 'Dữ liệu học tập đang được lưu an toàn trên thiết bị',
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                    color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E3A8A),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(width: 8),
-        // Badge XP
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFBFDBFE)),
+          const SizedBox(height: 6),
+          Text(
+            'Đăng ký tài khoản để đồng bộ kết quả học lên máy chủ đám mây và mở khóa đầy đủ 10 Unit.',
+            style: TextStyle(
+              fontSize: 11.5,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+              height: 1.35,
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 10),
+          Row(
             children: [
-              const Icon(Icons.bolt_rounded, color: Color(0xFF2563EB), size: 18),
-              const SizedBox(width: 2),
-              Text(
-                '$xp',
-                style: const TextStyle(
-                  fontFamily: 'BeVietnamPro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                  color: Color(0xFF1D4ED8),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.auto_stories_rounded, size: 14),
+                label: const Text('Học thử'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                  side: BorderSide(color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  minimumSize: Size.zero,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TrialLessonPickerScreen()),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 14),
+                label: const Text('Đăng ký'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTokens.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  minimumSize: Size.zero,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  );
+                },
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  );
+                },
+                child: Text(
+                  'Đăng nhập >',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- 4. Lộ trình học tập SGK 12 (Roadmap chuẩn mục lục) ---
+  Widget _buildRoadmapTimeline(BuildContext context, HomeController controller, AuthController auth) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isStudent = auth.isAuthenticated && !auth.user.isGuest;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Lộ trình SGK Tiếng Anh 12',
+              style: TextStyle(
+                fontFamily: 'BeVietnamPro',
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.menu_book_rounded, size: 16),
+              label: const Text('Xem Sách', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+              onPressed: () {
+                MainShell.switchToTab(context, 1);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ..._roadmapItems.map((item) {
+          if (item.isReview) {
+            return _buildReviewRoadmapCard(context, item, isStudent, controller);
+          } else {
+            return _buildUnitRoadmapCard(context, item, isStudent, controller);
+          }
+        }),
+      ],
+    );
+  }
+
+  Widget _buildUnitRoadmapCard(
+    BuildContext context,
+    RoadmapUnitItem item,
+    bool isStudent,
+    HomeController controller,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final progress = controller.getUnitProgress(item.number);
+    final isCompleted = progress.isCompleted;
+    final isStarted = progress.isStarted;
+
+    // Màu nền trực quan phản ánh trạng thái thực tế của Unit
+    final Color cardBg = isCompleted
+        ? const Color(0xFF15803D)
+        : (isStarted
+            ? const Color(0xFF1E40AF)
+            : const Color(0xFF334155));
+
+    final lesson = TrialLessonRepository.instance.getLessonByUnit(item.number);
+    final hasTrialReady = lesson != null && lesson.isReady;
+
+    return Column(
+      children: [
+        // Thẻ Unit chính
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: cardBg.withAlpha(60),
+                offset: const Offset(0, 4),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UnitDetailScreen(
+                      unitNumber: item.number,
+                      unitTitle: item.title.replaceAll(RegExp(r'^Unit \d+:\s*'), ''),
+                      unitTopic: item.readingTitle,
+                    ),
+                  ),
+                );
+                if (context.mounted) controller.refresh();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(isStudent ? 40 : 30),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            isStudent
+                                ? 'CHƯƠNG TRÌNH SGK 12'
+                                : (hasTrialReady ? 'CÓ BÀI HỌC THỬ' : 'SGK 12'),
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          isCompleted
+                              ? Icons.emoji_events_rounded
+                              : (isStarted ? Icons.play_circle_outline_rounded : Icons.menu_book_rounded),
+                          color: isCompleted
+                              ? const Color(0xFFFBBF24)
+                              : Colors.white.withAlpha(220),
+                          size: 24,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        fontFamily: 'BeVietnamPro',
+                        fontWeight: FontWeight.w900,
+                        fontSize: 17,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.bookPages} • Bài đọc: ${item.readingTitle}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.white.withAlpha(220),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withAlpha(40),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline_rounded, size: 14, color: Colors.white70),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              item.scopeDescription,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Nút tròn kết nối lộ trình với trạng thái thật
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              Container(
+                width: 2,
+                height: 14,
+                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+              ),
+              InkWell(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UnitDetailScreen(
+                        unitNumber: item.number,
+                        unitTitle: item.title.replaceAll(RegExp(r'^Unit \d+:\s*'), ''),
+                        unitTopic: item.readingTitle,
+                      ),
+                    ),
+                  );
+                  if (context.mounted) controller.refresh();
+                },
+                borderRadius: BorderRadius.circular(30),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isCompleted
+                            ? const Color(0xFF22C55E)
+                            : (isStarted
+                                ? const Color(0xFF2563EB)
+                                : (isDark ? const Color(0xFF1E3A8A) : const Color(0xFF0F172A))),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isCompleted
+                                    ? const Color(0xFF22C55E)
+                                    : (isStarted ? const Color(0xFF2563EB) : const Color(0xFF0F172A)))
+                                .withAlpha(80),
+                            offset: const Offset(0, 3),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        isCompleted
+                            ? Icons.check_rounded
+                            : (isStarted ? Icons.play_arrow_rounded : (isStudent ? Icons.arrow_forward_rounded : Icons.auto_stories_rounded)),
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isCompleted
+                              ? const Color(0xFF86EFAC)
+                              : (isStarted
+                                  ? const Color(0xFF93C5FD)
+                                  : (isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0))),
+                        ),
+                      ),
+                      child: Text(
+                        isCompleted
+                            ? 'Ôn lại'
+                            : (isStarted
+                                ? 'Tiếp tục'
+                                : (isStudent ? 'Bắt đầu' : 'Học thử')),
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: isCompleted
+                              ? (isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D))
+                              : (isStarted
+                                  ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8))
+                                  : (isDark ? Colors.white : const Color(0xFF1E293B))),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      isCompleted
+                          ? 'Đã hoàn thành ${progress.completedSections}/${progress.totalSections} phần'
+                          : (isStarted
+                              ? 'Đang học (${progress.completedSections}/${progress.totalSections} phần)'
+                              : (isStudent ? '${progress.totalSections} phần SGK' : 'Bài đọc có hướng dẫn')),
+                      style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 2,
+                height: 14,
+                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
               ),
             ],
           ),
@@ -243,55 +1090,116 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 2. Banner nhắc nhở tạo tài khoản ---
-  Widget _buildGuestBanner(BuildContext context) {
+  Widget _buildReviewRoadmapCard(
+    BuildContext context,
+    RoadmapUnitItem item,
+    bool isStudent,
+    HomeController controller,
+  ) {
+    final progress = controller.getReviewProgress(item.reviewNumber);
+    final isCompleted = progress.isCompleted;
+    final isStarted = progress.isStarted;
+
+    String actionLabel = isCompleted ? 'Ôn lại' : (isStarted ? 'Tiếp tục' : 'Bắt đầu');
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3730A3), Color(0xFF4F46E5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x203730A3),
+            offset: Offset(0, 4),
+            blurRadius: 10,
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Expanded(
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(50),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isCompleted ? Icons.check_circle_rounded : Icons.military_tech_rounded,
+              color: isCompleted ? const Color(0xFF86EFAC) : Colors.white,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Giữ streak 3 ngày của bạn!',
-                  style: TextStyle(
-                    fontFamily: 'BeVietnamPro',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                    color: Color(0xFF1E40AF),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBBF24),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'ĐIỂM MỐC ÔN TẬP SGK (${item.bookPages})',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF78350F),
+                    ),
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 6),
                 Text(
-                  'Tạo tài khoản để không mất tiến độ.',
-                  style: TextStyle(fontSize: 11.5, color: Color(0xFF3B82F6)),
+                  item.title,
+                  style: const TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.scopeDescription,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: Colors.white.withAlpha(220),
+                  ),
                 ),
               ],
             ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF4338CA),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const RegisterScreen()),
-              );
+              // Quyền truy cập Review: Học viên hoặc Review 1 (mở cho trải nghiệm)
+              if (isStudent || item.reviewNumber == 1) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReviewDetailScreen(reviewNumber: item.reviewNumber),
+                  ),
+                );
+              } else {
+                _showLockedDialog(context);
+              }
             },
-            child: const Text(
-              'Tạo tài khoản',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+            child: Text(
+              actionLabel,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -299,8 +1207,256 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 3. Card Đếm ngược kỳ thi THPT ---
-  Widget _buildCountdownCard(BuildContext context, AuthController auth) {
+  void _showLockedDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            const Icon(Icons.school_rounded, color: AppTokens.primary, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Nội dung dành cho Học viên',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Bạn đang trải nghiệm ở chế độ Khách (được làm các bài đọc hiểu học thử trong 10 Unit).\n\nHãy đăng ký tài khoản Học viên hoàn toàn miễn phí để mở khóa toàn bộ các phần bài học, bài tập ôn tập Review và đồng bộ kết quả học tập!',
+          style: TextStyle(fontSize: 13, height: 1.5, color: isDark ? Colors.white70 : const Color(0xFF334155)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Để sau'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTokens.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+              );
+            },
+            child: const Text('Đăng ký ngay', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static const List<RoadmapUnitItem> _roadmapItems = [
+    RoadmapUnitItem(
+      number: 1,
+      title: 'Unit 1: Life Stories We Admire',
+      bookPages: 'Trang in 8–19',
+      readingTitle: 'Steve Jobs: Life and Achievements',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 2,
+      title: 'Unit 2: A Multicultural World',
+      bookPages: 'Trang in 20–31',
+      readingTitle: 'The Effects of Globalisation on Cultural Diversity',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 3,
+      title: 'Unit 3: Green Living',
+      bookPages: 'Trang in 32–43',
+      readingTitle: 'Go Green with Plastics!',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 0,
+      reviewNumber: 1,
+      title: 'Review 1 (Units 1 - 3)',
+      bookPages: 'Trang in 44–47',
+      readingTitle: 'Ôn tập Language & 4 Skills Units 1 - 3',
+      scopeDescription: '15 câu hỏi trắc nghiệm & bài tập viết luận SGK',
+    ),
+    RoadmapUnitItem(
+      number: 4,
+      title: 'Unit 4: Urbanisation',
+      bookPages: 'Trang in 48–59',
+      readingTitle: 'Ha Noi: Then and Now',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 5,
+      title: 'Unit 5: The World of Work',
+      bookPages: 'Trang in 60–71',
+      readingTitle: 'Job Advertisements',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 0,
+      reviewNumber: 2,
+      title: 'Review 2 (Units 4 - 5)',
+      bookPages: 'Trang in 72–75',
+      readingTitle: 'Ôn tập Language & 4 Skills Units 4 - 5',
+      scopeDescription: '15 câu hỏi trắc nghiệm & bài tập viết luận SGK',
+    ),
+    RoadmapUnitItem(
+      number: 6,
+      title: 'Unit 6: Artificial Intelligence',
+      bookPages: 'Trang in 76–87',
+      readingTitle: 'AI Applications in Education',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 7,
+      title: 'Unit 7: The World of Mass Media',
+      bookPages: 'Trang in 88–99',
+      readingTitle: 'Digital Media vs. Traditional Media',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 8,
+      title: 'Unit 8: Wildlife Conservation',
+      bookPages: 'Trang in 100–111',
+      readingTitle: 'Wildlife Conservation News',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 0,
+      reviewNumber: 3,
+      title: 'Review 3 (Units 6 - 8)',
+      bookPages: 'Trang in 112–115',
+      readingTitle: 'Ôn tập Language & 4 Skills Units 6 - 8',
+      scopeDescription: '15 câu hỏi trắc nghiệm & bài tập viết luận SGK',
+    ),
+    RoadmapUnitItem(
+      number: 9,
+      title: 'Unit 9: Career Paths',
+      bookPages: 'Trang in 116–127',
+      readingTitle: 'Career Experts',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 10,
+      title: 'Unit 10: Lifelong Learning',
+      bookPages: 'Trang in 128–139',
+      readingTitle: 'Head Teacher',
+      scopeDescription: '9 phần SGK • Bài đọc tương tác Activity 2 (5 câu hỏi)',
+    ),
+    RoadmapUnitItem(
+      number: 0,
+      reviewNumber: 4,
+      title: 'Review 4 (Units 9 - 10)',
+      bookPages: 'Trang in 140–143',
+      readingTitle: 'Ôn tập tổng kết toàn bộ SGK Tiếng Anh 12',
+      scopeDescription: 'Tổng hợp ngữ pháp trọng tâm & bài tập viết luận SGK',
+    ),
+  ];
+
+  // --- 3. Card Đếm ngược kỳ thi THPT (tự thu gọn nếu chưa đặt ngày thi) ---
+  Widget _buildCountdownCard(BuildContext context, HomeController controller, AuthController auth) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Tính số ngày đếm ngược từ examDate thực tế nếu có
+    final rawExamDate = controller.examDate.isNotEmpty ? controller.examDate : auth.user.examDate;
+    int? daysRemaining;
+    bool isExpired = false;
+
+    if (rawExamDate.isNotEmpty) {
+      final parsedDate = DateTime.tryParse(rawExamDate);
+      if (parsedDate != null) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final target = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+        final diff = target.difference(today).inDays;
+        if (diff < 0) {
+          isExpired = true;
+        } else {
+          daysRemaining = diff;
+        }
+      }
+    }
+
+    // Nếu chưa đặt ngày thi: thu gọn thẻ đếm ngược, giữ đường dẫn chỉnh mục tiêu ở vị trí phụ
+    if (rawExamDate.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E2430) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.calendar_month_rounded, color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Kỳ thi THPT: Chưa đặt ngày thi',
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    auth.user.hasConfirmedTargetScore
+                        ? 'Mục tiêu: ${auth.user.targetScore == 10.0 ? '10' : '${auth.user.targetScore!.toStringAsFixed(0)}+'} đ • Kế hoạch: ${auth.user.dailyMinutes}p/ngày'
+                        : 'Mục tiêu: Chưa chọn • Kế hoạch: ${auth.user.dailyMinutes}p/ngày',
+                    style: TextStyle(fontSize: 11.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OnboardingTargetScreen(
+                      initialTargetScore: auth.user.hasConfirmedTargetScore ? auth.user.targetScore : null,
+                      autoLoadSavedSettings: false,
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                'Thiết lập >',
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                  color: AppTokens.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -339,7 +1495,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Mục tiêu ${auth.user.targetScore.toStringAsFixed(0)}+',
+                  auth.user.hasConfirmedTargetScore
+                      ? 'Mục tiêu ${auth.user.targetScore == 10.0 ? '10' : '${auth.user.targetScore!.toStringAsFixed(0)}+'}'
+                      : 'Chưa chọn mục tiêu',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 12,
@@ -350,24 +1508,28 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Row(
+          Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '238',
-                style: TextStyle(
+                daysRemaining != null
+                    ? '$daysRemaining'
+                    : (isExpired ? 'Đã qua' : 'Chưa đặt'),
+                style: const TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w900,
-                  fontSize: 38,
+                  fontSize: 34,
                   color: Colors.white,
                   letterSpacing: -1,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
-                'ngày nữa',
-                style: TextStyle(
+                daysRemaining != null
+                    ? 'ngày nữa'
+                    : (isExpired ? 'ngày thi' : 'ngày thi'),
+                style: const TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -388,7 +1550,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const OnboardingTargetScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => OnboardingTargetScreen(
+                        initialTargetScore: auth.user.hasConfirmedTargetScore ? auth.user.targetScore : null,
+                        autoLoadSavedSettings: false,
+                      ),
+                    ),
                   );
                 },
                 child: const Text(
@@ -407,17 +1574,593 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 4. Card Tiếp tục học: Unit 3 - Reading ---
-  Widget _buildContinueLearningCard(BuildContext context) {
+  // --- 4. Card Bài học thử / Tiếp tục học (ưu tiên trải nghiệm học thử của khách) ---
+  Widget _buildContinueLearningCard(
+    BuildContext context,
+    HomeController controller,
+    AuthController auth,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final session = controller.learningSession;
+
+    // A. DÀNH CHO KHÁCH CHƯA ĐĂNG NHẬP
+    if (!auth.isAuthenticated) {
+      final isTrialSession = session != null &&
+          (session.lessonType == 'trial' || session.lessonId.startsWith('trial_'));
+
+      // 1. Khách đang làm dở bài thử (in_progress)
+      if (isTrialSession && session.isInProgress) {
+        final lesson = TrialLessonRepository.instance.getLessonById(session.lessonId) ??
+            TrialLessonRepository.instance.getDefaultLesson();
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isDark ? const Color(0xFF2563EB) : const Color(0xFF93C5FD), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? const Color(0x20000000) : const Color(0x0E2563EB),
+                offset: const Offset(0, 4),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'TIẾP TỤC BÀI HỌC THỬ (UNIT ${lesson.unitNumber})',
+                      style: TextStyle(
+                        fontFamily: 'BeVietnamPro',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                        color: isDark ? const Color(0xFF93C5FD) : AppTokens.primary,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Câu ${session.currentQuestionIndex + 1}/${session.totalQuestions}',
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                lesson.lessonTitle,
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${lesson.textbookSource} • ${lesson.activityName}',
+                style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 14),
+              AppButton(
+                label: 'Tiếp tục làm câu ${session.currentQuestionIndex + 1}',
+                isFullWidth: true,
+                variant: AppButtonVariant.primary,
+                height: 46,
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TrialLessonScreen(
+                        lessonId: lesson.lessonId,
+                        initialStep: 1,
+                        initialQuestionIndex: session.currentQuestionIndex,
+                        initialAnswers: session.selectedAnswers,
+                      ),
+                    ),
+                  );
+                  if (context.mounted) {
+                    controller.refresh();
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton.icon(
+                  icon: const Icon(Icons.swap_horiz_rounded, size: 16, color: AppTokens.primary),
+                  label: const Text(
+                    'Đổi sang bài học thử khác',
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.5,
+                      color: AppTokens.primary,
+                    ),
+                  ),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TrialLessonPickerScreen(currentLessonId: lesson.lessonId),
+                      ),
+                    );
+                    if (context.mounted) {
+                      controller.refresh();
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // 2. Khách đã hoàn thành bài thử (completed)
+      if (isTrialSession && session.isCompleted) {
+        final lesson = TrialLessonRepository.instance.getLessonById(session.lessonId) ??
+            TrialLessonRepository.instance.getDefaultLesson();
+        final score = session.score != null
+            ? (session.score! / session.totalQuestions * 10.0)
+            : 0.0;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? const Color(0x20000000) : const Color(0x0A000000),
+                offset: const Offset(0, 4),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A), size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'ĐÃ HOÀN THÀNH BÀI THỬ',
+                          style: TextStyle(
+                            fontFamily: 'BeVietnamPro',
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                            color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${score.toStringAsFixed(1)} / 10.0 đ',
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Unit ${lesson.unitNumber}: ${lesson.lessonTitle}',
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Đúng ${session.score}/${session.totalQuestions} câu theo SGK. Tạo tài khoản để mở khóa toàn bộ 10 Unit.',
+                style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: 'Xem lại kết quả',
+                      variant: AppButtonVariant.primary,
+                      height: 44,
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TrialLessonScreen(
+                              lessonId: lesson.lessonId,
+                              initialStep: 2,
+                              initialAnswers: session.selectedAnswers,
+                            ),
+                          ),
+                        );
+                        if (context.mounted) {
+                          controller.refresh();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AppButton(
+                      label: 'Ôn lại bài',
+                      variant: AppButtonVariant.outlined,
+                      height: 44,
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TrialLessonScreen(
+                              lessonId: lesson.lessonId,
+                              initialStep: 0,
+                            ),
+                          ),
+                        );
+                        if (context.mounted) {
+                          controller.refresh();
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton.icon(
+                  icon: const Icon(Icons.explore_outlined, size: 16, color: AppTokens.primary),
+                  label: const Text(
+                    'Xem danh sách 10 Unit (Học thử hoặc đăng ký)',
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.5,
+                      color: AppTokens.primary,
+                    ),
+                  ),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TrialLessonPickerScreen(currentLessonId: lesson.lessonId),
+                      ),
+                    );
+                    if (context.mounted) {
+                      controller.refresh();
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // 3. Khách chưa bắt đầu bài thử (mặc định đề xuất Unit 1 nhưng cho chọn bài khác)
+      final defaultLesson = TrialLessonRepository.instance.getDefaultLesson();
+      return Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E40AF), Color(0xFF2563EB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x252563EB),
+              offset: Offset(0, 6),
+              blurRadius: 14,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(50),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.stars_rounded, color: Color(0xFFFFC53D), size: 16),
+                      SizedBox(width: 4),
+                      Text(
+                        'BÀI HỌC THỬ ĐẦU TIÊN',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                const Text(
+                  'SGK Tiếng Anh 12',
+                  style: TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Unit ${defaultLesson.unitNumber}: ${defaultLesson.lessonTitle}',
+              style: const TextStyle(
+                fontFamily: 'BeVietnamPro',
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Đọc hiểu tương tác có hỗ trợ tra từ, dịch đoạn và làm bài tập đọc hiểu Activity 2 chuẩn SGK Global Success 12.',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Colors.white70,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF1D4ED8),
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => TrialLessonScreen(lessonId: defaultLesson.lessonId)),
+                );
+                if (context.mounted) {
+                  controller.refresh();
+                }
+              },
+              child: const Text(
+                'Học thử ngay',
+                style: TextStyle(
+                  fontFamily: 'BeVietnamPro',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: InkWell(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TrialLessonPickerScreen(),
+                    ),
+                  );
+                  if (context.mounted) {
+                    controller.refresh();
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.explore_outlined, size: 16, color: Color(0xFFFFC53D)),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Chọn bài học thử khác (${TrialLessonRepository.instance.getReadyLessons().length} Unit sẵn sàng) >',
+                          style: const TextStyle(
+                            fontFamily: 'BeVietnamPro',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                            color: Color(0xFFFFC53D),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // B. DÀNH CHO HỌC VIÊN ĐÃ ĐĂNG NHẬP
+    if (session == null) {
+      final defaultLesson = TrialLessonRepository.instance.getDefaultLesson();
+      return Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E2430) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isDark ? const Color(0xFF2563EB) : const Color(0xFF93C5FD), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? const Color(0x20000000) : const Color(0x0E2563EB),
+              offset: const Offset(0, 4),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.school_rounded, color: isDark ? const Color(0xFF60A5FA) : AppTokens.primary, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'LỘ TRÌNH HỌC VIÊN SGK 12',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          color: isDark ? const Color(0xFF93C5FD) : AppTokens.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '10 Unit chuẩn SGK',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Unit ${defaultLesson.unitNumber}: ${defaultLesson.unitTitle}',
+              style: TextStyle(
+                fontFamily: 'BeVietnamPro',
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${defaultLesson.lessonTitle} · Đầy đủ bài đọc tương tác, từ vựng và ngữ pháp trọng tâm.',
+              style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), height: 1.35),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'Học bài đọc hiểu',
+                    icon: Icons.menu_book_rounded,
+                    variant: AppButtonVariant.primary,
+                    height: 44,
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TrialLessonScreen(lessonId: defaultLesson.lessonId),
+                        ),
+                      );
+                      if (context.mounted) controller.refresh();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AppButton(
+                    label: 'Chi tiết Unit',
+                    icon: Icons.arrow_forward_rounded,
+                    variant: AppButtonVariant.outlined,
+                    height: 44,
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => UnitDetailScreen(
+                            unitNumber: defaultLesson.unitNumber,
+                            unitTitle: defaultLesson.unitTitle,
+                          ),
+                        ),
+                      );
+                      if (context.mounted) controller.refresh();
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: TextButton.icon(
+                icon: const Icon(Icons.explore_outlined, size: 16, color: AppTokens.primary),
+                label: const Text(
+                  'Chọn bài học từ toàn bộ 10 Unit SGK >',
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                    color: AppTokens.primary,
+                  ),
+                ),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TextbookHubScreen(),
+                    ),
+                  );
+                  if (context.mounted) controller.refresh();
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final isInProgress = !session.isCompleted;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E2430) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
+        border: Border.all(
+          color: isInProgress
+              ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF93C5FD))
+              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        ),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x06000000),
-            offset: Offset(0, 3),
+            color: isDark ? const Color(0x20000000) : const Color(0x06000000),
+            offset: const Offset(0, 3),
             blurRadius: 8,
           ),
         ],
@@ -427,11 +2170,40 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(18),
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ReadingStudyScreen()),
-            );
+          onTap: () async {
+            final repo = Provider.of<AppRepository>(context, listen: false);
+            if (isInProgress) {
+              final questions = await repo.getQuestionsByIds(session.questionIds);
+              if (context.mounted && questions.isNotEmpty) {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PracticeQuizScreen(
+                      title: session.lessonTitle,
+                      questions: questions,
+                      lessonId: session.lessonId,
+                      initialIndex: session.currentQuestionIndex,
+                      initialAnswers: session.selectedAnswers,
+                      nextLessonTitle: session.nextLessonTitle,
+                    ),
+                  ),
+                );
+                if (context.mounted) {
+                  controller.refresh();
+                }
+                return;
+              }
+            }
+
+            if (context.mounted) {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PracticeScreen()),
+              );
+              if (context.mounted) {
+                controller.refresh();
+              }
+            }
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -441,40 +2213,50 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: isInProgress
+                        ? (isDark ? const Color(0xFF1E3A8A).withAlpha(120) : const Color(0xFFEFF6FF))
+                        : (isDark ? const Color(0xFF064E3B).withAlpha(120) : const Color(0xFFF0FDF4)),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Center(
-                    child: Icon(Icons.menu_book_rounded, color: Color(0xFF2563EB), size: 26),
+                  child: Center(
+                    child: Icon(
+                      isInProgress ? Icons.play_arrow_rounded : Icons.check_circle_outline_rounded,
+                      color: isInProgress
+                          ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB))
+                          : (isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A)),
+                      size: 26,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Tiếp tục học',
+                        isInProgress ? 'Tiếp tục bài đang làm dở' : 'Bài đã hoàn thành gần đây',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
+                          color: isInProgress ? const Color(0xFF2563EB) : const Color(0xFF16A34A),
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        'Unit 3 · Reading',
+                        session.lessonTitle,
                         style: TextStyle(
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w800,
                           fontSize: 16,
-                          color: Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
-                        'Green Habits for a Better Future',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        isInProgress
+                            ? 'Câu ${session.currentQuestionIndex + 1}/${session.totalQuestions} • Chạm để làm tiếp'
+                            : 'Đúng ${session.score}/${session.totalQuestions} câu • Gợi ý: ${session.nextLessonTitle ?? 'Luyện tập thêm'}',
+                        style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ],
                   ),
@@ -488,20 +2270,76 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 5. Checklist Nhiệm vụ hôm nay ---
-  Widget _buildDailyTasksCard(BuildContext context) {
-    int doneCount = (_task1Done ? 1 : 0) + (_task2Done ? 1 : 0) + (_task3Done ? 1 : 0);
+  // --- 5. Checklist Nhiệm vụ hôm nay dựa trên dữ liệu thật ---
+  Widget _buildDailyTasksCard(
+    BuildContext context,
+    HomeController controller,
+    AuthController auth,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dueWords = controller.dueWordsCount;
+    final dueWrongs = controller.dueWrongQuestionsCount;
+    final hasDailyActivity = controller.todayQuestionsDone > 0;
+    final session = controller.learningSession;
+
+    // Nếu là khách và chưa có dữ liệu từ vựng / câu sai cần ôn
+    if (!auth.isAuthenticated && dueWords == 0 && dueWrongs == 0 && !hasDailyActivity) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E2430) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.assignment_outlined, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Nhiệm vụ hôm nay',
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    session != null && session.isCompleted
+                        ? 'Bạn đã hoàn thành bài học thử hôm nay! Hãy tạo tài khoản để làm thêm nhiệm vụ mới.'
+                        : 'Hoàn thành bài học thử đầu tiên để bắt đầu ghi nhận từ vựng và câu sai cần ôn.',
+                    style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E2430) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x06000000),
-            offset: Offset(0, 3),
+            color: isDark ? const Color(0x20000000) : const Color(0x06000000),
+            offset: const Offset(0, 3),
             blurRadius: 8,
           ),
         ],
@@ -512,27 +2350,27 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Nhiệm vụ hôm nay',
                 style: TextStyle(
                   fontFamily: 'BeVietnamPro',
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
-                  color: Color(0xFF0F172A),
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: doneCount == 3 ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '$doneCount/3 hoàn thành',
+                  'Mục tiêu: ${controller.todayQuestionsDone}/${controller.dailyGoal} câu',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
-                    color: doneCount == 3 ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
                   ),
                 ),
               ),
@@ -540,36 +2378,38 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Task 1
+          // Task 1: Ôn từ vựng
           _buildTaskItem(
-            title: 'Ôn 12 từ đến hạn',
-            time: 'Hoàn thành',
-            isDone: _task1Done,
-            onChanged: (val) => setState(() => _task1Done = val ?? false),
+            title: dueWords > 0
+                ? 'Ôn $dueWords từ vựng đến hạn'
+                : 'Chưa có từ vựng nào đến hạn ôn',
+            time: dueWords > 0 ? 'Cần ôn' : 'Trống',
+            isDone: false,
+            onChanged: (_) {},
           ),
           const Divider(height: 16),
 
-          // Task 2
+          // Task 2: Câu sai
           _buildTaskItem(
-            title: 'Đọc phần Reading của Unit 3',
-            time: '8 phút',
-            isDone: _task2Done,
-            onChanged: (val) => setState(() => _task2Done = val ?? false),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ReadingStudyScreen()),
-              );
-            },
+            title: dueWrongs > 0
+                ? 'Ôn $dueWrongs câu sai trong sổ tay'
+                : 'Sổ câu sai trống',
+            time: dueWrongs > 0 ? 'Cần ôn' : 'Trống',
+            isDone: false,
+            onChanged: (_) {},
           ),
           const Divider(height: 16),
 
-          // Task 3
+          // Task 3: Luyện tập ngày
           _buildTaskItem(
-            title: '10 câu ngữ pháp (dạng bạn hay sai)',
-            time: '6 phút',
-            isDone: _task3Done,
-            onChanged: (val) => setState(() => _task3Done = val ?? false),
+            title: hasDailyActivity
+                ? 'Đã luyện ${controller.todayQuestionsDone} câu hôm nay'
+                : 'Luyện tập đạt mục tiêu ngày (${controller.dailyGoal} câu)',
+            time: controller.isDailyGoalCompleted
+                ? 'Hoàn thành'
+                : (hasDailyActivity ? 'Đang học' : 'Chưa bắt đầu'),
+            isDone: controller.isDailyGoalCompleted && hasDailyActivity,
+            onChanged: (_) {},
           ),
         ],
       ),
@@ -583,6 +2423,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required ValueChanged<bool?> onChanged,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -601,7 +2442,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontFamily: 'BeVietnamPro',
                 fontWeight: isDone ? FontWeight.w500 : FontWeight.w600,
                 fontSize: 14,
-                color: isDone ? const Color(0xFF94A3B8) : const Color(0xFF1E293B),
+                color: isDone
+                    ? const Color(0xFF94A3B8)
+                    : (isDark ? Colors.white : const Color(0xFF1E293B)),
                 decoration: isDone ? TextDecoration.lineThrough : null,
               ),
             ),
@@ -609,7 +2452,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: isDone ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+              color: isDone
+                  ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
+                  : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -617,7 +2462,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: isDone ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                color: isDone
+                    ? (isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A))
+                    : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
             ),
           ),
@@ -637,10 +2484,7 @@ class _HomeScreenState extends State<HomeScreen> {
             variant: AppButtonVariant.outlined,
             height: 48,
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const UnitDetailScreen()),
-              );
+              MainShell.switchToTab(context, 1);
             },
           ),
         ),
@@ -652,11 +2496,11 @@ class _HomeScreenState extends State<HomeScreen> {
             variant: AppButtonVariant.outlined,
             height: 48,
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Gia sư AI English 12 sẵn sàng giải đáp thắc mắc bài tập của bạn!'),
-                  duration: Duration(seconds: 2),
-                ),
+              AiTutorSheet.show(
+                context,
+                unitNumber: 1,
+                unitTitle: 'Life Stories We Admire',
+                sectionTitle: 'Hỏi đáp bài học',
               );
             },
           ),

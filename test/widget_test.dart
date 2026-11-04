@@ -11,7 +11,7 @@ class FakeAppRepository extends Fake implements AppRepository {
   Future<List<Topic>> getTopicsByGrade(int grade) async => [];
 
   @override
-  Future<List<WordProgress>> getAllWordProgress() async => [];
+  Future<List<WordProgress>> getAllWordProgress({String? ownerId}) async => [];
 }
 
 void main() {

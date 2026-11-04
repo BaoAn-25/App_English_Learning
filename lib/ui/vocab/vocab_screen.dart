@@ -20,7 +20,7 @@ class VocabScreen extends StatelessWidget {
     }
 
     return ChangeNotifierProvider(
-      create: (ctx) => VocabProvider(repo)..loadTopics(),
+      create: (ctx) => VocabProvider(repo),
       child: TopicListScreen(showAppBar: showAppBar),
     );
   }

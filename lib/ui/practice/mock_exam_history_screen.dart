@@ -192,10 +192,12 @@ class _MockExamHistoryScreenState extends State<MockExamHistoryScreen> {
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    formatDate(exam.startedAt),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
+                                  Expanded(
+                                    child: Text(
+                                      formatDate(exam.startedAt),
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
                                     ),
                                   ),
                                 ],

@@ -194,10 +194,12 @@ class _PracticeHistoryScreenState extends State<PracticeHistoryScreen> {
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    formatDate(attempt.startedAt),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
+                                  Expanded(
+                                    child: Text(
+                                      formatDate(attempt.startedAt),
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
                                     ),
                                   ),
                                 ],

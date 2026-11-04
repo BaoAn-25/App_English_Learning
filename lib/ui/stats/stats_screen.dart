@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/app_repository.dart';
+import '../practice/practice_quiz_screen.dart';
+import '../practice/wrong_book_screen.dart';
 import '../strings.dart';
 import '../theme/app_tokens.dart';
 import '../theme/components/app_button.dart';
@@ -82,6 +84,10 @@ class StatsScreen extends StatelessWidget {
                   vertical: AppTokens.space8,
                 ),
                 children: [
+                  // 0. Thẻ mở nhanh Sổ tay câu sai (WrongBookScreen)
+                  _buildWrongBookEntryCard(context),
+                  const SizedBox(height: AppTokens.space16),
+
                   // 1. Bộ chọn thời gian: 7 ngày / 30 ngày
                   _buildRangeSelector(context, controller),
                   const SizedBox(height: AppTokens.space16),
@@ -108,6 +114,79 @@ class StatsScreen extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+
+  // --- 0. Thẻ mở nhanh Sổ tay câu sai ---
+  Widget _buildWrongBookEntryCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AppCard(
+      color: isDark ? const Color(0xFF1E2430) : Colors.white,
+      border: Border.all(
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF7F1D1D).withAlpha(110) : const Color(0xFFFEE2E2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.menu_book_rounded,
+              color: isDark ? const Color(0xFFF87171) : AppTokens.errorRed,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sổ tay câu sai',
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Xem lại lời giải chi tiết và luyện các câu từng làm sai',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTokens.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WrongBookScreen()),
+              );
+            },
+            child: const Text(
+              'Mở sổ sai',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -225,6 +304,7 @@ class StatsScreen extends StatelessWidget {
     int rangeDays,
   ) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final stats = summary.rangeStats;
 
     // Tìm giá trị max để scale trục Y
@@ -245,7 +325,9 @@ class StatsScreen extends StatelessWidget {
           barRods: [
             BarChartRodData(
               toY: s.questionsDone.toDouble(),
-              color: s.questionsDone > 0 ? AppTokens.primary : const Color(0xFFE2E8F0),
+              color: s.questionsDone > 0
+                  ? AppTokens.primary
+                  : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               width: rangeDays == 7 ? 18 : 6,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -343,51 +425,55 @@ class StatsScreen extends StatelessWidget {
     BuildContext context,
     TypeAccuracySummary weakest,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppCard(
-      color: const Color(0xFFFFF9EE),
+      color: isDark ? const Color(0xFF2E1E0F) : const Color(0xFFFFF9EE),
       border: Border.all(color: AppTokens.accentYellow, width: 1.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.warning_amber_rounded,
-                color: Color(0xFFE65100),
+                color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFE65100),
                 size: 22,
               ),
               const SizedBox(width: AppTokens.space8),
               Expanded(
                 child: Text(
                   '${AppStrings.weakestTypeAlert}: ${weakest.displayName}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
-                    color: Color(0xFF943A00),
+                    color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF943A00),
                   ),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE0B2),
+                  color: isDark ? const Color(0xFF78350F) : const Color(0xFFFFE0B2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   'Đúng ${weakest.accuracy.toStringAsFixed(0)}%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFB23B00),
+                    color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFB23B00),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppTokens.space8),
-          const Text(
+          Text(
             AppStrings.recommendPractice,
-            style: TextStyle(fontSize: 13, color: Color(0xFF703200)),
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? const Color(0xFFFCD34D) : const Color(0xFF703200),
+            ),
           ),
           const SizedBox(height: AppTokens.space12),
           AppButton(
@@ -395,9 +481,30 @@ class StatsScreen extends StatelessWidget {
             icon: Icons.flash_on_rounded,
             variant: AppButtonVariant.secondary,
             isFullWidth: true,
-            onPressed: () {
+            onPressed: () async {
               if (onPracticeType != null) {
                 onPracticeType!(weakest.type);
+                return;
+              }
+              final repo = repository ?? AppRepository();
+              final allQuestions = await repo.getAllQuestions();
+              final typedQuestions = allQuestions
+                  .where((q) => q.type == weakest.type)
+                  .toList()
+                ..shuffle();
+              final quizQuestions = (typedQuestions.isNotEmpty ? typedQuestions : allQuestions)
+                  .take(10)
+                  .toList();
+              if (context.mounted && quizQuestions.isNotEmpty) {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PracticeQuizScreen(
+                      title: 'Luyện dạng: ${weakest.displayName}',
+                      questions: quizQuestions,
+                    ),
+                  ),
+                );
               }
             },
           ),
@@ -439,13 +546,16 @@ class StatsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        item.displayName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          item.displayName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         item.totalQuestions > 0
                             ? '${item.correctQuestions}/${item.totalQuestions} câu (${item.accuracy.toStringAsFixed(0)}%)'

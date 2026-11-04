@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/components/app_button.dart';
 import '../theme/components/prep_logo.dart';
 import 'welcome_screen.dart';
@@ -8,7 +9,9 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -32,7 +35,7 @@ class SplashScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'English 12',
+                  'EngPass',
                   style: TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontSize: 40,
@@ -97,6 +100,7 @@ class SplashScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

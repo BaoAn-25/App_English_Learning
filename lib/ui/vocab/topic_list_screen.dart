@@ -6,17 +6,132 @@ import 'package:provider/provider.dart';
 import '../../data/models/topic.dart';
 import 'srs_review_screen.dart';
 import 'vocab_provider.dart';
+import 'match_game_screen.dart';
 import 'word_list_screen.dart';
 
-/// Màn hình danh sách 10 chủ đề từ vựng
-class TopicListScreen extends StatelessWidget {
+/// Màn hình danh sách 10 chủ đề từ vựng & Ghép Thẻ
+class TopicListScreen extends StatefulWidget {
   final bool showAppBar;
   const TopicListScreen({super.key, this.showAppBar = true});
+
+  @override
+  State<TopicListScreen> createState() => _TopicListScreenState();
+}
+
+class _TopicListScreenState extends State<TopicListScreen> {
+  int _selectedSegment = 0; // 0: Flashcards, 1: Match Game
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<VocabProvider>().loadTopics();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final isDark = theme.brightness == Brightness.dark;
+
+    final segmentedControl = Container(
+      color: isDark ? const Color(0xFF1E2430) : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => setState(() => _selectedSegment = 0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _selectedSegment == 0 ? Colors.white : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: _selectedSegment == 0
+                        ? [const BoxShadow(color: Color(0x10000000), blurRadius: 4, offset: Offset(0, 1))]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Thẻ Lật 3D (Flashcards)',
+                      style: TextStyle(
+                        fontFamily: 'BeVietnamPro',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.5,
+                        color: _selectedSegment == 0 ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => setState(() => _selectedSegment = 1),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _selectedSegment == 1 ? const Color(0xFF2563EB) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: _selectedSegment == 1
+                        ? [const BoxShadow(color: Color(0x182563EB), blurRadius: 4, offset: Offset(0, 1))]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Ghép Thẻ (Match Game)',
+                      style: TextStyle(
+                        fontFamily: 'BeVietnamPro',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.5,
+                        color: _selectedSegment == 1 ? Colors.white : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (_selectedSegment == 1) {
+      return Scaffold(
+        backgroundColor: colorScheme.surface,
+        appBar: widget.showAppBar
+            ? AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0.5,
+                title: const Text(
+                  'Ghép Thẻ Từ Vựng',
+                  style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              )
+            : null,
+        body: Column(
+          children: [
+            segmentedControl,
+            const Expanded(
+              child: MatchGameScreen(isEmbedded: true),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -25,7 +140,7 @@ class TopicListScreen extends StatelessWidget {
           return CustomScrollView(
             slivers: [
               // ── App Bar (Ẩn khi nhúng trong TabBar của ReviewScreen) ──
-              if (showAppBar)
+              if (widget.showAppBar)
                 SliverAppBar(
                   expandedHeight: 160,
                   floating: false,
@@ -49,6 +164,14 @@ class TopicListScreen extends StatelessWidget {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const TextbookScreen()),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.dashboard_customize_rounded),
+                      tooltip: 'Trò chơi Ghép Thẻ Từ Vựng',
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MatchGameScreen()),
                       ),
                     ),
                     _SrsReviewButton(provider: provider),
@@ -488,8 +611,7 @@ class _TopicCard extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (_) => ChangeNotifierProvider.value(
-                value: context.read<VocabProvider>()
-                  ..loadWordsByTopic(topic.id),
+                value: context.read<VocabProvider>(),
                 child: WordListScreen(topic: topic),
               ),
             ),

@@ -2,7 +2,10 @@ import '../textbook/word_source_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/app_repository.dart';
 import '../../data/models/word.dart';
+import '../../navigation/main_shell.dart';
+import '../theme/components/engpass_mascot.dart';
 import 'vocab_provider.dart';
 
 /// Màn hình Ôn luyện ngắt quãng (Spaced Repetition System)
@@ -80,6 +83,13 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
 
   void _showSummary(int reviewed, int correct) {
     if (reviewed < _dueWords.length) return;
+    AppRepository().recordStudyReward(
+      xp: 15,
+      minutes: 3,
+      questionsDone: reviewed,
+      correct: correct,
+    );
+    MainShell.markFirstLessonCompleted(context);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -94,9 +104,14 @@ class _SrsReviewScreenState extends State<SrsReviewScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const EngPassMascot(
+              mood: MascotMood.celebrate,
+              size: 88,
+            ),
+            const SizedBox(height: 12),
             Text(
-              'Hoàn thành $reviewed từ',
-              style: const TextStyle(fontSize: 16),
+              'Hoàn thành $reviewed từ (+15 XP)',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(

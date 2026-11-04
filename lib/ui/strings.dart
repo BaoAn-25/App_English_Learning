@@ -23,7 +23,7 @@ class AppStrings {
   // Offline & Sync Status
   static const syncStatusSyncing = 'Đang đồng bộ...';
   static const syncStatusSynced = 'Đã đồng bộ';
-  static const syncStatusOffline = 'Đang ngoại tuyến (Offline)';
+  static const syncStatusOffline = 'Lưu trên thiết bị';
   static const syncStatusError = 'Lỗi đồng bộ';
   static const syncNow = 'Đồng bộ ngay';
   static const lastSyncedAt = 'Đồng bộ lần cuối:';
@@ -101,7 +101,7 @@ class AppStrings {
   static const enableDailyReminder = 'Bật nhắc nhở hằng ngày';
   static const reminderTime = 'Giờ nhắc';
   static const reminderNotificationTitle = 'Đã đến giờ ôn luyện tiếng Anh!';
-  static const reminderNotificationBody = 'Hãy hoàn thành mục tiêu hôm nay để duy trì chuỗi học tập (streak) nhé!';
+  static const reminderNotificationBody = 'Dành ít phút hôm nay để hoàn thành mục tiêu học tập bạn nhé!';
   static const appearanceSection = 'Giao diện';
   static const themeSystem = 'Theo hệ thống';
   static const themeLight = 'Giao diện sáng';

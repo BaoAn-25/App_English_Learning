@@ -24,6 +24,7 @@ class DelayedRepository extends RecordingRepository {
     required List<AttemptAnswer> Function(int) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) async {
     await ready.future;
     await super.savePracticeResult(
@@ -31,6 +32,7 @@ class DelayedRepository extends RecordingRepository {
       buildAnswers: buildAnswers,
       wrongEntries: wrongEntries,
       dailyStat: dailyStat,
+      ownerId: ownerId,
     );
   }
 }

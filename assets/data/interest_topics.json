@@ -1,0 +1,157 @@
+[
+  {
+    "id": "it_football",
+    "categoryId": "cat_sports",
+    "categoryName": "Thể thao & Vận động",
+    "title": "World Football & Soccer",
+    "titleVi": "Bóng đá thế giới & Thể thao",
+    "iconName": "sports_soccer_rounded",
+    "description": "Thuật ngữ bóng đá, vị trí thi đấu, luật việt vị và cảm xúc sân cỏ",
+    "order": 1,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_gym",
+    "categoryId": "cat_sports",
+    "categoryName": "Thể thao & Vận động",
+    "title": "Gym & Fitness Lifestyle",
+    "titleVi": "Gym, Thể hình & Sức khỏe",
+    "iconName": "fitness_center_rounded",
+    "description": "Bài tập thể hình, dinh dưỡng cơ bắp, lịch tập và tăng cường thể lực",
+    "order": 2,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_esports",
+    "categoryId": "cat_sports",
+    "categoryName": "Thể thao & Vận động",
+    "title": "Esports & Gaming World",
+    "titleVi": "Esports & Game thủ",
+    "iconName": "sports_esports_rounded",
+    "description": "Thuật ngữ giải đấu game, giao tranh combat, xếp hạng và streamer",
+    "order": 3,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_cafe",
+    "categoryId": "cat_food",
+    "categoryName": "Ẩm thực & Đời sống",
+    "title": "Coffee Shop & Milk Tea",
+    "titleVi": "Quán Cafe & Trà sữa",
+    "iconName": "local_cafe_rounded",
+    "description": "Cách gọi đồ uống, chọn độ ngọt, tráng miệng và thanh toán sành điệu",
+    "order": 4,
+    "level": "A1-A2"
+  },
+  {
+    "id": "it_dining",
+    "categoryId": "cat_food",
+    "categoryName": "Ẩm thực & Đời sống",
+    "title": "Street Food & Dining Out",
+    "titleVi": "Ẩm thực đường phố & Nhà hàng",
+    "iconName": "restaurant_rounded",
+    "description": "Đặt bàn nhà hàng, gọi món khai vị, món chính và nhận xét hương vị",
+    "order": 5,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_fashion",
+    "categoryId": "cat_food",
+    "categoryName": "Ẩm thực & Đời sống",
+    "title": "Fashion & Shopping Mall",
+    "titleVi": "Thời trang & Mua sắm",
+    "iconName": "shopping_bag_rounded",
+    "description": "Thử trang phục, phối đồ outfit, săn sale và trả giá thông minh",
+    "order": 6,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_movies",
+    "categoryId": "cat_entertainment",
+    "categoryName": "Giải trí & Văn hóa trẻ",
+    "title": "Cinema & Blockbuster Movies",
+    "titleVi": "Điện ảnh & Phim chiếu rạp",
+    "iconName": "movie_filter_rounded",
+    "description": "Xem phim rạp, thể loại phim, cốt truyện plot twist và diễn xuất",
+    "order": 7,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_music",
+    "categoryId": "cat_entertainment",
+    "categoryName": "Giải trí & Văn hóa trẻ",
+    "title": "Music & Live Concerts",
+    "titleVi": "Âm nhạc & Đêm nhạc sống",
+    "iconName": "music_note_rounded",
+    "description": "Giai điệu, lời bài hát, album idol và hòa mình vào đại nhạc hội",
+    "order": 8,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_airport",
+    "categoryId": "cat_travel",
+    "categoryName": "Du lịch & Khám phá",
+    "title": "Airport & Flight Boarding",
+    "titleVi": "Sân bay & Xuất nhập cảnh",
+    "iconName": "flight_takeoff_rounded",
+    "description": "Làm thủ tục check-in, thẻ lên máy bay, hành lý và soi chiếu an ninh",
+    "order": 9,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_hotel",
+    "categoryId": "cat_travel",
+    "categoryName": "Du lịch & Khám phá",
+    "title": "Hotel & Resort Vacation",
+    "titleVi": "Khách sạn & Nghỉ dưỡng",
+    "iconName": "hotel_rounded",
+    "description": "Nhận phòng khách sạn, yêu cầu dịch vụ phòng và trải nghiệm kỳ nghỉ",
+    "order": 10,
+    "level": "A2-B1"
+  },
+  {
+    "id": "it_greetings",
+    "categoryId": "cat_social",
+    "categoryName": "Giao tiếp đời sống",
+    "title": "Essential Greetings & Small Talk",
+    "titleVi": "Giao tiếp vỡ lòng & Chào hỏi",
+    "iconName": "waving_hand_rounded",
+    "description": "Lời chào tự nhiên, giới thiệu bản thân và xã giao lịch sự cho người mới",
+    "order": 11,
+    "level": "A1"
+  },
+  {
+    "id": "it_family",
+    "categoryId": "cat_social",
+    "categoryName": "Giao tiếp đời sống",
+    "title": "Family Members & Daily Life",
+    "titleVi": "Miêu tả thành viên gia đình",
+    "iconName": "groups_rounded",
+    "description": "Hỏi thăm họ hàng, miêu tả tính cách người thân như mẫu Duolingo",
+    "order": 12,
+    "level": "A1-A2"
+  },
+  {
+    "id": "it_tech_coding",
+    "categoryId": "cat_career",
+    "categoryName": "Học đường & Nghề nghiệp",
+    "title": "Tech, Coding & AI Era",
+    "titleVi": "Công nghệ thông tin & Lập trình",
+    "iconName": "terminal_rounded",
+    "description": "Lập trình phần mềm, sửa bug, trí tuệ nhân tạo và hệ thống đám mây",
+    "order": 13,
+    "level": "B1-B2"
+  },
+  {
+    "id": "it_pets",
+    "categoryId": "cat_nature",
+    "categoryName": "Thiên nhiên & Thú cưng",
+    "title": "Cute Pets & Animals",
+    "titleVi": "Thú cưng & Thế giới động vật",
+    "iconName": "pets_rounded",
+    "description": "Chăm sóc chó mèo, nhận nuôi thú cưng và tình yêu động vật",
+    "order": 14,
+    "level": "A1-A2"
+  }
+]
+

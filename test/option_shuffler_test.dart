@@ -31,6 +31,7 @@ class _MockRepo extends AppRepository {
     required List<AttemptAnswer> Function(int attemptId) buildAnswers,
     required List<WrongBookEntry> wrongEntries,
     required DailyStat dailyStat,
+    String? ownerId,
   }) async {
     lastAttempt = Attempt(
       id: 99,
@@ -46,7 +47,7 @@ class _MockRepo extends AppRepository {
   }
 
   @override
-  Future<List<Attempt>> getAllAttempts() async =>
+  Future<List<Attempt>> getAllAttempts({String? ownerId}) async =>
       lastAttempt == null ? [] : [lastAttempt!];
 
   @override
@@ -64,7 +65,9 @@ Question _testQuestion({
     grade: 12,
     type: 'grammar',
     stem: 'Stem of $id',
-    options: options ?? ['Opt A (idx 0)', 'Opt B (idx 1)', 'Opt C (idx 2)', 'Opt D (idx 3)'],
+    options:
+        options ??
+        ['Opt A (idx 0)', 'Opt B (idx 1)', 'Opt C (idx 2)', 'Opt D (idx 3)'],
     correctIndex: correctIndex,
     explanation: 'Giải thích chi tiết cho $id',
     difficulty: 1,
@@ -108,102 +111,112 @@ void main() {
   });
 
   group('PracticeQuizScreen với Option Shuffling', () {
-    testWidgets('Tích hợp xáo trộn: chọn slot hiển thị nhưng chấm điểm & lưu index gốc',
-        (tester) async {
-      // Câu hỏi có đáp án đúng gốc là A (correctIndex = 0)
-      final q1 = _testQuestion(id: 'q1', correctIndex: 0);
-      // Cố định ánh xạ: slot 0 hiển thị opt 2 (C), slot 1 hiển thị opt 0 (A), slot 2 hiển thị opt 3 (D), slot 3 hiển thị opt 1 (B)
-      final mapping1 = QuestionOptionMapping([2, 0, 3, 1]);
+    testWidgets(
+      'Tích hợp xáo trộn: chọn slot hiển thị nhưng chấm điểm & lưu index gốc',
+      (tester) async {
+        // Câu hỏi có đáp án đúng gốc là A (correctIndex = 0)
+        final q1 = _testQuestion(id: 'q1', correctIndex: 0);
+        // Cố định ánh xạ: slot 0 hiển thị opt 2 (C), slot 1 hiển thị opt 0 (A), slot 2 hiển thị opt 3 (D), slot 3 hiển thị opt 1 (B)
+        final mapping1 = QuestionOptionMapping([2, 0, 3, 1]);
 
-      final repo = _MockRepo([q1]);
+        final repo = _MockRepo([q1]);
 
-      await tester.pumpWidget(
-        Provider<AppRepository>.value(
-          value: repo,
-          child: MaterialApp(
-            home: PracticeQuizScreen(
-              title: 'Luyện tập',
-              questions: [q1],
-              optionMappings: [mapping1],
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: repo,
+            child: MaterialApp(
+              home: PracticeQuizScreen(
+                title: 'Luyện tập',
+                questions: [q1],
+                optionMappings: [mapping1],
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Trên màn hình:
-      // Slot 0 (A) hiển thị 'Opt C (idx 2)'
-      // Slot 1 (B) hiển thị 'Opt A (idx 0)'
-      // Người dùng chọn Slot B (bấm vào text 'Opt A (idx 0)')
-      await tester.tap(find.text('Opt A (idx 0)'));
-      await tester.pumpAndSettle();
+        // Trên màn hình:
+        // Slot 0 (A) hiển thị 'Opt C (idx 2)'
+        // Slot 1 (B) hiển thị 'Opt A (idx 0)'
+        // Người dùng chọn Slot B (bấm vào text 'Opt A (idx 0)')
+        await tester.tap(find.text('Opt A (idx 0)'));
+        await tester.pumpAndSettle();
 
-      // Nộp bài
-      await tester.tap(find.text('Nộp bài'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.text('Nộp bài'),
-      ));
-      await tester.pumpAndSettle();
+        // Nộp bài
+        await tester.tap(find.text('Nộp bài'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Nộp bài'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // 1. Điểm số: Đúng 1/1 vì đã chọn đúng originalIndex 0
-      expect(repo.lastAttempt!.score, 1);
-      expect(repo.lastAnswers[0].chosenIndex, 0); // Lưu index gốc = 0!
-      expect(repo.lastAnswers[0].isCorrect, isTrue);
-      expect(repo.lastWrong, isEmpty);
+        // 1. Điểm số: Đúng 1/1 vì đã chọn đúng originalIndex 0
+        expect(repo.lastAttempt!.score, 1);
+        expect(repo.lastAnswers[0].chosenIndex, 0); // Lưu index gốc = 0!
+        expect(repo.lastAnswers[0].isCorrect, isTrue);
+        expect(repo.lastWrong, isEmpty);
 
-      // 2. Màn hình sau khi nộp: Hiển thị đúng đáp án đúng theo slot hiển thị
-      // Vì originalIndex 0 đang ở slot B, nên badge hiển thị 'Đáp án đúng: B'
-      expect(find.text('Đáp án đúng: B'), findsOneWidget);
-    });
+        // 2. Màn hình sau khi nộp: Hiển thị đúng đáp án đúng theo slot hiển thị
+        // Vì originalIndex 0 đang ở slot B, nên badge hiển thị 'Đáp án đúng: B'
+        await tester.scrollUntilVisible(find.text('Đáp án đúng: B'), 100);
+        expect(find.text('Đáp án đúng: B'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Chọn sai slot khi xáo trộn -> tính sai và lưu wrong_book chính xác',
-        (tester) async {
-      final q1 = _testQuestion(id: 'q1', correctIndex: 0);
-      // Slot 0 hiển thị opt 3, Slot 1 hiển thị opt 0
-      final mapping1 = QuestionOptionMapping([3, 0, 1, 2]);
+    testWidgets(
+      'Chọn sai slot khi xáo trộn -> tính sai và lưu wrong_book chính xác',
+      (tester) async {
+        final q1 = _testQuestion(id: 'q1', correctIndex: 0);
+        // Slot 0 hiển thị opt 3, Slot 1 hiển thị opt 0
+        final mapping1 = QuestionOptionMapping([3, 0, 1, 2]);
 
-      final repo = _MockRepo([q1]);
+        final repo = _MockRepo([q1]);
 
-      await tester.pumpWidget(
-        Provider<AppRepository>.value(
-          value: repo,
-          child: MaterialApp(
-            home: PracticeQuizScreen(
-              title: 'Luyện tập',
-              questions: [q1],
-              optionMappings: [mapping1],
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: repo,
+            child: MaterialApp(
+              home: PracticeQuizScreen(
+                title: 'Luyện tập',
+                questions: [q1],
+                optionMappings: [mapping1],
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Người dùng chọn Slot 0 (bấm vào 'Opt D (idx 3)')
-      await tester.tap(find.text('Opt D (idx 3)'));
-      await tester.pumpAndSettle();
+        // Người dùng chọn Slot 0 (bấm vào 'Opt D (idx 3)')
+        await tester.tap(find.text('Opt D (idx 3)'));
+        await tester.pumpAndSettle();
 
-      // Nộp bài
-      await tester.tap(find.text('Nộp bài'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.text('Nộp bài'),
-      ));
-      await tester.pumpAndSettle();
+        // Nộp bài
+        await tester.tap(find.text('Nộp bài'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Nộp bài'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Chấm sai: điểm 0/1
-      expect(repo.lastAttempt!.score, 0);
-      // chosenIndex lưu vào SQLite là index gốc 3!
-      expect(repo.lastAnswers[0].chosenIndex, 3);
-      expect(repo.lastAnswers[0].isCorrect, isFalse);
-      expect(repo.lastWrong.length, 1);
-      expect(repo.lastWrong[0].questionId, 'q1');
-    });
+        // Chấm sai: điểm 0/1
+        expect(repo.lastAttempt!.score, 0);
+        // chosenIndex lưu vào SQLite là index gốc 3!
+        expect(repo.lastAnswers[0].chosenIndex, 3);
+        expect(repo.lastAnswers[0].isCorrect, isFalse);
+        expect(repo.lastWrong.length, 1);
+        expect(repo.lastWrong[0].questionId, 'q1');
+      },
+    );
 
-    testWidgets('Thứ tự hiển thị phương án ổn định khi chuyển câu qua lại',
-        (tester) async {
+    testWidgets('Thứ tự hiển thị phương án ổn định khi chuyển câu qua lại', (
+      tester,
+    ) async {
       final q1 = _testQuestion(id: 'q1', correctIndex: 0);
       final q2 = _testQuestion(id: 'q2', correctIndex: 1);
 
@@ -213,10 +226,7 @@ void main() {
         Provider<AppRepository>.value(
           value: repo,
           child: MaterialApp(
-            home: PracticeQuizScreen(
-              title: 'Luyện tập',
-              questions: [q1, q2],
-            ),
+            home: PracticeQuizScreen(title: 'Luyện tập', questions: [q1, q2]),
           ),
         ),
       );
@@ -238,51 +248,60 @@ void main() {
   });
 
   group('MockExamQuizScreen với Option Shuffling', () {
-    testWidgets('Thi thử: xáo trộn đáp án nhưng lưu index gốc và xem lại chính xác',
-        (tester) async {
-      final q1 = _testQuestion(id: 'q1', correctIndex: 0);
-      final mapping1 = QuestionOptionMapping([1, 2, 0, 3]); // opt 0 ở slot 2 (C)
+    testWidgets(
+      'Thi thử: xáo trộn đáp án nhưng lưu index gốc và xem lại chính xác',
+      (tester) async {
+        final q1 = _testQuestion(id: 'q1', correctIndex: 0);
+        final mapping1 = QuestionOptionMapping([
+          1,
+          2,
+          0,
+          3,
+        ]); // opt 0 ở slot 2 (C)
 
-      final repo = _MockRepo([q1]);
+        final repo = _MockRepo([q1]);
 
-      await tester.pumpWidget(
-        Provider<AppRepository>.value(
-          value: repo,
-          child: MaterialApp(
-            home: MockExamQuizScreen(
-              questions: [q1],
-              durationMinutes: 10,
-              optionMappings: [mapping1],
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: repo,
+            child: MaterialApp(
+              home: MockExamQuizScreen(
+                questions: [q1],
+                durationMinutes: 10,
+                optionMappings: [mapping1],
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Bấm vào opt 0 đang ở slot C
-      await tester.tap(find.text('Opt A (idx 0)'));
-      await tester.pumpAndSettle();
+        // Bấm vào opt 0 đang ở slot C
+        await tester.tap(find.text('Opt A (idx 0)'));
+        await tester.pumpAndSettle();
 
-      // Nộp bài thi
-      await tester.tap(find.text('Nộp bài'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.text('Nộp bài'),
-      ));
-      await tester.pumpAndSettle();
+        // Nộp bài thi
+        await tester.tap(find.text('Nộp bài'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Nộp bài'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Điểm số & SQLite: chính xác
-      expect(repo.lastAttempt!.score, 1);
-      expect(repo.lastAnswers[0].chosenIndex, 0);
+        // Điểm số & SQLite: chính xác
+        expect(repo.lastAttempt!.score, 1);
+        expect(repo.lastAnswers[0].chosenIndex, 0);
 
-      // Mở màn xem lại bài làm PracticeReviewScreen
-      await tester.tap(find.text('Xem lại bài thi'));
-      await tester.pumpAndSettle();
+        // Mở màn xem lại bài làm PracticeReviewScreen
+        await tester.tap(find.text('Xem lại bài thi'));
+        await tester.pumpAndSettle();
 
-      // Màn xem lại hiển thị theo thứ tự gốc nhất quán:
-      expect(find.byType(PracticeReviewScreen), findsOneWidget);
-      expect(find.textContaining('A. Opt A (idx 0)'), findsWidgets);
-    });
+        // Màn xem lại hiển thị theo thứ tự gốc nhất quán:
+        expect(find.byType(PracticeReviewScreen), findsOneWidget);
+        expect(find.textContaining('A. Opt A (idx 0)'), findsWidgets);
+      },
+    );
   });
 }
