@@ -24,6 +24,12 @@ class AuthController extends ChangeNotifier {
     loadSavedProfile();
   }
 
+  @visibleForTesting
+  void setUserForTesting(UserProfile user) {
+    _user = user;
+    notifyListeners();
+  }
+
   final ApiClient _apiClient;
   final AppRepository _repository;
 
@@ -112,11 +118,14 @@ class AuthController extends ChangeNotifier {
         if (res.isSuccess && res.data != null) {
           final serverUser = res.data!['user'] as Map<String, dynamic>?;
           if (serverUser != null) {
+            final sEmail = serverUser['email'] as String? ?? _user.email;
             _user = _user.copyWith(
               displayName: serverUser['displayName'] as String? ?? _user.displayName,
-              email: serverUser['email'] as String? ?? _user.email,
+              email: sEmail,
               avatarUrl: serverUser['avatarUrl'] as String? ?? _user.avatarUrl,
-              role: serverUser['role'] as String? ?? _user.role,
+              role: UserProfile.isSystemAdmin(sEmail)
+                  ? 'admin'
+                  : (serverUser['role'] as String? ?? _user.role),
               emailVerified: serverUser['emailVerified'] == true,
               isLocked: serverUser['isLocked'] == true,
               lockedReason: serverUser['lockedReason'] as String? ?? '',
@@ -129,6 +138,10 @@ class AuthController extends ChangeNotifier {
           if (lockMsg != null && lockMsg.isNotEmpty) {
             _errorMessage = lockMsg;
           }
+        }
+        if (UserProfile.isSystemAdmin(_user.email)) {
+          _user = _user.copyWith(role: 'admin');
+          await _repository.saveAuthUser(_user);
         }
       }
     } catch (_) {

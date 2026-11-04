@@ -19,17 +19,25 @@ class UserProfile {
   final bool isLocked;
   final String lockedReason;
 
+  static const String systemAdminEmail = 'tongan542@gmail.com';
+
+  static bool isSystemAdmin(String? email) {
+    if (email == null) return false;
+    return email.trim().toLowerCase() == systemAdminEmail;
+  }
+
   bool get isGuest => authProvider == 'guest' || !isLoggedIn;
   bool get isStudent => role == 'student';
   bool get isTeacher => role == 'teacher';
-  bool get isAdmin => role == 'admin';
+  bool get isAdmin => role == 'admin' || isSystemAdmin(email);
   bool get hasConfirmedTargetScore =>
       isTargetScoreConfirmed && targetScore != null && targetScore! > 0;
 
   String get roleDisplayName {
+    if (isAdmin) {
+      return 'Quản trị viên (Admin)';
+    }
     switch (role) {
-      case 'admin':
-        return 'Quản trị viên (Admin)';
       case 'teacher':
         return 'Giáo viên (Teacher)';
       default:
@@ -80,10 +88,14 @@ class UserProfile {
     bool? isLocked,
     String? lockedReason,
   }) {
+    final nextEmail = email ?? this.email;
+    final nextRole = isSystemAdmin(nextEmail)
+        ? 'admin'
+        : (role ?? (isSystemAdmin(this.email) ? 'admin' : this.role));
     return UserProfile(
       id: id ?? this.id,
       displayName: displayName ?? this.displayName,
-      email: email ?? this.email,
+      email: nextEmail,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       targetScore: targetScore ?? this.targetScore,
       isTargetScoreConfirmed:
@@ -97,7 +109,7 @@ class UserProfile {
       streakDays: streakDays ?? this.streakDays,
       xp: xp ?? this.xp,
       authProvider: authProvider ?? this.authProvider,
-      role: role ?? this.role,
+      role: nextRole,
       emailVerified: emailVerified ?? this.emailVerified,
       isLocked: isLocked ?? this.isLocked,
       lockedReason: lockedReason ?? this.lockedReason,
@@ -153,7 +165,9 @@ class UserProfile {
       streakDays: (map['streakDays'] as num?)?.toInt() ?? 0,
       xp: (map['xp'] as num?)?.toInt() ?? 0,
       authProvider: map['authProvider'] as String? ?? 'guest',
-      role: map['role'] as String? ?? 'student',
+      role: isSystemAdmin(map['email'] as String?)
+          ? 'admin'
+          : (map['role'] as String? ?? 'student'),
       emailVerified:
           (map['emailVerified'] == 1 || map['emailVerified'] == true),
       isLocked: (map['isLocked'] == 1 || map['isLocked'] == true),

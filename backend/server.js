@@ -4,6 +4,7 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const crypto = require('crypto');
 
+const isSystemAdminEmail = (em) => Boolean(em && String(em).toLowerCase().trim() === 'tongan542@gmail.com');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -838,6 +839,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     await client.query('COMMIT');
 
+    if (isSystemAdminEmail(user.email)) user.role = 'admin';
     const token = generateToken({ id: userId, email, role: 'student' });
 
     // Gửi email xác minh nếu có cấu hình SMTP
@@ -1127,6 +1129,7 @@ app.post('/api/auth/google', async (req, res) => {
       await client.query('COMMIT');
 
       // Cấp JWT Token của hệ thống English 12 (không dùng ID Token Google làm session token vô thời hạn)
+      if (isSystemAdminEmail(googleEmail)) userRole = 'admin';
       const token = generateToken({ id: userId, email: googleEmail, role: userRole });
 
       // Không trả về hoặc log nguyên ID token

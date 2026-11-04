@@ -8,7 +8,7 @@ import '../data/question_sync_service.dart';
 import '../data/remote/api_client.dart';
 import '../ui/auth/auth_controller.dart';
 import '../ui/auth/welcome_screen.dart';
-import 'main_shell.dart';
+import 'role_routing_shell.dart';
 
 class AppStartup extends StatefulWidget {
   final Future<void> Function()? initialize;
@@ -90,12 +90,12 @@ class _AppStartupState extends State<AppStartup> {
           return const WelcomeScreen();
         }
         if (widget.startWithOnboarding == false) {
-          return const MainShell();
+          return const RoleRoutingShell();
         }
 
         // 2. Mặc định theo trạng thái người học thực tế đã hoàn thành Onboarding hay chưa
         if (_hasCompletedOnboarding) {
-          return const MainShell();
+          return const RoleRoutingShell();
         }
 
         // Chưa hoàn thành onboarding -> vào thẳng màn hình chào mừng & học thử (Ảnh 1)

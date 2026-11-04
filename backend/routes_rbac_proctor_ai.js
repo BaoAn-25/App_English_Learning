@@ -8,6 +8,7 @@ async function initRbacAndProctoringTables(client) {
   await client.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_locked BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_reason TEXT;
+    UPDATE users SET role = 'admin' WHERE LOWER(TRIM(email)) = 'tongan542@gmail.com';
 
     CREATE TABLE IF NOT EXISTS system_configs (
       key VARCHAR(64) PRIMARY KEY,
@@ -100,6 +101,113 @@ async function initRbacAndProctoringTables(client) {
       updated_by VARCHAR(64),
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    ALTER TABLE supervised_exams ADD COLUMN IF NOT EXISTS class_id VARCHAR(64);
+    ALTER TABLE supervised_exams ADD COLUMN IF NOT EXISTS open_at TIMESTAMP WITH TIME ZONE;
+    ALTER TABLE supervised_exams ADD COLUMN IF NOT EXISTS max_attempts INT NOT NULL DEFAULT 1;
+    ALTER TABLE supervised_exams ADD COLUMN IF NOT EXISTS shuffle_questions BOOLEAN NOT NULL DEFAULT TRUE;
+
+    ALTER TABLE exam_live_sessions ADD COLUMN IF NOT EXISTS student_explanation TEXT;
+    ALTER TABLE exam_live_sessions ADD COLUMN IF NOT EXISTS explanation_submitted_at TIMESTAMP WITH TIME ZONE;
+
+    CREATE TABLE IF NOT EXISTS classes (
+      id VARCHAR(64) PRIMARY KEY,
+      name VARCHAR(120) NOT NULL,
+      school_name VARCHAR(255) DEFAULT '',
+      academic_year VARCHAR(32) DEFAULT '2025-2026',
+      join_code VARCHAR(32) UNIQUE NOT NULL,
+      teacher_id VARCHAR(64),
+      teacher_name VARCHAR(120) DEFAULT '',
+      teacher_email VARCHAR(255) DEFAULT '',
+      require_approval BOOLEAN NOT NULL DEFAULT FALSE,
+      show_leaderboard BOOLEAN NOT NULL DEFAULT TRUE,
+      allow_join BOOLEAN NOT NULL DEFAULT TRUE,
+      is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS class_members (
+      id VARCHAR(64) PRIMARY KEY,
+      class_id VARCHAR(64) REFERENCES classes(id) ON DELETE CASCADE,
+      student_id VARCHAR(64) NOT NULL,
+      student_name VARCHAR(120) DEFAULT '',
+      student_email VARCHAR(255) DEFAULT '',
+      status VARCHAR(32) NOT NULL DEFAULT 'active',
+      joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(class_id, student_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS class_assignments (
+      id VARCHAR(64) PRIMARY KEY,
+      class_id VARCHAR(64) REFERENCES classes(id) ON DELETE CASCADE,
+      class_name VARCHAR(120) DEFAULT '',
+      title TEXT NOT NULL,
+      assignment_type VARCHAR(32) NOT NULL DEFAULT 'unit_practice',
+      unit_number INT NOT NULL DEFAULT 1,
+      skills_json JSONB NOT NULL DEFAULT '["reading"]'::jsonb,
+      exam_id VARCHAR(64),
+      deadline_at TIMESTAMP WITH TIME ZONE,
+      max_attempts INT NOT NULL DEFAULT 2,
+      show_answers_mode VARCHAR(32) NOT NULL DEFAULT 'after_submit',
+      status VARCHAR(32) NOT NULL DEFAULT 'open',
+      created_by VARCHAR(64),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS assignment_submissions (
+      id VARCHAR(64) PRIMARY KEY,
+      assignment_id VARCHAR(64) REFERENCES class_assignments(id) ON DELETE CASCADE,
+      class_id VARCHAR(64),
+      student_id VARCHAR(64) NOT NULL,
+      student_name VARCHAR(120) DEFAULT '',
+      student_email VARCHAR(255) DEFAULT '',
+      score NUMERIC(5, 2) NOT NULL DEFAULT 0.0,
+      correct_count INT NOT NULL DEFAULT 0,
+      total_questions INT NOT NULL DEFAULT 0,
+      skill_breakdown_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+      is_late BOOLEAN NOT NULL DEFAULT FALSE,
+      submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS question_bug_reports (
+      id VARCHAR(64) PRIMARY KEY,
+      question_id VARCHAR(64),
+      unit_number INT NOT NULL DEFAULT 1,
+      skill VARCHAR(32) DEFAULT 'reading',
+      title TEXT NOT NULL,
+      details TEXT DEFAULT '',
+      category VARCHAR(32) DEFAULT 'wrong_answer',
+      status VARCHAR(32) NOT NULL DEFAULT 'new',
+      reporter_id VARCHAR(64),
+      reported_by VARCHAR(120) DEFAULT '',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS system_announcements (
+      id VARCHAR(64) PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      target VARCHAR(32) NOT NULL DEFAULT 'all',
+      type VARCHAR(32) NOT NULL DEFAULT 'general',
+      class_id VARCHAR(64),
+      sent_by VARCHAR(64),
+      sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS teacher_requests (
+      id VARCHAR(64) PRIMARY KEY,
+      user_id VARCHAR(64),
+      name VARCHAR(120) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      school VARCHAR(255) DEFAULT '',
+      subject VARCHAR(120) DEFAULT 'Tiếng Anh 12',
+      is_verified_domain BOOLEAN NOT NULL DEFAULT FALSE,
+      status VARCHAR(32) NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
   `);
 }
@@ -275,6 +383,7 @@ function registerRbacProctorAiRoutes(app, pool, { authenticateToken, hashPasswor
         return res.status(401).json({ error: 'Tài khoản không tồn tại hoặc đã bị xóa khỏi hệ thống.' });
       }
       const dbUser = result.rows[0];
+      if (dbUser.email && dbUser.email.toLowerCase().trim() === 'tongan542@gmail.com') dbUser.role = 'admin';
       if (dbUser.is_locked) {
         return res.status(403).json({
           error: `Tài khoản của bạn đã bị khóa bởi Quản trị viên. Lý do: ${dbUser.locked_reason || 'Vi phạm quy định hệ thống.'}`,
@@ -554,11 +663,34 @@ BẮT BUỘC trả về đúng định dạng JSON Array thuần túy (không b�
       }
     }
 
-    // Bộ sinh câu hỏi chuẩn SGK 12 dự phòng (Built-in Question Generator)
-    const fallbackQuestions = buildGeneratedQuestionsFallback(Number(unitNumber) || 1, String(skill), Number(difficulty) || 2, safeCount, topicPrompt);
+    // Khi Gemini API chưa sẵn sàng -> Truy vấn câu hỏi thật từ bảng teacher_questions trong Database
+    if (process.env.DATABASE_URL) {
+      try {
+        const dbRes = await pool.query(
+          `SELECT * FROM teacher_questions WHERE unit_number = $1 ORDER BY created_at DESC LIMIT $2`,
+          [Number(unitNumber) || 1, safeCount]
+        );
+        if (dbRes.rows.length > 0) {
+          return res.json({
+            source: 'database_question_bank',
+            questions: dbRes.rows.map((r) => ({
+              id: r.id,
+              unitNumber: r.unit_number,
+              skill: r.skill,
+              difficulty: r.difficulty,
+              stem: r.stem,
+              options: Array.isArray(r.options_json) ? r.options_json : [],
+              correctIndex: r.correct_index,
+              explanation: r.explanation,
+            })),
+          });
+        }
+      } catch (_) {}
+    }
+
     res.json({
-      source: 'builtin_academic_generator',
-      questions: fallbackQuestions,
+      source: 'unconfigured',
+      questions: [],
     });
   });
 
@@ -1580,7 +1712,8 @@ Trả về JSON thuần túy theo cấu trúc:
       }
       query += ' ORDER BY created_at DESC LIMIT 200';
       const result = await pool.query(query, params);
-      res.json({ users: result.rows });
+      const users = result.rows.map((u) => (u.email && u.email.toLowerCase().trim() === 'tongan542@gmail.com') ? { ...u, role: 'admin' } : u);
+      res.json({ users });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -1833,172 +1966,522 @@ Trả về JSON thuần túy theo cấu trúc:
       res.status(500).json({ error: err.message });
     }
   });
+
+  // ---------------------------------------------------------------------------
+  // 7. Quản lý Lớp học, Thành viên Lớp, Bài giao & Nộp bài (Giáo viên - Học sinh - Admin)
+  // ---------------------------------------------------------------------------
+  app.get('/api/classes', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ classes: [] });
+    try {
+      let query = '';
+      let params = [];
+      if (req.user.role === 'admin') {
+        query = `
+          SELECT c.*,
+            (SELECT COUNT(*)::int FROM class_members m WHERE m.class_id = c.id AND m.status = 'active') AS student_count,
+            (SELECT COUNT(*)::int FROM class_members m WHERE m.class_id = c.id AND m.status = 'pending') AS pending_count,
+            (SELECT COUNT(*)::int FROM class_assignments a WHERE a.class_id = c.id AND a.status = 'open') AS open_assignment_count
+          FROM classes c
+          ORDER BY c.created_at DESC
+        `;
+      } else if (req.user.role === 'teacher') {
+        query = `
+          SELECT c.*,
+            (SELECT COUNT(*)::int FROM class_members m WHERE m.class_id = c.id AND m.status = 'active') AS student_count,
+            (SELECT COUNT(*)::int FROM class_members m WHERE m.class_id = c.id AND m.status = 'pending') AS pending_count,
+            (SELECT COUNT(*)::int FROM class_assignments a WHERE a.class_id = c.id AND a.status = 'open') AS open_assignment_count
+          FROM classes c
+          WHERE c.teacher_id = $1 OR LOWER(c.teacher_email) = LOWER($2)
+          ORDER BY c.created_at DESC
+        `;
+        params = [req.user.id, req.user.email || ''];
+      } else {
+        query = `
+          SELECT c.*, m.status AS membership_status,
+            (SELECT COUNT(*)::int FROM class_members cm WHERE cm.class_id = c.id AND cm.status = 'active') AS student_count,
+            (SELECT COUNT(*)::int FROM class_assignments a WHERE a.class_id = c.id AND a.status = 'open') AS open_assignment_count
+          FROM classes c
+          JOIN class_members m ON m.class_id = c.id
+          WHERE m.student_id = $1
+          ORDER BY m.joined_at DESC
+        `;
+        params = [req.user.id];
+      }
+      const result = await pool.query(query, params);
+      res.json({ classes: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/classes', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const {
+      name,
+      schoolName = '',
+      academicYear = '2025-2026',
+      joinCode,
+      teacherId,
+      teacherName,
+      teacherEmail,
+      requireApproval = false,
+      showLeaderboard = true,
+    } = req.body;
+    if (!name || String(name).trim().length === 0) {
+      return res.status(400).json({ error: 'Vui lòng nhập tên lớp học.' });
+    }
+    try {
+      const id = `cls_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const code = (joinCode && String(joinCode).trim().length >= 4)
+        ? String(joinCode).trim().toUpperCase()
+        : `ENG-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+      const finalTeacherId = teacherId || (req.user.role === 'teacher' ? req.user.id : null);
+      const finalTeacherName = teacherName || (req.user.role === 'teacher' ? (req.user.displayName || req.user.email) : '');
+      const finalTeacherEmail = teacherEmail || (req.user.role === 'teacher' ? req.user.email : '');
+
+      const result = await pool.query(
+        `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING *`,
+        [
+          id,
+          String(name).trim(),
+          String(schoolName).trim(),
+          String(academicYear).trim(),
+          code,
+          finalTeacherId,
+          finalTeacherName,
+          finalTeacherEmail,
+          Boolean(requireApproval),
+          Boolean(showLeaderboard),
+        ]
+      );
+      await logAudit(pool, req.user, 'CREATE_CLASS', 'classes', id, { name, joinCode: code });
+      res.status(201).json({ message: 'Đã tạo lớp học thành công.', classItem: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/classes/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { name, schoolName, academicYear, joinCode, teacherId, teacherName, teacherEmail, requireApproval, showLeaderboard, allowJoin, isArchived } = req.body;
+    try {
+      const result = await pool.query(
+        `UPDATE classes
+         SET name = COALESCE($1, name),
+             school_name = COALESCE($2, school_name),
+             academic_year = COALESCE($3, academic_year),
+             join_code = COALESCE($4, join_code),
+             teacher_id = COALESCE($5, teacher_id),
+             teacher_name = COALESCE($6, teacher_name),
+             teacher_email = COALESCE($7, teacher_email),
+             require_approval = COALESCE($8, require_approval),
+             show_leaderboard = COALESCE($9, show_leaderboard),
+             allow_join = COALESCE($10, allow_join),
+             is_archived = COALESCE($11, is_archived),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $12 RETURNING *`,
+        [
+          name || null,
+          schoolName !== undefined ? schoolName : null,
+          academicYear || null,
+          joinCode ? String(joinCode).trim().toUpperCase() : null,
+          teacherId !== undefined ? teacherId : null,
+          teacherName !== undefined ? teacherName : null,
+          teacherEmail !== undefined ? teacherEmail : null,
+          requireApproval !== undefined ? Boolean(requireApproval) : null,
+          showLeaderboard !== undefined ? Boolean(showLeaderboard) : null,
+          allowJoin !== undefined ? Boolean(allowJoin) : null,
+          isArchived !== undefined ? Boolean(isArchived) : null,
+          id,
+        ]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy lớp học.' });
+      await logAudit(pool, req.user, 'UPDATE_CLASS', 'classes', id, { joinCode, teacherName, isArchived });
+      res.json({ message: 'Đã cập nhật lớp học.', classItem: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/classes/join', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { joinCode } = req.body;
+    if (!joinCode || String(joinCode).trim().length === 0) {
+      return res.status(400).json({ error: 'Vui lòng nhập mã lớp.' });
+    }
+    try {
+      const clsRes = await pool.query(
+        'SELECT * FROM classes WHERE UPPER(TRIM(join_code)) = UPPER(TRIM($1)) AND is_archived = FALSE',
+        [String(joinCode)]
+      );
+      if (clsRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Không tìm thấy lớp học với mã này.' });
+      }
+      const cls = clsRes.rows[0];
+      if (!cls.allow_join) {
+        return res.status(403).json({ error: 'Lớp học này hiện đang khóa tiếp nhận thành viên mới.' });
+      }
+      const status = cls.require_approval ? 'pending' : 'active';
+      const memId = `cm_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const memRes = await pool.query(
+        `INSERT INTO class_members (id, class_id, student_id, student_name, student_email, status)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (class_id, student_id) DO UPDATE SET status = EXCLUDED.status
+         RETURNING *`,
+        [memId, cls.id, req.user.id, req.user.displayName || 'Học sinh', req.user.email || '', status]
+      );
+      res.status(201).json({
+        message: status === 'pending'
+          ? `Đã gửi yêu cầu tham gia lớp ${cls.name}. Chờ giáo viên phê duyệt.`
+          : `Đã tham gia lớp ${cls.name} thành công!`,
+        classItem: cls,
+        membership: memRes.rows[0],
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/classes/:classId/members', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ members: [] });
+    const { classId } = req.params;
+    try {
+      const result = await pool.query(
+        `SELECT m.*,
+           COALESCE(p.current_streak, 0) AS streak,
+           COALESCE(p.target_score, 7.0) AS target_score,
+           COALESCE((SELECT AVG(s.score)::numeric(5,2) FROM assignment_submissions s WHERE s.student_id = m.student_id AND s.class_id = m.class_id), 0.0) AS avg_score,
+           (SELECT COUNT(*)::int FROM assignment_submissions s WHERE s.student_id = m.student_id AND s.class_id = m.class_id) AS submitted_count
+         FROM class_members m
+         LEFT JOIN user_profiles p ON p.user_id = m.student_id
+         WHERE m.class_id = $1
+         ORDER BY m.status DESC, m.joined_at DESC`,
+        [classId]
+      );
+      res.json({ members: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/classes/:classId/members/:memberId/decision', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { classId, memberId } = req.params;
+    const { status } = req.body; // 'active' | 'rejected'
+    try {
+      if (status === 'rejected') {
+        await pool.query('DELETE FROM class_members WHERE id = $1 AND class_id = $2', [memberId, classId]);
+        return res.json({ message: 'Đã từ chối yêu cầu vào lớp.' });
+      }
+      const result = await pool.query(
+        `UPDATE class_members SET status = 'active' WHERE id = $1 AND class_id = $2 RETURNING *`,
+        [memberId, classId]
+      );
+      res.json({ message: 'Đã duyệt học sinh vào lớp.', member: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Bài giao cho lớp & Kết quả nộp bài
+  app.get('/api/assignments', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ assignments: [] });
+    const { classId } = req.query;
+    try {
+      let query = `
+        SELECT a.*,
+          (SELECT COUNT(*)::int FROM assignment_submissions s WHERE s.assignment_id = a.id) AS submitted_count,
+          (SELECT COUNT(*)::int FROM class_members m WHERE m.class_id = a.class_id AND m.status = 'active') AS total_students
+        FROM class_assignments a
+        WHERE 1=1
+      `;
+      const params = [];
+      if (classId) {
+        params.push(String(classId));
+        query += ` AND a.class_id = $${params.length}`;
+      }
+      query += ' ORDER BY a.created_at DESC';
+      const result = await pool.query(query, params);
+      res.json({ assignments: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/assignments', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const {
+      classId,
+      className = '',
+      title,
+      assignmentType = 'unit_practice',
+      unitNumber = 1,
+      skills = ['reading'],
+      examId = null,
+      deadlineAt,
+      maxAttempts = 2,
+      showAnswersMode = 'after_submit',
+      status = 'open',
+    } = req.body;
+    if (!title) return res.status(400).json({ error: 'Vui lòng nhập tiêu đề bài giao.' });
+    try {
+      const id = `asg_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const result = await pool.query(
+        `INSERT INTO class_assignments
+          (id, class_id, class_name, title, assignment_type, unit_number, skills_json, exam_id, deadline_at, max_attempts, show_answers_mode, status, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         RETURNING *`,
+        [
+          id,
+          classId || null,
+          className,
+          String(title).trim(),
+          assignmentType,
+          Number(unitNumber) || 1,
+          JSON.stringify(Array.isArray(skills) ? skills : ['reading']),
+          examId,
+          deadlineAt ? new Date(deadlineAt).toISOString() : new Date(Date.now() + 3 * 86400000).toISOString(),
+          Number(maxAttempts) || 2,
+          showAnswersMode,
+          status,
+          req.user.id,
+        ]
+      );
+      await logAudit(pool, req.user, 'CREATE_ASSIGNMENT', 'class_assignments', id, { title, className });
+      res.status(201).json({ message: 'Đã giao bài cho lớp thành công.', assignment: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/assignments/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    try {
+      await pool.query('DELETE FROM class_assignments WHERE id = $1', [req.params.id]);
+      res.json({ message: 'Đã xóa bài giao.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/assignments/:id/submit', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { classId, score = 0, correctCount = 0, totalQuestions = 0, skillBreakdown = {} } = req.body;
+    try {
+      const asgRes = await pool.query('SELECT * FROM class_assignments WHERE id = $1', [id]);
+      const asg = asgRes.rows[0];
+      const isLate = asg?.deadline_at ? new Date() > new Date(asg.deadline_at) : false;
+      const subId = `sub_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const result = await pool.query(
+        `INSERT INTO assignment_submissions
+          (id, assignment_id, class_id, student_id, student_name, student_email, score, correct_count, total_questions, skill_breakdown_json, is_late)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING *`,
+        [
+          subId,
+          id,
+          classId || asg?.class_id || null,
+          req.user.id,
+          req.user.displayName || 'Học sinh',
+          req.user.email || '',
+          Number(score) || 0,
+          Number(correctCount) || 0,
+          Number(totalQuestions) || 0,
+          JSON.stringify(skillBreakdown || {}),
+          isLate,
+        ]
+      );
+      res.status(201).json({ message: 'Đã nộp bài thành công.', submission: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Học sinh gửi giải trình khi bị tự động nộp bài sau 10 giây rời ứng dụng
+  app.post('/api/exams/supervised/:examId/explain', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { examId } = req.params;
+    const { sessionId, explanation } = req.body;
+    if (!explanation || String(explanation).trim().length === 0) {
+      return res.status(400).json({ error: 'Vui lòng nhập lý do giải trình.' });
+    }
+    try {
+      const result = await pool.query(
+        `UPDATE exam_live_sessions
+         SET student_explanation = $1, explanation_submitted_at = CURRENT_TIMESTAMP
+         WHERE id = $2 AND exam_id = $3
+         RETURNING *`,
+        [String(explanation).trim(), sessionId, examId]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy phiên thi.' });
+      res.json({ message: 'Đã gửi giải trình tới Giáo viên giám sát.', session: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Báo lỗi câu hỏi thật từ Học sinh -> Giáo viên / Admin
+  app.get('/api/bug-reports', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ reports: [] });
+    try {
+      const result = await pool.query('SELECT * FROM question_bug_reports ORDER BY created_at DESC LIMIT 200');
+      res.json({ reports: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/bug-reports', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { questionId = '', unitNumber = 1, skill = 'reading', title, details = '', category = 'wrong_answer' } = req.body;
+    if (!title) return res.status(400).json({ error: 'Vui lòng nhập tiêu đề lỗi.' });
+    try {
+      const id = `rpt_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const result = await pool.query(
+        `INSERT INTO question_bug_reports (id, question_id, unit_number, skill, title, details, category, status, reporter_id, reported_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'new', $8, $9)
+         RETURNING *`,
+        [
+          id,
+          questionId,
+          Number(unitNumber) || 1,
+          skill,
+          String(title).trim(),
+          String(details).trim(),
+          category,
+          req.user.id,
+          req.user.displayName || req.user.email || 'Học sinh',
+        ]
+      );
+      res.status(201).json({ message: 'Cảm ơn bạn! Báo lỗi đã được gửi tới Giáo viên & Admin.', report: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/bug-reports/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { status } = req.body;
+    try {
+      const result = await pool.query(
+        `UPDATE question_bug_reports SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+        [status || 'resolved', req.params.id]
+      );
+      res.json({ message: 'Đã cập nhật trạng thái báo lỗi.', report: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Thông báo hệ thống & lớp học thật
+  app.get('/api/announcements', authenticateToken, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ announcements: [] });
+    try {
+      const result = await pool.query('SELECT * FROM system_announcements ORDER BY sent_at DESC LIMIT 100');
+      res.json({ announcements: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/announcements', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { title, content, target = 'all', type = 'general', classId = null } = req.body;
+    if (!title) return res.status(400).json({ error: 'Vui lòng nhập tiêu đề thông báo.' });
+    try {
+      const id = `ann_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const result = await pool.query(
+        `INSERT INTO system_announcements (id, title, content, target, type, class_id, sent_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [id, String(title).trim(), String(content || '').trim(), target, type, classId, req.user.id]
+      );
+      await logAudit(pool, req.user, 'SEND_ANNOUNCEMENT', 'system_announcements', id, { title, target });
+      res.status(201).json({ message: 'Đã phát thông báo thành công.', announcement: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Yêu cầu duyệt Giáo viên thật
+  app.get('/api/admin/teacher-requests', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ requests: [] });
+    try {
+      const result = await pool.query(`SELECT * FROM teacher_requests WHERE status = 'pending' ORDER BY created_at DESC`);
+      res.json({ requests: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/teacher-requests', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { name, school = '', subject = 'Tiếng Anh 12' } = req.body;
+    const email = req.user.email || '';
+    const isVerifiedDomain = email.endsWith('.edu.vn') || email.endsWith('.edu');
+    try {
+      const id = `treq_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const result = await pool.query(
+        `INSERT INTO teacher_requests (id, user_id, name, email, school, subject, is_verified_domain, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+         RETURNING *`,
+        [id, req.user.id, name || req.user.displayName || email, email, school, subject, isVerifiedDomain]
+      );
+      res.status(201).json({ message: 'Đã gửi hồ sơ đăng ký Giáo viên tới Quản trị viên.', request: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/teacher-requests/:id/decision', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { approve } = req.body;
+    try {
+      const reqRes = await pool.query('SELECT * FROM teacher_requests WHERE id = $1', [id]);
+      if (reqRes.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy yêu cầu.' });
+      const treq = reqRes.rows[0];
+      const newStatus = approve ? 'approved' : 'rejected';
+      await pool.query('UPDATE teacher_requests SET status = $1 WHERE id = $2', [newStatus, id]);
+      if (approve && treq.email) {
+        await pool.query(`UPDATE users SET role = 'teacher', updated_at = CURRENT_TIMESTAMP WHERE LOWER(email) = LOWER($1)`, [treq.email]);
+      }
+      await logAudit(pool, req.user, approve ? 'APPROVE_TEACHER' : 'REJECT_TEACHER', 'teacher_requests', id, { email: treq.email });
+      res.json({ message: approve ? 'Đã duyệt quyền Giáo viên.' : 'Đã từ chối yêu cầu.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
-// Các bộ xử lý học thuật dự phòng (Built-in Academic Fallbacks khi chưa có API Key)
+// Thông báo minh bạch khi chưa kết nối khóa Gemini API trực tuyến (Không tạo điểm/dữ liệu giả)
 // ---------------------------------------------------------------------------
 function buildRoleSmartFallback(role, mode, message, unitNumber) {
   const q = String(message || '').trim();
-  if (role === 'admin') {
-    return `🛡️ **[Trợ lý AI Quản trị Hệ thống - Chế độ Nội bộ]**\n` +
-      `• Bạn vừa yêu cầu: *"${q}"*\n` +
-      `• Bạn có thể sử dụng nút **"⚡ AI Số hóa Sách mới"** ở tab **Học liệu & Thay sách** để bóc tách văn bản sách giáo khoa mới thành Bài đọc, Từ vựng IPA và Câu hỏi tự động.\n` +
-      `• Để kích hoạt mô hình ngôn ngữ lớn Google Gemini 2.5 Flash trực tuyến, hãy dán \`GEMINI_API_KEY\` tại tab **⚙️ Cấu hình AI** ngay trong Cổng Admin.`;
-  }
-  if (role === 'teacher') {
-    return `👩‍🏫 **[Trợ lý AI Giáo viên - Chế độ Nội bộ]**\n` +
-      `• Yêu cầu soạn giảng/đánh giá: *"${q}"*\n` +
-      `• Gợi ý chuyên môn: Bạn có thể bấm nút **"⚡ AI Tạo câu hỏi tự động"** trong mục **Ngân hàng câu hỏi** để sinh ngay bộ câu hỏi trắc nghiệm chuẩn THPT kèm giải thích và lưu 1 chạm vào hệ thống mà không cần nhập thủ công.\n` +
-      `• Khi học sinh nộp bài thi có giám sát, hệ thống tự động thống kê số câu đúng, số lần rời ứng dụng và phân loại đúng hạn / trễ hạn.`;
-  }
-  if (mode === 'writing_check') {
-    const wordCount = q.split(/\s+/).filter(Boolean).length;
-    const hasCapital = /^[A-Z]/.test(q);
-    const hasEndPunct = /[.!?]$/.test(q);
-    let score = 7.5;
-    const tips = [];
-    if (!hasCapital) {
-      score -= 0.5;
-      tips.push('Đầu câu cần viết hoa chữ cái đầu tiên.');
-    }
-    if (!hasEndPunct) {
-      score -= 0.5;
-      tips.push('Cuối câu cần có dấu chấm câu (`.`, `!`, hoặc `?`).');
-    }
-    if (wordCount < 5) {
-      score -= 1.0;
-      tips.push('Câu còn khá ngắn, bạn nên mở rộng bằng mệnh đề quan hệ (`who/which/that`) hoặc liên từ (`because/although/moreover`) để ăn điểm ngữ pháp lớp 12.');
-    } else {
-      tips.push('Cấu trúc câu có độ dài tốt. Hãy chú ý sự hòa hợp giữa chủ ngữ và động từ (Subject-Verb Agreement).');
-    }
-    return `📝 **[Đánh giá & Chấm điểm Câu/Đoạn văn Tiếng Anh]**\n` +
-      `• **Điểm ước tính:** **${score.toFixed(1)} / 10.0** (${wordCount} từ)\n` +
-      `• **Nhận xét chi tiết:**\n  - ${tips.join('\n  - ')}\n` +
-      `• **Mẹo nâng band điểm THPT:** Sử dụng Câu chẻ (*It is ... that ...* - Unit 2) hoặc Mệnh đề phân từ (*Having + V3/ed* - Unit 1/3) để câu văn học thuật hơn.`;
-  }
-
-  return `🎓 **[Gia sư AI EngPass - Kiến thức Trọng tâm SGK 12${unitNumber ? ' Unit ' + unitNumber : ''}]**\n` +
-    `• Về câu hỏi của bạn: *"${q}"*\n` +
-    `• **Hướng dẫn tư duy (Phương pháp loại trừ):**\n` +
-    `  1. Xác định từ khóa thời gian hoặc dấu hiệu ngữ pháp trong câu (ví dụ: *while/when* → Quá khứ tiếp diễn & Quá khứ đơn; *It is/was ... that* → Câu chẻ nhấn mạnh; *which* thay cho cả mệnh đề phía trước).\n` +
-    `  2. Kiểm tra từ loại (Danh từ / Động từ / Tính từ / Trạng từ) đứng trước và sau chỗ trống.\n` +
-    `  3. Bạn có thể chuyển sang chế độ **"Chấm bài viết"** hoặc mở **"Trung tâm Dịch thuật 3-trong-1"** để tra cứu từ vựng kèm IPA và lưu vào Flashcard SRS nhé!`;
+  return `⚠️ **[Thông báo Kết nối Dịch vụ AI]**\n` +
+    `• Yêu cầu của bạn: *"${q}"*\n` +
+    `• Hiện tại máy chủ chưa nhận được phản hồi từ Google Gemini API (hoặc đang ngoại tuyến).\n` +
+    `• Hệ thống cam kết **không sinh câu trả lời mẫu hay chấm điểm giả lập**. Vui lòng kiểm tra biến môi trường \`GEMINI_API_KEY\` trên Render hoặc thử lại sau ít giây.`;
 }
 
-function buildGeneratedQuestionsFallback(unitNumber, skill, difficulty, count, topicPrompt) {
-  const bank = [
-    {
-      unit: 1,
-      skill: 'grammar',
-      stem: 'While Steve Jobs _______ in his garage, he developed the first Apple computer with Steve Wozniak.',
-      options: ['A. was working', 'B. worked', 'C. has worked', 'D. had worked'],
-      correctIndex: 0,
-      explanation: 'Dùng thì Quá khứ tiếp diễn (was working) sau "While" để diễn tả hành động đang diễn ra trong quá khứ thì hành động khác xảy ra (developed).',
-    },
-    {
-      unit: 1,
-      skill: 'vocabulary',
-      stem: 'Vo Thi Sau is greatly _______ for her bravery and sacrifice during the resistance war.',
-      options: ['A. admired', 'B. admiring', 'C. admiration', 'D. admirable'],
-      correctIndex: 0,
-      explanation: 'Cấu trúc bị động: be + trạng từ + V3/ed (is greatly admired for: được ngưỡng mộ sâu sắc vì điều gì).',
-    },
-    {
-      unit: 2,
-      skill: 'grammar',
-      stem: 'Cultural exchange festivals represent _______ rich diversity of our multicultural world.',
-      options: ['A. the', 'B. a', 'C. an', 'D. Ø (no article)'],
-      correctIndex: 0,
-      explanation: 'Dùng mạo từ xác định "the" trước cụm danh từ được xác định bởi giới từ "of our multicultural world".',
-    },
-    {
-      unit: 3,
-      skill: 'grammar',
-      stem: 'Many students bring reusable water bottles to school, _______ helps reduce single-use plastic waste significantly.',
-      options: ['A. which', 'B. that', 'C. who', 'D. where'],
-      correctIndex: 0,
-      explanation: 'Đại từ quan hệ "which" đứng sau dấu phẩy dùng để thay thế cho toàn bộ mệnh đề đứng trước nó.',
-    },
-    {
-      unit: 4,
-      skill: 'grammar',
-      stem: 'The faster the city expands, _______ the traffic congestion becomes during rush hours.',
-      options: ['A. the worse', 'B. the worst', 'C. worse', 'D. more bad'],
-      correctIndex: 0,
-      explanation: 'Cấu trúc so sánh kép (Double comparatives): The + so sánh hơn + S + V, the + so sánh hơn + S + V (bad -> worse).',
-    },
-    {
-      unit: 5,
-      skill: 'vocabulary',
-      stem: 'Applicants for this position must be able to work well under pressure and meet tight _______.',
-      options: ['A. deadlines', 'B. schedules', 'C. salaries', 'D. vacancies'],
-      correctIndex: 0,
-      explanation: 'Cụm từ cố định (collocation): "meet tight deadlines" nghĩa là hoàn thành công việc đúng thời hạn gấp rút.',
-    },
-    {
-      unit: 6,
-      skill: 'grammar',
-      stem: 'The school principal had the IT technicians _______ the new AI learning platform in all classrooms.',
-      options: ['A. install', 'B. to install', 'C. installed', 'D. installing'],
-      correctIndex: 0,
-      explanation: 'Cấu trúc cầu khiến chủ động với have: "have + tân ngữ chỉ người + V(nguyên thể)" (nhờ/thuê ai làm gì).',
-    },
-  ];
-
-  const filtered = bank.filter((q) => q.unit === unitNumber);
-  const sourceList = filtered.length > 0 ? [...filtered, ...bank] : bank;
-  const result = [];
-  for (let i = 0; i < count; i++) {
-    const template = sourceList[i % sourceList.length];
-    result.push({
-      id: `gen_q_${Date.now()}_${i}`,
-      unitNumber,
-      skill: skill || template.skill,
-      difficulty: difficulty || 2,
-      stem: template.stem,
-      options: template.options,
-      correctIndex: template.correctIndex,
-      explanation: template.explanation + (topicPrompt ? ` (Chủ đề: ${topicPrompt})` : ''),
-    });
-  }
-  return result;
+function buildGeneratedQuestionsFallback() {
+  return [];
 }
 
 function buildSmartDigitizedCurriculum(unitNumber, title, rawText) {
-  const cleanText = String(rawText || '').trim();
-  const sentences = cleanText
-    .split(/(?<=[.!?])\s+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 15);
-
-  const words = Array.from(
-    new Set(
-      cleanText
-        .replace(/[^a-zA-Z\s]/g, ' ')
-        .toLowerCase()
-        .split(/\s+/)
-        .filter((w) => w.length >= 6)
-    )
-  ).slice(0, 6);
-
-  const vocabulary = words.map((w) => ({
-    english: w,
-    ipa: `/${w}/`,
-    meaningVi: `Từ vựng trọng tâm Unit ${unitNumber} (${w})`,
-    example: sentences.find((s) => s.toLowerCase().includes(w)) || `This is an academic example using the word "${w}".`,
-  }));
-
-  const questions = buildGeneratedQuestionsFallback(unitNumber, 'reading', 2, 3, title || `Unit ${unitNumber}`);
-
   return {
     unitNumber,
-    title: title || `Unit ${unitNumber} - Học liệu Sách giáo khoa Mới`,
-    readingPassage: cleanText,
-    translationVi: `Bản chuẩn hóa học liệu Unit ${unitNumber} (${sentences.length} câu đọc hiểu đã được số hóa).`,
-    grammarSummary: `Trọng tâm ngữ pháp và cấu trúc câu học thuật trích xuất từ văn bản Unit ${unitNumber}.`,
-    vocabulary,
-    questions,
+    title: title || `Unit ${unitNumber}`,
+    readingPassage: String(rawText || '').trim(),
+    translationVi: '',
+    grammarSummary: '',
+    vocabulary: [],
+    questions: [],
   };
 }
 

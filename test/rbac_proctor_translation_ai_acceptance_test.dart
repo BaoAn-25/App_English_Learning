@@ -62,6 +62,37 @@ void main() {
       expect(restoredTeacher.lockedReason, 'Tạm khóa bảo trì');
     });
 
+    test('tongan542@gmail.com is strictly granted Admin role while normal accounts are strictly Student', () {
+      const tonganProfile = UserProfile(
+        id: 'usr_tongan',
+        displayName: 'anbao',
+        email: 'tongan542@gmail.com',
+        role: 'student',
+      );
+      final enforced = tonganProfile.copyWith();
+      expect(enforced.isAdmin, isTrue);
+      expect(enforced.role, 'admin');
+
+      final fromMapTongan = UserProfile.fromMap({
+        'id': 'usr_tongan',
+        'email': 'tongan542@gmail.com',
+        'displayName': 'anbao',
+        'role': 'student',
+      });
+      expect(fromMapTongan.isAdmin, isTrue);
+      expect(fromMapTongan.role, 'admin');
+
+      final studentProfile = UserProfile.fromMap({
+        'id': 'usr_normal_student',
+        'email': 'student@gmail.com',
+        'displayName': 'Học sinh',
+        'role': 'student',
+      });
+      expect(studentProfile.isAdmin, isFalse);
+      expect(studentProfile.isTeacher, isFalse);
+      expect(studentProfile.isStudent, isTrue);
+    });
+
     test('ExamLockGuard automatically blocks TranslationService and Student AI Copilot during Supervised Exam', () async {
       ExamLockGuard.instance.exitSupervisedExam();
       expect(ExamLockGuard.instance.isLocked, isFalse);
@@ -181,7 +212,7 @@ void main() {
       expect(find.text('Trung Tâm Quản Trị Admin'), findsOneWidget);
       expect(find.text('1. Người dùng & Phân quyền'), findsOneWidget);
       expect(find.text('2. Học liệu & Thay sách mới'), findsOneWidget);
-      expect(find.text('4. Cấu hình API AI'), findsOneWidget);
+      expect(find.text('3. Giám sát Audit Logs'), findsOneWidget);
     });
   });
 }

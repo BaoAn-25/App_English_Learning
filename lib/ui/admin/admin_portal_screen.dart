@@ -35,20 +35,13 @@ class _AdminPortalScreenState extends State<AdminPortalScreen>
   List<Map<String, dynamic>> _curriculums = [];
   List<Map<String, dynamic>> _auditLogs = [];
 
-  // AI Config
-  final TextEditingController _apiKeyCtrl = TextEditingController();
-  String _selectedModel = 'gemini-2.5-flash';
-  Map<String, dynamic> _aiConfigInfo = {};
-  bool _isSavingAiConfig = false;
-  String? _aiTestResultMessage;
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 4,
+      length: 3,
       vsync: this,
-      initialIndex: widget.initialTabIndex.clamp(0, 3),
+      initialIndex: widget.initialTabIndex.clamp(0, 2),
     );
     _loadAllAdminData();
   }
@@ -57,7 +50,6 @@ class _AdminPortalScreenState extends State<AdminPortalScreen>
   void dispose() {
     _tabController.dispose();
     _userSearchCtrl.dispose();
-    _apiKeyCtrl.dispose();
     super.dispose();
   }
 
@@ -69,15 +61,12 @@ class _AdminPortalScreenState extends State<AdminPortalScreen>
     );
     final curriculums = await RbacProctorAiService.instance.getCurriculumVersions();
     final logs = await RbacProctorAiService.instance.getAuditLogs();
-    final aiCfg = await RbacProctorAiService.instance.getAiConfig();
 
     if (!mounted) return;
     setState(() {
       _users = users;
       _curriculums = curriculums;
       _auditLogs = logs;
-      _aiConfigInfo = aiCfg;
-      _selectedModel = (aiCfg['model'] ?? 'gemini-2.5-flash').toString();
       _isLoading = false;
     });
   }
@@ -474,7 +463,6 @@ class _AdminPortalScreenState extends State<AdminPortalScreen>
             Tab(icon: Icon(Icons.manage_accounts_rounded, size: 18), text: '1. Người dùng & Phân quyền'),
             Tab(icon: Icon(Icons.library_books_rounded, size: 18), text: '2. Học liệu & Thay sách mới'),
             Tab(icon: Icon(Icons.security_rounded, size: 18), text: '3. Giám sát Audit Logs'),
-            Tab(icon: Icon(Icons.settings_suggest_rounded, size: 18), text: '4. Cấu hình API AI'),
           ],
         ),
       ),
@@ -486,7 +474,6 @@ class _AdminPortalScreenState extends State<AdminPortalScreen>
                 _buildUsersRbacTab(cardColor, textMain, textSub, borderColor),
                 _buildCurriculumReplacerTab(cardColor, textMain, textSub, borderColor),
                 _buildAuditLogsTab(cardColor, textMain, textSub, borderColor),
-                _buildAiConfigTab(cardColor, textMain, textSub, borderColor),
               ],
             ),
     );
@@ -905,148 +892,4 @@ class _AdminPortalScreenState extends State<AdminPortalScreen>
       ],
     );
   }
-
-  // TAB 4: Cấu hình API Key cho Trợ lý Cá nhân AI Chatbot
-  Widget _buildAiConfigTab(
-    Color cardColor,
-    Color textMain,
-    Color textSub,
-    Color borderColor,
-  ) {
-    final hasKey = _aiConfigInfo['hasApiKey'] == true;
-    final maskedKey = (_aiConfigInfo['maskedApiKey'] ?? '').toString();
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    hasKey ? Icons.check_circle_rounded : Icons.info_outline_rounded,
-                    color: hasKey ? AppTokens.success : AppTokens.warning,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      hasKey
-                          ? 'Đã cấu hình khóa API AI (${_aiConfigInfo['model']})'
-                          : 'Chưa nhập khóa API trực tuyến (Đang chạy Bộ xử lý Học thuật Nội bộ)',
-                      style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: textMain),
-                    ),
-                  ),
-                ],
-              ),
-              if (maskedKey.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'Khóa hiện tại: $maskedKey',
-                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textSub),
-                ),
-              ],
-              const Divider(height: 24),
-              Text(
-                '🔑 Hướng dẫn lấy khóa API Google Gemini miễn phí:',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: textMain),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '1. Truy cập https://aistudio.google.com/apikey và đăng nhập Google.\n'
-                '2. Bấm "Create API key" và sao chép mã khóa bắt đầu bằng "AIzaSy...".\n'
-                '3. Dán mã khóa vào ô bên dưới và bấm "Kiểm tra & Lưu Cấu Hình".',
-                style: TextStyle(fontSize: 12.5, color: textSub, height: 1.45),
-              ),
-              const SizedBox(height: 14),
-              DropdownButtonFormField<String>(
-                initialValue: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
-                        .contains(_selectedModel)
-                    ? _selectedModel
-                    : 'gemini-2.5-flash',
-                decoration: const InputDecoration(
-                  labelText: 'Chọn Mô hình AI (Model)',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'gemini-2.5-flash',
-                    child: Text('Gemini 2.5 Flash (Khuyến nghị - Nhanh & Thông minh nhất)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'gemini-2.0-flash',
-                    child: Text('Gemini 2.0 Flash (Tốc độ cao, hỗ trợ Vision OCR)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'gemini-1.5-flash',
-                    child: Text('Gemini 1.5 Flash (Ổn định, tương thích rộng)'),
-                  ),
-                ],
-                onChanged: (v) {
-                  if (v != null) setState(() => _selectedModel = v);
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _apiKeyCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Dán GEMINI_API_KEY vào đây (AIzaSy...)',
-                  hintText: 'Để trống nếu muốn giữ khóa hiện tại',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _isSavingAiConfig
-                      ? null
-                      : () async {
-                          setState(() => _isSavingAiConfig = true);
-                          final res = await RbacProctorAiService.instance.saveAndTestAiConfig(
-                            apiKey: _apiKeyCtrl.text,
-                            model: _selectedModel,
-                          );
-                          _apiKeyCtrl.clear();
-                          await _loadAllAdminData();
-                          if (!mounted) return;
-                          setState(() {
-                            _isSavingAiConfig = false;
-                            _aiTestResultMessage = res['testReply']?.toString();
-                          });
-                        },
-                  icon: const Icon(Icons.save_rounded),
-                  label: Text(
-                    _isSavingAiConfig ? 'Đang kiểm tra kết nối AI...' : 'Kiểm Tra Kết Nối & Lưu Cấu Hình AI',
-                  ),
-                ),
-              ),
-              if (_aiTestResultMessage != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTokens.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '🤖 Phản hồi hệ thống: $_aiTestResultMessage',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textMain),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }
-

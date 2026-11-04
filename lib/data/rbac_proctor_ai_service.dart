@@ -9,8 +9,10 @@ import 'app_database.dart';
 import 'app_repository.dart';
 import 'models/question.dart';
 import 'models/topic.dart';
+import 'models/user_profile.dart';
 import 'models/word.dart';
 import 'remote/api_client.dart';
+import 'trial_lesson_repository.dart';
 
 /// Khóa bảo vệ chống gian lận toàn cục khi Học viên đang ở trong Phòng thi có giám sát.
 /// Tự động khóa toàn bộ tính năng Dịch thuật và Gia sư AI Chatbot.
@@ -85,10 +87,14 @@ class SupervisedExamModel {
   final String id;
   final String title;
   final String description;
+  final String? classId;
+  final String? className;
   final int durationMinutes;
   final DateTime deadlineAt;
   final int graceSeconds;
   final int maxViolations;
+  final int maxAttempts;
+  final bool shuffleQuestions;
   final String violationAction; // 'force_submit' | 'invalidate'
   final List<Map<String, dynamic>> questions;
   final bool isActive;
@@ -99,10 +105,14 @@ class SupervisedExamModel {
     required this.id,
     required this.title,
     required this.description,
+    this.classId,
+    this.className,
     required this.durationMinutes,
     required this.deadlineAt,
     this.graceSeconds = 10,
     this.maxViolations = 2,
+    this.maxAttempts = 1,
+    this.shuffleQuestions = true,
     this.violationAction = 'force_submit',
     required this.questions,
     this.isActive = true,
@@ -116,10 +126,14 @@ class SupervisedExamModel {
     'id': id,
     'title': title,
     'description': description,
+    'classId': classId,
+    'className': className,
     'durationMinutes': durationMinutes,
     'deadlineAt': deadlineAt.toIso8601String(),
     'graceSeconds': graceSeconds,
     'maxViolations': maxViolations,
+    'maxAttempts': maxAttempts,
+    'shuffleQuestions': shuffleQuestions,
     'violationAction': violationAction,
     'questions': questions,
     'isActive': isActive,
@@ -147,6 +161,8 @@ class SupervisedExamModel {
       id: (map['id'] ?? 'sexam_${DateTime.now().millisecondsSinceEpoch}').toString(),
       title: (map['title'] ?? 'Đề kiểm tra có giám sát').toString(),
       description: (map['description'] ?? '').toString(),
+      classId: (map['classId'] ?? map['class_id'])?.toString(),
+      className: (map['className'] ?? map['class_name'])?.toString(),
       durationMinutes: (map['durationMinutes'] ?? map['duration_minutes'] as num?)?.toInt() ?? 45,
       deadlineAt: DateTime.tryParse(
             (map['deadlineAt'] ?? map['deadline_at'] ?? '').toString(),
@@ -154,6 +170,8 @@ class SupervisedExamModel {
           DateTime.now().add(const Duration(days: 7)),
       graceSeconds: (map['graceSeconds'] ?? map['grace_seconds'] as num?)?.toInt() ?? 10,
       maxViolations: (map['maxViolations'] ?? map['max_violations'] as num?)?.toInt() ?? 2,
+      maxAttempts: (map['maxAttempts'] ?? map['max_attempts'] as num?)?.toInt() ?? 1,
+      shuffleQuestions: (map['shuffleQuestions'] ?? map['shuffle_questions']) != false,
       violationAction: (map['violationAction'] ?? map['violation_action'] ?? 'force_submit').toString(),
       questions: parsedQuestions,
       isActive: (map['isActive'] ?? map['is_active']) != false,
@@ -178,6 +196,8 @@ class ExamLiveSessionModel {
   final int violationCount;
   final List<Map<String, dynamic>> violationLogs;
   final String? teacherWarningMessage;
+  final String? studentExplanation;
+  final DateTime? explanationSubmittedAt;
   final int answeredCount;
   final int totalQuestions;
   final Map<String, int> currentAnswers;
@@ -197,6 +217,8 @@ class ExamLiveSessionModel {
     this.violationCount = 0,
     this.violationLogs = const [],
     this.teacherWarningMessage,
+    this.studentExplanation,
+    this.explanationSubmittedAt,
     this.answeredCount = 0,
     this.totalQuestions = 0,
     this.currentAnswers = const {},
@@ -240,6 +262,8 @@ class ExamLiveSessionModel {
     'violationCount': violationCount,
     'violationLogs': violationLogs,
     'teacherWarningMessage': teacherWarningMessage,
+    'studentExplanation': studentExplanation,
+    'explanationSubmittedAt': explanationSubmittedAt?.toIso8601String(),
     'answeredCount': answeredCount,
     'totalQuestions': totalQuestions,
     'currentAnswers': currentAnswers,
@@ -275,6 +299,10 @@ class ExamLiveSessionModel {
       violationCount: (map['violationCount'] ?? map['violation_count'] as num?)?.toInt() ?? 0,
       violationLogs: parsedLogs,
       teacherWarningMessage: (map['teacherWarningMessage'] ?? map['teacher_warning_message'])?.toString(),
+      studentExplanation: (map['studentExplanation'] ?? map['student_explanation'])?.toString(),
+      explanationSubmittedAt: (map['explanationSubmittedAt'] ?? map['explanation_submitted_at']) != null
+          ? DateTime.tryParse((map['explanationSubmittedAt'] ?? map['explanation_submitted_at']).toString())
+          : null,
       answeredCount: (map['answeredCount'] ?? map['answered_count'] as num?)?.toInt() ?? 0,
       totalQuestions: (map['totalQuestions'] ?? map['total_questions'] as num?)?.toInt() ?? 0,
       currentAnswers: parsedAnswers,
@@ -589,54 +617,41 @@ class RbacProctorAiService {
     if (role == 'admin') {
       return '🛡️ **[Trợ lý AI Quản trị viên – EngPass Copilot]**\n\n'
           '• **Yêu cầu của Admin:** *"$q"*\n'
-          '• **Thao tác tự động không cần nhập tay:**\n'
-          '  1. Để số hóa văn bản sách giáo khoa mới thành Bài đọc + Từ vựng IPA + Câu hỏi: Mở tab **Học liệu & Thay sách** → Bấm **"⚡ AI Số hóa Sách mới"**.\n'
-          '  2. Để nạp khóa Google Gemini trực tuyến: Mở tab **⚙️ Cấu hình AI** ngay trong Cổng Admin và dán `GEMINI_API_KEY`.';
+          '• **Trạng thái kết nối:** Hiện chưa kết nối được với máy chủ AI trực tuyến (Render). Vui lòng kiểm tra kết nối mạng hoặc biến môi trường `GEMINI_API_KEY` trên Render.\n'
+          '• **Công cụ quản trị dữ liệu thật:** Bạn có thể sử dụng trực tiếp mục **Nội dung** để quản lý 10 Unit SGK, **Người dùng** để duyệt giáo viên và **Quản lý** để giám sát lớp học & kỳ thi.';
     }
     if (role == 'teacher') {
       return '👩‍🏫 **[Trợ lý AI Giáo viên – Soạn giảng & Chấm bài]**\n\n'
           '• **Yêu cầu của Giáo viên:** *"$q"*\n'
-          '• **Hỗ trợ tự động hóa:**\n'
-          '  1. Bấm nút **"⚡ AI Tạo câu hỏi tự động"** ở mục **Ngân hàng câu hỏi** để sinh ngay bộ câu hỏi trắc nghiệm 4 đáp án A/B/C/D kèm giải thích và lưu 1 chạm vào hệ thống.\n'
-          '  2. Trong **Bảng Giám sát Phòng thi**, bạn có thể bấm **"Nhờ AI Nhận xét"** trên từng bài nộp để tổng hợp lỗi sai của học sinh.';
+          '• **Trạng thái kết nối:** Hiện đang ở chế độ ngoại tuyến. Bạn có thể trích xuất câu hỏi trực tiếp từ Ngân hàng câu hỏi thật của 10 Unit SGK Lớp 12 hoặc kết nối mạng để gọi Gemini AI.';
     }
     if (mode == 'writing_check') {
-      final words = q.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-      final hasCapital = RegExp(r'^[A-Z]').hasMatch(q);
-      final hasPunct = RegExp(r'[.!?]$').hasMatch(q);
-      double score = 7.8;
-      final notes = <String>[];
-      if (!hasCapital) {
-        score -= 0.5;
-        notes.add('Chữ cái đầu câu cần viết hoa.');
-      }
-      if (!hasPunct) {
-        score -= 0.5;
-        notes.add('Cuối câu cần có dấu kết thúc câu (`.`, `!`, `?`).');
-      }
-      if (words.length < 6) {
-        score -= 1.0;
-        notes.add('Câu còn ngắn (${words.length} từ). Hãy mở rộng bằng mệnh đề quan hệ (`who/which/that`) hoặc liên từ (`although/because/moreover`).');
-      } else {
-        notes.add('Độ dài câu tốt (${words.length} từ). Chú ý chia đúng thì của động từ và sự hòa hợp chủ ngữ - động từ.');
-      }
-      return '📝 **[Kết quả Chấm & Sửa lỗi Câu/Đoạn văn Tiếng Anh]**\n\n'
-          '• **Điểm đánh giá:** **${score.toStringAsFixed(1)} / 10.0**\n'
-          '• **Nhận xét chi tiết:**\n  - ${notes.join('\n  - ')}\n'
-          '• **Cấu trúc ăn điểm Lớp 12 gợi ý:**\n'
-          '  - *It is/was [thành phần nhấn mạnh] that ...* (Câu chẻ - Unit 2)\n'
-          '  - *The more ..., the more ...* (So sánh kép - Unit 4)';
+      return '📝 **[Trợ lý Chấm bài viết AI]**\n\n'
+          '• **Bài viết của bạn:** *"$q"*\n'
+          '• **Thông báo:** Tính năng chấm điểm và sửa lỗi bài viết chi tiết yêu cầu kết nối trực tuyến tới máy chủ AI Gemini trên Render. Vui lòng kiểm tra kết nối mạng và thử lại.';
+    }
+
+    // Tra cứu thực tế từ điển học liệu SGK 12 nếu học sinh hỏi từ/cụm từ
+    final lesson = unitNumber != null
+        ? TrialLessonRepository.instance.getLessonByUnit(unitNumber)
+        : TrialLessonRepository.instance.getDefaultLesson();
+    final lookup = TrialLessonRepository.instance.lookupWordOrPhrase(
+      query: q,
+      currentLesson: lesson,
+    );
+    if (lookup.isFoundInDictionary) {
+      return '🎓 **[Tra cứu Học liệu SGK Tiếng Anh 12${unitNumber != null ? " – Unit $unitNumber" : ""}]**\n\n'
+          '• **Từ/Cụm từ:** **${lookup.displayWord}** ${lookup.phonetic ?? ""} ${lookup.partOfSpeech ?? ""}\n'
+          '• **Nghĩa chuẩn SGK:** ${lookup.meaning}\n'
+          '• **Nguồn:** ${lookup.source}';
     }
 
     return '🎓 **[Gia sư AI Cá nhân – SGK Tiếng Anh 12${unitNumber != null ? " Unit $unitNumber" : ""}]**\n\n'
         '• **Câu hỏi của bạn:** *"$q"*\n'
-        '• **Phân tích & Gợi ý phương pháp (Socratic):**\n'
-        '  1. **Từ khóa & Ngữ cảnh:** Xác định dấu hiệu thì (như *while/when* ở Unit 1, *for/since* ở Unit 4) hoặc giới từ đi kèm động từ (*rely on, apply for, contribute to*).\n'
-        '  2. **Loại trừ phương án nhiễu:** Kiểm tra từ loại (Danh từ / Động từ / Tính từ / Trạng từ) cần điền vào vị trí trống.\n'
-        '  3. Bạn có thể chọn thẻ **"✍️ Chấm bài viết"** ở trên để mình chấm điểm câu tiếng Anh của bạn, hoặc mở **"Trung tâm Dịch thuật"** để tra từ kèm IPA nhé!';
+        '• **Thông báo:** Hiện thiết bị đang ngoại tuyến hoặc máy chủ AI đang bận. Bạn có thể tra cứu trực tiếp từ vựng/ngữ pháp trong mục **Sách** hoặc kết nối mạng để trò chuyện trực tuyến với AI.';
   }
 
-  /// Sinh câu hỏi trắc nghiệm tự động bằng AI cho Giáo viên & Admin (Không cần nhập tay)
+  /// Sinh câu hỏi trắc nghiệm bằng AI cho Giáo viên & Admin (hoặc trích xuất từ Ngân hàng câu hỏi thật trong DB)
   Future<List<Map<String, dynamic>>> generateQuestionsWithAi({
     required int unitNumber,
     required String skill,
@@ -695,91 +710,50 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
-    // Fallback từ ngân hàng mẫu học thuật chuẩn SGK 12
-    return _generateAcademicQuestionsLocal(unitNumber, skill, difficulty, count, topicPrompt);
+    // Truy vấn trực tiếp từ Ngân hàng câu hỏi thật trong SQLite & Học liệu SGK 12 thật
+    return _loadRealQuestionsFromBank(unitNumber, skill, difficulty, count, topicPrompt);
   }
 
-  List<Map<String, dynamic>> _generateAcademicQuestionsLocal(
+  Future<List<Map<String, dynamic>>> _loadRealQuestionsFromBank(
     int unitNumber,
     String skill,
     int difficulty,
     int count,
     String topicPrompt,
-  ) {
-    final templates = <Map<String, dynamic>>[
-      {
-        'unit': 1,
-        'skill': 'grammar',
-        'stem': 'While Vo Thi Sau _______ out a mission against the French soldiers, she was captured.',
-        'options': ['A. was carrying', 'B. carried', 'C. has carried', 'D. is carrying'],
-        'correctIndex': 0,
-        'explanation': 'Hành động đang diễn ra trong quá khứ (was carrying) thì hành động khác cắt ngang (was captured).',
-      },
-      {
-        'unit': 1,
-        'skill': 'vocabulary',
-        'stem': 'Steve Jobs’s life story has _______ millions of young entrepreneurs around the world.',
-        'options': ['A. inspired', 'B. inspiration', 'C. inspiring', 'D. inspirational'],
-        'correctIndex': 0,
-        'explanation': 'Sau trợ động từ "has" của thì Hiện tại hoàn thành cần quá khứ phân từ V3/ed (inspired: truyền cảm hứng).',
-      },
-      {
-        'unit': 2,
-        'skill': 'grammar',
-        'stem': 'Globalization has helped people appreciate _______ cultural diversity of different nations.',
-        'options': ['A. the', 'B. a', 'C. an', 'D. Ø (no article)'],
-        'correctIndex': 0,
-        'explanation': 'Dùng mạo từ xác định "the" trước danh từ được xác định bởi cụm giới từ "of different nations".',
-      },
-      {
-        'unit': 3,
-        'skill': 'grammar',
-        'stem': 'More households are switching to solar panels, _______ reduces carbon emissions considerably.',
-        'options': ['A. which', 'B. that', 'C. who', 'D. whom'],
-        'correctIndex': 0,
-        'explanation': 'Đại từ quan hệ "which" sau dấu phẩy thay thế cho toàn bộ mệnh đề phía trước.',
-      },
-      {
-        'unit': 4,
-        'skill': 'grammar',
-        'stem': 'The more rapidly urban areas expand, _______ housing becomes for low-income workers.',
-        'options': ['A. the more expensive', 'B. more expensive', 'C. the most expensive', 'D. expensiver'],
-        'correctIndex': 0,
-        'explanation': 'Cấu trúc so sánh kép: The + comparative + S + V, the + comparative + S + V.',
-      },
-      {
-        'unit': 5,
-        'skill': 'vocabulary',
-        'stem': 'Many university graduates prefer flexible working hours and a supportive working _______.',
-        'options': ['A. environment', 'B. environmental', 'C. environmentally', 'D. environmentalist'],
-        'correctIndex': 0,
-        'explanation': 'Sau tính từ "supportive working" cần một danh từ (working environment: môi trường làm việc).',
-      },
-      {
-        'unit': 6,
-        'skill': 'grammar',
-        'stem': 'We had a technician _______ the virtual reality headsets in our English multimedia lab.',
-        'options': ['A. check', 'B. to check', 'C. checked', 'D. checking'],
-        'correctIndex': 0,
-        'explanation': 'Thể cầu khiến chủ động: have + somebody + V(bare-infinitive).',
-      },
-    ];
+  ) async {
+    final dbQuestions = await getTeacherQuestions(
+      unitNumber: unitNumber,
+      skill: skill == 'all' ? null : skill,
+    );
+    final pool = <Question>[...dbQuestions];
 
-    final unitMatches = templates.where((t) => t['unit'] == unitNumber).toList();
-    final pool = unitMatches.isNotEmpty ? [...unitMatches, ...templates] : templates;
+    if (pool.isEmpty) {
+      final allUnitQuestions = await getTeacherQuestions(unitNumber: unitNumber);
+      pool.addAll(allUnitQuestions);
+    }
+
+    if (pool.isEmpty) {
+      final lesson = TrialLessonRepository.instance.getLessonByUnit(unitNumber) ??
+          TrialLessonRepository.instance.getDefaultLesson();
+      pool.addAll(lesson.questionsAsStandardQuestions);
+    }
+
+    if (pool.isEmpty) {
+      pool.addAll(TrialLessonRepository.instance.getAllReadyStandardQuestions());
+    }
+
     final out = <Map<String, dynamic>>[];
-
-    for (var i = 0; i < count; i++) {
+    for (var i = 0; i < count && pool.isNotEmpty; i++) {
       final item = pool[i % pool.length];
       out.add({
-        'id': 'ai_q_${DateTime.now().millisecondsSinceEpoch}_$i',
+        'id': 'q_bank_${unitNumber}_${DateTime.now().millisecondsSinceEpoch}_$i',
         'unitNumber': unitNumber,
-        'skill': skill,
+        'skill': skill.isNotEmpty ? skill : item.type,
         'difficulty': difficulty,
-        'stem': item['stem'],
-        'options': List<String>.from(item['options'] as List),
-        'correctIndex': item['correctIndex'],
-        'explanation': '${item['explanation']}${topicPrompt.isNotEmpty ? " (Trọng tâm: $topicPrompt)" : ""}',
+        'stem': item.stem,
+        'options': List<String>.from(item.options),
+        'correctIndex': item.correctIndex,
+        'explanation': '${item.explanation}${topicPrompt.isNotEmpty ? " ($topicPrompt)" : ""}',
       });
     }
     return out;
@@ -803,32 +777,94 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
-    // Xử lý bóc tách thông minh ngay trên máy (Offline Smart Digitizer)
+    // Đối chiếu từ vựng thực tế từ bảng `words` của SQLite và từ điển SGK 12
     final clean = rawText.trim();
-    final words = clean
+    final db = await AppDatabase.instance.database;
+    final existingWordsRows = await db.query(
+      'words',
+      where: 'topicId = ?',
+      whereArgs: ['t$unitNumber'],
+    );
+    final dbWordsMap = <String, Word>{};
+    for (final r in existingWordsRows) {
+      final w = Word.fromMap(r);
+      dbWordsMap[w.english.toLowerCase()] = w;
+    }
+
+    final lesson = TrialLessonRepository.instance.getLessonByUnit(unitNumber);
+    final tokens = clean
         .replaceAll(RegExp(r'[^a-zA-Z\s]'), ' ')
         .toLowerCase()
         .split(RegExp(r'\s+'))
-        .where((w) => w.length >= 6)
+        .where((w) => w.length >= 4)
         .toSet()
-        .take(6)
         .toList();
 
-    final vocabList = words.map((w) => {
-      'english': w,
-      'ipa': '/$w/',
-      'meaningVi': 'Từ vựng học thuật Unit $unitNumber ($w)',
-      'example': 'Students should master the word "$w" in Unit $unitNumber.',
-    }).toList();
+    final vocabList = <Map<String, dynamic>>[];
+    for (final token in tokens) {
+      if (vocabList.length >= 8) break;
+      if (dbWordsMap.containsKey(token)) {
+        final w = dbWordsMap[token]!;
+        vocabList.add({
+          'english': w.english,
+          'ipa': w.ipa,
+          'meaningVi': w.meaningVi,
+          'example': w.example,
+        });
+        continue;
+      }
+      final lookedUp = TrialLessonRepository.instance.lookupWordOrPhrase(
+        query: token,
+        currentLesson: lesson,
+      );
+      if (lookedUp.isFoundInDictionary) {
+        vocabList.add({
+          'english': token,
+          'ipa': lookedUp.phonetic ?? '',
+          'meaningVi': lookedUp.meaning,
+          'example': lookedUp.contextSentence ?? '',
+        });
+      }
+    }
 
-    final questions = _generateAcademicQuestionsLocal(unitNumber, 'reading', 2, 4, title);
+    if (vocabList.isEmpty && dbWordsMap.isNotEmpty) {
+      for (final w in dbWordsMap.values.take(6)) {
+        vocabList.add({
+          'english': w.english,
+          'ipa': w.ipa,
+          'meaningVi': w.meaningVi,
+          'example': w.example,
+        });
+      }
+    }
+
+    if (vocabList.isEmpty && lesson != null) {
+      for (final entry in lesson.vocabulary.entries.take(6)) {
+        final lookedUp = TrialLessonRepository.instance.lookupWordOrPhrase(
+          query: entry.key,
+          currentLesson: lesson,
+        );
+        vocabList.add({
+          'english': entry.key,
+          'ipa': lookedUp.phonetic ?? '',
+          'meaningVi': entry.value,
+          'example': '',
+        });
+      }
+    }
+
+    final questions = await _loadRealQuestionsFromBank(unitNumber, 'reading', 2, 4, title);
 
     return {
       'unitNumber': unitNumber,
-      'title': title.isNotEmpty ? title : 'Unit $unitNumber - Chương trình Sách mới',
+      'title': title.isNotEmpty
+          ? title
+          : (lesson?.unitTitle ?? 'Unit $unitNumber - Chương trình SGK 12'),
       'readingPassage': clean,
-      'translationVi': 'Bản chuẩn hóa nội dung bài đọc Unit $unitNumber từ học liệu sách mới.',
-      'grammarSummary': 'Cấu trúc ngữ pháp và từ vựng học thuật trích xuất tự động cho Unit $unitNumber.',
+      'translationVi': lesson != null && lesson.paragraphs.isNotEmpty
+          ? lesson.paragraphs.map((p) => p.translation).join('\n\n')
+          : '',
+      'grammarSummary': lesson?.lessonTitle ?? 'Nội dung bài học Unit $unitNumber',
       'vocabulary': vocabList,
       'questions': questions,
     };
@@ -857,6 +893,30 @@ class RbacProctorAiService {
       limit: 150,
     );
     return rows.map((r) => Question.fromMap(r)).toList();
+  }
+
+  Future<void> saveTeacherQuestion({
+    String? id,
+    required int unitNumber,
+    required String skill,
+    required int difficulty,
+    required String stem,
+    required List<String> options,
+    required int correctIndex,
+    required String explanation,
+  }) async {
+    await saveTeacherQuestions([
+      {
+        'id': ?id,
+        'unitNumber': unitNumber,
+        'skill': skill,
+        'difficulty': difficulty,
+        'stem': stem,
+        'options': options,
+        'correctIndex': correctIndex,
+        'explanation': explanation,
+      }
+    ]);
   }
 
   Future<void> saveTeacherQuestions(List<Map<String, dynamic>> rawQuestions) async {
@@ -915,7 +975,7 @@ class RbacProctorAiService {
     } catch (_) {}
   }
 
-  // Quản lý Tài liệu & Bài học bổ trợ (Study Materials CRUD)
+  // Quản lý Tài liệu & Bài học bổ trợ (Study Materials CRUD - Không tự tạo dữ liệu giả)
   Future<List<Map<String, dynamic>>> getStudyMaterials() async {
     final raw = await _repo.getSetting('teacher_study_materials_json');
     List<Map<String, dynamic>> localList = [];
@@ -925,29 +985,23 @@ class RbacProctorAiService {
         localList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       } catch (_) {}
     }
-    if (localList.isEmpty) {
-      localList = [
-        {
-          'id': 'mat_unit1_grammar',
-          'unitNumber': 1,
-          'category': 'grammar',
-          'title': 'Chuyên đề Thì Quá khứ đơn & Quá khứ tiếp diễn (Unit 1)',
-          'content': '1. Dùng Past Continuous (was/were + V-ing) cho hành động đang diễn ra tại thời điểm xác định trong quá khứ.\n'
-              '2. Dùng Past Simple (V2/ed) cho hành động xen vào (thường đi với when/while).',
-          'createdAt': DateTime.now().toIso8601String(),
-        },
-        {
-          'id': 'mat_unit2_cleft',
-          'unitNumber': 2,
-          'category': 'grammar',
-          'title': 'Tổng hợp Câu chẻ (Cleft Sentences) & Mạo từ (Unit 2)',
-          'content': 'Cấu trúc: It is/was + [Thành phần nhấn mạnh] + that/who + S + V.\n'
-              'Lưu ý mạo từ "the" trước tên nhạc cụ, đại dương, dãy núi và so sánh nhất.',
-          'createdAt': DateTime.now().toIso8601String(),
-        },
-      ];
-      await _repo.setSetting('teacher_study_materials_json', jsonEncode(localList));
-    }
+    try {
+      final client = await _client();
+      final res = await client.getJson('/teacher/materials', timeout: const Duration(seconds: 6));
+      if (res.isSuccess && res.data?['materials'] is List) {
+        final serverList = (res.data!['materials'] as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+        if (serverList.isNotEmpty) {
+          for (final sMat in serverList) {
+            if (!localList.any((l) => l['id'] == sMat['id'])) {
+              localList.add(sMat);
+            }
+          }
+          await _repo.setSetting('teacher_study_materials_json', jsonEncode(localList));
+        }
+      }
+    } catch (_) {}
     return localList;
   }
 
@@ -1009,27 +1063,7 @@ class RbacProctorAiService {
       } catch (_) {}
     }
 
-    if (localExams.isEmpty) {
-      final defaultQuestions = _generateAcademicQuestionsLocal(1, 'grammar', 2, 10, 'Đề kiểm tra định kỳ');
-      localExams = [
-        SupervisedExamModel(
-          id: 'sexam_unit1_3_midterm',
-          title: 'Kiểm tra Giám sát 15 phút: Trọng tâm Unit 1 – Unit 3',
-          description: 'Đề kiểm tra có giám sát chống gian lận (Tự động cảnh báo & đếm ngược 10 giây nếu rời khỏi ứng dụng).',
-          durationMinutes: 15,
-          deadlineAt: DateTime.now().add(const Duration(days: 5)),
-          graceSeconds: 10,
-          maxViolations: 2,
-          violationAction: 'force_submit',
-          questions: defaultQuestions,
-          isActive: true,
-          createdAt: DateTime.now(),
-        ),
-      ];
-      await _saveSupervisedExamsLocal(localExams);
-    }
-
-    // Đồng bộ thêm từ Backend nếu có mạng
+    // Đồng bộ từ Backend nếu có mạng (Không tự tạo đề thi mẫu giả)
     try {
       final client = await _client();
       final res = await client.getJson('/exams/supervised', timeout: const Duration(seconds: 6));
@@ -1039,7 +1073,10 @@ class RbacProctorAiService {
             .toList();
         if (serverList.isNotEmpty) {
           for (final sExam in serverList) {
-            if (!localExams.any((l) => l.id == sExam.id)) {
+            final idx = localExams.indexWhere((l) => l.id == sExam.id);
+            if (idx >= 0) {
+              localExams[idx] = sExam;
+            } else {
               localExams.add(sExam);
             }
           }
@@ -1062,10 +1099,14 @@ class RbacProctorAiService {
     String? id,
     required String title,
     required String description,
+    String? classId,
+    String? className,
     required int durationMinutes,
     required DateTime deadlineAt,
     required int graceSeconds,
     required int maxViolations,
+    int maxAttempts = 1,
+    bool shuffleQuestions = true,
     required String violationAction,
     List<Map<String, dynamic>>? questions,
     bool isActive = true,
@@ -1074,16 +1115,20 @@ class RbacProctorAiService {
     final examId = id ?? 'sexam_${DateTime.now().millisecondsSinceEpoch}';
     final finalQuestions = (questions != null && questions.isNotEmpty)
         ? questions
-        : _generateAcademicQuestionsLocal(1, 'grammar', 2, 10, title);
+        : await _loadRealQuestionsFromBank(1, 'grammar', 2, 10, title);
 
     final model = SupervisedExamModel(
       id: examId,
       title: title.trim(),
       description: description.trim(),
+      classId: classId,
+      className: className,
       durationMinutes: durationMinutes,
       deadlineAt: deadlineAt,
       graceSeconds: graceSeconds,
       maxViolations: maxViolations,
+      maxAttempts: maxAttempts,
+      shuffleQuestions: shuffleQuestions,
       violationAction: violationAction,
       questions: finalQuestions,
       isActive: isActive,
@@ -1478,13 +1523,30 @@ class RbacProctorAiService {
       } catch (_) {}
     }
 
+    // Luôn đảm bảo tài khoản quản trị hệ thống tongan542@gmail.com mang vai trò admin
+    for (var i = 0; i < users.length; i++) {
+      final uEmail = (users[i]['email'] ?? '').toString().trim().toLowerCase();
+      if (UserProfile.isSystemAdmin(uEmail)) {
+        users[i]['role'] = 'admin';
+      }
+    }
+
     if (users.isEmpty) {
       final currentAuth = await _repo.getAuthUser();
       users = [
-        if (currentAuth != null)
+        {
+          'id': 'usr_admin_tongan',
+          'email': UserProfile.systemAdminEmail,
+          'display_name': 'anbao (Quản trị viên)',
+          'role': 'admin',
+          'is_locked': false,
+          'locked_reason': '',
+          'created_at': DateTime.now().toIso8601String(),
+        },
+        if (currentAuth != null && !UserProfile.isSystemAdmin(currentAuth.email))
           {
             'id': currentAuth.id,
-            'email': currentAuth.email.isNotEmpty ? currentAuth.email : 'admin@engpass.vn',
+            'email': currentAuth.email,
             'display_name': currentAuth.displayName,
             'role': currentAuth.role,
             'is_locked': currentAuth.isLocked,
@@ -1872,5 +1934,940 @@ class RbacProctorAiService {
       logs.removeRange(100, logs.length);
     }
     await _repo.setSetting('system_audit_logs_json', jsonEncode(logs));
+  }
+
+  // ===========================================================================
+  // 8. GIẢI TRÌNH PHÒNG THI, QUẢN LÝ LỚP HỌC, BÀI GIAO, BÁO LỖI & THÔNG BÁO THẬT
+  // ===========================================================================
+
+  /// Học sinh gửi giải trình khi bài thi bị tự động nộp sau 10 giây rời app
+  Future<ExamLiveSessionModel?> submitExamExplanation({
+    required String examId,
+    required String sessionId,
+    required String explanation,
+  }) async {
+    final sessions = await getLiveSessionsForExam(examId);
+    final idx = sessions.indexWhere((s) => s.id == sessionId);
+    ExamLiveSessionModel? updated;
+    if (idx >= 0) {
+      final cur = sessions[idx];
+      updated = ExamLiveSessionModel(
+        id: cur.id,
+        examId: cur.examId,
+        userId: cur.userId,
+        studentName: cur.studentName,
+        studentEmail: cur.studentEmail,
+        status: cur.status,
+        violationCount: cur.violationCount,
+        violationLogs: cur.violationLogs,
+        teacherWarningMessage: cur.teacherWarningMessage,
+        studentExplanation: explanation.trim(),
+        explanationSubmittedAt: DateTime.now(),
+        answeredCount: cur.answeredCount,
+        totalQuestions: cur.totalQuestions,
+        currentAnswers: cur.currentAnswers,
+        score: cur.score,
+        startedAt: cur.startedAt,
+        submittedAt: cur.submittedAt,
+        lastHeartbeatAt: DateTime.now(),
+      );
+      await _saveLiveSession(updated);
+    }
+
+    await recordAuditLog(
+      action: 'SUBMIT_EXAM_EXPLANATION',
+      targetType: 'exam_live_session',
+      targetId: sessionId,
+      details: 'Học sinh gửi giải trình phòng thi: "${explanation.trim()}"',
+    );
+
+    try {
+      final client = await _client();
+      final res = await client.postJson('/exams/supervised/$examId/explain', {
+        'sessionId': sessionId,
+        'explanation': explanation.trim(),
+      });
+      if (res.isSuccess && res.data?['session'] is Map) {
+        final serverUpdated = ExamLiveSessionModel.fromMap(
+          Map<String, dynamic>.from(res.data!['session'] as Map),
+        );
+        await _saveLiveSession(serverUpdated);
+        return serverUpdated;
+      }
+    } catch (_) {}
+
+    return updated;
+  }
+
+  /// Lấy danh sách Lớp học thật (Đồng bộ SQLite & Backend, không có dữ liệu mẫu giả)
+  Future<List<Map<String, dynamic>>> getClasses() async {
+    final raw = await _repo.getSetting('admin_classes_json');
+    List<Map<String, dynamic>> localList = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        localList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    try {
+      final client = await _client();
+      final res = await client.getJson('/classes', timeout: const Duration(seconds: 6));
+      if (res.isSuccess && res.data?['classes'] is List) {
+        final serverList = (res.data!['classes'] as List)
+            .map((e) => _normalizeClassMap(Map<String, dynamic>.from(e as Map)))
+            .toList();
+        if (serverList.isNotEmpty) {
+          for (final sc in serverList) {
+            final idx = localList.indexWhere((l) => l['id'] == sc['id']);
+            if (idx >= 0) {
+              localList[idx] = sc;
+            } else {
+              localList.add(sc);
+            }
+          }
+          await _repo.setSetting('admin_classes_json', jsonEncode(localList));
+        }
+      }
+    } catch (_) {}
+
+    // Cập nhật số lượng học sinh & bài đang mở thực tế từ bảng members và assignments
+    final allAssignments = await _getAssignmentsRaw();
+    for (int i = 0; i < localList.length; i++) {
+      final c = Map<String, dynamic>.from(localList[i]);
+      final cid = (c['id'] ?? '').toString();
+      final members = await getClassMembers(cid, syncRemote: false);
+      final approvedCount = members.where((m) => m['status'] == 'approved').length;
+      final pendingCount = members.where((m) => m['status'] == 'pending').length;
+      final openAssignCount = allAssignments
+          .where((a) => a['classId'] == cid && a['status'] != 'closed')
+          .length;
+      c['studentsCount'] = approvedCount > 0 ? approvedCount : ((c['studentsCount'] as num?)?.toInt() ?? 0);
+      c['pendingCount'] = pendingCount;
+      c['openAssignmentsCount'] = openAssignCount;
+      localList[i] = c;
+    }
+
+    return localList;
+  }
+
+  Map<String, dynamic> _normalizeClassMap(Map<String, dynamic> m) {
+    return {
+      'id': (m['id'] ?? '').toString(),
+      'name': (m['name'] ?? '').toString(),
+      'schoolName': (m['schoolName'] ?? m['school_name'] ?? 'THPT').toString(),
+      'schoolYear': (m['schoolYear'] ?? m['school_year'] ?? '2026-2027').toString(),
+      'bookSet': (m['bookSet'] ?? m['book_set'] ?? 'SGK Tiếng Anh 12 Global Success').toString(),
+      'teacherId': (m['teacherId'] ?? m['teacher_id'] ?? '').toString(),
+      'teacherName': (m['teacherName'] ?? m['teacher_name'] ?? '').toString(),
+      'teacherEmail': (m['teacherEmail'] ?? m['teacher_email'] ?? '').toString(),
+      'code': (m['code'] ?? m['join_code'] ?? '').toString(),
+      'requireApproval': m['requireApproval'] == true || m['require_approval'] == true,
+      'showLeaderboard': m['showLeaderboard'] != false && m['show_leaderboard'] != false,
+      'allowJoin': m['allowJoin'] != false && m['allow_join'] != false,
+      'status': (m['status'] ?? 'active').toString(),
+      'studentsCount': (m['studentsCount'] ?? m['student_count'] ?? 0 as num).toInt(),
+      'pendingCount': (m['pendingCount'] ?? m['pending_count'] ?? 0 as num).toInt(),
+      'progressPercent': (m['progressPercent'] ?? m['progress_percent'] ?? 0 as num).toInt(),
+      'createdAt': (m['createdAt'] ?? m['created_at'] ?? DateTime.now().toIso8601String()).toString(),
+    };
+  }
+
+  static String generateClassJoinCode(String className) {
+    final prefix = className
+        .toUpperCase()
+        .replaceAll(RegExp(r'[^A-Z0-9]'), '')
+        .padRight(4, 'X')
+        .substring(0, 4);
+    final rand = (1000 + (DateTime.now().microsecondsSinceEpoch % 9000)).toString();
+    return '$prefix-$rand';
+  }
+
+  Future<Map<String, dynamic>> createClass({
+    required String name,
+    String schoolName = 'THPT',
+    String schoolYear = '2026-2027',
+    String bookSet = 'SGK Tiếng Anh 12 Global Success',
+    String? joinCode,
+    bool requireApproval = true,
+    bool showLeaderboard = true,
+    String? teacherName,
+    String? teacherEmail,
+  }) async {
+    final user = await _repo.getAuthUser();
+    final classes = await getClasses();
+    final code = (joinCode != null && joinCode.trim().isNotEmpty)
+        ? joinCode.trim().toUpperCase()
+        : generateClassJoinCode(name);
+
+    final newClass = {
+      'id': 'cls_${DateTime.now().millisecondsSinceEpoch}',
+      'name': name.trim(),
+      'schoolName': schoolName.trim(),
+      'schoolYear': schoolYear.trim(),
+      'bookSet': bookSet.trim(),
+      'teacherId': user?.id ?? '',
+      'teacherName': teacherName ?? user?.displayName ?? 'Giáo viên',
+      'teacherEmail': teacherEmail ?? user?.email ?? '',
+      'code': code,
+      'requireApproval': requireApproval,
+      'showLeaderboard': showLeaderboard,
+      'allowJoin': true,
+      'status': 'active',
+      'studentsCount': 0,
+      'pendingCount': 0,
+      'progressPercent': 0,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+
+    classes.insert(0, newClass);
+    await _repo.setSetting('admin_classes_json', jsonEncode(classes));
+
+    await recordAuditLog(
+      action: 'CREATE_CLASS',
+      targetType: 'class',
+      targetId: newClass['id'].toString(),
+      details: 'Tạo lớp học "${newClass['name']}" (Mã lớp: $code)',
+    );
+
+    try {
+      final client = await _client();
+      final res = await client.postJson('/classes', {
+        'name': name.trim(),
+        'schoolName': schoolName.trim(),
+        'schoolYear': schoolYear.trim(),
+        'bookSet': bookSet.trim(),
+        'joinCode': code,
+        'requireApproval': requireApproval,
+        'showLeaderboard': showLeaderboard,
+        'teacherName': newClass['teacherName'],
+        'teacherEmail': newClass['teacherEmail'],
+      });
+      if (res.isSuccess && res.data?['class'] is Map) {
+        final serverClass = _normalizeClassMap(Map<String, dynamic>.from(res.data!['class'] as Map));
+        classes[0] = serverClass;
+        await _repo.setSetting('admin_classes_json', jsonEncode(classes));
+        return serverClass;
+      }
+    } catch (_) {}
+
+    return newClass;
+  }
+
+  Future<Map<String, dynamic>?> updateClass({
+    required String classId,
+    String? name,
+    String? schoolName,
+    String? teacherName,
+    String? teacherEmail,
+    String? joinCode,
+    bool? requireApproval,
+    bool? showLeaderboard,
+    bool? allowJoin,
+    String? status,
+  }) async {
+    final classes = await getClasses();
+    final idx = classes.indexWhere((c) => c['id'] == classId);
+    if (idx < 0) return null;
+
+    final cur = Map<String, dynamic>.from(classes[idx]);
+    if (name != null) cur['name'] = name.trim();
+    if (schoolName != null) cur['schoolName'] = schoolName.trim();
+    if (teacherName != null) cur['teacherName'] = teacherName.trim();
+    if (teacherEmail != null) cur['teacherEmail'] = teacherEmail.trim();
+    if (joinCode != null) cur['code'] = joinCode.trim().toUpperCase();
+    if (requireApproval != null) cur['requireApproval'] = requireApproval;
+    if (showLeaderboard != null) cur['showLeaderboard'] = showLeaderboard;
+    if (allowJoin != null) cur['allowJoin'] = allowJoin;
+    if (status != null) cur['status'] = status;
+
+    classes[idx] = cur;
+    await _repo.setSetting('admin_classes_json', jsonEncode(classes));
+
+    await recordAuditLog(
+      action: 'UPDATE_CLASS',
+      targetType: 'class',
+      targetId: classId,
+      details: 'Cập nhật lớp học "${cur['name']}" (Mã: ${cur['code']}, Trạng thái: ${cur['status']})',
+    );
+
+    try {
+      final client = await _client();
+      await client.putJson('/classes/$classId', {
+        'name': cur['name'],
+        'schoolName': cur['schoolName'],
+        'teacherName': cur['teacherName'],
+        'teacherEmail': cur['teacherEmail'],
+        'joinCode': cur['code'],
+        'requireApproval': cur['requireApproval'],
+        'showLeaderboard': cur['showLeaderboard'],
+        'allowJoin': cur['allowJoin'],
+        'status': cur['status'],
+      });
+    } catch (_) {}
+
+    return cur;
+  }
+
+  Future<String> regenerateClassCode(String classId) async {
+    final classes = await getClasses();
+    final idx = classes.indexWhere((c) => c['id'] == classId);
+    final className = idx >= 0 ? (classes[idx]['name'] ?? 'CLASS').toString() : 'CLASS';
+    final newCode = generateClassJoinCode(className);
+    await updateClass(classId: classId, joinCode: newCode);
+    return newCode;
+  }
+
+  /// Học sinh nhập Mã lớp để tham gia lớp học
+  Future<Map<String, dynamic>> joinClassByCode(String joinCode) async {
+    final cleanCode = joinCode.trim().toUpperCase();
+    if (cleanCode.isEmpty) {
+      return {'ok': false, 'message': 'Vui lòng nhập mã lớp học.'};
+    }
+
+    final user = await _repo.getAuthUser();
+    final studentId = user?.id ?? 'usr_student_local';
+    final studentName = (user?.displayName.isNotEmpty == true) ? user!.displayName : 'Học sinh';
+    final studentEmail = user?.email ?? '';
+
+    try {
+      final client = await _client();
+      final res = await client.postJson('/classes/join', {'joinCode': cleanCode});
+      if (res.isSuccess && res.data != null) {
+        return {
+          'ok': true,
+          'status': res.data!['memberStatus'] ?? 'approved',
+          'message': res.data!['message'] ?? 'Tham gia lớp học thành công.',
+          'classItem': res.data!['class'],
+        };
+      }
+    } catch (_) {}
+
+    final classes = await getClasses();
+    final targetClass = classes.where(
+      (c) => (c['code'] ?? '').toString().toUpperCase() == cleanCode,
+    ).firstOrNull;
+
+    if (targetClass == null) {
+      return {'ok': false, 'message': 'Không tìm thấy lớp học với mã "$cleanCode".'};
+    }
+    if (targetClass['allowJoin'] == false || targetClass['status'] == 'archived') {
+      return {'ok': false, 'message': 'Lớp học này hiện đã đóng nhận học sinh mới.'};
+    }
+
+    final classId = targetClass['id'].toString();
+    final requireApproval = targetClass['requireApproval'] == true;
+    final status = requireApproval ? 'pending' : 'approved';
+
+    final stats = await _repo.getOverallStats();
+    final totalDone = (stats['totalDone'] as num?)?.toInt() ?? 0;
+    final totalCorrect = (stats['totalCorrect'] as num?)?.toInt() ?? 0;
+    final avgScore = totalDone > 0 ? double.parse(((totalCorrect / totalDone) * 10).toStringAsFixed(1)) : 0.0;
+    final streakDays = (stats['streak'] as num?)?.toInt() ?? 0;
+
+    final members = await getClassMembers(classId, syncRemote: false);
+    final existingIdx = members.indexWhere((m) => m['studentId'] == studentId || (studentEmail.isNotEmpty && m['studentEmail'] == studentEmail));
+    final memberItem = {
+      'id': existingIdx >= 0 ? members[existingIdx]['id'] : 'cm_${DateTime.now().millisecondsSinceEpoch}',
+      'classId': classId,
+      'studentId': studentId,
+      'studentName': studentName,
+      'studentEmail': studentEmail,
+      'status': status,
+      'streakDays': streakDays,
+      'avgScore': avgScore,
+      'overdueCount': 0,
+      'joinedAt': DateTime.now().toIso8601String(),
+    };
+
+    if (existingIdx >= 0) {
+      members[existingIdx] = memberItem;
+    } else {
+      members.insert(0, memberItem);
+    }
+    await _saveClassMembersLocal(classId, members);
+
+    // Cập nhật sĩ số lớp học
+    await getClasses();
+
+    await recordAuditLog(
+      action: 'STUDENT_JOIN_CLASS',
+      targetType: 'class',
+      targetId: classId,
+      details: '$studentName tham gia lớp ${targetClass['name']} bằng mã $cleanCode ($status)',
+    );
+
+    return {
+      'ok': true,
+      'status': status,
+      'message': status == 'pending'
+          ? 'Đã gửi yêu cầu vào lớp ${targetClass['name']}. Vui lòng chờ giáo viên duyệt.'
+          : 'Bạn đã vào lớp ${targetClass['name']} thành công!',
+      'classItem': targetClass,
+    };
+  }
+
+  Future<List<Map<String, dynamic>>> getClassMembers(String classId, {bool syncRemote = true}) async {
+    final raw = await _repo.getSetting('class_members_$classId');
+    List<Map<String, dynamic>> list = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    if (syncRemote) {
+      try {
+        final client = await _client();
+        final res = await client.getJson('/classes/$classId/members', timeout: const Duration(seconds: 5));
+        if (res.isSuccess && res.data?['members'] is List) {
+          final serverList = (res.data!['members'] as List).map((e) {
+            final m = Map<String, dynamic>.from(e as Map);
+            return {
+              'id': (m['id'] ?? '').toString(),
+              'classId': (m['class_id'] ?? m['classId'] ?? classId).toString(),
+              'studentId': (m['student_id'] ?? m['studentId'] ?? '').toString(),
+              'studentName': (m['student_name'] ?? m['studentName'] ?? '').toString(),
+              'studentEmail': (m['student_email'] ?? m['studentEmail'] ?? '').toString(),
+              'status': (m['status'] ?? 'approved').toString(),
+              'streakDays': (m['streak_days'] ?? m['streakDays'] ?? 0 as num).toInt(),
+              'avgScore': (m['avg_score'] ?? m['avgScore'] ?? 0.0 as num).toDouble(),
+              'overdueCount': (m['overdue_count'] ?? m['overdueCount'] ?? 0 as num).toInt(),
+              'joinedAt': (m['joined_at'] ?? m['joinedAt'] ?? DateTime.now().toIso8601String()).toString(),
+            };
+          }).toList();
+          if (serverList.isNotEmpty) {
+            list = serverList;
+            await _saveClassMembersLocal(classId, list);
+          }
+        }
+      } catch (_) {}
+    }
+
+    return list;
+  }
+
+  Future<void> _saveClassMembersLocal(String classId, List<Map<String, dynamic>> members) async {
+    await _repo.setSetting('class_members_$classId', jsonEncode(members));
+  }
+
+  /// Giáo viên thêm học sinh vào lớp hoặc duyệt yêu cầu vào lớp
+  Future<Map<String, dynamic>> addStudentToClass({
+    required String classId,
+    required String studentName,
+    required String studentEmail,
+    String status = 'approved',
+  }) async {
+    final members = await getClassMembers(classId, syncRemote: false);
+    final item = {
+      'id': 'cm_${DateTime.now().millisecondsSinceEpoch}',
+      'classId': classId,
+      'studentId': 'usr_${DateTime.now().millisecondsSinceEpoch}',
+      'studentName': studentName.trim(),
+      'studentEmail': studentEmail.trim().toLowerCase(),
+      'status': status,
+      'streakDays': 0,
+      'avgScore': 0.0,
+      'overdueCount': 0,
+      'joinedAt': DateTime.now().toIso8601String(),
+    };
+    members.insert(0, item);
+    await _saveClassMembersLocal(classId, members);
+    await getClasses();
+    return item;
+  }
+
+  Future<void> decideClassMember({
+    required String classId,
+    required String memberId,
+    required String status, // 'approved' | 'rejected'
+  }) async {
+    final members = await getClassMembers(classId, syncRemote: false);
+    if (status == 'rejected') {
+      members.removeWhere((m) => m['id'] == memberId);
+    } else {
+      final idx = members.indexWhere((m) => m['id'] == memberId);
+      if (idx >= 0) {
+        members[idx]['status'] = status;
+      }
+    }
+    await _saveClassMembersLocal(classId, members);
+    await getClasses();
+
+    await recordAuditLog(
+      action: status == 'approved' ? 'APPROVE_CLASS_MEMBER' : 'REJECT_CLASS_MEMBER',
+      targetType: 'class_member',
+      targetId: memberId,
+      details: '${status == 'approved' ? "Duyệt" : "Từ chối"} học sinh $memberId vào lớp $classId',
+    );
+
+    try {
+      final client = await _client();
+      await client.postJson('/classes/$classId/members/$memberId/decision', {'status': status});
+    } catch (_) {}
+  }
+
+  Future<List<Map<String, dynamic>>> _getAssignmentsRaw() async {
+    final raw = await _repo.getSetting('class_assignments_json');
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw) as List;
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Quản lý Bài giao cho lớp (Assignments CRUD)
+  Future<List<Map<String, dynamic>>> getAssignments({String? classId}) async {
+    List<Map<String, dynamic>> list = await _getAssignmentsRaw();
+
+    try {
+      final client = await _client();
+      final q = classId != null && classId.isNotEmpty ? '?classId=$classId' : '';
+      final res = await client.getJson('/assignments$q', timeout: const Duration(seconds: 5));
+      if (res.isSuccess && res.data?['assignments'] is List) {
+        final serverList = (res.data!['assignments'] as List).map((e) {
+          final m = Map<String, dynamic>.from(e as Map);
+          return {
+            'id': (m['id'] ?? '').toString(),
+            'title': (m['title'] ?? '').toString(),
+            'classId': (m['class_id'] ?? m['classId'] ?? '').toString(),
+            'className': (m['class_name'] ?? m['className'] ?? '').toString(),
+            'contentType': (m['content_type'] ?? m['contentType'] ?? 'unit').toString(),
+            'unitNumber': (m['unit_number'] ?? m['unitNumber'] ?? 1 as num).toInt(),
+            'skills': (m['skills'] as List?)?.map((s) => s.toString()).toList() ?? ['reading'],
+            'dueAt': (m['due_at'] ?? m['dueAt'] ?? DateTime.now().add(const Duration(days: 3)).toIso8601String()).toString(),
+            'maxAttempts': (m['max_attempts'] ?? m['maxAttempts'] ?? 2 as num).toInt(),
+            'showAnswerMode': (m['show_answer_mode'] ?? m['showAnswerMode'] ?? 'after_submit').toString(),
+            'status': (m['status'] ?? 'open').toString(),
+            'submittedCount': (m['submitted_count'] ?? m['submittedCount'] ?? 0 as num).toInt(),
+            'createdAt': (m['created_at'] ?? m['createdAt'] ?? DateTime.now().toIso8601String()).toString(),
+          };
+        }).toList();
+        if (serverList.isNotEmpty) {
+          for (final sa in serverList) {
+            final idx = list.indexWhere((l) => l['id'] == sa['id']);
+            if (idx >= 0) {
+              list[idx] = sa;
+            } else {
+              list.add(sa);
+            }
+          }
+          await _repo.setSetting('class_assignments_json', jsonEncode(list));
+        }
+      }
+    } catch (_) {}
+
+    final submissions = await getSubmissionsForClass();
+    for (int i = 0; i < list.length; i++) {
+      final a = Map<String, dynamic>.from(list[i]);
+      final aid = a['id'].toString();
+      final subCount = submissions.where((s) => s['assignmentId'] == aid).length;
+      if (subCount > 0) {
+        a['submittedCount'] = subCount;
+      }
+      list[i] = a;
+    }
+
+    if (classId != null && classId.isNotEmpty && classId != 'all') {
+      return list.where((a) => a['classId'] == classId).toList();
+    }
+    return list;
+  }
+
+  Future<Map<String, dynamic>> createAssignment({
+    required String title,
+    required String classId,
+    required String className,
+    String contentType = 'unit',
+    int unitNumber = 1,
+    List<String> skills = const ['reading'],
+    required DateTime dueAt,
+    int maxAttempts = 2,
+    String showAnswerMode = 'after_submit',
+    String status = 'open',
+  }) async {
+    final list = await _getAssignmentsRaw();
+    final item = {
+      'id': 'asg_${DateTime.now().millisecondsSinceEpoch}',
+      'title': title.trim(),
+      'classId': classId,
+      'className': className,
+      'contentType': contentType,
+      'unitNumber': unitNumber,
+      'skills': skills,
+      'dueAt': dueAt.toIso8601String(),
+      'maxAttempts': maxAttempts,
+      'showAnswerMode': showAnswerMode,
+      'status': status,
+      'submittedCount': 0,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    list.insert(0, item);
+    await _repo.setSetting('class_assignments_json', jsonEncode(list));
+
+    await recordAuditLog(
+      action: 'CREATE_ASSIGNMENT',
+      targetType: 'assignment',
+      targetId: item['id'].toString(),
+      details: 'Giao bài "${item['title']}" cho lớp $className (Unit $unitNumber)',
+    );
+
+    try {
+      final client = await _client();
+      await client.postJson('/assignments', item);
+    } catch (_) {}
+
+    return item;
+  }
+
+  Future<void> deleteAssignment(String assignmentId) async {
+    final list = await _getAssignmentsRaw();
+    list.removeWhere((a) => a['id'] == assignmentId);
+    await _repo.setSetting('class_assignments_json', jsonEncode(list));
+    try {
+      final client = await _client();
+      await client.deleteJson('/assignments/$assignmentId');
+    } catch (_) {}
+  }
+
+  Future<Map<String, dynamic>> submitAssignment({
+    required String assignmentId,
+    required String classId,
+    required double score,
+    int durationSeconds = 300,
+    Map<String, double> skillScores = const {},
+  }) async {
+    final user = await _repo.getAuthUser();
+    final raw = await _repo.getSetting('assignment_submissions_json');
+    List<Map<String, dynamic>> subs = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        subs = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    final subItem = {
+      'id': 'sub_${DateTime.now().millisecondsSinceEpoch}',
+      'assignmentId': assignmentId,
+      'classId': classId,
+      'studentId': user?.id ?? 'usr_student',
+      'studentName': user?.displayName ?? 'Học sinh',
+      'studentEmail': user?.email ?? '',
+      'score': score,
+      'durationSeconds': durationSeconds,
+      'skillScores': skillScores,
+      'status': 'submitted',
+      'submittedAt': DateTime.now().toIso8601String(),
+    };
+
+    subs.insert(0, subItem);
+    await _repo.setSetting('assignment_submissions_json', jsonEncode(subs));
+
+    try {
+      final client = await _client();
+      await client.postJson('/assignments/$assignmentId/submit', subItem);
+    } catch (_) {}
+
+    return subItem;
+  }
+
+  Future<List<Map<String, dynamic>>> getSubmissionsForClass({
+    String? classId,
+    String? assignmentId,
+  }) async {
+    final raw = await _repo.getSetting('assignment_submissions_json');
+    List<Map<String, dynamic>> subs = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        subs = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    // Kết hợp thêm các bài nộp thật từ Phòng thi có giám sát (ExamLiveSessionModel)
+    final rawSessions = await _repo.getSetting('exam_live_sessions_json');
+    if (rawSessions != null && rawSessions.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawSessions) as List;
+        final exams = await getSupervisedExams();
+        for (final s in decoded) {
+          final m = Map<String, dynamic>.from(s as Map);
+          if (m['submittedAt'] != null) {
+            final ex = exams.where((e) => e.id == m['examId']).firstOrNull;
+            final exClassId = ex?.classId ?? '';
+            final sessionSubId = 'exam_sub_${m['id']}';
+            if (!subs.any((x) => x['id'] == sessionSubId)) {
+              subs.add({
+                'id': sessionSubId,
+                'assignmentId': m['examId'] ?? '',
+                'classId': exClassId,
+                'studentId': m['userId'] ?? '',
+                'studentName': m['studentName'] ?? 'Học sinh',
+                'studentEmail': m['studentEmail'] ?? '',
+                'score': (m['score'] as num?)?.toDouble() ?? 0.0,
+                'durationSeconds': 600,
+                'skillScores': <String, double>{},
+                'status': m['status'] ?? 'submitted',
+                'submittedAt': m['submittedAt'].toString(),
+              });
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    return subs.where((s) {
+      if (classId != null && classId.isNotEmpty && classId != 'all' && s['classId'] != classId) {
+        return false;
+      }
+      if (assignmentId != null && assignmentId.isNotEmpty && s['assignmentId'] != assignmentId) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  /// Quản lý Báo lỗi Câu hỏi / Bài đọc thật từ Học sinh & Giáo viên
+  Future<List<Map<String, dynamic>>> getBugReports() async {
+    final raw = await _repo.getSetting('admin_bug_reports_json');
+    List<Map<String, dynamic>> list = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    try {
+      final client = await _client();
+      final res = await client.getJson('/bug-reports', timeout: const Duration(seconds: 5));
+      if (res.isSuccess && res.data?['reports'] is List) {
+        final serverList = (res.data!['reports'] as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+        if (serverList.isNotEmpty) {
+          for (final sr in serverList) {
+            if (!list.any((l) => l['id'] == sr['id'])) {
+              list.add(sr);
+            }
+          }
+          await _repo.setSetting('admin_bug_reports_json', jsonEncode(list));
+        }
+      }
+    } catch (_) {}
+
+    return list;
+  }
+
+  Future<Map<String, dynamic>> submitBugReport({
+    required String targetCode,
+    required int unitNumber,
+    required String skill,
+    required String issueType,
+    required String reason,
+    String questionId = '',
+  }) async {
+    final user = await _repo.getAuthUser();
+    final list = await getBugReports();
+    final item = {
+      'id': 'rpt_${DateTime.now().millisecondsSinceEpoch}',
+      'targetCode': targetCode.trim(),
+      'questionId': questionId,
+      'unit': unitNumber,
+      'skill': skill,
+      'issueType': issueType,
+      'reason': reason.trim(),
+      'reporter': user?.displayName.isNotEmpty == true ? user!.displayName : (user?.email ?? 'Học sinh'),
+      'status': 'open',
+      'reportCount': 1,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    list.insert(0, item);
+    await _repo.setSetting('admin_bug_reports_json', jsonEncode(list));
+
+    await recordAuditLog(
+      action: 'SUBMIT_BUG_REPORT',
+      targetType: 'question_bug_report',
+      targetId: item['id'].toString(),
+      details: 'Báo lỗi "$targetCode" ($issueType): ${reason.trim()}',
+    );
+
+    try {
+      final client = await _client();
+      await client.postJson('/bug-reports', {
+        'targetCode': targetCode.trim(),
+        'questionId': questionId,
+        'unitNumber': unitNumber,
+        'skill': skill,
+        'issueType': issueType,
+        'reason': reason.trim(),
+        'reporterName': item['reporter'],
+      });
+    } catch (_) {}
+
+    return item;
+  }
+
+  Future<void> updateBugReportStatus({
+    required String reportId,
+    required String status, // 'open' | 'fixed' | 'ignored'
+  }) async {
+    final list = await getBugReports();
+    final idx = list.indexWhere((r) => r['id'] == reportId);
+    if (idx >= 0) {
+      list[idx]['status'] = status;
+      await _repo.setSetting('admin_bug_reports_json', jsonEncode(list));
+    }
+
+    await recordAuditLog(
+      action: 'RESOLVE_BUG_REPORT',
+      targetType: 'question_bug_report',
+      targetId: reportId,
+      details: 'Cập nhật trạng thái báo lỗi $reportId sang "$status"',
+    );
+
+    try {
+      final client = await _client();
+      await client.putJson('/bug-reports/$reportId', {'status': status});
+    } catch (_) {}
+  }
+
+  /// Quản lý Thông báo hệ thống thật
+  Future<List<Map<String, dynamic>>> getAnnouncements() async {
+    final raw = await _repo.getSetting('admin_announcements_json');
+    List<Map<String, dynamic>> list = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    try {
+      final client = await _client();
+      final res = await client.getJson('/announcements', timeout: const Duration(seconds: 5));
+      if (res.isSuccess && res.data?['announcements'] is List) {
+        final serverList = (res.data!['announcements'] as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+        if (serverList.isNotEmpty) {
+          for (final sa in serverList) {
+            if (!list.any((l) => l['id'] == sa['id'])) {
+              list.add(sa);
+            }
+          }
+          await _repo.setSetting('admin_announcements_json', jsonEncode(list));
+        }
+      }
+    } catch (_) {}
+
+    return list;
+  }
+
+  Future<Map<String, dynamic>> createAnnouncement({
+    required String title,
+    required String content,
+    String audience = 'Tất cả người dùng',
+    String category = 'Hệ thống',
+    String displayType = 'Cả hai',
+    bool sendPush = true,
+    String scheduledAt = 'Gửi ngay',
+  }) async {
+    final list = await getAnnouncements();
+    final item = {
+      'id': 'ann_${DateTime.now().millisecondsSinceEpoch}',
+      'title': title.trim(),
+      'content': content.trim(),
+      'audience': audience,
+      'category': category,
+      'displayType': displayType,
+      'sendPush': sendPush,
+      'scheduledAt': scheduledAt,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    list.insert(0, item);
+    await _repo.setSetting('admin_announcements_json', jsonEncode(list));
+
+    await recordAuditLog(
+      action: 'SEND_SYSTEM_ANNOUNCEMENT',
+      targetType: 'announcement',
+      targetId: item['id'].toString(),
+      details: 'Gửi thông báo "$title" tới $audience',
+    );
+
+    try {
+      final client = await _client();
+      await client.postJson('/announcements', item);
+    } catch (_) {}
+
+    return item;
+  }
+
+  /// Quản lý Yêu cầu Duyệt tài khoản Giáo viên thật (Không tự tạo giáo viên mẫu giả)
+  Future<List<Map<String, dynamic>>> getTeacherRequests() async {
+    final raw = await _repo.getSetting('admin_teacher_requests_json');
+    List<Map<String, dynamic>> list = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+
+    try {
+      final client = await _client();
+      final res = await client.getJson('/admin/teacher-requests', timeout: const Duration(seconds: 5));
+      if (res.isSuccess && res.data?['requests'] is List) {
+        final serverList = (res.data!['requests'] as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+        if (serverList.isNotEmpty) {
+          list = serverList;
+          await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
+        }
+      }
+    } catch (_) {}
+
+    return list;
+  }
+
+  Future<void> decideTeacherRequest({
+    required Map<String, dynamic> request,
+    required bool approve,
+    String password = '',
+  }) async {
+    final requests = await getTeacherRequests();
+    requests.removeWhere((r) => r['id'] == request['id']);
+    await _repo.setSetting('admin_teacher_requests_json', jsonEncode(requests));
+
+    if (approve) {
+      final pwd = password.trim().isNotEmpty
+          ? password.trim()
+          : 'GV${DateTime.now().millisecondsSinceEpoch % 100000}!';
+      await createAdminUser(
+        email: (request['email'] ?? '').toString(),
+        password: pwd,
+        displayName: (request['display_name'] ?? request['displayName'] ?? '').toString(),
+        role: 'teacher',
+      );
+    } else {
+      await recordAuditLog(
+        action: 'REJECT_TEACHER_REQUEST',
+        targetType: 'teacher_request',
+        targetId: (request['id'] ?? '').toString(),
+        details: 'Từ chối yêu cầu tài khoản giáo viên: ${request['email']}',
+      );
+    }
+
+    try {
+      final client = await _client();
+      await client.postJson('/admin/teacher-requests/${request['id']}/decision', {
+        'approve': approve,
+      });
+    } catch (_) {}
   }
 }

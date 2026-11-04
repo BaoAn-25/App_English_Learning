@@ -18,9 +18,6 @@ import '../theme/components/sync_status_badge.dart';
 import 'settings_controller.dart';
 import '../teacher/teacher_portal_screen.dart';
 import '../admin/admin_portal_screen.dart';
-import '../translation/translation_hub_screen.dart';
-import '../practice/supervised_exam_screen.dart';
-import '../ai/ai_tutor_sheet.dart';
 
 /// Màn hình Cá nhân & Cài đặt.
 /// Xuất widget công khai để MainShell gắn vào NavigationBar.
@@ -94,9 +91,11 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   _buildProfileCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
-                // 1.5. Phân quyền Vai trò (Student / Teacher / Admin) & Cổng Quản Trị
-                _buildRoleAndPortalsCard(context),
-                const SizedBox(height: AppTokens.space16),
+                // 1.5. Cổng Chức Năng Dành Riêng Cho Giáo Viên / Admin (Học viên không hiển thị)
+                if (auth.user.isTeacher || auth.user.isAdmin) ...[
+                  _buildRoleAndPortalsCard(context),
+                  const SizedBox(height: AppTokens.space16),
+                ],
 
                 // 2. Mục tiêu luyện tập hàng ngày
                 _buildDailyGoalCard(context, controller),
@@ -125,144 +124,186 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     );
   }
 
-  // --- Khối 1.5: Phân quyền Vai trò (RBAC) & Truy cập Cổng Giáo viên / Admin ---
+  // --- Khối Cổng Quản Trị / Giáo Viên (Chỉ dành riêng cho Teacher hoặc Admin) ---
   Widget _buildRoleAndPortalsCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: AuthController.instance,
       builder: (context, _) {
         final user = AuthController.instance.user;
-        final currentRole = ['student', 'teacher', 'admin'].contains(user.role)
-            ? user.role
-            : 'student';
 
+        // Nếu là học sinh hoặc khách: Tuyệt đối không hiển thị
+        if (user.isStudent || (!user.isTeacher && !user.isAdmin)) {
+          return const SizedBox.shrink();
+        }
+
+        // Cổng Quản trị viên Tối cao (Admin)
+        if (user.isAdmin) {
+          return AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTokens.primary.withAlpha(25),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.admin_panel_settings_rounded, color: AppTokens.primary, size: 22),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Trung Tâm Quản Trị Hệ Thống',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? Colors.white : AppTokens.textMain,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTokens.primary.withAlpha(30),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'QUẢN TRỊ VIÊN (ADMIN)',
+                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w900, color: AppTokens.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Toàn quyền quản trị hệ thống: Quản lý người dùng, phân quyền vai trò, thay sách mới và xem nhật ký kiểm toán.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: isDark ? AppTokens.darkTextSub : AppTokens.textSub,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTokens.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
+                      label: const Text('Trung Tâm Quản Trị Admin', style: TextStyle(fontWeight: FontWeight.w800)),
+                    ),
+                    FilledButton.tonalIcon(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.school_rounded, size: 18),
+                      label: const Text('Cổng Giáo Viên'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Cổng Giáo viên (Teacher)
         return AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.verified_user_rounded, color: AppTokens.primary, size: 22),
-                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTokens.primaryLight.withAlpha(25),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.school_rounded, color: AppTokens.primaryLight, size: 22),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      'Vai trò & Cổng Chức Năng (${user.roleDisplayName})',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : AppTokens.textMain,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cổng Giáo Viên & Giám Sát Thi',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : AppTokens.textMain,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppTokens.primaryLight.withAlpha(30),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'GIÁO VIÊN (TEACHER)',
+                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w900, color: AppTokens.primaryLight),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               Text(
-                'Chuyển đổi nhanh vai trò để quản lý Học viên, Giáo viên (Ra đề & Giám sát thi 10s) hoặc Admin (Quản trị hệ thống, Thay sách mới & Cấu hình API AI).',
+                'Quản lý đề thi & hạn nộp, Giám sát trực tiếp phòng thi học sinh chống gian lận 10 giây, Ngân hàng câu hỏi và Tài liệu bổ trợ.',
                 style: TextStyle(
                   fontSize: 12.5,
                   color: isDark ? AppTokens.darkTextSub : AppTokens.textSub,
                   height: 1.4,
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 'student',
-                      icon: Icon(Icons.person_rounded, size: 16),
-                      label: Text('Học viên', style: TextStyle(fontSize: 12)),
-                    ),
-                    ButtonSegment(
-                      value: 'teacher',
-                      icon: Icon(Icons.school_rounded, size: 16),
-                      label: Text('Giáo viên', style: TextStyle(fontSize: 12)),
-                    ),
-                    ButtonSegment(
-                      value: 'admin',
-                      icon: Icon(Icons.admin_panel_settings_rounded, size: 16),
-                      label: Text('Admin', style: TextStyle(fontSize: 12)),
-                    ),
-                  ],
-                  selected: {currentRole},
-                  onSelectionChanged: (sel) async {
-                    final nextRole = sel.first;
-                    await AuthController.instance.switchRole(nextRole);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Đã chuyển sang vai trò: ${nextRole.toUpperCase()}'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTokens.primaryLight,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  FilledButton.tonalIcon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.school_rounded, size: 18),
-                    label: const Text('Cổng Giáo Viên'),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
-                    label: const Text('Trung Tâm Admin'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const TranslationHubScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.translate_rounded, size: 18),
-                    label: const Text('Dịch thuật 3-in-1'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SupervisedExamListScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.shield_rounded, size: 18),
-                    label: const Text('Phòng thi Giám sát'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AdminPortalScreen(initialTabIndex: 3),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.key_rounded, size: 18),
-                    label: const Text('Cấu hình API AI'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => AiTutorSheet.show(context),
-                    icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                    label: const Text('Trợ lý AI Chatbot'),
-                  ),
-                ],
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                  );
+                },
+                icon: const Icon(Icons.school_rounded, size: 18),
+                label: const Text('Vào Cổng Giáo Viên & Giám Sát', style: TextStyle(fontWeight: FontWeight.w800)),
               ),
             ],
           ),

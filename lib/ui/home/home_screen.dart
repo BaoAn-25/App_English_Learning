@@ -219,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- Khu vực Khám phá Duolingo x Quizlet (Phát âm IPA & Chủ đề sở thích) ---
   Widget _buildExploreDuolingoHub(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentUser = AuthController.instance.user;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -543,28 +544,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              TextButton.icon(
-                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
-                  );
-                },
-                icon: const Icon(Icons.school_rounded, size: 16),
-                label: const Text('Giáo viên', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-              ),
-              TextButton.icon(
-                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
-                  );
-                },
-                icon: const Icon(Icons.admin_panel_settings_rounded, size: 16),
-                label: const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-              ),
+              if (currentUser.isTeacher || currentUser.isAdmin)
+                TextButton.icon(
+                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.school_rounded, size: 16),
+                  label: const Text('Giáo viên', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
+              if (currentUser.isAdmin)
+                TextButton.icon(
+                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.admin_panel_settings_rounded, size: 16),
+                  label: const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
             ],
           ),
         ),

@@ -19,6 +19,8 @@ class SupervisedExamListScreen extends StatefulWidget {
 class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
   bool _isLoading = true;
   List<SupervisedExamModel> _exams = [];
+  List<Map<String, dynamic>> _assignments = [];
+  final TextEditingController _joinCodeController = TextEditingController();
 
   @override
   void initState() {
@@ -26,14 +28,169 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
     _loadExams();
   }
 
+  @override
+  void dispose() {
+    _joinCodeController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadExams() async {
     setState(() => _isLoading = true);
     final list = await RbacProctorAiService.instance.getSupervisedExams();
+    final assigns = await RbacProctorAiService.instance.getAssignments();
     if (!mounted) return;
     setState(() {
       _exams = list.where((e) => e.isActive).toList();
+      _assignments = assigns.where((a) => a['status'] != 'closed').toList();
       _isLoading = false;
     });
+  }
+
+  Future<void> _handleJoinClassByCode() async {
+    final code = _joinCodeController.text.trim();
+    if (code.isEmpty) return;
+    final res = await RbacProctorAiService.instance.joinClassByCode(code);
+    if (!mounted) return;
+    final ok = res['ok'] == true;
+    if (ok) {
+      _joinCodeController.clear();
+      await _loadExams();
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text((res['message'] ?? '').toString()),
+        backgroundColor: ok ? AppTokens.success : AppTokens.danger,
+      ),
+    );
+  }
+
+  void _showExamRulesSheet(SupervisedExamModel exam) {
+    bool agreed = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.policy_outlined, color: AppTokens.primary),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Quy chế thi có giám sát',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                exam.title,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                children: [
+                  Chip(label: Text('${exam.questions.length} câu')),
+                  Chip(label: Text('${exam.durationMinutes} phút')),
+                  Chip(label: Text('Làm ${exam.maxAttempts} lần')),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Trong lúc thi:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              _buildRuleItem(
+                Icons.app_blocking_outlined,
+                Colors.indigo,
+                'Không thoát ứng dụng và không chuyển sang ứng dụng khác.',
+              ),
+              _buildRuleItem(
+                Icons.timer_outlined,
+                Colors.amber[800]!,
+                'Nếu rời ứng dụng, bạn có ${exam.graceSeconds} giây để quay lại làm bài.',
+              ),
+              _buildRuleItem(
+                Icons.warning_amber_rounded,
+                Colors.red,
+                'Quá ${exam.graceSeconds} giây, bài thi tự nộp và tính điểm ngay. Câu chưa làm tính là sai.',
+              ),
+              _buildRuleItem(
+                Icons.visibility_outlined,
+                Colors.blueGrey,
+                'Mọi lần rời ứng dụng đều được ghi nhận và gửi trực tiếp cho Giáo viên.',
+              ),
+              const SizedBox(height: 10),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: agreed,
+                onChanged: (v) => setSheetState(() => agreed = v ?? false),
+                title: const Text(
+                  'Tôi đã đọc và đồng ý với quy chế thi có giám sát',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: agreed
+                      ? () async {
+                          Navigator.pop(ctx);
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SupervisedExamPlayerScreen(exam: exam),
+                            ),
+                          );
+                          _loadExams();
+                        }
+                      : null,
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: const Text('Bắt đầu thi'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRuleItem(IconData icon, Color color, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text, style: const TextStyle(fontSize: 13, height: 1.35)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -52,7 +209,7 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
         backgroundColor: cardColor,
         elevation: 0,
         title: Text(
-          'Phòng Thi Giám Sát & Hạn Nộp',
+          'Lớp Học & Phòng Thi Giám Sát',
           style: TextStyle(fontWeight: FontWeight.w800, color: textMain, fontSize: 17),
         ),
         actions: [
@@ -68,6 +225,117 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // Khối Tham gia lớp học bằng Mã lớp thật
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.groups_rounded, color: AppTokens.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tham gia lớp học bằng mã giáo viên cấp',
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                              color: textMain,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _joinCodeController,
+                              textCapitalization: TextCapitalization.characters,
+                              decoration: const InputDecoration(
+                                hintText: 'Nhập mã lớp (VD: 12A1-7432)',
+                                isDense: true,
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          FilledButton(
+                            onPressed: _handleJoinClassByCode,
+                            child: const Text('Vào lớp'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Danh sách bài tập lớp học giáo viên giao (nếu có)
+                if (_assignments.isNotEmpty) ...[
+                  Text(
+                    'Bài tập Giáo viên giao (${_assignments.length})',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textMain),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._assignments.map((a) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.assignment_outlined, color: AppTokens.primary),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  a['title'].toString(),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: textMain),
+                                ),
+                                Text(
+                                  'Lớp ${a['className'] ?? "12"} • Unit ${a['unitNumber'] ?? 1}',
+                                  style: TextStyle(fontSize: 12, color: textSub),
+                                ),
+                              ],
+                            ),
+                          ),
+                          FilledButton.tonal(
+                            onPressed: () async {
+                              await RbacProctorAiService.instance.submitAssignment(
+                                assignmentId: a['id'].toString(),
+                                classId: (a['classId'] ?? '').toString(),
+                                score: 8.5,
+                              );
+                              await _loadExams();
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Đã hoàn thành và nộp bài "${a['title']}"!'),
+                                  backgroundColor: AppTokens.success,
+                                ),
+                              );
+                            },
+                            child: const Text('Nộp bài'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 10),
+                ],
+
                 // Thẻ giới thiệu cơ chế chống gian lận 10s
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -149,7 +417,7 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                               ),
                             ),
                             const Spacer(),
-                            Icon(Icons.shield_rounded, size: 16, color: AppTokens.primary),
+                            const Icon(Icons.shield_rounded, size: 16, color: AppTokens.primary),
                             const SizedBox(width: 4),
                             Text(
                               'Giám sát ${exam.graceSeconds}s',
@@ -203,15 +471,7 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton.icon(
-                            onPressed: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => SupervisedExamPlayerScreen(exam: exam),
-                                ),
-                              );
-                              _loadExams();
-                            },
+                            onPressed: () => _showExamRulesSheet(exam),
                             icon: const Icon(Icons.play_arrow_rounded),
                             label: const Text('Vào Phòng Thi Giám Sát'),
                           ),
@@ -595,7 +855,7 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                 ),
                 const SizedBox(height: 16),
 
-                // Nội dung câu hỏi
+                // Nội dung câu hỏi + Nút Báo lỗi câu hỏi thật
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
@@ -603,14 +863,32 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: borderColor),
                   ),
-                  child: Text(
-                    (currentQ['stem'] ?? '').toString(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: textMain,
-                      height: 1.5,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (currentQ['stem'] ?? '').toString(),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: textMain,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            foregroundColor: textSub,
+                          ),
+                          onPressed: () => _showReportQuestionDialog(currentQ, _currentIndex + 1),
+                          icon: const Icon(Icons.flag_outlined, size: 15),
+                          label: const Text('Báo lỗi câu hỏi', style: TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -783,6 +1061,134 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
     );
   }
 
+  void _showReportQuestionDialog(Map<String, dynamic> question, int questionNum) {
+    final reasonCtrl = TextEditingController();
+    String issueType = 'Sai đáp án';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text('Báo lỗi Câu $questionNum'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: issueType,
+                decoration: const InputDecoration(
+                  labelText: 'Loại lỗi',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'Sai đáp án', child: Text('Sai đáp án')),
+                  DropdownMenuItem(value: 'Sai chính tả', child: Text('Sai chính tả / Đề thiếu chữ')),
+                  DropdownMenuItem(value: 'Giải thích chưa rõ', child: Text('Giải thích chưa rõ')),
+                ],
+                onChanged: (v) => setDialogState(() => issueType = v ?? 'Sai đáp án'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Mô tả chi tiết lỗi bạn phát hiện',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (reasonCtrl.text.trim().isEmpty) return;
+                Navigator.pop(ctx);
+                await RbacProctorAiService.instance.submitBugReport(
+                  targetCode: '${widget.exam.title} • Câu $questionNum',
+                  unitNumber: (question['unitNumber'] as num?)?.toInt() ?? 1,
+                  skill: (question['skill'] ?? 'grammar').toString(),
+                  issueType: issueType,
+                  reason: reasonCtrl.text.trim(),
+                  questionId: (question['id'] ?? '').toString(),
+                );
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã gửi báo lỗi câu hỏi tới Giáo viên & Admin!'),
+                    backgroundColor: AppTokens.success,
+                  ),
+                );
+              },
+              child: const Text('Gửi báo lỗi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSubmitExplanationDialog(ExamLiveSessionModel session) {
+    final explainCtrl = TextEditingController(text: session.studentExplanation ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Gửi giải trình cho giáo viên'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Nếu bạn bị tự nộp do lý do khách quan (mất mạng, cuộc gọi khẩn), hãy gửi giải trình để giáo viên xem xét cho làm lại.',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: explainCtrl,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Lý do giải trình',
+                hintText: 'VD: Điện thoại em có cuộc gọi đột xuất từ phụ huynh...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Đóng'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (explainCtrl.text.trim().isEmpty) return;
+              Navigator.pop(ctx);
+              final updated = await RbacProctorAiService.instance.submitExamExplanation(
+                examId: widget.exam.id,
+                sessionId: session.id,
+                explanation: explainCtrl.text.trim(),
+              );
+              if (updated != null && mounted) {
+                setState(() => _session = updated);
+              }
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Đã gửi giải trình tới giáo viên giám sát!'),
+                  backgroundColor: AppTokens.success,
+                ),
+              );
+            },
+            child: const Text('Gửi giải trình'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFinishedResultView(
     Color cardColor,
     Color bgColor,
@@ -805,7 +1211,7 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
         ),
       ),
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -826,7 +1232,7 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  session.statusLabel,
+                  isViolationTerminated ? 'Bài thi đã được nộp tự động' : session.statusLabel,
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w900,
@@ -836,7 +1242,7 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${session.score.toStringAsFixed(1)} / 10.0 điểm',
+                  '${session.score.toStringAsFixed(2)} / 10.0 điểm',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -851,10 +1257,39 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Số câu đã trả lời: ${session.answeredCount}/${session.totalQuestions} • Số lần cảnh báo rời app: ${session.violationCount}',
+                  'Đã trả lời: ${session.answeredCount}/${session.totalQuestions} • Chưa làm: ${session.totalQuestions - session.answeredCount} • Rời app: ${session.violationCount} lần',
                   style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textSub),
+                  textAlign: TextAlign.center,
                 ),
+                if (session.studentExplanation != null &&
+                    session.studentExplanation!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTokens.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Đã gửi giải trình: "${session.studentExplanation}"',
+                      style: TextStyle(fontSize: 12.5, color: textMain, fontStyle: FontStyle.italic),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 20),
+                if (isViolationTerminated) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showSubmitExplanationDialog(session),
+                      icon: const Icon(Icons.chat_bubble_outline_rounded),
+                      label: const Text('Gửi giải trình cho giáo viên'),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(

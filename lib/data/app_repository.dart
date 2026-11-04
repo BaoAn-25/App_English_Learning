@@ -380,6 +380,29 @@ class AppRepository {
     await db.delete('app_settings', where: "key LIKE 'auth_%' OR key = 'is_logged_in'");
   }
 
+  Future<void> signOut() async {
+    await clearAuthToken();
+    await clearAuthUser();
+  }
+
+  Future<Map<String, dynamic>> getOverallStats({String? ownerId}) async {
+    final attempts = await getAllAttempts(ownerId: ownerId);
+    int totalDone = 0;
+    int totalScore = 0;
+    for (final a in attempts) {
+      totalDone += a.total;
+      totalScore += a.score;
+    }
+    final streakRaw = await getSetting('learning_streak') ?? '0';
+    final streak = int.tryParse(streakRaw) ?? 0;
+    return {
+      'totalDone': totalDone,
+      'totalCorrect': totalScore,
+      'streak': streak,
+      'attemptsCount': attempts.length,
+    };
+  }
+
   // --- Tiến độ từ vựng (Word Progress / SRS) ---
   Future<WordProgress?> getWordProgress(String wordId, {String? ownerId}) async {
     final effectiveOwner = (ownerId != null && ownerId.trim().isNotEmpty)
