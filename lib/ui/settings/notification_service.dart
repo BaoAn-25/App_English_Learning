@@ -71,6 +71,12 @@ class NotificationService {
   static const String channelDescription =
       'Thông báo nhắc nhở duy trì streak và hoàn thành mục tiêu học tập tiếng Anh 12';
 
+  // Kênh thông báo Lớp học (do Giáo viên lên lịch)
+  static const String classChannelId = 'class_study_reminder';
+  static const String classChannelName = 'Nhắc học từ Lớp học';
+  static const String classChannelDescription =
+      'Thông báo nhắc nhở làm bài tập và ôn tập do Giáo viên lên lịch gửi tới cả lớp';
+
   String get currentTimeZoneName => _currentTimeZoneName;
   bool get isInitialized => _isInitialized;
 
@@ -306,5 +312,88 @@ class NotificationService {
   Future<bool> hasPendingReminder() async {
     final pending = await getPendingNotificationRequests();
     return pending.any((req) => req.id == reminderNotificationId);
+  }
+
+  /// Phát thông báo tức thì lên thanh trạng thái điện thoại (dùng để test hoặc thông báo nóng)
+  Future<bool> showInstantNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    await init();
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        classChannelId,
+        classChannelName,
+        channelDescription: classChannelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+      const darwinDetails = DarwinNotificationDetails();
+      const details = NotificationDetails(android: androidDetails, iOS: darwinDetails);
+      await _notificationsPlugin.show(id, title, body, details, payload: payload);
+      return true;
+    } catch (e) {
+      debugPrint('Error showing instant notification: $e');
+      return false;
+    }
+  }
+
+  /// Lên lịch thông báo Lớp học theo ngày giờ chỉ định từ Giáo viên
+  Future<bool> scheduleClassReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+    String? payload,
+  }) async {
+    await init();
+    try {
+      final tz.TZDateTime tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
+      // Nếu thời điểm đã qua trong quá khứ -> bỏ qua
+      if (tzScheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
+        return false;
+      }
+
+      const androidDetails = AndroidNotificationDetails(
+        classChannelId,
+        classChannelName,
+        channelDescription: classChannelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+      const darwinDetails = DarwinNotificationDetails();
+      const details = NotificationDetails(android: androidDetails, iOS: darwinDetails);
+
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexact,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Error scheduling class reminder: $e');
+      return false;
+    }
+  }
+
+  /// Hủy thông báo theo ID cụ thể
+  Future<bool> cancelNotification(int id) async {
+    await init();
+    try {
+      await _notificationsPlugin.cancel(id);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }

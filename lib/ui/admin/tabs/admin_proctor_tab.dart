@@ -66,6 +66,8 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
           _isLoading = false;
         });
       }
+      // Tự động đồng bộ ngầm các lớp lên Cloud Render
+      _service.syncAllClassesToCloud().catchError((_) => <String, dynamic>{});
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -686,7 +688,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
         builder: (ctx, setDlgState) => AlertDialog(
           title: const Text('Thêm học sinh vào lớp'),
           content: SizedBox(
-            width: double.maxFinite,
+            width: MediaQuery.of(ctx).size.width.clamp(280.0, 380.0),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -697,19 +699,21 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Danh sách học sinh', border: OutlineInputBorder(), isDense: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Danh sách học sinh',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
                       selectedItemBuilder: (context) {
                         return studentUsers.map((u) {
                           final name = (u['display_name'] ?? u['displayName'] ?? u['email'] ?? '').toString();
                           final email = (u['email'] ?? '').toString();
-                          return Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '$name ($email)',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13),
-                            ),
+                          return Text(
+                            '$name ($email)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13),
                           );
                         }).toList();
                       },

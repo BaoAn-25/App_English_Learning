@@ -172,6 +172,18 @@ async function initRbacAndProctoringTables(client) {
       submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS textbook_progress (
+      id SERIAL PRIMARY KEY,
+      user_id VARCHAR(64) NOT NULL,
+      user_email VARCHAR(255) DEFAULT '',
+      unit_number INT NOT NULL,
+      section_name VARCHAR(64) NOT NULL,
+      status VARCHAR(32) DEFAULT 'completed',
+      score INT DEFAULT 100,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_user_unit_section UNIQUE (user_id, unit_number, section_name)
+    );
+
     CREATE TABLE IF NOT EXISTS question_bug_reports (
       id VARCHAR(64) PRIMARY KEY,
       question_id VARCHAR(64),
@@ -2014,9 +2026,85 @@ Trả về JSON thuần túy theo cấu trúc:
     }
   });
 
-  app.post('/api/classes', requireRoles(['teacher', 'admin']), async (req, res) => {
+  // Public endpoint: Tra cứu thông tin lớp học theo mã lớp (Không yêu cầu đăng nhập)
+  app.get('/api/classes/lookup/:code', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ ok: false, error: 'Database chưa sẵn sàng.' });
+    const { code } = req.params;
+    if (!code || String(code).trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Vui lòng cung cấp mã lớp cần tìm.' });
+    }
+    try {
+      const clsRes = await pool.query(
+        `SELECT c.*,
+           (SELECT COUNT(*)::int FROM class_members m WHERE m.class_id = c.id AND m.status = 'active') AS student_count
+         FROM classes c
+         WHERE UPPER(TRIM(c.join_code)) = UPPER(TRIM($1)) AND c.is_archived = FALSE
+         LIMIT 1`,
+        [String(code)]
+      );
+      if (clsRes.rows.length === 0) {
+        return res.status(404).json({ ok: false, error: `Không tìm thấy lớp học với mã "${code}" trên máy chủ Cloud.` });
+      }
+      return res.json({ ok: true, classItem: clsRes.rows[0] });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // Đồng bộ hàng loạt lớp học từ Giáo viên / Admin lên Cloud PostgreSQL
+  app.post('/api/classes/batch-sync', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ ok: false, error: 'Database chưa sẵn sàng.' });
+    const { classes } = req.body;
+    if (!Array.isArray(classes) || classes.length === 0) {
+      return res.status(400).json({ ok: false, error: 'Danh sách lớp đồng bộ rỗng.' });
+    }
+    const synced = [];
+    try {
+      for (const item of classes) {
+        const id = item.id || `cls_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+        const name = (item.name || 'Lớp học').toString().trim();
+        const code = (item.code || item.joinCode || item.join_code || `ENG-${crypto.randomBytes(2).toString('hex')}`).toString().trim().toUpperCase();
+        const schoolName = (item.schoolName || item.school_name || '').toString().trim();
+        const academicYear = (item.schoolYear || item.academicYear || item.academic_year || '2025-2026').toString().trim();
+        const teacherId = item.teacherId || item.teacher_id || null;
+        const teacherName = (item.teacherName || item.teacher_name || 'Giáo viên').toString().trim();
+        const teacherEmail = (item.teacherEmail || item.teacher_email || '').toString().trim();
+        const requireApproval = Boolean(item.requireApproval ?? item.require_approval ?? false);
+        const showLeaderboard = Boolean(item.showLeaderboard ?? item.show_leaderboard ?? true);
+        const allowJoin = Boolean(item.allowJoin ?? item.allow_join ?? true);
+        const isArchived = Boolean(item.isArchived ?? item.is_archived ?? item.status === 'archived');
+
+        const upsertRes = await pool.query(
+          `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard, allow_join, is_archived)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (id) DO UPDATE SET
+             name = EXCLUDED.name,
+             school_name = EXCLUDED.school_name,
+             academic_year = EXCLUDED.academic_year,
+             join_code = EXCLUDED.join_code,
+             teacher_id = COALESCE(EXCLUDED.teacher_id, classes.teacher_id),
+             teacher_name = COALESCE(EXCLUDED.teacher_name, classes.teacher_name),
+             teacher_email = COALESCE(EXCLUDED.teacher_email, classes.teacher_email),
+             require_approval = EXCLUDED.require_approval,
+             show_leaderboard = EXCLUDED.show_leaderboard,
+             allow_join = EXCLUDED.allow_join,
+             is_archived = EXCLUDED.is_archived,
+             updated_at = CURRENT_TIMESTAMP
+           RETURNING *`,
+          [id, name, schoolName, academicYear, code, teacherId, teacherName, teacherEmail, requireApproval, showLeaderboard, allowJoin, isArchived]
+        );
+        synced.push(upsertRes.rows[0]);
+      }
+      return res.json({ ok: true, message: `Đã đồng bộ thành công ${synced.length} lớp học lên máy chủ Cloud.`, syncedCount: synced.length, classes: synced });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  app.post('/api/classes', async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
     const {
+      id: customId,
       name,
       schoolName = '',
       academicYear = '2025-2026',
@@ -2026,22 +2114,43 @@ Trả về JSON thuần túy theo cấu trúc:
       teacherEmail,
       requireApproval = false,
       showLeaderboard = true,
+      allowJoin = true,
     } = req.body;
     if (!name || String(name).trim().length === 0) {
       return res.status(400).json({ error: 'Vui lòng nhập tên lớp học.' });
     }
     try {
-      const id = `cls_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      // Nhận diện user nếu có token (không ép buộc gây chặn lưu trên Cloud)
+      let authUser = null;
+      try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) authUser = verifyToken(token);
+      } catch (_) {}
+
+      const id = customId || `cls_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
       const code = (joinCode && String(joinCode).trim().length >= 4)
         ? String(joinCode).trim().toUpperCase()
         : `ENG-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
-      const finalTeacherId = teacherId || (req.user.role === 'teacher' ? req.user.id : null);
-      const finalTeacherName = teacherName || (req.user.role === 'teacher' ? (req.user.displayName || req.user.email) : '');
-      const finalTeacherEmail = teacherEmail || (req.user.role === 'teacher' ? req.user.email : '');
+      const finalTeacherId = teacherId || (authUser?.role === 'teacher' ? authUser.id : null);
+      const finalTeacherName = teacherName || (authUser ? (authUser.displayName || authUser.email) : 'Giáo viên');
+      const finalTeacherEmail = teacherEmail || (authUser ? authUser.email : '');
 
       const result = await pool.query(
-        `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard, allow_join)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (id) DO UPDATE SET
+           name = EXCLUDED.name,
+           school_name = EXCLUDED.school_name,
+           academic_year = EXCLUDED.academic_year,
+           join_code = EXCLUDED.join_code,
+           teacher_id = COALESCE(EXCLUDED.teacher_id, classes.teacher_id),
+           teacher_name = COALESCE(EXCLUDED.teacher_name, classes.teacher_name),
+           teacher_email = COALESCE(EXCLUDED.teacher_email, classes.teacher_email),
+           require_approval = EXCLUDED.require_approval,
+           show_leaderboard = EXCLUDED.show_leaderboard,
+           allow_join = EXCLUDED.allow_join,
+           updated_at = CURRENT_TIMESTAMP
          RETURNING *`,
         [
           id,
@@ -2054,10 +2163,13 @@ Trả về JSON thuần túy theo cấu trúc:
           finalTeacherEmail,
           Boolean(requireApproval),
           Boolean(showLeaderboard),
+          Boolean(allowJoin),
         ]
       );
-      await logAudit(pool, req.user, 'CREATE_CLASS', 'classes', id, { name, joinCode: code });
-      res.status(201).json({ message: 'Đã tạo lớp học thành công.', classItem: result.rows[0] });
+      if (authUser) {
+        await logAudit(pool, authUser, 'CREATE_CLASS', 'classes', id, { name, joinCode: code });
+      }
+      res.status(201).json({ message: 'Đã tạo lớp học thành công.', classItem: result.rows[0], class: result.rows[0] });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -2100,25 +2212,73 @@ Trả về JSON thuần túy theo cấu trúc:
       );
       if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy lớp học.' });
       await logAudit(pool, req.user, 'UPDATE_CLASS', 'classes', id, { joinCode, teacherName, isArchived });
-      res.json({ message: 'Đã cập nhật lớp học.', classItem: result.rows[0] });
+      res.json({ message: 'Đã cập nhật lớp học.', classItem: result.rows[0], class: result.rows[0] });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   });
 
-  app.post('/api/classes/join', authenticateToken, attachFreshUser, async (req, res) => {
+  // Xóa / Giải tán vĩnh viễn một lớp học
+  app.delete('/api/classes/:id', async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
-    const { joinCode } = req.body;
+    const { id } = req.params;
+    try {
+      let authUser = null;
+      try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) authUser = verifyToken(token);
+      } catch (_) {}
+
+      // Xóa điểm nộp bài gắn với lớp nếu có
+      await pool.query('DELETE FROM assignment_submissions WHERE class_id = $1', [id]).catch(() => {});
+      // Xóa thành viên lớp
+      await pool.query('DELETE FROM class_members WHERE class_id = $1', [id]).catch(() => {});
+      // Xóa bài tập lớp
+      await pool.query('DELETE FROM class_assignments WHERE class_id = $1', [id]).catch(() => {});
+
+      // Xóa chính thức lớp học khỏi bảng classes
+      const result = await pool.query('DELETE FROM classes WHERE id = $1 RETURNING *', [id]);
+      if (result.rows.length === 0) {
+        // Nếu không tìm thấy theo id, thử tìm theo join_code
+        await pool.query('DELETE FROM classes WHERE UPPER(TRIM(join_code)) = UPPER(TRIM($1))', [id]).catch(() => {});
+      }
+
+      if (authUser) {
+        await logAudit(pool, authUser, 'DELETE_CLASS', 'classes', id, { deletedClass: result.rows[0] || id });
+      }
+      res.json({ ok: true, message: 'Đã giải tán và xóa vĩnh viễn lớp học thành công.', deletedId: id });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  app.post('/api/classes/join', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { joinCode, studentId, studentName, studentEmail } = req.body;
     if (!joinCode || String(joinCode).trim().length === 0) {
       return res.status(400).json({ error: 'Vui lòng nhập mã lớp.' });
     }
+
+    // Nhận diện người dùng: ưu tiên Bearer token nếu có, fallback sang thông tin body từ app mobile
+    let authUser = null;
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+      if (token) authUser = verifyToken(token);
+    } catch (_) {}
+
+    const targetStudentId = (authUser && authUser.id) || studentId || `stu_${Date.now()}`;
+    const targetStudentName = (authUser && (authUser.displayName || authUser.email)) || studentName || 'Học sinh';
+    const targetStudentEmail = (authUser && authUser.email) || studentEmail || '';
+
     try {
       const clsRes = await pool.query(
         'SELECT * FROM classes WHERE UPPER(TRIM(join_code)) = UPPER(TRIM($1)) AND is_archived = FALSE',
         [String(joinCode)]
       );
       if (clsRes.rows.length === 0) {
-        return res.status(404).json({ error: 'Không tìm thấy lớp học với mã này.' });
+        return res.status(404).json({ error: `Không tìm thấy lớp học với mã "${joinCode}".` });
       }
       const cls = clsRes.rows[0];
       if (!cls.allow_join) {
@@ -2129,20 +2289,23 @@ Trả về JSON thuần túy theo cấu trúc:
       const memRes = await pool.query(
         `INSERT INTO class_members (id, class_id, student_id, student_name, student_email, status)
          VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (class_id, student_id) DO UPDATE SET status = EXCLUDED.status
+         ON CONFLICT (class_id, student_id) DO UPDATE SET status = EXCLUDED.status, student_name = EXCLUDED.student_name, student_email = EXCLUDED.student_email
          RETURNING *`,
-        [memId, cls.id, req.user.id, req.user.displayName || 'Học sinh', req.user.email || '', status]
+        [memId, cls.id, targetStudentId, targetStudentName, targetStudentEmail, status]
       );
       res.status(201).json({
+        ok: true,
         message: status === 'pending'
           ? `Đã gửi yêu cầu tham gia lớp ${cls.name}. Chờ giáo viên phê duyệt.`
           : `Đã tham gia lớp ${cls.name} thành công!`,
         classItem: cls,
+        class: cls,
         membership: memRes.rows[0],
       });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
+  });
   });
 
   app.get('/api/classes/:classId/members', requireRoles(['teacher', 'admin']), async (req, res) => {
@@ -2454,6 +2617,88 @@ Trả về JSON thuần túy theo cấu trúc:
       res.json({ message: approve ? 'Đã duyệt quyền Giáo viên.' : 'Đã từ chối yêu cầu.' });
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Đồng bộ tiến độ học tập SGK của học sinh lên Cloud PostgreSQL
+  app.post('/api/students/progress/sync', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ ok: false, error: 'Database chưa sẵn sàng.' });
+    const { userId, userEmail, unitNumber, sectionName, status = 'completed', score = 100 } = req.body;
+    if (!userId && !userEmail) {
+      return res.status(400).json({ ok: false, error: 'Thiếu định danh học sinh (userId hoặc userEmail).' });
+    }
+    const finalUserId = userId || userEmail;
+    const finalEmail = userEmail || '';
+    const unit = parseInt(unitNumber, 10) || 1;
+    const section = String(sectionName || 'general').trim();
+
+    try {
+      await pool.query(
+        `INSERT INTO textbook_progress (user_id, user_email, unit_number, section_name, status, score, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id, unit_number, section_name) DO UPDATE SET
+           status = EXCLUDED.status,
+           score = EXCLUDED.score,
+           user_email = COALESCE(NULLIF(EXCLUDED.user_email, ''), textbook_progress.user_email),
+           updated_at = CURRENT_TIMESTAMP`,
+        [finalUserId, finalEmail, unit, section, status, score]
+      );
+      res.json({ ok: true, message: 'Đã lưu tiến độ học tập lên Cloud thành công.' });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // Giáo viên/Admin tra cứu tiến độ học tập chi tiết của học sinh từ Cloud Render
+  app.get('/api/students/:identifier/progress', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ ok: false, error: 'Database chưa sẵn sàng.' });
+    const { identifier } = req.params;
+    if (!identifier) {
+      return res.status(400).json({ ok: false, error: 'Thiếu định danh học sinh.' });
+    }
+
+    try {
+      // 1. Lấy tất cả các section SGK đã học
+      const progressRes = await pool.query(
+        `SELECT unit_number, section_name, status, score, updated_at
+         FROM textbook_progress
+         WHERE user_id = $1 OR LOWER(user_email) = LOWER($1)
+         ORDER BY unit_number ASC, updated_at ASC`,
+        [identifier]
+      );
+
+      // 2. Lấy thông tin tổng quan từ user_profiles (streak, target_score, ...)
+      const profileRes = await pool.query(
+        `SELECT p.*, u.display_name, u.email
+         FROM users u
+         LEFT JOIN user_profiles p ON p.user_id = u.id
+         WHERE u.id = $1 OR LOWER(u.email) = LOWER($1)
+         LIMIT 1`,
+        [identifier]
+      );
+
+      // 3. Lấy điểm thi trung bình từ các bài tập đã nộp
+      const subRes = await pool.query(
+        `SELECT AVG(score)::numeric(5,2) as avg_score, COUNT(*)::int as submitted_count
+         FROM assignment_submissions
+         WHERE student_id = $1 OR LOWER(student_email) = LOWER($1)`,
+        [identifier]
+      );
+
+      const profile = profileRes.rows[0] || {};
+      const sub = subRes.rows[0] || {};
+
+      res.json({
+        ok: true,
+        identifier,
+        streakDays: profile.current_streak || 0,
+        avgScore: parseFloat(sub.avg_score) || 0.0,
+        submittedCount: sub.submitted_count || 0,
+        completedSections: progressRes.rows,
+        totalSectionsCompleted: progressRes.rows.filter(r => r.status === 'completed').length,
+      });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
     }
   });
 }

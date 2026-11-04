@@ -40,6 +40,8 @@ class _AdminManagementTabState extends State<AdminManagementTab> with SingleTick
   bool _vibrationEnabled = true;
   bool _autoLogEvidence = true;
 
+  bool _isSyncingCloud = false;
+
   @override
   void initState() {
     super.initState();
@@ -966,12 +968,27 @@ class _AdminManagementTabState extends State<AdminManagementTab> with SingleTick
                   title: const Text('Đồng bộ máy chủ Cloud Render', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   subtitle: const Text('Kiểm tra và đẩy toàn bộ điểm thi, lớp học lên cloud', style: TextStyle(fontSize: 11, color: Colors.black54)),
                   trailing: OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Đồng bộ Cloud thành công lúc ${DateTime.now().hour}:${DateTime.now().minute}!')),
-                      );
-                    },
-                    child: const Text('Đồng bộ', style: TextStyle(fontSize: 12)),
+                    onPressed: _isSyncingCloud
+                        ? null
+                        : () async {
+                            setState(() => _isSyncingCloud = true);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Đang đồng bộ lớp học và dữ liệu lên Cloud Render...'), duration: Duration(seconds: 1)),
+                            );
+                            final res = await _service.syncAllClassesToCloud();
+                            if (mounted) {
+                              setState(() => _isSyncingCloud = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(res['message']?.toString() ?? 'Đồng bộ hoàn tất!'),
+                                  backgroundColor: (res['ok'] == true) ? const Color(0xFF1B5E20) : Colors.orange[800],
+                                ),
+                              );
+                            }
+                          },
+                    child: _isSyncingCloud
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('Đồng bộ', style: TextStyle(fontSize: 12)),
                   ),
                 ),
               ],
@@ -1022,16 +1039,20 @@ class _AdminManagementTabState extends State<AdminManagementTab> with SingleTick
         Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 8),
         Expanded(
-          flex: 5,
-          child: Text(label, style: const TextStyle(fontSize: 12.5, color: Colors.black87)),
+          flex: 4,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.black87),
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          flex: 6,
+          flex: 5,
           child: Text(
             value,
             textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+            softWrap: true,
+            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
           ),
         ),
       ],

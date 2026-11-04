@@ -62,6 +62,11 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
       _myExamSessions = mySessions;
       _isLoading = false;
     });
+
+    // Tự động đồng bộ các lịch nhắc hẹn mới nhất từ Giáo viên vào hệ điều hành điện thoại
+    if (!_isGuest) {
+      unawaited(RbacProctorAiService.instance.syncStudentClassReminders(user.id));
+    }
   }
 
   void _showGuestWarningDialog() {

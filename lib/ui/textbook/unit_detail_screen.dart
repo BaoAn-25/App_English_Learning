@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/app_repository.dart';
+import '../../data/rbac_proctor_ai_service.dart';
 import '../../data/textbook_repository.dart';
 import '../../data/trial_lesson_repository.dart';
 import '../../data/trial_policy.dart';
@@ -209,6 +210,22 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     }
   }
 
+  Future<void> _recordSectionCompletion(String key) async {
+    final ownerId = await _getEffectiveOwnerId();
+    final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
+    await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+    if (prev != 'completed') {
+      await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
+    }
+    RbacProctorAiService.instance.syncTextbookProgressToCloud(
+      unitNumber: widget.unitNumber,
+      sectionKey: key,
+    ).catchError((_) => false);
+    if (mounted) {
+      await MainShell.markFirstLessonCompleted(context);
+    }
+  }
+
   Future<void> _handleSectionTap(Map<String, dynamic> sec) async {
     final title = sec['title'] as String;
     final int targetPage = _getUnitStartPage() + (sec['pageOffset'] as int);
@@ -226,15 +243,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
         ),
       );
       if (res == true) {
-        final ownerId = await _getEffectiveOwnerId();
-        final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
-        await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
-        if (prev != 'completed') {
-          await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
-        }
-        if (mounted) {
-          await MainShell.markFirstLessonCompleted(context);
-        }
+        await _recordSectionCompletion(key);
       }
       await _loadSectionStatuses();
       return;
@@ -252,15 +261,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
         ),
       );
       if (res == true) {
-        final ownerId = await _getEffectiveOwnerId();
-        final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
-        await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
-        if (prev != 'completed') {
-          await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
-        }
-        if (mounted) {
-          await MainShell.markFirstLessonCompleted(context);
-        }
+        await _recordSectionCompletion(key);
       }
       await _loadSectionStatuses();
       return;
@@ -291,15 +292,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
         ),
       );
       if (res == true) {
-        final ownerId = await _getEffectiveOwnerId();
-        final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
-        await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
-        if (prev != 'completed') {
-          await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
-        }
-        if (mounted) {
-          await MainShell.markFirstLessonCompleted(context);
-        }
+        await _recordSectionCompletion(key);
       }
       await _loadSectionStatuses();
       return;
@@ -319,15 +312,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
       ),
     );
     if (res == true) {
-      final ownerId = await _getEffectiveOwnerId();
-      final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
-      await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
-      if (prev != 'completed') {
-        await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
-      }
-      if (mounted) {
-        await MainShell.markFirstLessonCompleted(context);
-      }
+      await _recordSectionCompletion(key);
     }
     await _loadSectionStatuses();
   }

@@ -13,6 +13,7 @@ import 'models/user_profile.dart';
 import 'models/word.dart';
 import 'remote/api_client.dart';
 import 'trial_lesson_repository.dart';
+import '../ui/settings/notification_service.dart';
 
 /// Khóa bảo vệ chống gian lận toàn cục khi Học viên đang ở trong Phòng thi có giám sát.
 /// Tự động khóa toàn bộ tính năng Dịch thuật và Gia sư AI Chatbot.
@@ -315,6 +316,61 @@ class ExamLiveSessionModel {
       lastHeartbeatAt: DateTime.tryParse((map['lastHeartbeatAt'] ?? map['last_heartbeat_at'] ?? '').toString()) ?? DateTime.now(),
     );
   }
+}
+
+/// Mô hình Lịch Nhắc Hẹn Lớp Học do Giáo viên lên lịch cho Học sinh
+class ClassReminderModel {
+  final String id;
+  final String classId;
+  final String className;
+  final String title;
+  final String message;
+  final DateTime scheduledAt;
+  final String teacherName;
+  final String teacherEmail;
+  final DateTime createdAt;
+  final bool isActive;
+
+  const ClassReminderModel({
+    required this.id,
+    required this.classId,
+    required this.className,
+    required this.title,
+    required this.message,
+    required this.scheduledAt,
+    required this.teacherName,
+    required this.teacherEmail,
+    required this.createdAt,
+    this.isActive = true,
+  });
+
+  int get notificationId => id.hashCode.abs() % 100000 + 2000;
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'classId': classId,
+    'className': className,
+    'title': title,
+    'message': message,
+    'scheduledAt': scheduledAt.toIso8601String(),
+    'teacherName': teacherName,
+    'teacherEmail': teacherEmail,
+    'createdAt': createdAt.toIso8601String(),
+    'isActive': isActive,
+  };
+
+  factory ClassReminderModel.fromMap(Map<String, dynamic> map) => ClassReminderModel(
+    id: (map['id'] ?? '').toString(),
+    classId: (map['classId'] ?? map['class_id'] ?? '').toString(),
+    className: (map['className'] ?? map['class_name'] ?? '').toString(),
+    title: (map['title'] ?? '').toString(),
+    message: (map['message'] ?? map['content'] ?? '').toString(),
+    scheduledAt: DateTime.tryParse((map['scheduledAt'] ?? map['scheduled_at'] ?? map['remind_at'] ?? '').toString()) ?? DateTime.now(),
+    teacherName: (map['teacherName'] ?? map['teacher_name'] ?? map['sent_by'] ?? 'Giáo viên').toString(),
+    teacherEmail: (map['teacherEmail'] ?? map['teacher_email'] ?? '').toString(),
+    createdAt: DateTime.tryParse((map['createdAt'] ?? map['created_at'] ?? map['sent_at'] ?? '').toString()) ?? DateTime.now(),
+    isActive: map['isActive'] != false && map['status'] != 'cancelled',
+  );
 }
 
 /// Dịch vụ trung tâm quản lý RBAC (Giáo viên & Admin), Phòng thi Giám sát 10s,
@@ -2055,12 +2111,23 @@ class RbacProctorAiService {
 
   /// Lấy danh sách Lớp học thật (Đồng bộ SQLite & Backend, không có dữ liệu mẫu giả)
   Future<List<Map<String, dynamic>>> getClasses() async {
+    final delRaw = await _repo.getSetting('deleted_class_ids_json');
+    final Set<String> deletedIds = {};
+    if (delRaw != null && delRaw.isNotEmpty) {
+      try {
+        deletedIds.addAll((jsonDecode(delRaw) as List).map((e) => e.toString()));
+      } catch (_) {}
+    }
+
     final raw = await _repo.getSetting('admin_classes_json');
     List<Map<String, dynamic>> localList = [];
     if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw) as List;
-        localList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        localList = decoded
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .where((c) => !deletedIds.contains(c['id'].toString()) && !deletedIds.contains((c['code'] ?? '').toString()))
+            .toList();
       } catch (_) {}
     }
 
@@ -2073,6 +2140,12 @@ class RbacProctorAiService {
             .toList();
         if (serverList.isNotEmpty) {
           for (final sc in serverList) {
+            final scId = sc['id'].toString();
+            final scCode = (sc['code'] ?? '').toString();
+            // Nếu lớp học đã bị xóa, tuyệt đối không phục hồi/thêm lại vào danh sách
+            if (deletedIds.contains(scId) || deletedIds.contains(scCode)) {
+              continue;
+            }
             final idx = localList.indexWhere((l) => l['id'] == sc['id']);
             if (idx >= 0) {
               localList[idx] = sc;
@@ -2129,11 +2202,25 @@ class RbacProctorAiService {
   }
 
   static String generateClassJoinCode(String className) {
-    final prefix = className
-        .toUpperCase()
-        .replaceAll(RegExp(r'[^A-Z0-9]'), '')
-        .padRight(4, 'X')
-        .substring(0, 4);
+    const vietnameseMap = {
+      'a': 'a', 'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+      'ă': 'a', 'ắ': 'a', 'ằ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+      'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+      'd': 'd', 'đ': 'd',
+      'e': 'e', 'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+      'ê': 'e', 'ế': 'e', 'ề': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+      'i': 'i', 'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+      'o': 'o', 'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+      'ô': 'o', 'ố': 'o', 'ồ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+      'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+      'u': 'u', 'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+      'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+      'y': 'y', 'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+    };
+    var normalized = className.toLowerCase();
+    vietnameseMap.forEach((key, val) => normalized = normalized.replaceAll(key, val));
+    final clean = normalized.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    final prefix = clean.padRight(4, 'X').substring(0, 4);
     final rand = (1000 + (DateTime.now().microsecondsSinceEpoch % 9000)).toString();
     return '$prefix-$rand';
   }
@@ -2188,6 +2275,7 @@ class RbacProctorAiService {
     try {
       final client = await _client();
       final res = await client.postJson('/classes', {
+        'id': newClass['id'],
         'name': name.trim(),
         'schoolName': schoolName.trim(),
         'schoolYear': schoolYear.trim(),
@@ -2198,8 +2286,9 @@ class RbacProctorAiService {
         'teacherName': newClass['teacherName'],
         'teacherEmail': newClass['teacherEmail'],
       });
-      if (res.isSuccess && res.data?['class'] is Map) {
-        final serverClass = _normalizeClassMap(Map<String, dynamic>.from(res.data!['class'] as Map));
+      if (res.isSuccess && (res.data?['classItem'] is Map || res.data?['class'] is Map)) {
+        final rawServer = (res.data?['classItem'] ?? res.data?['class']) as Map;
+        final serverClass = _normalizeClassMap(Map<String, dynamic>.from(rawServer));
         classes[0] = serverClass;
         await _repo.setSetting('admin_classes_json', jsonEncode(classes));
         return serverClass;
@@ -2207,6 +2296,37 @@ class RbacProctorAiService {
     } catch (_) {}
 
     return newClass;
+  }
+
+  /// Đồng bộ toàn bộ các lớp học từ máy Giáo viên/Admin lên Cloud PostgreSQL (Render)
+  Future<Map<String, dynamic>> syncAllClassesToCloud() async {
+    final classes = await getClasses();
+    if (classes.isEmpty) {
+      return {'ok': true, 'count': 0, 'message': 'Không có lớp học nào để đồng bộ.'};
+    }
+    try {
+      final client = await _client();
+      final res = await client.postJson('/classes/batch-sync', {'classes': classes});
+      if (res.isSuccess && res.data != null) {
+        final count = (res.data!['syncedCount'] as num?)?.toInt() ?? classes.length;
+        return {
+          'ok': true,
+          'count': count,
+          'message': res.data!['message'] ?? 'Đã đồng bộ $count lớp học lên Cloud thành công!',
+        };
+      }
+      return {
+        'ok': false,
+        'count': 0,
+        'message': res.data?['error']?.toString() ?? 'Máy chủ Cloud từ chối đồng bộ.',
+      };
+    } catch (e) {
+      return {
+        'ok': false,
+        'count': 0,
+        'message': 'Lỗi kết nối máy chủ Cloud: $e',
+      };
+    }
   }
 
   Future<Map<String, dynamic>?> updateClass({
@@ -2276,19 +2396,45 @@ class RbacProctorAiService {
   /// Xóa hoặc Giải tán một lớp học khỏi hệ thống
   Future<bool> deleteClass(String classId) async {
     final classes = await getClasses();
-    final idx = classes.indexWhere((c) => c['id'].toString() == classId.toString());
-    if (idx < 0) return false;
-
-    final removed = classes.removeAt(idx);
-    await _repo.setSetting('admin_classes_json', jsonEncode(classes));
-    await _repo.setSetting('class_members_$classId', '[]');
-
-    await recordAuditLog(
-      action: 'DELETE_CLASS',
-      targetType: 'class',
-      targetId: classId,
-      details: 'Giải tán / Xóa lớp học "${removed['name']}" (Mã: ${removed['code']})',
+    final idx = classes.indexWhere(
+      (c) => c['id'].toString() == classId.toString() || (c['code'] ?? '').toString() == classId.toString(),
     );
+
+    // Lưu ID và mã lớp vào danh sách đã xóa vĩnh viễn để chống auto-fetch hồi sinh
+    final delRaw = await _repo.getSetting('deleted_class_ids_json');
+    final Set<String> deletedIds = {};
+    if (delRaw != null && delRaw.isNotEmpty) {
+      try {
+        deletedIds.addAll((jsonDecode(delRaw) as List).map((e) => e.toString()));
+      } catch (_) {}
+    }
+    deletedIds.add(classId.toString());
+
+    if (idx >= 0) {
+      final removed = classes.removeAt(idx);
+      if (removed['id'] != null) deletedIds.add(removed['id'].toString());
+      if (removed['code'] != null) deletedIds.add(removed['code'].toString());
+      await _repo.setSetting('admin_classes_json', jsonEncode(classes));
+      await _repo.setSetting('class_members_$classId', '[]');
+
+      await recordAuditLog(
+        action: 'DELETE_CLASS',
+        targetType: 'class',
+        targetId: classId,
+        details: 'Giải tán / Xóa lớp học "${removed['name']}" (Mã: ${removed['code']})',
+      );
+    }
+    await _repo.setSetting('deleted_class_ids_json', jsonEncode(deletedIds.toList()));
+
+    // Xóa khỏi danh sách lớp đã tham gia của học sinh
+    final joinedRaw = await _repo.getSetting('student_joined_classes_json');
+    if (joinedRaw != null && joinedRaw.isNotEmpty) {
+      try {
+        final jList = (jsonDecode(joinedRaw) as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        jList.removeWhere((c) => c['id'].toString() == classId.toString() || (c['code'] ?? '').toString() == classId.toString());
+        await _repo.setSetting('student_joined_classes_json', jsonEncode(jList));
+      } catch (_) {}
+    }
 
     try {
       final client = await _client();
@@ -2304,6 +2450,14 @@ class RbacProctorAiService {
     final studentId = user?.id ?? '';
     final studentEmail = (user?.email ?? '').trim().toLowerCase();
 
+    final delRaw = await _repo.getSetting('deleted_class_ids_json');
+    final Set<String> deletedIds = {};
+    if (delRaw != null && delRaw.isNotEmpty) {
+      try {
+        deletedIds.addAll((jsonDecode(delRaw) as List).map((e) => e.toString()));
+      } catch (_) {}
+    }
+
     // 1. Thử gọi API lấy lớp học từ server Neon
     try {
       final client = await _client();
@@ -2311,6 +2465,7 @@ class RbacProctorAiService {
       if (res.isSuccess && res.data?['classes'] is List) {
         final serverList = (res.data!['classes'] as List)
             .map((e) => _normalizeClassMap(Map<String, dynamic>.from(e as Map)))
+            .where((c) => !deletedIds.contains(c['id'].toString()) && !deletedIds.contains((c['code'] ?? '').toString()))
             .toList();
         if (serverList.isNotEmpty) {
           await _repo.setSetting('student_joined_classes_json', jsonEncode(serverList));
@@ -2324,7 +2479,10 @@ class RbacProctorAiService {
     if (cached != null && cached.isNotEmpty) {
       try {
         final decoded = jsonDecode(cached) as List;
-        final list = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        final list = decoded
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .where((c) => !deletedIds.contains(c['id'].toString()) && !deletedIds.contains((c['code'] ?? '').toString()))
+            .toList();
         if (list.isNotEmpty) return list;
       } catch (_) {}
     }
@@ -2334,6 +2492,8 @@ class RbacProctorAiService {
     final joined = <Map<String, dynamic>>[];
     for (final c in allClasses) {
       final cid = c['id'].toString();
+      final cCode = (c['code'] ?? '').toString();
+      if (deletedIds.contains(cid) || deletedIds.contains(cCode)) continue;
       final members = await getClassMembers(cid, syncRemote: false);
       final matchedMember = members.where((m) {
         final mId = (m['studentId'] ?? '').toString();
@@ -2363,9 +2523,15 @@ class RbacProctorAiService {
     final studentName = (user?.displayName.isNotEmpty == true) ? user!.displayName : 'Học sinh';
     final studentEmail = user?.email ?? '';
 
+    // 1. Gửi request tham gia lớp học lên Cloud Backend Render
     try {
       final client = await _client();
-      final res = await client.postJson('/classes/join', {'joinCode': cleanCode});
+      final res = await client.postJson('/classes/join', {
+        'joinCode': cleanCode,
+        'studentId': studentId,
+        'studentName': studentName,
+        'studentEmail': studentEmail,
+      });
       if (res.isSuccess && res.data != null) {
         final rawStatus = res.data!['membership']?['status'] ?? res.data!['memberStatus'] ?? 'approved';
         final status = (rawStatus == 'active') ? 'approved' : rawStatus;
@@ -2387,6 +2553,43 @@ class RbacProctorAiService {
           'status': status,
           'message': res.data!['message'] ?? 'Tham gia lớp học thành công.',
           'classItem': classMap,
+        };
+      }
+
+      // 2. Nếu join trực tiếp chưa nhận diện, thử tra cứu lớp công khai trên Cloud Render
+      final lookupRes = await client.getJson('/classes/lookup/$cleanCode');
+      if (lookupRes.isSuccess && lookupRes.data?['classItem'] is Map) {
+        final rawLookup = lookupRes.data!['classItem'] as Map;
+        final cloudClass = _normalizeClassMap(Map<String, dynamic>.from(rawLookup));
+        if (cloudClass['allowJoin'] == false || cloudClass['status'] == 'archived') {
+          return {'ok': false, 'message': 'Lớp học này hiện đã đóng nhận học sinh mới.'};
+        }
+        final status = cloudClass['requireApproval'] == true ? 'pending' : 'approved';
+        cloudClass['membershipStatus'] = status;
+
+        final myJoined = await getMyJoinedClasses();
+        final jIdx = myJoined.indexWhere((c) => c['id'] == cloudClass['id']);
+        if (jIdx >= 0) {
+          myJoined[jIdx] = cloudClass;
+        } else {
+          myJoined.insert(0, cloudClass);
+        }
+        await _repo.setSetting('student_joined_classes_json', jsonEncode(myJoined));
+
+        await recordAuditLog(
+          action: 'STUDENT_JOIN_CLASS_CLOUD',
+          targetType: 'class',
+          targetId: cloudClass['id'].toString(),
+          details: '$studentName tham gia lớp ${cloudClass['name']} từ Cloud Render qua mã $cleanCode ($status)',
+        );
+
+        return {
+          'ok': true,
+          'status': status,
+          'message': status == 'pending'
+              ? 'Đã tìm thấy lớp ${cloudClass['name']} và gửi yêu cầu tham gia. Vui lòng chờ giáo viên duyệt.'
+              : 'Bạn đã tham gia lớp ${cloudClass['name']} thành công!',
+          'classItem': cloudClass,
         };
       }
     } catch (_) {}
@@ -3102,5 +3305,195 @@ class RbacProctorAiService {
         'approve': approve,
       });
     } catch (_) {}
+  }
+
+  // ===========================================================================
+  // 12. QUẢN LÝ LỊCH NHẮC HẸN LỚP HỌC (CLASS REMINDERS) & THÔNG BÁO TỚI HỌC VIÊN
+  // ===========================================================================
+
+  /// Lấy danh sách Lịch nhắc hẹn của Lớp học (hỗ trợ lọc theo classId)
+  Future<List<ClassReminderModel>> getClassReminders({String? classId}) async {
+    final raw = await _repo.getSetting('class_reminders_json');
+    List<ClassReminderModel> list = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List;
+        list = decoded
+            .map((e) => ClassReminderModel.fromMap(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      } catch (_) {}
+    }
+
+    // Thử đồng bộ từ Backend Render nếu có kết nối
+    try {
+      final client = await _client();
+      final res = await client.getJson('/announcements', timeout: const Duration(seconds: 4));
+      if (res.isSuccess && res.data?['announcements'] is List) {
+        final serverList = (res.data!['announcements'] as List)
+            .where((a) => (a['type'] ?? '') == 'class_reminder')
+            .map((a) => ClassReminderModel.fromMap(Map<String, dynamic>.from(a as Map)))
+            .toList();
+        for (final sItem in serverList) {
+          if (!list.any((l) => l.id == sItem.id)) {
+            list.add(sItem);
+          }
+        }
+        await _repo.setSetting('class_reminders_json', jsonEncode(list.map((e) => e.toMap()).toList()));
+      }
+    } catch (_) {}
+
+    // Sắp xếp theo ngày giờ hẹn tăng dần
+    list.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+    if (classId != null && classId.isNotEmpty) {
+      return list.where((r) => r.classId == classId).toList();
+    }
+    return list;
+  }
+
+  /// Giáo viên tạo Lịch nhắc hẹn cho toàn bộ học sinh trong Lớp học
+  Future<ClassReminderModel> createClassReminder({
+    required String classId,
+    required String className,
+    required String title,
+    required String message,
+    required DateTime scheduledAt,
+    String? teacherName,
+    String? teacherEmail,
+  }) async {
+    final user = await _repo.getAuthUser();
+    final cleanTeacherName = teacherName ?? (user?.displayName.isNotEmpty == true ? user!.displayName : 'Giáo viên');
+    final cleanTeacherEmail = teacherEmail ?? (user?.email ?? '');
+
+    final reminder = ClassReminderModel(
+      id: 'rem_${DateTime.now().millisecondsSinceEpoch}',
+      classId: classId,
+      className: className,
+      title: title.trim(),
+      message: message.trim(),
+      scheduledAt: scheduledAt,
+      teacherName: cleanTeacherName,
+      teacherEmail: cleanTeacherEmail,
+      createdAt: DateTime.now(),
+      isActive: true,
+    );
+
+    final list = await getClassReminders();
+    list.insert(0, reminder);
+    await _repo.setSetting('class_reminders_json', jsonEncode(list.map((e) => e.toMap()).toList()));
+
+    // Đồng bộ lên Backend Render qua hệ thống Announcements
+    try {
+      final client = await _client();
+      await client.postJson('/announcements', {
+        'id': reminder.id,
+        'title': reminder.title,
+        'content': reminder.message,
+        'target': 'class',
+        'type': 'class_reminder',
+        'class_id': reminder.classId,
+        'class_name': reminder.className,
+        'remind_at': reminder.scheduledAt.toIso8601String(),
+        'sent_by': reminder.teacherName,
+      });
+    } catch (_) {}
+
+    // Lên lịch trực tiếp trên điện thoại này (để máy hiện tại cũng nhận thông báo khi tới giờ)
+    await NotificationService().scheduleClassReminder(
+      id: reminder.notificationId,
+      title: '🔔 ${reminder.className}: ${reminder.title}',
+      body: reminder.message,
+      scheduledDate: reminder.scheduledAt,
+      payload: 'class_reminder_${reminder.id}',
+    );
+
+    await recordAuditLog(
+      action: 'CREATE_CLASS_REMINDER',
+      targetType: 'class_reminder',
+      targetId: reminder.id,
+      details: '$cleanTeacherName tạo lịch nhắc hẹn "$title" cho $className lúc ${scheduledAt.toIso8601String()}',
+    );
+
+    return reminder;
+  }
+
+  /// Hủy lịch nhắc hẹn
+  Future<void> deleteClassReminder(String reminderId) async {
+    final list = await getClassReminders();
+    final idx = list.indexWhere((r) => r.id == reminderId);
+    if (idx >= 0) {
+      final item = list[idx];
+      await NotificationService().cancelNotification(item.notificationId);
+      list.removeAt(idx);
+      await _repo.setSetting('class_reminders_json', jsonEncode(list.map((e) => e.toMap()).toList()));
+    }
+  }
+
+  /// Học viên đồng bộ lịch nhắc hẹn từ các lớp học mình tham gia vào hệ điều hành
+  Future<int> syncStudentClassReminders(String userId) async {
+    final myClasses = await getMyJoinedClasses();
+    final joinedClassIds = myClasses.map((c) => (c['id'] ?? '').toString()).toSet();
+    final allReminders = await getClassReminders();
+
+    int scheduledCount = 0;
+    for (final reminder in allReminders) {
+      if (!reminder.isActive) continue;
+      // Nếu học sinh thuộc lớp này (hoặc chưa phân lớp nhưng có lịch demo)
+      final isMember = joinedClassIds.isEmpty || joinedClassIds.contains(reminder.classId);
+      if (isMember && reminder.scheduledAt.isAfter(DateTime.now())) {
+        final success = await NotificationService().scheduleClassReminder(
+          id: reminder.notificationId,
+          title: '🔔 ${reminder.className}: ${reminder.title}',
+          body: reminder.message,
+          scheduledDate: reminder.scheduledAt,
+          payload: 'class_reminder_${reminder.id}',
+        );
+        if (success) scheduledCount++;
+      }
+    }
+    return scheduledCount;
+  }
+
+  /// Đồng bộ một mục bài học đã hoàn thành của học sinh lên Cloud PostgreSQL
+  Future<bool> syncTextbookProgressToCloud({
+    required int unitNumber,
+    required String sectionKey,
+    String status = 'completed',
+    int score = 100,
+  }) async {
+    final user = await _repo.getAuthUser();
+    final userId = user?.id ?? 'usr_local';
+    final userEmail = user?.email ?? '';
+
+    try {
+      final client = await _client();
+      final res = await client.postJson('/students/progress/sync', {
+        'userId': userId,
+        'userEmail': userEmail,
+        'unitNumber': unitNumber,
+        'sectionName': sectionKey,
+        'status': status,
+        'score': score,
+      });
+      return res.isSuccess;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Tra cứu tiến độ học tập chi tiết của học sinh từ Cloud Render
+  Future<Map<String, dynamic>?> getStudentCloudProgress(String identifier) async {
+    if (identifier.trim().isEmpty) return null;
+    try {
+      final client = await _client();
+      final res = await client.getJson(
+        '/students/${Uri.encodeComponent(identifier.trim())}/progress',
+        timeout: const Duration(seconds: 5),
+      );
+      if (res.isSuccess && res.data != null) {
+        return Map<String, dynamic>.from(res.data!);
+      }
+    } catch (_) {}
+    return null;
   }
 }

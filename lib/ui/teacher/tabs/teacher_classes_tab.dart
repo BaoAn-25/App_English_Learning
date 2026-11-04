@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../data/app_repository.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../../admin/components/class_code_dialog.dart';
 import '../../common/dialogs/student_progress_sheet.dart';
+import '../../settings/notification_service.dart';
 
 /// Tab 2 (Giáo viên): Quản lý Lớp học, Tạo lớp mới, Duyệt học sinh & Hồ sơ học sinh chi tiết
 class TeacherClassesTab extends StatefulWidget {
@@ -44,6 +45,8 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
           _isLoading = false;
         });
       }
+      // Tự động đồng bộ ngầm toàn bộ lớp lên Cloud Render để học sinh ở bất kỳ máy nào cũng vào được
+      _service.syncAllClassesToCloud().catchError((_) => <String, dynamic>{});
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -263,6 +266,269 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
     );
   }
 
+  /// Lên lịch nhắc hẹn học bài gửi tới toàn bộ học sinh trong lớp học
+  void _showScheduleClassReminderModal(Map<String, dynamic> classItem) {
+    final classId = classItem['id'].toString();
+    final className = classItem['name']?.toString() ?? 'Lớp học';
+
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = const TimeOfDay(hour: 20, minute: 0);
+
+    final titleCtrl = TextEditingController(text: 'Nhắc học tập tiếng Anh');
+    final messageCtrl = TextEditingController(
+      text: 'Thầy/Cô nhắc cả lớp $className: Tối nay nhớ vào hoàn thành bài tập trắc nghiệm và ôn luyện từ vựng nhé!',
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final scheduledDateTime = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+            selectedTime.hour,
+            selectedTime.minute,
+          );
+
+          void applyPreset(String title, String message) {
+            setSheetState(() {
+              titleCtrl.text = title;
+              messageCtrl.text = message;
+            });
+          }
+
+          return Container(
+            padding: EdgeInsets.only(
+              top: 20,
+              left: 20,
+              right: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.notifications_active_rounded, color: Color(0xFFE65100), size: 26),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Lên lịch nhắc hẹn cho $className',
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Đến đúng giờ hẹn, điện thoại của tất cả học viên trong lớp sẽ tự động nảy chuông và thông báo nhắc học.',
+                    style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Khối Chọn Ngày & Giờ
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () async {
+                            final d = await showDatePicker(
+                              context: ctx,
+                              initialDate: selectedDate,
+                              firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                              lastDate: DateTime.now().add(const Duration(days: 90)),
+                            );
+                            if (d != null) setSheetState(() => selectedDate = d);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F7FF),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFC5CAE9)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF283593)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () async {
+                            final t = await showTimePicker(
+                              context: ctx,
+                              initialTime: selectedTime,
+                            );
+                            if (t != null) setSheetState(() => selectedTime = t);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF3E0),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFFFCC80)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.access_time_rounded, size: 18, color: Color(0xFFE65100)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Mẫu nhắc nhở nhanh
+                  const Text('Chọn mẫu nhắc nhanh:', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ActionChip(
+                          avatar: const Icon(Icons.menu_book_rounded, size: 16),
+                          label: const Text('Ôn từ vựng Unit', style: TextStyle(fontSize: 12)),
+                          onPressed: () => applyPreset(
+                            'Nhắc ôn từ vựng $className',
+                            'Thầy/Cô nhắc cả lớp hôm nay nhớ vào làm flashcard và ôn từ vựng Unit SGK 12 nhé!',
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        ActionChip(
+                          avatar: const Icon(Icons.assignment_turned_in_rounded, size: 16),
+                          label: const Text('Hoàn thành bài tập', style: TextStyle(fontSize: 12)),
+                          onPressed: () => applyPreset(
+                            'Nhắc làm bài tập $className',
+                            'Thầy/Cô nhắc cả lớp vào hoàn thành bài tập giao trong lớp trước khi hết hạn!',
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        ActionChip(
+                          avatar: const Icon(Icons.shield_rounded, size: 16),
+                          label: const Text('Vào phòng thi', style: TextStyle(fontSize: 12)),
+                          onPressed: () => applyPreset(
+                            'Nhắc thi kiểm tra $className',
+                            'Đến giờ kiểm tra giám sát rồi! Cả lớp vào mục Phòng Thi Giám Sát để làm bài nghiêm túc nhé.',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextField(
+                    controller: titleCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Tiêu đề thông báo',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: messageCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Nội dung dặn dò của Thầy/Cô',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Nút Phát thông báo hẹn giờ
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE65100)),
+                      onPressed: () async {
+                        if (titleCtrl.text.trim().isEmpty) return;
+                        Navigator.pop(ctx);
+
+                        await _service.createClassReminder(
+                          classId: classId,
+                          className: className,
+                          title: titleCtrl.text.trim(),
+                          message: messageCtrl.text.trim(),
+                          scheduledAt: scheduledDateTime,
+                        );
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Đã tạo lịch nhắc hẹn cho $className lúc ${scheduledDateTime.hour}:${scheduledDateTime.minute.toString().padLeft(2, '0')} ngày ${scheduledDateTime.day}/${scheduledDateTime.month}!'),
+                              backgroundColor: const Color(0xFF1B5E20),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.alarm_on_rounded),
+                      label: const Text('Phát Lịch Nhắc Hẹn Cho Cả Lớp', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Nút test nảy notification tức thì trên máy này
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final notifId = DateTime.now().millisecondsSinceEpoch % 100000 + 4000;
+                        await NotificationService().showInstantNotification(
+                          id: notifId,
+                          title: '🔔 $className: ${titleCtrl.text.trim()}',
+                          body: messageCtrl.text.trim(),
+                        );
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã phát thông báo thử nghiệm thành công lên thanh thông báo máy của bạn!'),
+                            backgroundColor: Colors.blueAccent,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.play_arrow_outlined, size: 18),
+                      label: const Text('Thử nghiệm thông báo ngay trên máy này'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _openClassDetailModal(Map<String, dynamic> classItem) async {
     final classId = classItem['id'].toString();
     var currentClass = Map<String, dynamic>.from(classItem);
@@ -319,6 +585,11 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
                           'Lớp ${currentClass['name']} (${currentClass['schoolYear'] ?? "2026-2027"})',
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
+                      ),
+                      IconButton(
+                        tooltip: 'Lên lịch nhắc hẹn cả lớp',
+                        icon: const Icon(Icons.alarm_add_rounded, color: Color(0xFFE65100)),
+                        onPressed: () => _showScheduleClassReminderModal(currentClass),
                       ),
                       IconButton(
                         tooltip: 'Thêm học sinh vào lớp',
@@ -981,6 +1252,11 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
                                 ),
                               ],
                               const Spacer(),
+                              IconButton(
+                                tooltip: 'Lên lịch nhắc hẹn cho cả lớp',
+                                icon: const Icon(Icons.alarm_add_rounded, size: 20, color: Color(0xFFE65100)),
+                                onPressed: () => _showScheduleClassReminderModal(c),
+                              ),
                               IconButton(
                                 tooltip: 'Sao chép mã lớp',
                                 icon: const Icon(Icons.copy, size: 18),
