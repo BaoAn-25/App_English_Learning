@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../data/app_repository.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../../admin/components/class_code_dialog.dart';
+import '../../common/dialogs/student_progress_sheet.dart';
 
 /// Tab 2 (Giáo viên): Quản lý Lớp học, Tạo lớp mới, Duyệt học sinh & Hồ sơ học sinh chi tiết
 class TeacherClassesTab extends StatefulWidget {
@@ -791,163 +792,11 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
   }
 
   void _showStudentProfileSheet(Map<String, dynamic> student, String className) {
-    final name = (student['studentName'] ?? 'Học sinh').toString();
-    final streak = (student['streakDays'] as num?)?.toInt() ?? 0;
-    final avgScore = (student['avgScore'] as num?)?.toDouble() ?? 0.0;
-    final overdue = (student['overdueCount'] as num?)?.toInt() ?? 0;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: const Color(0xFFE8EAF6),
-                  child: Text(
-                    name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : 'H',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF283593),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Lớp $className • ${student['studentEmail'] ?? ""}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Streak học tập', style: TextStyle(fontSize: 11, color: Colors.black54)),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$streak ngày',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange[900]),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Điểm trung bình', style: TextStyle(fontSize: 11, color: Colors.black54)),
-                        const SizedBox(height: 4),
-                        Text(
-                          avgScore.toStringAsFixed(1),
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue[900]),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Quá hạn', style: TextStyle(fontSize: 11, color: Colors.black54)),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$overdue bài',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red[900]),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      await _service.createAnnouncement(
-                        title: 'Nhắc nhở học tập từ giáo viên lớp $className',
-                        content: 'Chào $name, em nhớ hoàn thành bài tập đúng hạn nhé!',
-                        audience: name,
-                        category: 'Nhắc học',
-                      );
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Đã gửi thông báo nhắc học tới $name!')),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.notifications_active_outlined, size: 18),
-                    label: const Text('Nhắc học'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      widget.onNavigateTab(2);
-                    },
-                    icon: const Icon(Icons.assignment_add, size: 18),
-                    label: const Text('Giao bài ôn'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    StudentProgressSheet.show(
+      context,
+      student: student,
+      currentClassName: className,
+      onUpdated: _loadClasses,
     );
   }
 
