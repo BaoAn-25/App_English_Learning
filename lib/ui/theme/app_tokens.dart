@@ -27,6 +27,20 @@ class AppTokens {
   static const Color borderLight = Color(0xFFE2E8F0); // Viền nhẹ
   static const Color cardShadowColor = Color(0x0A0F172A); // Đổ bóng nhẹ tinh tế
 
+  // Semantic & Dark Mode aliases đồng bộ cho toàn bộ màn hình (Student / Teacher / Admin)
+  static const Color danger = errorRed;
+  static const Color success = successGreen;
+  static const Color warning = accentYellow;
+  static const Color background = backgroundLight;
+  static const Color darkBackground = Color(0xFF0B1120);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color darkSurface = Color(0xFF162032);
+  static const Color darkTextMain = Color(0xFFF8FAFC);
+  static const Color textSub = textSecondary;
+  static const Color darkTextSub = Color(0xFF94A3B8);
+  static const Color border = borderLight;
+  static const Color darkBorder = Color(0xFF1E293B);
+
   // Khoảng cách (Spacing)
   static const double space4 = 4.0;
   static const double space8 = 8.0;

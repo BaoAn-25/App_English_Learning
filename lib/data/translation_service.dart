@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'rbac_proctor_ai_service.dart';
 import 'trial_lesson_repository.dart';
 
 /// Nguồn của kết quả dịch
@@ -119,6 +120,12 @@ class TranslationService {
     TrialLessonData? currentLesson,
     String? contextSentence,
   }) async {
+    if (ExamLockGuard.instance.isLocked) {
+      return TranslationResult.failure(
+        text,
+        '🔒 Công cụ Dịch thuật đang bị khóa tạm thời vì bạn đang làm bài thi có giám sát (${ExamLockGuard.instance.activeExamTitle ?? "Phòng thi"}).',
+      );
+    }
     final trimmed = text.trim();
     if (trimmed.isEmpty) {
       return const TranslationResult(
@@ -313,5 +320,105 @@ class TranslationService {
     }
 
     return null;
+  }
+
+  /// Dịch 2 chiều (Anh -> Việt hoặc Việt -> Anh) phục vụ Trung tâm Dịch thuật Học thuật 3-trong-1
+  Future<TranslationResult> translateBidirectional({
+    required String text,
+    String sourceLang = 'en',
+    String targetLang = 'vi',
+  }) async {
+    if (ExamLockGuard.instance.isLocked) {
+      return TranslationResult.failure(
+        text,
+        '🔒 Công cụ Dịch thuật đang bị khóa vì bạn đang trong Phòng thi có giám sát (${ExamLockGuard.instance.activeExamTitle ?? "Kiểm tra"}).',
+      );
+    }
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
+      return TranslationResult.failure('', 'Vui lòng nhập hoặc nói nội dung cần dịch.');
+    }
+
+    if (sourceLang == 'en' && targetLang == 'vi') {
+      return translateSelection(text: trimmed);
+    }
+
+    // Dịch Việt -> Anh
+    final cacheKey = 'vi2en||${_normalizeKey(trimmed)}';
+    if (_cache.containsKey(cacheKey)) {
+      return _cache[cacheKey]!;
+    }
+
+    // Kiểm tra đối chiếu ngược trong từ điển SGK 12
+    final lower = _normalizeKey(trimmed);
+    for (final entry in TrialLessonRepository.phraseDictionary.entries) {
+      if (entry.value.toLowerCase() == lower || entry.value.toLowerCase().contains(lower)) {
+        final res = TranslationResult(
+          originalText: trimmed,
+          translatedText: entry.key,
+          source: TranslationSource.phraseDictionary,
+        );
+        _cache[cacheKey] = res;
+        return res;
+      }
+    }
+
+    // Gọi dịch máy trực tuyến Việt -> Anh
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+    try {
+      final gUri = Uri.parse(
+        'https://translate.googleapis.com/translate_a/single?client=gtx&sl=$sourceLang&tl=$targetLang&dt=t&q=${Uri.encodeComponent(trimmed)}',
+      );
+      final request = await client.getUrl(gUri).timeout(const Duration(seconds: 5));
+      request.headers.set('User-Agent', 'Mozilla/5.0');
+      final response = await request.close().timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final decoded = jsonDecode(body);
+        if (decoded is List && decoded.isNotEmpty && decoded[0] is List) {
+          final buffer = StringBuffer();
+          for (final seg in (decoded[0] as List)) {
+            if (seg is List && seg.isNotEmpty && seg[0] != null) {
+              buffer.write(seg[0].toString());
+            }
+          }
+          final trans = buffer.toString().trim();
+          if (trans.isNotEmpty) {
+            final res = TranslationResult(
+              originalText: trimmed,
+              translatedText: trans,
+              source: TranslationSource.machineTranslation,
+            );
+            _cache[cacheKey] = res;
+            return res;
+          }
+        }
+      }
+    } catch (_) {
+    } finally {
+      client.close();
+    }
+
+    return TranslationResult.networkRequired(trimmed);
+  }
+
+  /// Rút trích danh sách từ vựng học thuật SGK 12 xuất hiện trong đoạn văn để học sinh lưu 1 chạm vào Flashcard SRS
+  List<WordLookupResult> extractKeyVocabulary(String englishText) {
+    final tokens = englishText
+        .replaceAll(RegExp(r'[^a-zA-Z\s-]'), ' ')
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length >= 4)
+        .toSet();
+
+    final extracted = <WordLookupResult>[];
+    for (final token in tokens) {
+      final lookup = TrialLessonRepository.instance.lookupWordOrPhrase(query: token);
+      if (lookup.isFoundInDictionary) {
+        extracted.add(lookup);
+      }
+      if (extracted.length >= 8) break;
+    }
+    return extracted;
   }
 }

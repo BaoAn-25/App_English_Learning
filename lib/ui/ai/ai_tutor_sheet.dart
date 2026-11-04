@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../data/app_repository.dart';
-import '../../data/remote/api_client.dart';
-import '../../data/trial_lesson_repository.dart';
+import '../../data/rbac_proctor_ai_service.dart';
+import '../auth/auth_controller.dart';
+import '../theme/app_tokens.dart';
 import '../theme/components/engpass_mascot.dart';
 
 class AiChatMessage {
@@ -9,24 +9,28 @@ class AiChatMessage {
   final bool isUser;
   final DateTime timestamp;
   final bool isOfflineNotice;
+  final List<Map<String, dynamic>>? generatedQuestions;
 
   const AiChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
     this.isOfflineNotice = false,
+    this.generatedQuestions,
   });
 }
 
-/// Bottom Sheet Trợ lý Gia sư AI dành cho học sinh Tiếng Anh 12.
-/// - Kết nối trực tiếp API Backend (`/api/ai/ask`).
-/// - Nếu máy chủ chưa cấu hình API Key: Báo trung thực, không tạo phản hồi giả,
-///   đồng thời kích hoạt chế độ hỗ trợ tri thức SGK 12 ngoại tuyến.
+/// Trợ lý Cá nhân AI Chatbot Đa vai trò (`EngPass AI Copilot`):
+/// - Học viên (`student`): Hỏi đáp kiến thức SGK 12 (Socratic), Chấm bài viết / sửa lỗi câu tiếng Anh, Gợi ý lộ trình.
+///   * Ràng buộc: Tự động khóa 100% khi đang trong Phòng thi có giám sát (`ExamLockGuard`).
+/// - Giáo viên (`teacher`): Trợ lý soạn giảng, tạo câu hỏi trắc nghiệm tự động (lưu 1 chạm vào Ngân hàng đề), nhận xét bài làm học sinh.
+/// - Quản trị viên (`admin`): Trợ lý số hóa sách giáo khoa mới, kiểm tra dữ liệu và phân tích hệ thống.
 class AiTutorSheet extends StatefulWidget {
   final int? unitNumber;
   final String? unitTitle;
   final String? sectionTitle;
   final String? contextText;
+  final String? initialMode;
 
   const AiTutorSheet({
     super.key,
@@ -34,6 +38,7 @@ class AiTutorSheet extends StatefulWidget {
     this.unitTitle,
     this.sectionTitle,
     this.contextText,
+    this.initialMode,
   });
 
   static Future<void> show(
@@ -42,6 +47,7 @@ class AiTutorSheet extends StatefulWidget {
     String? unitTitle,
     String? sectionTitle,
     String? contextText,
+    String? initialMode,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -52,6 +58,7 @@ class AiTutorSheet extends StatefulWidget {
         unitTitle: unitTitle,
         sectionTitle: sectionTitle,
         contextText: contextText,
+        initialMode: initialMode,
       ),
     );
   }
@@ -65,10 +72,17 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
   final ScrollController _scrollController = ScrollController();
   final List<AiChatMessage> _messages = [];
   bool _isLoading = false;
+  late String _activeMode;
+
+  String get _currentRole => AuthController.instance.user.role;
 
   @override
   void initState() {
     super.initState();
+    _activeMode = widget.initialMode ??
+        (_currentRole == 'teacher'
+            ? 'teacher_assist'
+            : (_currentRole == 'admin' ? 'admin_assist' : 'general'));
     _initWelcomeMessage();
   }
 
@@ -80,6 +94,47 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
   }
 
   void _initWelcomeMessage() {
+    if (ExamLockGuard.instance.isLocked && _currentRole == 'student') {
+      _messages.add(
+        AiChatMessage(
+          text: '🔒 **Chế độ Chống Gian Lận Phòng Thi đang bật!**\n\n'
+              'Bạn đang làm bài thi có giám sát: "${ExamLockGuard.instance.activeExamTitle ?? "Kiểm tra"}".\n'
+              'Gia sư AI tạm thời bị khóa cho đến khi bạn hoàn thành và nộp bài.',
+          isUser: false,
+          timestamp: DateTime.now(),
+          isOfflineNotice: true,
+        ),
+      );
+      return;
+    }
+
+    if (_currentRole == 'admin') {
+      _messages.add(
+        AiChatMessage(
+          text: 'Xin chào Quản trị viên! Mình là **Admin AI Copilot**.\n\n'
+              '• Hỗ trợ chuẩn hóa & số hóa nội dung Sách giáo khoa mới tự động.\n'
+              '• Hỗ trợ tạo nhanh bộ câu hỏi hệ thống không cần nhập tay.\n'
+              '• Ràng buộc an toàn: Mọi dữ liệu AI sinh ra đều ở trạng thái Bản nháp để Admin kiểm duyệt trước khi lưu.',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+      return;
+    }
+
+    if (_currentRole == 'teacher') {
+      _messages.add(
+        AiChatMessage(
+          text: 'Xin chào Giáo viên! Mình là **Trợ lý AI Soạn Giảng & Chấm Bài**.\n\n'
+              '• Bấm **"⚡ Sinh 3 câu trắc nghiệm mẫu"** bên dưới để tự động tạo câu hỏi và lưu 1 chạm vào Ngân hàng đề mà không cần gõ tay.\n'
+              '• Hoặc nhập yêu cầu soạn bài đọc, giải thích ngữ pháp, nhận xét học sinh.',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+      return;
+    }
+
     final unitInfo = widget.unitNumber != null
         ? 'Unit ${widget.unitNumber}: ${widget.unitTitle ?? ""}'
         : 'SGK Tiếng Anh 12 Global Success';
@@ -87,8 +142,9 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
 
     _messages.add(
       AiChatMessage(
-        text: 'Xin chào! Mình là Gia sư AI đồng hành cùng bạn ôn luyện $unitInfo$sectionInfo.\n\n'
-            'Bạn có thể hỏi về cách dùng ngữ pháp, mẹo làm bài đọc hiểu, dịch cụm từ hoặc cấu trúc câu nhé!',
+        text: 'Xin chào! Mình là **Gia sư AI Cá nhân** đồng hành cùng bạn ôn luyện $unitInfo$sectionInfo.\n\n'
+            '• **💬 Hỏi bài & Ngữ pháp:** Giải thích từ vựng, ngữ pháp và hướng dẫn cách loại trừ đáp án.\n'
+            '• **✍️ Chấm bài viết:** Chấm điểm câu/đoạn văn tiếng Anh (thang 10) và sửa lỗi chi tiết.',
         isUser: false,
         timestamp: DateTime.now(),
       ),
@@ -96,6 +152,8 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
   }
 
   Future<void> _sendMessage([String? presetText]) async {
+    if (ExamLockGuard.instance.isLocked && _currentRole == 'student') return;
+
     final query = (presetText ?? _inputController.text).trim();
     if (query.isEmpty || _isLoading) return;
 
@@ -113,115 +171,82 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
       );
       _isLoading = true;
     });
-
     _scrollToBottom();
 
     try {
-      final repo = AppRepository();
-      final token = await repo.getAuthToken();
-      final client = ApiClient(tokenProvider: () => token);
+      // Nếu Giáo viên / Admin bấm tạo câu hỏi tự động nhanh
+      if ((_currentRole == 'teacher' || _currentRole == 'admin') &&
+          (query.toLowerCase().contains('sinh') || query.toLowerCase().contains('tạo câu hỏi'))) {
+        final generated = await RbacProctorAiService.instance.generateQuestionsWithAi(
+          unitNumber: widget.unitNumber ?? 1,
+          skill: 'grammar',
+          difficulty: 2,
+          count: 3,
+          topicPrompt: query,
+        );
+        if (!mounted) return;
+        final previewBuffer = StringBuffer(
+          '✅ **Đã tạo tự động ${generated.length} câu hỏi trắc nghiệm (Bản nháp kiểm duyệt):**\n\n',
+        );
+        for (int i = 0; i < generated.length; i++) {
+          final q = generated[i];
+          previewBuffer.writeln('**Câu ${i + 1}:** ${q['stem']}');
+          final opts = (q['options'] as List?) ?? [];
+          for (final o in opts) {
+            previewBuffer.writeln('  • $o');
+          }
+          previewBuffer.writeln('  👉 *Giải thích:* ${q['explanation']}\n');
+        }
+        setState(() {
+          _messages.add(
+            AiChatMessage(
+              text: previewBuffer.toString().trim(),
+              isUser: false,
+              timestamp: DateTime.now(),
+              generatedQuestions: generated,
+            ),
+          );
+        });
+        return;
+      }
 
-      final response = await client.askAiTutor(
-        question: query,
+      final res = await RbacProctorAiService.instance.askRoleCopilot(
+        role: _currentRole,
+        mode: _activeMode,
+        message: query,
         unitNumber: widget.unitNumber,
-        section: widget.sectionTitle,
         contextText: widget.contextText,
       );
 
       if (!mounted) return;
-
-      if (response.isSuccess && response.data != null) {
-        final answer = response.data!['answer'] as String? ?? 'Chưa có câu trả lời.';
-        setState(() {
-          _messages.add(
-            AiChatMessage(
-              text: answer,
-              isUser: false,
-              timestamp: DateTime.now(),
-            ),
-          );
-        });
-      } else {
-        // Xử lý khi máy chủ chưa cấu hình API Key hoặc lỗi mạng
-        final errorMsg = response.errorMessage ?? 'Không thể kết nối máy chủ AI.';
-        final offlineAnswer = _getOfflineFallbackAnswer(query);
-
-        setState(() {
-          _messages.add(
-            AiChatMessage(
-              text: '⚠️ $errorMsg\n\n'
-                  '💡 [Giải đáp ngoại tuyến SGK 12]:\n$offlineAnswer',
-              isUser: false,
-              timestamp: DateTime.now(),
-              isOfflineNotice: true,
-            ),
-          );
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      final offlineAnswer = _getOfflineFallbackAnswer(query);
+      final answer = (res['answer'] ?? 'Chưa có câu trả lời.').toString();
       setState(() {
         _messages.add(
           AiChatMessage(
-            text: '⚠️ Không có kết nối mạng tới máy chủ AI ($e).\n\n'
-                '💡 [Giải đáp ngoại tuyến SGK 12]:\n$offlineAnswer',
+            text: answer,
             isUser: false,
             timestamp: DateTime.now(),
-            isOfflineNotice: true,
+            isOfflineNotice: res['isLocked'] == true,
           ),
         );
       });
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
         _scrollToBottom();
       }
     }
   }
 
-  /// Tra cứu tri thức có sẵn trong từ điển ngoại tuyến SGK 12 khi cloud AI chưa sẵn sàng
-  String _getOfflineFallbackAnswer(String query) {
-    final lower = query.toLowerCase();
-
-    // 1. Kiểm tra từ vựng
-    final lookup = TrialLessonRepository.instance.lookupWordOrPhrase(query: query);
-    if (lookup.isFoundInDictionary) {
-      final phonetic = lookup.phonetic != null ? ' [${lookup.phonetic}]' : '';
-      final pos = lookup.partOfSpeech != null ? ' (${lookup.partOfSpeech})' : '';
-      return 'Mục từ: "${lookup.displayWord}"$phonetic$pos\n'
-          'Nghĩa: ${lookup.meaning}\n'
-          'Nguồn: ${lookup.source}';
-    }
-
-    // 2. Kiến thức ngữ pháp Unit 1 & 2
-    if (lower.contains('quá khứ') || lower.contains('past') || widget.unitNumber == 1) {
-      return 'Trọng tâm ngữ pháp Unit 1 (Past Simple vs. Past Continuous):\n'
-          '• Quá khứ đơn (Past Simple): Diễn tả hành động đã xảy ra và kết thúc hoàn toàn trong quá khứ (S + V2/ed).\n'
-          '• Quá khứ tiếp diễn (Past Continuous): Diễn tả hành động đang diễn ra tại một thời điểm xác định trong quá khứ (S + was/were + V-ing).\n'
-          '• Kết hợp với When/While: Hành động đang xảy ra (quá khứ tiếp diễn) thì hành động khác cắt ngang (quá khứ đơn).\n'
-          'Ví dụ: "She was working in a hospital when she wrote her diary."';
-    }
-
-    if (lower.contains('cleft') || lower.contains('nhấn mạnh') || widget.unitNumber == 2) {
-      return 'Trọng tâm ngữ pháp Unit 2 (Cleft Sentences - Câu chẻ):\n'
-          '• Cấu trúc: It is / It was + [Thành phần cần nhấn mạnh] + that / who + S + V...\n'
-          '• Dùng để tập trung sự chú ý vào một thông tin cụ thể (chủ ngữ, tân ngữ, hoặc trạng ngữ).\n'
-          'Ví dụ: "It is the rich cultural diversity that makes our country unique."';
-    }
-
-    // 3. Mẹo làm bài đọc hiểu chung
-    if (lower.contains('đọc hiểu') || lower.contains('reading') || lower.contains('tiêu đề')) {
-      return 'Mẹo làm bài Đọc hiểu SGK & thi tốt nghiệp THPT:\n'
-          '1. Đọc lướt (Skimming): Đọc câu đầu và câu cuối mỗi đoạn văn để nắm ý chính.\n'
-          '2. Quét thông tin (Scanning): Tìm các từ khóa (tên riêng, số liệu, năm tháng, thuật ngữ) trong câu hỏi trước khi quay lại bài đọc.\n'
-          '3. Ghép tiêu đề đoạn văn: Chú ý từ đồng nghĩa hoặc cách diễn đạt lại (paraphrase) giữa tiêu đề và ý chính của đoạn.';
-    }
-
-    return 'Bạn có thể chạm trực tiếp vào bất kỳ từ vựng nào trong bài đọc để tra cứu nghĩa tức thì, '
-        'hoặc bôi đen cụm từ để xem bản dịch đối chiếu chuẩn SGK 12 nhé!';
+  Future<void> _saveGeneratedQuestionsToBank(List<Map<String, dynamic>> questions) async {
+    await RbacProctorAiService.instance.saveTeacherQuestions(questions);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã lưu ${questions.length} câu hỏi vào Ngân hàng câu hỏi thành công!'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _scrollToBottom() {
@@ -240,9 +265,33 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locked = ExamLockGuard.instance.isLocked && _currentRole == 'student';
+
+    final quickChips = _currentRole == 'admin'
+        ? [
+            'Tạo câu hỏi tự động Unit 1',
+            'Kiểm tra chất lượng học liệu',
+            'Hướng dẫn số hóa sách mới',
+          ]
+        : (_currentRole == 'teacher'
+            ? [
+                '⚡ Sinh 3 câu hỏi trắc nghiệm Unit ${widget.unitNumber ?? 1}',
+                'Gợi ý nhận xét bài kiểm tra học sinh',
+                'Soạn tóm tắt ngữ pháp trọng tâm',
+              ]
+            : (_activeMode == 'writing_check'
+                ? [
+                    'Although urbanization brings many benefits, it also causes pollution.',
+                    'It is cultural diversity that makes our world more interesting.',
+                  ]
+                : [
+                    'Trọng tâm ngữ pháp Unit ${widget.unitNumber ?? 1}',
+                    'Mẹo làm bài đọc hiểu THPT',
+                    'Phân biệt câu chẻ và mệnh đề quan hệ',
+                  ]));
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.86,
       padding: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -255,7 +304,9 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                bottom: BorderSide(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                ),
               ),
             ),
             child: Row(
@@ -269,30 +320,75 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Gia sư AI EngPass',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _currentRole == 'admin'
+                                  ? 'Trợ lý AI Quản trị (Admin Copilot)'
+                                  : (_currentRole == 'teacher'
+                                      ? 'Trợ lý AI Giáo viên (Teacher Copilot)'
+                                      : 'Gia sư AI Cá nhân EngPass'),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                       Text(
-                        widget.unitNumber != null
-                            ? 'Đang hỗ trợ Unit ${widget.unitNumber}: ${widget.unitTitle ?? ""}'
-                            : 'Hỗ trợ giải đáp kiến thức SGK 12 Global Success',
-                        style: TextStyle(fontSize: 11.5, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        locked
+                            ? '🔒 Đang khóa chống gian lận trong Phòng thi giám sát'
+                            : (widget.unitNumber != null
+                                ? 'Đang hỗ trợ Unit ${widget.unitNumber}: ${widget.unitTitle ?? ""}'
+                                : 'Ràng buộc thông minh theo vai trò ${_currentRole.toUpperCase()}'),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: locked
+                              ? AppTokens.danger
+                              : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        ),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
           ),
+
+          // Chuyển chế độ cho Học viên (Hỏi bài Socratic vs Chấm bài viết)
+          if (_currentRole == 'student' && !locked)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: 'general',
+                    icon: Icon(Icons.school_rounded, size: 16),
+                    label: Text('Hỏi bài & Ngữ pháp', style: TextStyle(fontSize: 12)),
+                  ),
+                  ButtonSegment(
+                    value: 'writing_check',
+                    icon: Icon(Icons.rate_review_rounded, size: 16),
+                    label: Text('Chấm câu / Bài viết', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+                selected: {_activeMode == 'writing_check' ? 'writing_check' : 'general'},
+                onSelectionChanged: (sel) {
+                  setState(() => _activeMode = sel.first);
+                },
+              ),
+            ),
 
           // Danh sách tin nhắn
           Expanded(
@@ -319,66 +415,84 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Gia sư AI đang soạn câu trả lời...',
-                    style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), fontStyle: FontStyle.italic),
+                    'Trợ lý AI đang xử lý yêu cầu...',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ),
             ),
 
-          // Gợi ý nhanh
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Row(
-              children: [
-                _buildQuickChip('Trọng tâm ngữ pháp Unit', isDark),
-                _buildQuickChip('Mẹo làm bài đọc hiểu', isDark),
-                _buildQuickChip('Cấu trúc câu hỏi hay gặp', isDark),
-              ],
+          if (!locked)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                children: quickChips.map((c) => _buildQuickChip(c, isDark)).toList(),
+              ),
             ),
-          ),
 
           // Input bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              border: Border(top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+              border: Border(
+                top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _inputController,
+                    enabled: !locked,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
-                    style: TextStyle(fontSize: 14, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
                     decoration: InputDecoration(
-                      hintText: 'Nhập câu hỏi bài học hoặc từ cần tra...',
-                      hintStyle: TextStyle(fontSize: 13, color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                      hintText: locked
+                          ? 'Đã khóa AI khi đang trong Phòng thi giám sát...'
+                          : (_activeMode == 'writing_check'
+                              ? 'Nhập câu hoặc đoạn văn tiếng Anh để AI chấm điểm...'
+                              : 'Nhập câu hỏi bài học hoặc yêu cầu cho AI...'),
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                      ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       filled: true,
                       fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                        borderSide: BorderSide(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A), width: 1.5),
+                        borderSide: BorderSide(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.send_rounded, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A)),
-                  onPressed: _sendMessage,
+                  icon: Icon(
+                    Icons.send_rounded,
+                    color: locked
+                        ? Colors.grey
+                        : (isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A)),
+                  ),
+                  onPressed: locked ? null : _sendMessage,
                 ),
               ],
             ),
@@ -412,7 +526,7 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
       alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.84),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: msg.isUser
@@ -432,17 +546,35 @@ class _AiTutorSheetState extends State<AiTutorSheet> {
                     : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
           ),
         ),
-        child: Text(
-          msg.text,
-          style: TextStyle(
-            fontSize: 13.5,
-            height: 1.45,
-            color: msg.isUser
-                ? Colors.white
-                : (msg.isOfflineNotice
-                    ? (isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E))
-                    : (isDark ? Colors.white : const Color(0xFF1E293B))),
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              msg.text,
+              style: TextStyle(
+                fontSize: 13.5,
+                height: 1.45,
+                color: msg.isUser
+                    ? Colors.white
+                    : (msg.isOfflineNotice
+                        ? (isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E))
+                        : (isDark ? Colors.white : const Color(0xFF1E293B))),
+              ),
+            ),
+            if (msg.generatedQuestions != null && msg.generatedQuestions!.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => _saveGeneratedQuestionsToBank(msg.generatedQuestions!),
+                  icon: const Icon(Icons.playlist_add_check_rounded, size: 18),
+                  label: Text(
+                    '+ Duyệt & Lưu ${msg.generatedQuestions!.length} câu vào Ngân hàng đề',
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

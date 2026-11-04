@@ -1,0 +1,2009 @@
+const crypto = require('crypto');
+
+/**
+ * Khởi tạo các bảng mở rộng cho RBAC (Teacher & Admin), Giám sát phòng thi 10s,
+ * Quản lý phiên bản Sách giáo khoa (Curriculum Versioning) và Cấu hình AI Chatbot.
+ */
+async function initRbacAndProctoringTables(client) {
+  await client.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_locked BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_reason TEXT;
+
+    CREATE TABLE IF NOT EXISTS system_configs (
+      key VARCHAR(64) PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS system_audit_logs (
+      id SERIAL PRIMARY KEY,
+      actor_id VARCHAR(64),
+      actor_email VARCHAR(255),
+      actor_role VARCHAR(32),
+      action VARCHAR(64) NOT NULL,
+      target_type VARCHAR(64),
+      target_id VARCHAR(128),
+      details JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS teacher_questions (
+      id VARCHAR(64) PRIMARY KEY,
+      grade INT NOT NULL DEFAULT 12,
+      unit_number INT NOT NULL DEFAULT 1,
+      skill VARCHAR(32) NOT NULL DEFAULT 'grammar',
+      difficulty INT NOT NULL DEFAULT 2,
+      stem TEXT NOT NULL,
+      options_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+      correct_index INT NOT NULL DEFAULT 0,
+      explanation TEXT NOT NULL DEFAULT '',
+      created_by VARCHAR(64),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS teacher_materials (
+      id VARCHAR(64) PRIMARY KEY,
+      unit_number INT NOT NULL DEFAULT 1,
+      category VARCHAR(32) NOT NULL DEFAULT 'reading',
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      vocabulary_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+      created_by VARCHAR(64),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS supervised_exams (
+      id VARCHAR(64) PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      duration_minutes INT NOT NULL DEFAULT 45,
+      deadline_at TIMESTAMP WITH TIME ZONE,
+      grace_seconds INT NOT NULL DEFAULT 10,
+      max_violations INT NOT NULL DEFAULT 2,
+      violation_action VARCHAR(32) NOT NULL DEFAULT 'force_submit',
+      questions_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_by VARCHAR(64),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS exam_live_sessions (
+      id VARCHAR(64) PRIMARY KEY,
+      exam_id VARCHAR(64) REFERENCES supervised_exams(id) ON DELETE CASCADE,
+      user_id VARCHAR(64),
+      student_name VARCHAR(120),
+      student_email VARCHAR(255),
+      status VARCHAR(32) NOT NULL DEFAULT 'in_progress',
+      violation_count INT NOT NULL DEFAULT 0,
+      violation_logs JSONB NOT NULL DEFAULT '[]'::jsonb,
+      teacher_warning_message TEXT,
+      answered_count INT NOT NULL DEFAULT 0,
+      total_questions INT NOT NULL DEFAULT 0,
+      current_answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+      score NUMERIC(5, 2) NOT NULL DEFAULT 0.0,
+      ai_feedback TEXT,
+      started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      submitted_at TIMESTAMP WITH TIME ZONE,
+      last_heartbeat_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS curriculum_sets (
+      id VARCHAR(64) PRIMARY KEY,
+      version_code VARCHAR(32) NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      is_active BOOLEAN NOT NULL DEFAULT FALSE,
+      payload_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+      updated_by VARCHAR(64),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+
+async function logAudit(pool, actor, action, targetType, targetId, details = {}) {
+  if (!process.env.DATABASE_URL) return;
+  try {
+    await pool.query(
+      `INSERT INTO system_audit_logs (actor_id, actor_email, actor_role, action, target_type, target_id, details)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        actor?.id || 'system',
+        actor?.email || 'system',
+        actor?.role || 'system',
+        action,
+        targetType,
+        String(targetId || ''),
+        JSON.stringify(details || {}),
+      ]
+    );
+  } catch (err) {
+    console.warn('⚠️ Không thể ghi audit log:', err.message);
+  }
+}
+
+async function getActiveAiConfig(pool) {
+  let dbKey = '';
+  let dbModel = '';
+  let dbProvider = 'gemini';
+  if (process.env.DATABASE_URL) {
+    try {
+      const res = await pool.query(
+        `SELECT key, value FROM system_configs WHERE key IN ('ai_api_key', 'ai_model', 'ai_provider')`
+      );
+      for (const row of res.rows) {
+        if (row.key === 'ai_api_key') dbKey = (row.value || '').trim();
+        if (row.key === 'ai_model') dbModel = (row.value || '').trim();
+        if (row.key === 'ai_provider') dbProvider = (row.value || 'gemini').trim();
+      }
+    } catch (_) {}
+  }
+  const apiKey = dbKey || process.env.GEMINI_API_KEY || process.env.AI_API_KEY || '';
+  const model = dbModel || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  return {
+    provider: dbProvider || 'gemini',
+    apiKey: apiKey.trim(),
+    model: model.trim(),
+    source: dbKey ? 'database_admin_config' : (apiKey ? 'environment_variable' : 'unconfigured'),
+  };
+}
+
+async function callGeminiWithFallback({
+  apiKey,
+  preferredModel,
+  systemInstruction,
+  userPrompt,
+  imageBase64,
+  mimeType,
+}) {
+  if (!apiKey) {
+    return { ok: false, error: 'Chưa cấu hình khóa API Key cho AI.' };
+  }
+
+  const modelsToTry = Array.from(
+    new Set([
+      preferredModel || 'gemini-2.5-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+    ])
+  );
+
+  const userParts = [{ text: userPrompt }];
+  if (imageBase64 && typeof imageBase64 === 'string' && imageBase64.trim().length > 0) {
+    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '').trim();
+    userParts.push({
+      inline_data: {
+        mime_type: mimeType || 'image/jpeg',
+        data: cleanBase64,
+      },
+    });
+  }
+
+  let lastError = 'Không thể kết nối tới dịch vụ AI.';
+  for (const modelName of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: systemInstruction
+            ? { parts: [{ text: systemInstruction }] }
+            : undefined,
+          contents: [{ parts: userParts }],
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (text) {
+          return { ok: true, text, modelUsed: modelName };
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        lastError = errData?.error?.message || `HTTP ${res.status}`;
+      }
+    } catch (err) {
+      lastError = err.message;
+    }
+  }
+
+  return { ok: false, error: lastError };
+}
+
+/**
+ * Kiểm tra xem học viên có đang ở trong Phòng thi có giám sát hay không.
+ * Nếu có -> Khóa toàn bộ AI Chatbot & Dịch thuật để chống gian lận.
+ */
+async function checkStudentExamLock(pool, userId) {
+  if (!process.env.DATABASE_URL || !userId) return null;
+  try {
+    const res = await pool.query(
+      `SELECT s.id, s.exam_id, e.title
+       FROM exam_live_sessions s
+       JOIN supervised_exams e ON e.id = s.exam_id
+       WHERE s.user_id = $1 AND s.status IN ('in_progress', 'warning_out_of_app')
+       ORDER BY s.started_at DESC LIMIT 1`,
+      [userId]
+    );
+    if (res.rows.length > 0) {
+      return res.rows[0];
+    }
+  } catch (_) {}
+  return null;
+}
+
+/**
+ * Tính điểm bài thi dựa trên danh sách câu hỏi và đáp án hiện tại của học sinh
+ */
+function calculateSupervisedExamScore(questionsJson, currentAnswersMap) {
+  const questions = Array.isArray(questionsJson) ? questionsJson : [];
+  if (questions.length === 0) {
+    return { correctCount: 0, totalQuestions: 0, score: 0.0 };
+  }
+  const answers = currentAnswersMap && typeof currentAnswersMap === 'object' ? currentAnswersMap : {};
+  let correctCount = 0;
+  questions.forEach((q, idx) => {
+    const qId = String(q.id || idx);
+    const chosen = answers[qId] !== undefined ? Number(answers[qId]) : (answers[String(idx)] !== undefined ? Number(answers[String(idx)]) : -1);
+    const correctIdx = Number(q.correctIndex ?? q.correct_index ?? 0);
+    if (chosen === correctIdx) {
+      correctCount += 1;
+    }
+  });
+  const score = Number(((correctCount / questions.length) * 10).toFixed(2));
+  return { correctCount, totalQuestions: questions.length, score };
+}
+
+function registerRbacProctorAiRoutes(app, pool, { authenticateToken, hashPassword }) {
+  // Middleware lấy thông tin user mới nhất từ DB (kiểm tra cả trạng thái bị khóa is_locked và role thực tế)
+  async function attachFreshUser(req, res, next) {
+    if (!process.env.DATABASE_URL) {
+      return next();
+    }
+    try {
+      const result = await pool.query(
+        'SELECT id, email, display_name, role, is_locked, locked_reason FROM users WHERE id = $1',
+        [req.user.id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(401).json({ error: 'Tài khoản không tồn tại hoặc đã bị xóa khỏi hệ thống.' });
+      }
+      const dbUser = result.rows[0];
+      if (dbUser.is_locked) {
+        return res.status(403).json({
+          error: `Tài khoản của bạn đã bị khóa bởi Quản trị viên. Lý do: ${dbUser.locked_reason || 'Vi phạm quy định hệ thống.'}`,
+          isLocked: true,
+          lockedReason: dbUser.locked_reason || 'Vi phạm quy định hệ thống.',
+        });
+      }
+      req.user = {
+        ...req.user,
+        id: dbUser.id,
+        email: dbUser.email,
+        displayName: dbUser.display_name,
+        role: dbUser.role || 'student',
+      };
+      next();
+    } catch (err) {
+      res.status(500).json({ error: 'Lỗi xác thực quyền người dùng: ' + err.message });
+    }
+  }
+
+  function requireRoles(allowedRoles) {
+    return [
+      authenticateToken,
+      attachFreshUser,
+      (req, res, next) => {
+        const userRole = req.user?.role || 'student';
+        if (!allowedRoles.includes(userRole)) {
+          return res.status(403).json({
+            error: `Quyền truy cập bị từ chối. Chức năng này yêu cầu vai trò: ${allowedRoles.join(' hoặc ')}. Vai trò hiện tại của bạn: ${userRole}.`,
+          });
+        }
+        next();
+      },
+    ];
+  }
+
+  // ---------------------------------------------------------------------------
+  // 1. Chuyển đổi vai trò nhanh phục vụ Kiểm thử / Khởi tạo Admin & Giáo viên
+  // ---------------------------------------------------------------------------
+  app.post('/api/auth/switch-role', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu chưa sẵn sàng.' });
+    }
+    const { targetRole } = req.body;
+    const validRoles = ['student', 'teacher', 'admin'];
+    if (!validRoles.includes(targetRole)) {
+      return res.status(400).json({ error: 'Vai trò không hợp lệ (chỉ chấp nhận student, teacher, admin).' });
+    }
+
+    try {
+      await pool.query(
+        'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+        [targetRole, req.user.id]
+      );
+      await logAudit(pool, req.user, 'SWITCH_ROLE', 'user', req.user.id, {
+        fromRole: req.user.role,
+        toRole: targetRole,
+      });
+      res.json({
+        message: `Đã chuyển vai trò tài khoản sang "${targetRole.toUpperCase()}" thành công.`,
+        role: targetRole,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Không thể cập nhật vai trò: ' + err.message });
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // 2. Cấu hình AI & Trợ lý Cá nhân AI Chatbot Đa Vai Trò (Student / Teacher / Admin)
+  // ---------------------------------------------------------------------------
+  app.get('/api/admin/ai-config', requireRoles(['admin', 'teacher']), async (req, res) => {
+    const config = await getActiveAiConfig(pool);
+    const maskedKey = config.apiKey
+      ? config.apiKey.slice(0, 6) + '••••••••••••••••' + config.apiKey.slice(-4)
+      : '';
+    res.json({
+      provider: config.provider,
+      model: config.model,
+      hasApiKey: Boolean(config.apiKey),
+      maskedApiKey: maskedKey,
+      source: config.source,
+    });
+  });
+
+  app.put('/api/admin/ai-config', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Cơ sở dữ liệu chưa sẵn sàng.' });
+    }
+    const { apiKey, model, provider, testConnection } = req.body;
+    try {
+      if (apiKey !== undefined && String(apiKey).trim().length > 0) {
+        await pool.query(
+          `INSERT INTO system_configs (key, value, updated_at)
+           VALUES ('ai_api_key', $1, CURRENT_TIMESTAMP)
+           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
+          [String(apiKey).trim()]
+        );
+      }
+      if (model !== undefined && String(model).trim().length > 0) {
+        await pool.query(
+          `INSERT INTO system_configs (key, value, updated_at)
+           VALUES ('ai_model', $1, CURRENT_TIMESTAMP)
+           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
+          [String(model).trim()]
+        );
+      }
+      if (provider !== undefined && String(provider).trim().length > 0) {
+        await pool.query(
+          `INSERT INTO system_configs (key, value, updated_at)
+           VALUES ('ai_provider', $1, CURRENT_TIMESTAMP)
+           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
+          [String(provider).trim()]
+        );
+      }
+
+      const activeConfig = await getActiveAiConfig(pool);
+      let connectionVerified = false;
+      let testReply = '';
+
+      if (testConnection && activeConfig.apiKey) {
+        const testRes = await callGeminiWithFallback({
+          apiKey: activeConfig.apiKey,
+          preferredModel: activeConfig.model,
+          systemInstruction: 'Trả lời ngắn gọn bằng 1 câu tiếng Việt.',
+          userPrompt: 'Xin chào, kiểm tra kết nối hệ thống EngPass AI.',
+        });
+        connectionVerified = testRes.ok;
+        testReply = testRes.ok ? testRes.text : testRes.error;
+      }
+
+      await logAudit(pool, req.user, 'UPDATE_AI_CONFIG', 'system_config', 'ai_config', {
+        model: activeConfig.model,
+        provider: activeConfig.provider,
+        connectionVerified,
+      });
+
+      res.json({
+        message: 'Đã lưu cấu hình AI Chatbot thành công.',
+        model: activeConfig.model,
+        provider: activeConfig.provider,
+        hasApiKey: Boolean(activeConfig.apiKey),
+        connectionVerified,
+        testReply,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Lỗi lưu cấu hình AI: ' + err.message });
+    }
+  });
+
+  // Trợ lý AI Cá nhân đa vai trò (Học viên, Giáo viên, Admin)
+  app.post('/api/ai/chat', authenticateToken, attachFreshUser, async (req, res) => {
+    const { message, roleContext, mode, unitNumber, contextText } = req.body;
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Vui lòng nhập nội dung yêu cầu cho Trợ lý AI.' });
+    }
+
+    const userRole = req.user.role || 'student';
+
+    // RÀNG BUỘC 1: Khóa tuyệt đối AI khi học viên đang trong Phòng thi có giám sát
+    if (userRole === 'student') {
+      const activeExam = await checkStudentExamLock(pool, req.user.id);
+      if (activeExam) {
+        return res.status(403).json({
+          examLocked: true,
+          error: `🔒 Tính năng Trợ lý AI đang bị khóa tạm thời vì bạn đang làm bài thi có giám sát: "${activeExam.title}". Vui lòng hoàn thành và nộp bài thi trước!`,
+        });
+      }
+    }
+
+    const aiConfig = await getActiveAiConfig(pool);
+
+    // Xây dựng System Prompt & Ràng buộc riêng cho từng vai trò
+    let systemInstruction = '';
+    if (userRole === 'admin' || roleContext === 'admin') {
+      systemInstruction = `Bạn là Trợ lý Quản trị Hệ thống & Số hóa Học liệu (Admin AI Copilot) của nền tảng EngPass Tiếng Anh 12.
+Nhiệm vụ của bạn:
+1. Hỗ trợ Admin biên tập, chuẩn hóa nội dung bài học SGK mới (tách bài đọc, từ vựng kèm IPA, ngữ pháp, câu hỏi).
+2. Phân tích chất lượng dữ liệu học tập và tóm tắt nhật ký hệ thống (Audit Logs).
+RÀNG BUỘC BẮT BUỘC:
+- Mọi dữ liệu sinh ra chỉ ở trạng thái Bản nháp (Preview) để Admin kiểm duyệt trước khi áp dụng.
+- Không bao giờ tự ý thực thi lệnh xóa người dùng hay ghi đè cơ sở dữ liệu khi chưa có xác nhận của Admin.`;
+    } else if (userRole === 'teacher' || roleContext === 'teacher') {
+      systemInstruction = `Bạn là Trợ lý Soạn giảng & Chấm bài (Teacher AI Copilot) dành cho Giáo viên Tiếng Anh 12 THPT.
+Nhiệm vụ của bạn:
+1. Tự động biên soạn câu hỏi trắc nghiệm (4 đáp án A, B, C, D kèm lời giải thích chi tiết) theo đúng ma trận đề thi tốt nghiệp THPT và SGK Global Success 12.
+2. Hỗ trợ chấm bài viết, phân tích lỗi sai phổ biến của học sinh và gợi ý nhận xét sư phạm.
+3. Soạn tài liệu bổ trợ, tóm tắt ngữ pháp và từ vựng cho lớp học.
+RÀNG BUỘC BẮT BUỘC:
+- Nội dung sinh ra phải chính xác về học thuật, rõ ràng để Giáo viên duyệt và lưu vào Ngân hàng câu hỏi chỉ với 1 chạm.`;
+    } else {
+      systemInstruction = `Bạn là Gia sư AI Cá nhân (Student AI Tutor) đồng hành cùng học sinh lớp 12 ôn thi THPT Quốc gia môn Tiếng Anh (chương trình Global Success 12).
+Nhiệm vụ của bạn:
+1. Giải thích từ vựng (kèm IPA, từ loại, ví dụ), cấu trúc ngữ pháp và bài đọc hiểu dễ hiểu, súc tích.
+2. Nếu học sinh nhờ chấm câu/đoạn văn tiếng Anh (mode = "writing_check"): Hãy chấm điểm trên thang 10, chỉ rõ từng lỗi ngữ pháp/từ vựng, giải thích vì sao sai và viết lại câu hoàn chỉnh.
+3. Tư vấn lộ trình ôn tập cá nhân hóa.
+RÀNG BUỘC SƯ PHẠM BẮT BUỘC (Guardrails):
+- Áp dụng phương pháp Socratic: Hướng dẫn cách phân tích câu hỏi và loại trừ phương án nhiễu để học sinh hiểu bản chất, không làm bài hộ máy móc.
+- Chỉ trả lời các nội dung liên quan đến môn Tiếng Anh và phương pháp học tập THPT.`;
+    }
+
+    if (aiConfig.apiKey) {
+      const aiRes = await callGeminiWithFallback({
+        apiKey: aiConfig.apiKey,
+        preferredModel: aiConfig.model,
+        systemInstruction,
+        userPrompt: `[Vai trò: ${userRole.toUpperCase()} | Chế độ: ${mode || 'general'} | Unit: ${unitNumber || 'Chung'}]\nNgữ cảnh: ${contextText || 'Không có'}\n\nYêu cầu: ${message}`,
+      });
+
+      if (aiRes.ok) {
+        return res.json({
+          isAvailable: true,
+          answer: aiRes.text,
+          modelUsed: aiRes.modelUsed,
+          role: userRole,
+        });
+      }
+    }
+
+    // Fallback thông minh theo vai trò khi chưa cấu hình API Key hoặc ngoại tuyến
+    return res.json({
+      isAvailable: false,
+      isSmartFallback: true,
+      role: userRole,
+      answer: buildRoleSmartFallback(userRole, mode, message, unitNumber),
+    });
+  });
+
+  // Endpoint AI Sinh Câu hỏi Trắc nghiệm Tự động cho Giáo viên & Admin (không cần nhập thủ công)
+  app.post('/api/ai/generate-questions', requireRoles(['teacher', 'admin']), async (req, res) => {
+    const { unitNumber = 1, skill = 'grammar', difficulty = 2, count = 3, topicPrompt = '' } = req.body;
+    const safeCount = Math.min(Math.max(Number(count) || 3, 1), 10);
+    const aiConfig = await getActiveAiConfig(pool);
+
+    if (aiConfig.apiKey) {
+      const prompt = `Hãy tạo ${safeCount} câu hỏi trắc nghiệm Tiếng Anh lớp 12 (Global Success) cho Unit ${unitNumber}, kỹ năng "${skill}", độ khó ${difficulty}/3.
+Chủ đề/Yêu cầu thêm: ${topicPrompt || 'Bám sát trọng tâm thi tốt nghiệp THPT'}.
+BẮT BUỘC trả về đúng định dạng JSON Array thuần túy (không bọc markdown), mỗi phần tử có cấu trúc:
+[
+  {
+    "stem": "Nội dung câu hỏi tiếng Anh...",
+    "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
+    "correctIndex": 0,
+    "explanation": "Giải thích chi tiết bằng tiếng Việt vì sao đáp án đó đúng..."
+  }
+]`;
+
+      const aiRes = await callGeminiWithFallback({
+        apiKey: aiConfig.apiKey,
+        preferredModel: aiConfig.model,
+        systemInstruction: 'Bạn là chuyên gia ra đề thi THPT Quốc gia môn Tiếng Anh. Chỉ trả về JSON Array hợp lệ.',
+        userPrompt: prompt,
+      });
+
+      if (aiRes.ok) {
+        try {
+          const cleaned = aiRes.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const normalized = parsed.map((q, idx) => ({
+              id: `ai_q_${Date.now()}_${idx}`,
+              unitNumber: Number(unitNumber) || 1,
+              skill: String(skill || 'grammar'),
+              difficulty: Number(difficulty) || 2,
+              stem: String(q.stem || ''),
+              options: Array.isArray(q.options) && q.options.length === 4
+                ? q.options.map(String)
+                : ['A. Option 1', 'B. Option 2', 'C. Option 3', 'D. Option 4'],
+              correctIndex: Number(q.correctIndex ?? 0),
+              explanation: String(q.explanation || ''),
+            }));
+            return res.json({
+              source: 'gemini_ai',
+              questions: normalized,
+            });
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Bộ sinh câu hỏi chuẩn SGK 12 dự phòng (Built-in Question Generator)
+    const fallbackQuestions = buildGeneratedQuestionsFallback(Number(unitNumber) || 1, String(skill), Number(difficulty) || 2, safeCount, topicPrompt);
+    res.json({
+      source: 'builtin_academic_generator',
+      questions: fallbackQuestions,
+    });
+  });
+
+  // Endpoint AI Số hóa Học liệu & Sách Giáo Khoa Mới cho Admin (không cần nhập thủ công)
+  app.post('/api/ai/digitize-curriculum', requireRoles(['admin', 'teacher']), async (req, res) => {
+    const { unitNumber = 1, rawText = '', title = '' } = req.body;
+    if (!rawText || String(rawText).trim().length < 10) {
+      return res.status(400).json({ error: 'Vui lòng dán nội dung văn bản hoặc mô tả bài học từ sách mới (tối thiểu 10 ký tự).' });
+    }
+
+    const aiConfig = await getActiveAiConfig(pool);
+    if (aiConfig.apiKey) {
+      const prompt = `Hãy số hóa đoạn văn bản sách giáo khoa Tiếng Anh 12 sau đây thành cấu trúc bài học chuẩn JSON cho Unit ${unitNumber} (${title || 'Bài học mới'}):
+Nội dung gốc:
+"""
+${rawText}
+"""
+BẮT BUỘC trả về JSON Object thuần túy (không bọc markdown) theo cấu trúc:
+{
+  "unitNumber": ${Number(unitNumber) || 1},
+  "title": "Tiêu đề Unit...",
+  "readingPassage": "Đoạn văn bài đọc tiếng Anh...",
+  "translationVi": "Bản dịch tiếng Việt sát nghĩa...",
+  "grammarSummary": "Tóm tắt cấu trúc ngữ pháp trọng tâm...",
+  "vocabulary": [
+    {"english": "word", "ipa": "/.../", "meaningVi": "nghĩa tiếng Việt", "example": "Câu ví dụ"}
+  ],
+  "questions": [
+    {"stem": "Câu hỏi đọc hiểu / ngữ pháp...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "correctIndex": 0, "explanation": "Giải thích..."}
+  ]
+}`;
+
+      const aiRes = await callGeminiWithFallback({
+        apiKey: aiConfig.apiKey,
+        preferredModel: aiConfig.model,
+        systemInstruction: 'Bạn là chuyên gia số hóa sách giáo khoa Tiếng Anh THPT. Chỉ trả về JSON hợp lệ.',
+        userPrompt: prompt,
+      });
+
+      if (aiRes.ok) {
+        try {
+          const cleaned = aiRes.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleaned);
+          return res.json({
+            source: 'gemini_ai',
+            digitizedUnit: parsed,
+          });
+        } catch (_) {}
+      }
+    }
+
+    // Built-in smart text parser fallback
+    const digitized = buildSmartDigitizedCurriculum(Number(unitNumber) || 1, title, rawText);
+    res.json({
+      source: 'builtin_smart_digitizer',
+      digitizedUnit: digitized,
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 3. Trung tâm Dịch thuật Đa phương thức (Text Realtime • Voice • Ảnh chụp OCR)
+  // ---------------------------------------------------------------------------
+  app.post('/api/translate/text', authenticateToken, attachFreshUser, async (req, res) => {
+    const { text, sourceLang = 'en', targetLang = 'vi' } = req.body;
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Văn bản cần dịch không được để trống.' });
+    }
+
+    if (req.user.role === 'student') {
+      const activeExam = await checkStudentExamLock(pool, req.user.id);
+      if (activeExam) {
+        return res.status(403).json({
+          examLocked: true,
+          error: `🔒 Công cụ Dịch thuật bị khóa khi đang trong Phòng thi có giám sát: "${activeExam.title}".`,
+        });
+      }
+    }
+
+    try {
+      const gUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sourceLang)}&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(text.trim())}`;
+      const gRes = await fetch(gUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      });
+      if (gRes.ok) {
+        const data = await gRes.json();
+        if (Array.isArray(data) && Array.isArray(data[0])) {
+          const translated = data[0].map((seg) => (Array.isArray(seg) ? seg[0] : '')).join('').trim();
+          return res.json({
+            originalText: text.trim(),
+            translatedText: translated,
+            sourceLang,
+            targetLang,
+          });
+        }
+      }
+    } catch (_) {}
+
+    res.status(502).json({ error: 'Không thể kết nối dịch vụ dịch trực tuyến lúc này.' });
+  });
+
+  app.post('/api/translate/ocr', authenticateToken, attachFreshUser, async (req, res) => {
+    const { imageBase64, mimeType = 'image/jpeg', extractedText = '', sourceLang = 'en', targetLang = 'vi' } = req.body;
+
+    if (req.user.role === 'student') {
+      const activeExam = await checkStudentExamLock(pool, req.user.id);
+      if (activeExam) {
+        return res.status(403).json({
+          examLocked: true,
+          error: `🔒 Dịch bằng hình ảnh (OCR) bị khóa khi đang trong Phòng thi có giám sát: "${activeExam.title}".`,
+        });
+      }
+    }
+
+    const aiConfig = await getActiveAiConfig(pool);
+
+    // Nếu có ảnh chụp và đã cấu hình Gemini Vision API -> Quét OCR + Dịch song ngữ trực tiếp từ ảnh
+    if (imageBase64 && aiConfig.apiKey) {
+      const ocrPrompt = `Hãy đọc toàn bộ văn bản trong bức ảnh này (OCR) và dịch sang ${targetLang === 'vi' ? 'Tiếng Việt' : 'Tiếng Anh'}, đồng thời rút trích 3-5 từ vựng học thuật quan trọng.
+Trả về JSON thuần túy theo cấu trúc:
+{
+  "recognizedText": "Văn bản gốc trích xuất từ ảnh...",
+  "translatedText": "Bản dịch đầy đủ...",
+  "keyVocabulary": [
+    {"word": "...", "ipa": "/.../", "meaning": "..."}
+  ]
+}`;
+      const visionRes = await callGeminiWithFallback({
+        apiKey: aiConfig.apiKey,
+        preferredModel: aiConfig.model,
+        systemInstruction: 'Bạn là công cụ OCR và Dịch thuật học thuật chính xác. Chỉ trả về JSON.',
+        userPrompt: ocrPrompt,
+        imageBase64,
+        mimeType,
+      });
+
+      if (visionRes.ok) {
+        try {
+          const cleaned = visionRes.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleaned);
+          return res.json({
+            isSuccess: true,
+            source: 'gemini_vision_ocr',
+            recognizedText: parsed.recognizedText || '',
+            translatedText: parsed.translatedText || '',
+            keyVocabulary: Array.isArray(parsed.keyVocabulary) ? parsed.keyVocabulary : [],
+          });
+        } catch (_) {
+          return res.json({
+            isSuccess: true,
+            source: 'gemini_vision_raw',
+            recognizedText: 'Đã quét nội dung từ ảnh',
+            translatedText: visionRes.text,
+            keyVocabulary: [],
+          });
+        }
+      }
+    }
+
+    // Nếu client gửi kèm văn bản trích xuất từ trang sách / OCR cục bộ -> Dịch trực tiếp
+    if (extractedText && String(extractedText).trim().length > 0) {
+      try {
+        const gUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sourceLang)}&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(extractedText.trim())}`;
+        const gRes = await fetch(gUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (gRes.ok) {
+          const data = await gRes.json();
+          const translated = Array.isArray(data?.[0])
+            ? data[0].map((seg) => (Array.isArray(seg) ? seg[0] : '')).join('').trim()
+            : '';
+          return res.json({
+            isSuccess: true,
+            source: 'text_ocr_translation',
+            recognizedText: extractedText.trim(),
+            translatedText: translated,
+            keyVocabulary: [],
+          });
+        }
+      } catch (_) {}
+    }
+
+    res.status(400).json({
+      isSuccess: false,
+      error: 'Để quét chữ trực tiếp từ ảnh chụp Camera cần cấu hình GEMINI_API_KEY trong mục Cấu hình AI của Admin, hoặc chọn quét trang sách SGK có sẵn.',
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 4. Cổng Giáo Viên (Teacher Portal) — FULL CRUD Câu hỏi, Tài liệu, Đề thi & Giám sát
+  // ---------------------------------------------------------------------------
+
+  // 4.1. CRUD Ngân hàng câu hỏi (Teacher & Admin)
+  app.get('/api/teacher/questions', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ questions: [] });
+    const { unitNumber, skill } = req.query;
+    try {
+      let query = 'SELECT * FROM teacher_questions WHERE 1=1';
+      const params = [];
+      if (unitNumber) {
+        params.push(Number(unitNumber));
+        query += ` AND unit_number = $${params.length}`;
+      }
+      if (skill && skill !== 'all') {
+        params.push(String(skill));
+        query += ` AND skill = $${params.length}`;
+      }
+      query += ' ORDER BY created_at DESC LIMIT 200';
+      const result = await pool.query(query, params);
+      res.json({ questions: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/teacher/questions', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    try {
+      // Hỗ trợ cả thêm 1 câu hỏi hoặc thêm hàng loạt từ AI Generator
+      const items = Array.isArray(req.body.questions) ? req.body.questions : [req.body];
+      const inserted = [];
+      for (const item of items) {
+        const qId = item.id || `tq_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+        const options = Array.isArray(item.options) ? item.options : [];
+        if (!item.stem || options.length < 2) continue;
+
+        const rowRes = await pool.query(
+          `INSERT INTO teacher_questions (id, grade, unit_number, skill, difficulty, stem, options_json, correct_index, explanation, created_by)
+           VALUES ($1, 12, $2, $3, $4, $5, $6, $7, $8, $9)
+           ON CONFLICT (id) DO UPDATE SET
+             unit_number = EXCLUDED.unit_number,
+             skill = EXCLUDED.skill,
+             difficulty = EXCLUDED.difficulty,
+             stem = EXCLUDED.stem,
+             options_json = EXCLUDED.options_json,
+             correct_index = EXCLUDED.correct_index,
+             explanation = EXCLUDED.explanation,
+             updated_at = CURRENT_TIMESTAMP
+           RETURNING *`,
+          [
+            qId,
+            Number(item.unitNumber || item.unit_number || 1),
+            String(item.skill || 'grammar'),
+            Number(item.difficulty || 2),
+            String(item.stem).trim(),
+            JSON.stringify(options),
+            Number(item.correctIndex ?? item.correct_index ?? 0),
+            String(item.explanation || '').trim(),
+            req.user.id,
+          ]
+        );
+        inserted.push(rowRes.rows[0]);
+      }
+
+      await logAudit(pool, req.user, 'CREATE_QUESTIONS', 'teacher_questions', `${inserted.length}_items`, {
+        count: inserted.length,
+      });
+
+      res.status(201).json({
+        message: `Đã lưu ${inserted.length} câu hỏi vào Ngân hàng câu hỏi.`,
+        questions: inserted,
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/teacher/questions/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { unitNumber, skill, difficulty, stem, options, correctIndex, explanation } = req.body;
+    try {
+      const result = await pool.query(
+        `UPDATE teacher_questions
+         SET unit_number = COALESCE($1, unit_number),
+             skill = COALESCE($2, skill),
+             difficulty = COALESCE($3, difficulty),
+             stem = COALESCE($4, stem),
+             options_json = COALESCE($5, options_json),
+             correct_index = COALESCE($6, correct_index),
+             explanation = COALESCE($7, explanation),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $8
+         RETURNING *`,
+        [
+          unitNumber !== undefined ? Number(unitNumber) : null,
+          skill || null,
+          difficulty !== undefined ? Number(difficulty) : null,
+          stem || null,
+          Array.isArray(options) ? JSON.stringify(options) : null,
+          correctIndex !== undefined ? Number(correctIndex) : null,
+          explanation !== undefined ? String(explanation) : null,
+          id,
+        ]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Không tìm thấy câu hỏi cần sửa.' });
+      }
+      await logAudit(pool, req.user, 'UPDATE_QUESTION', 'teacher_questions', id, { stem });
+      res.json({ message: 'Đã cập nhật câu hỏi thành công.', question: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/teacher/questions/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    try {
+      await pool.query('DELETE FROM teacher_questions WHERE id = $1', [id]);
+      await logAudit(pool, req.user, 'DELETE_QUESTION', 'teacher_questions', id, {});
+      res.json({ message: 'Đã xóa câu hỏi khỏi ngân hàng đề.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 4.2. CRUD Bài học bổ trợ & Tài liệu lớp học (Materials CRUD)
+  app.get('/api/teacher/materials', authenticateToken, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ materials: [] });
+    try {
+      const result = await pool.query('SELECT * FROM teacher_materials ORDER BY created_at DESC LIMIT 100');
+      res.json({ materials: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/teacher/materials', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { unitNumber = 1, category = 'reading', title, content, vocabulary = [] } = req.body;
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Tiêu đề và nội dung tài liệu không được để trống.' });
+    }
+    try {
+      const id = `mat_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const result = await pool.query(
+        `INSERT INTO teacher_materials (id, unit_number, category, title, content, vocabulary_json, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [id, Number(unitNumber), category, title.trim(), content.trim(), JSON.stringify(vocabulary), req.user.id]
+      );
+      await logAudit(pool, req.user, 'CREATE_MATERIAL', 'teacher_materials', id, { title });
+      res.status(201).json({ message: 'Đã tạo tài liệu học tập mới.', material: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/teacher/materials/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { unitNumber, category, title, content, vocabulary } = req.body;
+    try {
+      const result = await pool.query(
+        `UPDATE teacher_materials
+         SET unit_number = COALESCE($1, unit_number),
+             category = COALESCE($2, category),
+             title = COALESCE($3, title),
+             content = COALESCE($4, content),
+             vocabulary_json = COALESCE($5, vocabulary_json),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $6
+         RETURNING *`,
+        [
+          unitNumber !== undefined ? Number(unitNumber) : null,
+          category || null,
+          title || null,
+          content || null,
+          Array.isArray(vocabulary) ? JSON.stringify(vocabulary) : null,
+          id,
+        ]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy tài liệu.' });
+      await logAudit(pool, req.user, 'UPDATE_MATERIAL', 'teacher_materials', id, { title });
+      res.json({ message: 'Đã cập nhật tài liệu thành công.', material: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/teacher/materials/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    try {
+      await pool.query('DELETE FROM teacher_materials WHERE id = $1', [id]);
+      await logAudit(pool, req.user, 'DELETE_MATERIAL', 'teacher_materials', id, {});
+      res.json({ message: 'Đã xóa tài liệu học tập.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 4.3. CRUD Kỳ thi có giám sát & Hạn nộp (Supervised Exams CRUD)
+  app.get('/api/teacher/exams', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ exams: [] });
+    try {
+      const result = await pool.query(`
+        SELECT e.*,
+          (SELECT COUNT(*)::int FROM exam_live_sessions s WHERE s.exam_id = e.id) AS total_participants,
+          (SELECT COUNT(*)::int FROM exam_live_sessions s WHERE s.exam_id = e.id AND s.status IN ('in_progress', 'warning_out_of_app')) AS active_count,
+          (SELECT COUNT(*)::int FROM exam_live_sessions s WHERE s.exam_id = e.id AND s.violation_count > 0) AS violation_students
+        FROM supervised_exams e
+        ORDER BY e.created_at DESC
+      `);
+      res.json({ exams: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/teacher/exams', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const {
+      title,
+      description = '',
+      durationMinutes = 45,
+      deadlineAt,
+      graceSeconds = 10,
+      maxViolations = 2,
+      violationAction = 'force_submit',
+      questions = [],
+    } = req.body;
+
+    if (!title || String(title).trim().length === 0) {
+      return res.status(400).json({ error: 'Vui lòng nhập tiêu đề kỳ thi có giám sát.' });
+    }
+
+    try {
+      const examId = `sexam_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const finalQuestions = Array.isArray(questions) && questions.length > 0
+        ? questions
+        : buildGeneratedQuestionsFallback(1, 'grammar', 2, 10, title);
+
+      const result = await pool.query(
+        `INSERT INTO supervised_exams
+          (id, title, description, duration_minutes, deadline_at, grace_seconds, max_violations, violation_action, questions_json, is_active, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10)
+         RETURNING *`,
+        [
+          examId,
+          String(title).trim(),
+          String(description || '').trim(),
+          Number(durationMinutes) || 45,
+          deadlineAt ? new Date(deadlineAt).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString(),
+          Number(graceSeconds) || 10,
+          Number(maxViolations) || 2,
+          violationAction === 'invalidate' ? 'invalidate' : 'force_submit',
+          JSON.stringify(finalQuestions),
+          req.user.id,
+        ]
+      );
+
+      await logAudit(pool, req.user, 'CREATE_SUPERVISED_EXAM', 'supervised_exams', examId, {
+        title,
+        graceSeconds,
+        maxViolations,
+      });
+
+      res.status(201).json({
+        message: 'Đã tạo kỳ thi có giám sát thành công.',
+        exam: result.rows[0],
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/teacher/exams/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { title, description, durationMinutes, deadlineAt, graceSeconds, maxViolations, violationAction, isActive, questions } = req.body;
+    try {
+      const result = await pool.query(
+        `UPDATE supervised_exams
+         SET title = COALESCE($1, title),
+             description = COALESCE($2, description),
+             duration_minutes = COALESCE($3, duration_minutes),
+             deadline_at = COALESCE($4, deadline_at),
+             grace_seconds = COALESCE($5, grace_seconds),
+             max_violations = COALESCE($6, max_violations),
+             violation_action = COALESCE($7, violation_action),
+             is_active = COALESCE($8, is_active),
+             questions_json = COALESCE($9, questions_json),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $10
+         RETURNING *`,
+        [
+          title || null,
+          description !== undefined ? description : null,
+          durationMinutes !== undefined ? Number(durationMinutes) : null,
+          deadlineAt ? new Date(deadlineAt).toISOString() : null,
+          graceSeconds !== undefined ? Number(graceSeconds) : null,
+          maxViolations !== undefined ? Number(maxViolations) : null,
+          violationAction || null,
+          isActive !== undefined ? Boolean(isActive) : null,
+          Array.isArray(questions) ? JSON.stringify(questions) : null,
+          id,
+        ]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy kỳ thi.' });
+      await logAudit(pool, req.user, 'UPDATE_SUPERVISED_EXAM', 'supervised_exams', id, { title, isActive });
+      res.json({ message: 'Đã cập nhật cấu hình kỳ thi.', exam: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/teacher/exams/:id', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    try {
+      await pool.query('DELETE FROM supervised_exams WHERE id = $1', [id]);
+      await logAudit(pool, req.user, 'DELETE_SUPERVISED_EXAM', 'supervised_exams', id, {});
+      res.json({ message: 'Đã xóa kỳ thi có giám sát.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 4.4. Bảng Giám sát Phòng thi Trực tiếp (Live Proctoring Dashboard) & Can thiệp của Giáo viên
+  app.get('/api/teacher/exams/:examId/live-sessions', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ sessions: [] });
+    const { examId } = req.params;
+    try {
+      const examRes = await pool.query('SELECT * FROM supervised_exams WHERE id = $1', [examId]);
+      const sessionsRes = await pool.query(
+        'SELECT * FROM exam_live_sessions WHERE exam_id = $1 ORDER BY last_heartbeat_at DESC',
+        [examId]
+      );
+      res.json({
+        exam: examRes.rows[0] || null,
+        sessions: sessionsRes.rows,
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/teacher/exams/:examId/sessions/:sessionId/action', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { examId, sessionId } = req.params;
+    const { action, message, reason } = req.body;
+
+    try {
+      const sessionRes = await pool.query(
+        'SELECT * FROM exam_live_sessions WHERE id = $1 AND exam_id = $2',
+        [sessionId, examId]
+      );
+      if (sessionRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Không tìm thấy phiên thi của học sinh.' });
+      }
+      const session = sessionRes.rows[0];
+      const examRes = await pool.query('SELECT * FROM supervised_exams WHERE id = $1', [examId]);
+      const exam = examRes.rows[0];
+
+      if (action === 'warn') {
+        const warnMsg = message || 'Giáo viên nhắc nhở: Hệ thống phát hiện dấu hiệu mất tập trung. Vui lòng tập trung làm bài nghiêm túc!';
+        const updated = await pool.query(
+          `UPDATE exam_live_sessions
+           SET teacher_warning_message = $1, last_heartbeat_at = CURRENT_TIMESTAMP
+           WHERE id = $2 RETURNING *`,
+          [warnMsg, sessionId]
+        );
+        await logAudit(pool, req.user, 'PROCTOR_WARN_STUDENT', 'exam_live_sessions', sessionId, { warnMsg });
+        return res.json({ message: 'Đã gửi cảnh báo trực tiếp tới màn hình học sinh.', session: updated.rows[0] });
+      }
+
+      if (action === 'force_submit') {
+        const { score } = calculateSupervisedExamScore(exam?.questions_json, session.current_answers);
+        const updated = await pool.query(
+          `UPDATE exam_live_sessions
+           SET status = 'force_submitted_teacher',
+               score = $1,
+               teacher_warning_message = $2,
+               submitted_at = CURRENT_TIMESTAMP,
+               last_heartbeat_at = CURRENT_TIMESTAMP
+           WHERE id = $3 RETURNING *`,
+          [
+            score,
+            reason || 'Giáo viên đã chủ động thu bài thi của bạn do phát hiện hành vi khả nghi.',
+            sessionId,
+          ]
+        );
+        await logAudit(pool, req.user, 'PROCTOR_FORCE_SUBMIT', 'exam_live_sessions', sessionId, { score, reason });
+        return res.json({ message: 'Đã thu bài của học sinh ngay lập tức.', session: updated.rows[0] });
+      }
+
+      if (action === 'invalidate') {
+        const updated = await pool.query(
+          `UPDATE exam_live_sessions
+           SET status = 'invalidated',
+               score = 0,
+               teacher_warning_message = $1,
+               submitted_at = CURRENT_TIMESTAMP,
+               last_heartbeat_at = CURRENT_TIMESTAMP
+           WHERE id = $2 RETURNING *`,
+          [
+            reason || 'Bài thi bị hủy kết quả do vi phạm quy chế phòng thi (thoát ứng dụng / sao chép tài liệu).',
+            sessionId,
+          ]
+        );
+        await logAudit(pool, req.user, 'PROCTOR_INVALIDATE_EXAM', 'exam_live_sessions', sessionId, { reason });
+        return res.json({ message: 'Đã hủy kết quả bài thi của học sinh vi phạm.', session: updated.rows[0] });
+      }
+
+      if (action === 'reset_violation') {
+        const updated = await pool.query(
+          `UPDATE exam_live_sessions
+           SET status = 'in_progress',
+               violation_count = 0,
+               teacher_warning_message = 'Giáo viên đã xác nhận sự cố kỹ thuật và cho phép bạn tiếp tục làm bài.',
+               submitted_at = NULL,
+               last_heartbeat_at = CURRENT_TIMESTAMP
+           WHERE id = $1 RETURNING *`,
+          [sessionId]
+        );
+        await logAudit(pool, req.user, 'PROCTOR_RESET_VIOLATION', 'exam_live_sessions', sessionId, {});
+        return res.json({ message: 'Đã xóa cảnh báo và cho phép học sinh tiếp tục làm bài.', session: updated.rows[0] });
+      }
+
+      res.status(400).json({ error: 'Hành động giám sát không hợp lệ.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 4.5. Thống kê danh sách học viên cho Giáo viên
+  app.get('/api/teacher/students', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ students: [] });
+    try {
+      const result = await pool.query(`
+        SELECT u.id, u.email, u.display_name, u.role, u.is_locked, u.created_at,
+               COALESCE(p.target_score, 7.0) AS target_score,
+               COALESCE(p.current_streak, 0) AS streak,
+               COALESCE((SELECT SUM(xp_earned) FROM daily_stats d WHERE d.user_id = u.id), p.total_xp, 0)::int AS total_xp,
+               (SELECT COUNT(*)::int FROM exam_live_sessions s WHERE s.user_id = u.id) AS supervised_exams_taken
+        FROM users u
+        LEFT JOIN user_profiles p ON p.user_id = u.id
+        WHERE u.role = 'student'
+        ORDER BY total_xp DESC LIMIT 100
+      `);
+      res.json({ students: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // 5. Luồng Học sinh làm bài thi có giám sát (Anti-Cheat 10s Countdown & Deadline)
+  // ---------------------------------------------------------------------------
+  app.get('/api/exams/supervised', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ exams: [] });
+    try {
+      const result = await pool.query(`
+        SELECT e.id, e.title, e.description, e.duration_minutes, e.deadline_at,
+               e.grace_seconds, e.max_violations, e.violation_action, e.is_active,
+               jsonb_array_length(e.questions_json) AS question_count,
+               (SELECT row_to_json(s) FROM (
+                  SELECT id, status, score, violation_count, started_at, submitted_at
+                  FROM exam_live_sessions
+                  WHERE exam_id = e.id AND user_id = $1
+                  ORDER BY started_at DESC LIMIT 1
+               ) s) AS my_session
+        FROM supervised_exams e
+        WHERE e.is_active = TRUE
+        ORDER BY e.created_at DESC
+      `, [req.user.id]);
+      res.json({ exams: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/exams/supervised/:examId/start', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { examId } = req.params;
+    try {
+      const examRes = await pool.query('SELECT * FROM supervised_exams WHERE id = $1 AND is_active = TRUE', [examId]);
+      if (examRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Kỳ thi không tồn tại hoặc đã đóng.' });
+      }
+      const exam = examRes.rows[0];
+      const questions = Array.isArray(exam.questions_json) ? exam.questions_json : [];
+
+      // Kiểm tra xem học viên đã có phiên đang làm dở chưa
+      const existingRes = await pool.query(
+        `SELECT * FROM exam_live_sessions WHERE exam_id = $1 AND user_id = $2 ORDER BY started_at DESC LIMIT 1`,
+        [examId, req.user.id]
+      );
+
+      if (existingRes.rows.length > 0) {
+        const existing = existingRes.rows[0];
+        if (['in_progress', 'warning_out_of_app'].includes(existing.status)) {
+          return res.json({
+            exam,
+            session: existing,
+            resumed: true,
+          });
+        }
+      }
+
+      const sessionId = `ses_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const newSessionRes = await pool.query(
+        `INSERT INTO exam_live_sessions
+          (id, exam_id, user_id, student_name, student_email, status, total_questions)
+         VALUES ($1, $2, $3, $4, $5, 'in_progress', $6)
+         RETURNING *`,
+        [
+          sessionId,
+          examId,
+          req.user.id,
+          req.user.displayName || 'Học viên',
+          req.user.email || '',
+          questions.length,
+        ]
+      );
+
+      res.status(201).json({
+        exam,
+        session: newSessionRes.rows[0],
+        resumed: false,
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Heartbeat & Báo cáo sự kiện rời ứng dụng (Anti-cheat 10s enforcement)
+  app.post('/api/exams/supervised/:examId/heartbeat', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { examId } = req.params;
+    const {
+      sessionId,
+      currentAnswers = {},
+      answeredCount = 0,
+      eventType = 'heartbeat', // 'heartbeat' | 'app_backgrounded' | 'app_resumed' | 'timeout_10s_exceeded'
+      outOfAppSeconds = 0,
+      detail = '',
+    } = req.body;
+
+    try {
+      const examRes = await pool.query('SELECT * FROM supervised_exams WHERE id = $1', [examId]);
+      if (examRes.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy kỳ thi.' });
+      const exam = examRes.rows[0];
+
+      const sessionRes = await pool.query(
+        'SELECT * FROM exam_live_sessions WHERE id = $1 AND exam_id = $2 AND user_id = $3',
+        [sessionId, examId, req.user.id]
+      );
+      if (sessionRes.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy phiên làm bài.' });
+      const session = sessionRes.rows[0];
+
+      // Nếu Giáo viên đã thu bài hoặc hủy bài từ xa -> Báo ngay cho máy học sinh dừng làm bài
+      if (!['in_progress', 'warning_out_of_app'].includes(session.status)) {
+        return res.json({
+          forceTerminated: true,
+          status: session.status,
+          score: Number(session.score || 0),
+          message: session.teacher_warning_message || 'Phiên làm bài của bạn đã kết thúc theo lệnh của Giáo viên giám sát.',
+          session,
+        });
+      }
+
+      let newViolationCount = Number(session.violation_count || 0);
+      const logs = Array.isArray(session.violation_logs) ? [...session.violation_logs] : [];
+      let newStatus = 'in_progress';
+      let autoTerminate = false;
+      let terminateReason = '';
+
+      const graceLimit = Number(exam.grace_seconds || 10);
+      const maxViolations = Number(exam.max_violations || 2);
+
+      if (eventType === 'app_backgrounded') {
+        newViolationCount += 1;
+        newStatus = 'warning_out_of_app';
+        logs.push({
+          type: 'OUT_OF_APP',
+          timestamp: new Date().toISOString(),
+          detail: detail || 'Học sinh thoát ứng dụng / chuyển cửa sổ hoặc mở màn hình đa nhiệm.',
+          violationNumber: newViolationCount,
+        });
+        if (newViolationCount > maxViolations) {
+          autoTerminate = true;
+          terminateReason = `Hệ thống tự động xử lý: Bạn đã rời khỏi màn hình phòng thi ${newViolationCount} lần (vượt quá giới hạn cho phép ${maxViolations} lần).`;
+        }
+      } else if (eventType === 'timeout_10s_exceeded' || Number(outOfAppSeconds) >= graceLimit) {
+        newViolationCount += 1;
+        logs.push({
+          type: 'EXCEEDED_GRACE_TIME',
+          timestamp: new Date().toISOString(),
+          outOfAppSeconds: Number(outOfAppSeconds) || graceLimit,
+          detail: `Rời khỏi ứng dụng quá ${graceLimit} giây không quay lại.`,
+        });
+        autoTerminate = true;
+        terminateReason = `Hệ thống tự động xử lý: Bạn đã rời khỏi ứng dụng quá ${graceLimit} giây quy định của phòng thi.`;
+      } else if (eventType === 'app_resumed') {
+        logs.push({
+          type: 'RETURNED_TO_APP',
+          timestamp: new Date().toISOString(),
+          outOfAppSeconds: Number(outOfAppSeconds) || 0,
+        });
+      }
+
+      const mergedAnswers = (currentAnswers && Object.keys(currentAnswers).length > 0)
+        ? currentAnswers
+        : session.current_answers;
+
+      if (autoTerminate) {
+        const finalAction = exam.violation_action === 'invalidate' ? 'invalidated' : 'force_submitted_auto';
+        const { score } = finalAction === 'invalidated'
+          ? { score: 0.0 }
+          : calculateSupervisedExamScore(exam.questions_json, mergedAnswers);
+
+        const updated = await pool.query(
+          `UPDATE exam_live_sessions
+           SET status = $1,
+               violation_count = $2,
+               violation_logs = $3,
+               current_answers = $4,
+               answered_count = $5,
+               score = $6,
+               teacher_warning_message = $7,
+               submitted_at = CURRENT_TIMESTAMP,
+               last_heartbeat_at = CURRENT_TIMESTAMP
+           WHERE id = $8 RETURNING *`,
+          [
+            finalAction,
+            newViolationCount,
+            JSON.stringify(logs),
+            JSON.stringify(mergedAnswers),
+            Number(answeredCount) || 0,
+            score,
+            terminateReason,
+            sessionId,
+          ]
+        );
+
+        await logAudit(pool, req.user, 'AUTO_ANTI_CHEAT_TERMINATE', 'exam_live_sessions', sessionId, {
+          finalAction,
+          violationCount: newViolationCount,
+          outOfAppSeconds,
+          score,
+        });
+
+        return res.json({
+          forceTerminated: true,
+          status: finalAction,
+          score,
+          message: terminateReason,
+          session: updated.rows[0],
+        });
+      }
+
+      const updated = await pool.query(
+        `UPDATE exam_live_sessions
+         SET status = $1,
+             violation_count = $2,
+             violation_logs = $3,
+             current_answers = $4,
+             answered_count = $5,
+             last_heartbeat_at = CURRENT_TIMESTAMP
+         WHERE id = $6 RETURNING *`,
+        [
+          newStatus,
+          newViolationCount,
+          JSON.stringify(logs),
+          JSON.stringify(mergedAnswers),
+          Number(answeredCount) || 0,
+          sessionId,
+        ]
+      );
+
+      res.json({
+        forceTerminated: false,
+        status: newStatus,
+        violationCount: newViolationCount,
+        maxViolations,
+        graceSeconds: graceLimit,
+        teacherWarningMessage: updated.rows[0].teacher_warning_message || null,
+        session: updated.rows[0],
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Nộp bài thi có giám sát (Kiểm tra đúng hạn vs trễ hạn)
+  app.post('/api/exams/supervised/:examId/submit', authenticateToken, attachFreshUser, async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { examId } = req.params;
+    const { sessionId, answers = {}, isAutoForceSubmit = false, autoReason = '' } = req.body;
+
+    try {
+      const examRes = await pool.query('SELECT * FROM supervised_exams WHERE id = $1', [examId]);
+      if (examRes.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy kỳ thi.' });
+      const exam = examRes.rows[0];
+
+      const sessionRes = await pool.query(
+        'SELECT * FROM exam_live_sessions WHERE id = $1 AND exam_id = $2 AND user_id = $3',
+        [sessionId, examId, req.user.id]
+      );
+      if (sessionRes.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy phiên thi.' });
+      const session = sessionRes.rows[0];
+
+      // Nếu đã bị giáo viên thu bài / hủy trước đó thì trả về kết quả đó
+      if (['force_submitted_teacher', 'invalidated'].includes(session.status)) {
+        return res.json({
+          message: session.teacher_warning_message || 'Bài thi đã được xử lý bởi Giáo viên.',
+          session,
+          score: Number(session.score || 0),
+        });
+      }
+
+      const finalAnswers = Object.keys(answers).length > 0 ? answers : session.current_answers;
+      const { correctCount, totalQuestions, score } = calculateSupervisedExamScore(exam.questions_json, finalAnswers);
+
+      const now = new Date();
+      const deadline = exam.deadline_at ? new Date(exam.deadline_at) : null;
+      const isLate = deadline ? now > deadline : false;
+
+      let finalStatus = isLate ? 'submitted_late' : 'submitted_on_time';
+      if (isAutoForceSubmit) {
+        finalStatus = exam.violation_action === 'invalidate' ? 'invalidated' : 'force_submitted_auto';
+      }
+      const finalScore = finalStatus === 'invalidated' ? 0.0 : score;
+
+      const updated = await pool.query(
+        `UPDATE exam_live_sessions
+         SET status = $1,
+             current_answers = $2,
+             answered_count = $3,
+             total_questions = $4,
+             score = $5,
+             teacher_warning_message = COALESCE(NULLIF($6, ''), teacher_warning_message),
+             submitted_at = CURRENT_TIMESTAMP,
+             last_heartbeat_at = CURRENT_TIMESTAMP
+         WHERE id = $7 RETURNING *`,
+        [
+          finalStatus,
+          JSON.stringify(finalAnswers),
+          Object.keys(finalAnswers).length,
+          totalQuestions,
+          finalScore,
+          autoReason,
+          sessionId,
+        ]
+      );
+
+      res.json({
+        message: finalStatus === 'submitted_on_time'
+          ? 'Nộp bài đúng hạn thành công!'
+          : (finalStatus === 'submitted_late'
+            ? 'Đã nộp bài (Ghi nhận nộp trễ hạn so với quy định).'
+            : (autoReason || 'Bài thi đã được tự động thu hồi do vi phạm quy chế phòng thi.')),
+        status: finalStatus,
+        correctCount,
+        totalQuestions,
+        score: finalScore,
+        isLate,
+        session: updated.rows[0],
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // 6. Trung Tâm Quản Trị Admin (Admin Portal) — Users CRUD, Lock/RBAC, Curriculum Replacement & Audit Logs
+  // ---------------------------------------------------------------------------
+  app.get('/api/admin/overview', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({});
+    try {
+      const usersCount = await pool.query(`
+        SELECT
+          COUNT(*)::int AS total_users,
+          COUNT(*) FILTER (WHERE role = 'student')::int AS student_count,
+          COUNT(*) FILTER (WHERE role = 'teacher')::int AS teacher_count,
+          COUNT(*) FILTER (WHERE role = 'admin')::int AS admin_count,
+          COUNT(*) FILTER (WHERE is_locked = TRUE)::int AS locked_count
+        FROM users
+      `);
+      const examsCount = await pool.query(`
+        SELECT
+          COUNT(*)::int AS total_exams,
+          (SELECT COUNT(*)::int FROM exam_live_sessions WHERE violation_count > 0) AS total_violations
+        FROM supervised_exams
+      `);
+      const curriculumCount = await pool.query(`
+        SELECT COUNT(*)::int AS total_versions,
+               (SELECT title FROM curriculum_sets WHERE is_active = TRUE LIMIT 1) AS active_curriculum
+        FROM curriculum_sets
+      `);
+
+      res.json({
+        users: usersCount.rows[0],
+        exams: examsCount.rows[0],
+        curriculums: curriculumCount.rows[0],
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 6.1. CRUD Người dùng & Phân quyền + Khóa tài khoản
+  app.get('/api/admin/users', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ users: [] });
+    const { role, search } = req.query;
+    try {
+      let query = `
+        SELECT id, email, display_name, role, auth_provider, email_verified, is_locked, locked_reason, created_at
+        FROM users WHERE 1=1
+      `;
+      const params = [];
+      if (role && role !== 'all') {
+        params.push(String(role));
+        query += ` AND role = $${params.length}`;
+      }
+      if (search && String(search).trim().length > 0) {
+        params.push(`%${String(search).trim().toLowerCase()}%`);
+        query += ` AND (LOWER(email) LIKE $${params.length} OR LOWER(display_name) LIKE $${params.length})`;
+      }
+      query += ' ORDER BY created_at DESC LIMIT 200';
+      const result = await pool.query(query, params);
+      res.json({ users: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/users', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { email, password, displayName, role = 'student' } = req.body;
+    if (!email || !password || String(password).length < 6) {
+      return res.status(400).json({ error: 'Vui lòng nhập email hợp lệ và mật khẩu tối thiểu 6 ký tự.' });
+    }
+    const validRoles = ['student', 'teacher', 'admin'];
+    const finalRole = validRoles.includes(role) ? role : 'student';
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    try {
+      const userId = `usr_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const { hash, salt } = hashPassword(password);
+      const result = await pool.query(
+        `INSERT INTO users (id, email, password_hash, password_salt, display_name, auth_provider, role, email_verified)
+         VALUES ($1, $2, $3, $4, $5, 'email', $6, TRUE)
+         RETURNING id, email, display_name, role, is_locked, created_at`,
+        [userId, cleanEmail, hash, salt, (displayName || cleanEmail.split('@')[0]).trim(), finalRole]
+      );
+      await pool.query(
+        `INSERT INTO user_profiles (user_id, daily_minutes, current_streak, total_xp)
+         VALUES ($1, 20, 0, 0) ON CONFLICT (user_id) DO NOTHING`,
+        [userId]
+      );
+      await logAudit(pool, req.user, 'ADMIN_CREATE_USER', 'users', userId, { email: cleanEmail, role: finalRole });
+      res.status(201).json({
+        message: `Đã tạo tài khoản ${finalRole.toUpperCase()} thành công.`,
+        user: result.rows[0],
+      });
+    } catch (err) {
+      if (err.code === '23505') {
+        return res.status(409).json({ error: 'Email này đã tồn tại trong hệ thống.' });
+      }
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/admin/users/:id', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { displayName, role, isLocked, lockedReason } = req.body;
+    try {
+      const result = await pool.query(
+        `UPDATE users
+         SET display_name = COALESCE($1, display_name),
+             role = COALESCE($2, role),
+             is_locked = COALESCE($3, is_locked),
+             locked_reason = COALESCE($4, locked_reason),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $5
+         RETURNING id, email, display_name, role, is_locked, locked_reason, created_at`,
+        [
+          displayName || null,
+          role && ['student', 'teacher', 'admin'].includes(role) ? role : null,
+          isLocked !== undefined ? Boolean(isLocked) : null,
+          lockedReason !== undefined ? String(lockedReason) : null,
+          id,
+        ]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
+      await logAudit(pool, req.user, 'ADMIN_UPDATE_USER', 'users', id, { role, isLocked, lockedReason });
+      res.json({ message: 'Đã cập nhật thông tin & quyền người dùng.', user: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/admin/users/:id', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    if (id === req.user.id) {
+      return res.status(400).json({ error: 'Không thể tự xóa tài khoản Admin đang đăng nhập.' });
+    }
+    try {
+      await pool.query('DELETE FROM users WHERE id = $1', [id]);
+      await logAudit(pool, req.user, 'ADMIN_DELETE_USER', 'users', id, {});
+      res.json({ message: 'Đã xóa tài khoản người dùng khỏi hệ thống.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 6.2. Quản lý Phiên bản Sách Giáo Khoa & Thay thế Bộ Sách Mới (Curriculum Versioning CRUD)
+  app.get('/api/admin/curriculums', requireRoles(['admin', 'teacher']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ curriculums: [] });
+    try {
+      const result = await pool.query('SELECT * FROM curriculum_sets ORDER BY created_at DESC');
+      res.json({ curriculums: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/curriculums/active', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ activeCurriculum: null });
+    try {
+      const result = await pool.query('SELECT * FROM curriculum_sets WHERE is_active = TRUE ORDER BY updated_at DESC LIMIT 1');
+      res.json({ activeCurriculum: result.rows[0] || null });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/curriculums', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { versionCode, title, description = '', payload = {}, activateImmediately = false } = req.body;
+    if (!title || !versionCode) {
+      return res.status(400).json({ error: 'Vui lòng cung cấp mã phiên bản (versionCode) và tên bộ sách (title).' });
+    }
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const id = `cur_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      if (activateImmediately) {
+        await client.query('UPDATE curriculum_sets SET is_active = FALSE');
+      }
+      const result = await client.query(
+        `INSERT INTO curriculum_sets (id, version_code, title, description, is_active, payload_json, updated_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [
+          id,
+          String(versionCode).trim(),
+          String(title).trim(),
+          String(description).trim(),
+          Boolean(activateImmediately),
+          JSON.stringify(payload || {}),
+          req.user.id,
+        ]
+      );
+      await client.query('COMMIT');
+      await logAudit(pool, req.user, 'ADMIN_CREATE_CURRICULUM', 'curriculum_sets', id, {
+        versionCode,
+        title,
+        activateImmediately,
+      });
+      res.status(201).json({
+        message: activateImmediately
+          ? `Đã tạo và kích hoạt bộ sách "${title}" làm học liệu chính thức toàn hệ thống!`
+          : `Đã lưu phiên bản bộ sách "${title}" thành công.`,
+        curriculum: result.rows[0],
+      });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      res.status(500).json({ error: err.message });
+    } finally {
+      client.release();
+    }
+  });
+
+  app.put('/api/admin/curriculums/:id', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const { versionCode, title, description, payload } = req.body;
+    try {
+      const result = await pool.query(
+        `UPDATE curriculum_sets
+         SET version_code = COALESCE($1, version_code),
+             title = COALESCE($2, title),
+             description = COALESCE($3, description),
+             payload_json = COALESCE($4, payload_json),
+             updated_by = $5,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $6 RETURNING *`,
+        [
+          versionCode || null,
+          title || null,
+          description !== undefined ? description : null,
+          payload !== undefined ? JSON.stringify(payload) : null,
+          req.user.id,
+          id,
+        ]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy bộ sách.' });
+      await logAudit(pool, req.user, 'ADMIN_UPDATE_CURRICULUM', 'curriculum_sets', id, { title });
+      res.json({ message: 'Đã cập nhật dữ liệu bộ sách giáo khoa.', curriculum: result.rows[0] });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/curriculums/:id/activate', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE curriculum_sets SET is_active = FALSE');
+      const result = await client.query(
+        `UPDATE curriculum_sets
+         SET is_active = TRUE, updated_by = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2 RETURNING *`,
+        [req.user.id, id]
+      );
+      if (result.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Không tìm thấy phiên bản bộ sách cần kích hoạt.' });
+      }
+      await client.query('COMMIT');
+      await logAudit(pool, req.user, 'ADMIN_ACTIVATE_CURRICULUM', 'curriculum_sets', id, {
+        title: result.rows[0].title,
+        versionCode: result.rows[0].version_code,
+      });
+      res.json({
+        message: `Đã thay thế và áp dụng bộ sách "${result.rows[0].title}" cho toàn hệ thống!`,
+        curriculum: result.rows[0],
+      });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      res.status(500).json({ error: err.message });
+    } finally {
+      client.release();
+    }
+  });
+
+  app.delete('/api/admin/curriculums/:id', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    const { id } = req.params;
+    try {
+      await pool.query('DELETE FROM curriculum_sets WHERE id = $1', [id]);
+      await logAudit(pool, req.user, 'ADMIN_DELETE_CURRICULUM', 'curriculum_sets', id, {});
+      res.json({ message: 'Đã xóa phiên bản bộ sách.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 6.3. Nhật ký Giám sát Hệ thống (System Audit Logs)
+  app.get('/api/admin/audit-logs', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ logs: [] });
+    try {
+      const result = await pool.query('SELECT * FROM system_audit_logs ORDER BY created_at DESC LIMIT 100');
+      res.json({ logs: result.rows });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/admin/audit-logs', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
+    try {
+      await pool.query('DELETE FROM system_audit_logs WHERE created_at < NOW() - INTERVAL \'7 days\'');
+      res.json({ message: 'Đã dọn dẹp các bản ghi nhật ký cũ.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Các bộ xử lý học thuật dự phòng (Built-in Academic Fallbacks khi chưa có API Key)
+// ---------------------------------------------------------------------------
+function buildRoleSmartFallback(role, mode, message, unitNumber) {
+  const q = String(message || '').trim();
+  if (role === 'admin') {
+    return `🛡️ **[Trợ lý AI Quản trị Hệ thống - Chế độ Nội bộ]**\n` +
+      `• Bạn vừa yêu cầu: *"${q}"*\n` +
+      `• Bạn có thể sử dụng nút **"⚡ AI Số hóa Sách mới"** ở tab **Học liệu & Thay sách** để bóc tách văn bản sách giáo khoa mới thành Bài đọc, Từ vựng IPA và Câu hỏi tự động.\n` +
+      `• Để kích hoạt mô hình ngôn ngữ lớn Google Gemini 2.5 Flash trực tuyến, hãy dán \`GEMINI_API_KEY\` tại tab **⚙️ Cấu hình AI** ngay trong Cổng Admin.`;
+  }
+  if (role === 'teacher') {
+    return `👩‍🏫 **[Trợ lý AI Giáo viên - Chế độ Nội bộ]**\n` +
+      `• Yêu cầu soạn giảng/đánh giá: *"${q}"*\n` +
+      `• Gợi ý chuyên môn: Bạn có thể bấm nút **"⚡ AI Tạo câu hỏi tự động"** trong mục **Ngân hàng câu hỏi** để sinh ngay bộ câu hỏi trắc nghiệm chuẩn THPT kèm giải thích và lưu 1 chạm vào hệ thống mà không cần nhập thủ công.\n` +
+      `• Khi học sinh nộp bài thi có giám sát, hệ thống tự động thống kê số câu đúng, số lần rời ứng dụng và phân loại đúng hạn / trễ hạn.`;
+  }
+  if (mode === 'writing_check') {
+    const wordCount = q.split(/\s+/).filter(Boolean).length;
+    const hasCapital = /^[A-Z]/.test(q);
+    const hasEndPunct = /[.!?]$/.test(q);
+    let score = 7.5;
+    const tips = [];
+    if (!hasCapital) {
+      score -= 0.5;
+      tips.push('Đầu câu cần viết hoa chữ cái đầu tiên.');
+    }
+    if (!hasEndPunct) {
+      score -= 0.5;
+      tips.push('Cuối câu cần có dấu chấm câu (`.`, `!`, hoặc `?`).');
+    }
+    if (wordCount < 5) {
+      score -= 1.0;
+      tips.push('Câu còn khá ngắn, bạn nên mở rộng bằng mệnh đề quan hệ (`who/which/that`) hoặc liên từ (`because/although/moreover`) để ăn điểm ngữ pháp lớp 12.');
+    } else {
+      tips.push('Cấu trúc câu có độ dài tốt. Hãy chú ý sự hòa hợp giữa chủ ngữ và động từ (Subject-Verb Agreement).');
+    }
+    return `📝 **[Đánh giá & Chấm điểm Câu/Đoạn văn Tiếng Anh]**\n` +
+      `• **Điểm ước tính:** **${score.toFixed(1)} / 10.0** (${wordCount} từ)\n` +
+      `• **Nhận xét chi tiết:**\n  - ${tips.join('\n  - ')}\n` +
+      `• **Mẹo nâng band điểm THPT:** Sử dụng Câu chẻ (*It is ... that ...* - Unit 2) hoặc Mệnh đề phân từ (*Having + V3/ed* - Unit 1/3) để câu văn học thuật hơn.`;
+  }
+
+  return `🎓 **[Gia sư AI EngPass - Kiến thức Trọng tâm SGK 12${unitNumber ? ' Unit ' + unitNumber : ''}]**\n` +
+    `• Về câu hỏi của bạn: *"${q}"*\n` +
+    `• **Hướng dẫn tư duy (Phương pháp loại trừ):**\n` +
+    `  1. Xác định từ khóa thời gian hoặc dấu hiệu ngữ pháp trong câu (ví dụ: *while/when* → Quá khứ tiếp diễn & Quá khứ đơn; *It is/was ... that* → Câu chẻ nhấn mạnh; *which* thay cho cả mệnh đề phía trước).\n` +
+    `  2. Kiểm tra từ loại (Danh từ / Động từ / Tính từ / Trạng từ) đứng trước và sau chỗ trống.\n` +
+    `  3. Bạn có thể chuyển sang chế độ **"Chấm bài viết"** hoặc mở **"Trung tâm Dịch thuật 3-trong-1"** để tra cứu từ vựng kèm IPA và lưu vào Flashcard SRS nhé!`;
+}
+
+function buildGeneratedQuestionsFallback(unitNumber, skill, difficulty, count, topicPrompt) {
+  const bank = [
+    {
+      unit: 1,
+      skill: 'grammar',
+      stem: 'While Steve Jobs _______ in his garage, he developed the first Apple computer with Steve Wozniak.',
+      options: ['A. was working', 'B. worked', 'C. has worked', 'D. had worked'],
+      correctIndex: 0,
+      explanation: 'Dùng thì Quá khứ tiếp diễn (was working) sau "While" để diễn tả hành động đang diễn ra trong quá khứ thì hành động khác xảy ra (developed).',
+    },
+    {
+      unit: 1,
+      skill: 'vocabulary',
+      stem: 'Vo Thi Sau is greatly _______ for her bravery and sacrifice during the resistance war.',
+      options: ['A. admired', 'B. admiring', 'C. admiration', 'D. admirable'],
+      correctIndex: 0,
+      explanation: 'Cấu trúc bị động: be + trạng từ + V3/ed (is greatly admired for: được ngưỡng mộ sâu sắc vì điều gì).',
+    },
+    {
+      unit: 2,
+      skill: 'grammar',
+      stem: 'Cultural exchange festivals represent _______ rich diversity of our multicultural world.',
+      options: ['A. the', 'B. a', 'C. an', 'D. Ø (no article)'],
+      correctIndex: 0,
+      explanation: 'Dùng mạo từ xác định "the" trước cụm danh từ được xác định bởi giới từ "of our multicultural world".',
+    },
+    {
+      unit: 3,
+      skill: 'grammar',
+      stem: 'Many students bring reusable water bottles to school, _______ helps reduce single-use plastic waste significantly.',
+      options: ['A. which', 'B. that', 'C. who', 'D. where'],
+      correctIndex: 0,
+      explanation: 'Đại từ quan hệ "which" đứng sau dấu phẩy dùng để thay thế cho toàn bộ mệnh đề đứng trước nó.',
+    },
+    {
+      unit: 4,
+      skill: 'grammar',
+      stem: 'The faster the city expands, _______ the traffic congestion becomes during rush hours.',
+      options: ['A. the worse', 'B. the worst', 'C. worse', 'D. more bad'],
+      correctIndex: 0,
+      explanation: 'Cấu trúc so sánh kép (Double comparatives): The + so sánh hơn + S + V, the + so sánh hơn + S + V (bad -> worse).',
+    },
+    {
+      unit: 5,
+      skill: 'vocabulary',
+      stem: 'Applicants for this position must be able to work well under pressure and meet tight _______.',
+      options: ['A. deadlines', 'B. schedules', 'C. salaries', 'D. vacancies'],
+      correctIndex: 0,
+      explanation: 'Cụm từ cố định (collocation): "meet tight deadlines" nghĩa là hoàn thành công việc đúng thời hạn gấp rút.',
+    },
+    {
+      unit: 6,
+      skill: 'grammar',
+      stem: 'The school principal had the IT technicians _______ the new AI learning platform in all classrooms.',
+      options: ['A. install', 'B. to install', 'C. installed', 'D. installing'],
+      correctIndex: 0,
+      explanation: 'Cấu trúc cầu khiến chủ động với have: "have + tân ngữ chỉ người + V(nguyên thể)" (nhờ/thuê ai làm gì).',
+    },
+  ];
+
+  const filtered = bank.filter((q) => q.unit === unitNumber);
+  const sourceList = filtered.length > 0 ? [...filtered, ...bank] : bank;
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    const template = sourceList[i % sourceList.length];
+    result.push({
+      id: `gen_q_${Date.now()}_${i}`,
+      unitNumber,
+      skill: skill || template.skill,
+      difficulty: difficulty || 2,
+      stem: template.stem,
+      options: template.options,
+      correctIndex: template.correctIndex,
+      explanation: template.explanation + (topicPrompt ? ` (Chủ đề: ${topicPrompt})` : ''),
+    });
+  }
+  return result;
+}
+
+function buildSmartDigitizedCurriculum(unitNumber, title, rawText) {
+  const cleanText = String(rawText || '').trim();
+  const sentences = cleanText
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 15);
+
+  const words = Array.from(
+    new Set(
+      cleanText
+        .replace(/[^a-zA-Z\s]/g, ' ')
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length >= 6)
+    )
+  ).slice(0, 6);
+
+  const vocabulary = words.map((w) => ({
+    english: w,
+    ipa: `/${w}/`,
+    meaningVi: `Từ vựng trọng tâm Unit ${unitNumber} (${w})`,
+    example: sentences.find((s) => s.toLowerCase().includes(w)) || `This is an academic example using the word "${w}".`,
+  }));
+
+  const questions = buildGeneratedQuestionsFallback(unitNumber, 'reading', 2, 3, title || `Unit ${unitNumber}`);
+
+  return {
+    unitNumber,
+    title: title || `Unit ${unitNumber} - Học liệu Sách giáo khoa Mới`,
+    readingPassage: cleanText,
+    translationVi: `Bản chuẩn hóa học liệu Unit ${unitNumber} (${sentences.length} câu đọc hiểu đã được số hóa).`,
+    grammarSummary: `Trọng tâm ngữ pháp và cấu trúc câu học thuật trích xuất từ văn bản Unit ${unitNumber}.`,
+    vocabulary,
+    questions,
+  };
+}
+
+module.exports = {
+  initRbacAndProctoringTables,
+  registerRbacProctorAiRoutes,
+};
+

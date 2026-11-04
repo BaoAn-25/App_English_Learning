@@ -16,6 +16,11 @@ import '../theme/components/app_card.dart';
 import '../theme/components/section_header.dart';
 import '../theme/components/sync_status_badge.dart';
 import 'settings_controller.dart';
+import '../teacher/teacher_portal_screen.dart';
+import '../admin/admin_portal_screen.dart';
+import '../translation/translation_hub_screen.dart';
+import '../practice/supervised_exam_screen.dart';
+import '../ai/ai_tutor_sheet.dart';
 
 /// Màn hình Cá nhân & Cài đặt.
 /// Xuất widget công khai để MainShell gắn vào NavigationBar.
@@ -89,6 +94,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   _buildProfileCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
 
+                // 1.5. Phân quyền Vai trò (Student / Teacher / Admin) & Cổng Quản Trị
+                _buildRoleAndPortalsCard(context),
+                const SizedBox(height: AppTokens.space16),
+
                 // 2. Mục tiêu luyện tập hàng ngày
                 _buildDailyGoalCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
@@ -113,6 +122,152 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           },
         ),
       ),
+    );
+  }
+
+  // --- Khối 1.5: Phân quyền Vai trò (RBAC) & Truy cập Cổng Giáo viên / Admin ---
+  Widget _buildRoleAndPortalsCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedBuilder(
+      animation: AuthController.instance,
+      builder: (context, _) {
+        final user = AuthController.instance.user;
+        final currentRole = ['student', 'teacher', 'admin'].contains(user.role)
+            ? user.role
+            : 'student';
+
+        return AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.verified_user_rounded, color: AppTokens.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Vai trò & Cổng Chức Năng (${user.roleDisplayName})',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppTokens.textMain,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Chuyển đổi nhanh vai trò để quản lý Học viên, Giáo viên (Ra đề & Giám sát thi 10s) hoặc Admin (Quản trị hệ thống, Thay sách mới & Cấu hình API AI).',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: isDark ? AppTokens.darkTextSub : AppTokens.textSub,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'student',
+                      icon: Icon(Icons.person_rounded, size: 16),
+                      label: Text('Học viên', style: TextStyle(fontSize: 12)),
+                    ),
+                    ButtonSegment(
+                      value: 'teacher',
+                      icon: Icon(Icons.school_rounded, size: 16),
+                      label: Text('Giáo viên', style: TextStyle(fontSize: 12)),
+                    ),
+                    ButtonSegment(
+                      value: 'admin',
+                      icon: Icon(Icons.admin_panel_settings_rounded, size: 16),
+                      label: Text('Admin', style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                  selected: {currentRole},
+                  onSelectionChanged: (sel) async {
+                    final nextRole = sel.first;
+                    await AuthController.instance.switchRole(nextRole);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Đã chuyển sang vai trò: ${nextRole.toUpperCase()}'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.school_rounded, size: 18),
+                    label: const Text('Cổng Giáo Viên'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
+                    label: const Text('Trung Tâm Admin'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TranslationHubScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.translate_rounded, size: 18),
+                    label: const Text('Dịch thuật 3-in-1'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SupervisedExamListScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.shield_rounded, size: 18),
+                    label: const Text('Phòng thi Giám sát'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AdminPortalScreen(initialTabIndex: 3),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.key_rounded, size: 18),
+                    label: const Text('Cấu hình API AI'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => AiTutorSheet.show(context),
+                    icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                    label: const Text('Trợ lý AI Chatbot'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

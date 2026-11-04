@@ -25,6 +25,10 @@ import '../trial/trial_lesson_picker_screen.dart';
 import '../trial/trial_lesson_screen.dart';
 import 'home_controller.dart';
 import '../leaderboard/leaderboard_screen.dart';
+import '../translation/translation_hub_screen.dart';
+import '../practice/supervised_exam_screen.dart';
+import '../teacher/teacher_portal_screen.dart';
+import '../admin/admin_portal_screen.dart';
 
 class RoadmapUnitItem {
   final int number; // 0 for Review
@@ -400,6 +404,169 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+
+        // Hàng 2: Trung tâm Dịch thuật 3-in-1 & Phòng thi Giám sát 10s
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TranslationHubScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF065F46).withAlpha(90) : const Color(0xFFD1FAE5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.translate_rounded, color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Dịch thuật 3-in-1',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Text • Giọng nói • Ảnh OCR',
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SupervisedExamListScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2430) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF7C2D12).withAlpha(90) : const Color(0xFFFFEDD5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.shield_rounded, color: isDark ? const Color(0xFFFB923C) : const Color(0xFFEA580C), size: 22),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Phòng thi Giám sát',
+                        style: TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Chống gian lận 10s • Hạn nộp',
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Thanh truy cập nhanh Trợ lý AI Cá nhân & Cổng Giáo viên / Admin
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E2430) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => AiTutorSheet.show(context),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Trợ lý AI Cá nhân',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                  );
+                },
+                icon: const Icon(Icons.school_rounded, size: 16),
+                label: const Text('Giáo viên', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+              ),
+              TextButton.icon(
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                  );
+                },
+                icon: const Icon(Icons.admin_panel_settings_rounded, size: 16),
+                label: const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+              ),
+            ],
+          ),
         ),
       ],
     );

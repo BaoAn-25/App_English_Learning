@@ -62,7 +62,8 @@ const googleOAuthClient = new OAuth2Client();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+const { initRbacAndProctoringTables, registerRbacProctorAiRoutes } = require('./routes_rbac_proctor_ai');
+app.use(express.json({ limit: '15mb' }));
 
 // Kết nối Neon PostgreSQL qua SSL
 const pool = new Pool({
@@ -232,6 +233,7 @@ async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
     `);
     client.release();
+    await initRbacAndProctoringTables(pool);
     console.log('✅ Khởi tạo Schema Database English 12 hoàn tất.');
   } catch (err) {
     console.error('❌ Lỗi kết nối Neon Database:', err.message);
@@ -934,6 +936,13 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     clearLoginRateLimit(rateLimitKey);
+    if (user.is_locked) {
+      return res.status(403).json({
+        error: `Tài khoản của bạn đã bị khóa bởi Quản trị viên. Lý do: ${user.locked_reason || 'Vi phạm quy định hệ thống.'}`,
+        isLocked: true,
+        lockedReason: user.locked_reason || 'Vi phạm quy định hệ thống.',
+      });
+    }
 
     const token = generateToken({
       id: user.id,
@@ -1152,11 +1161,18 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
   try {
     const result = await pool.query(
-      'SELECT id, email, display_name, avatar_url, auth_provider, role, email_verified FROM users WHERE id = $1',
+      'SELECT id, email, display_name, avatar_url, auth_provider, role, email_verified, is_locked, locked_reason FROM users WHERE id = $1',
       [req.user.id]
     );
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Tài khoản không còn tồn tại hoặc đã bị thu hồi.' });
+    }
+    if (result.rows[0].is_locked) {
+      return res.status(403).json({
+        error: `Tài khoản của bạn đã bị khóa bởi Quản trị viên. Lý do: ${result.rows[0].locked_reason || 'Vi phạm quy định hệ thống.'}`,
+        isLocked: true,
+        lockedReason: result.rows[0].locked_reason || 'Vi phạm quy định hệ thống.',
+      });
     }
     const user = result.rows[0];
     res.json({
@@ -1820,7 +1836,8 @@ app.get('/api/leaderboard', async (req, res) => {
     return res.status(503).json({ error: 'Cơ sở dữ liệu máy chủ chưa sẵn sàng.' });
   }
   try {
-    const result = await pool.query(      SELECT 
+    const result = await pool.query(`
+      SELECT 
         u.id,
         u.display_name AS name,
         COALESCE(p.school_name, 'Lớp 12 · Mục tiêu THPT') AS school,
@@ -1833,7 +1850,7 @@ app.get('/api/leaderboard', async (req, res) => {
       GROUP BY u.id, u.display_name, p.school_name, p.total_xp, p.current_streak, u.avatar_url
       ORDER BY xp DESC
       LIMIT 50
-    \);
+    `);
 
     const leaderboard = result.rows.map((row, index) => ({
       rank: index + 1,
@@ -1914,6 +1931,14 @@ app.post('/api/ai/ask', authenticateToken, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Lỗi máy chủ khi kết nối AI: ' + err.message });
   }
+});
+
+// 7. Đăng ký các phân hệ RBAC (Teacher & Admin), Giám sát phòng thi 10s, Dịch thuật & AI Copilot
+registerRbacProctorAiRoutes(app, pool, {
+  authenticateToken,
+  hashPassword,
+  verifyPassword,
+  generateToken,
 });
 
 // Khởi chạy server

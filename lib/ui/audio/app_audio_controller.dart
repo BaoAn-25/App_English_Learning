@@ -174,6 +174,20 @@ class AppAudioController extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// Phát âm văn bản (Text-to-Speech) phục vụ Trung tâm Dịch thuật & Học từ vựng
+  Future<void> speakText(String text, {String languageCode = 'en'}) async {
+    final clean = text.trim();
+    if (clean.isEmpty) return;
+    final clipped = clean.length > 180 ? clean.substring(0, 180) : clean;
+    final lang = languageCode.toLowerCase().startsWith('vi') ? 'vi' : 'en';
+    final ttsUrl =
+        'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=$lang&q=${Uri.encodeComponent(clipped)}';
+    try {
+      await _player.stop();
+      await _player.play(UrlSource(ttsUrl));
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _stateSub?.cancel();

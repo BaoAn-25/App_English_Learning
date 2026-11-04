@@ -427,4 +427,120 @@ class ApiClient {
     }
     return null;
   }
+
+  /// Phương thức GET JSON tổng quát cho các phân hệ Teacher, Admin, Exam Proctoring & AI
+  Future<ApiResponse> getJson(
+    String path, {
+    String? overrideToken,
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    try {
+      final cleanPath = path.startsWith('/') ? path : '/$path';
+      final uri = Uri.parse('$baseUrl$cleanPath');
+      final request = await _httpClient.getUrl(uri).timeout(timeout);
+      _headers(overrideToken).forEach((k, v) => request.headers.set(k, v));
+      final response = await request.close().timeout(timeout);
+      final body = await response.transform(utf8.decoder).join();
+      final Map<String, dynamic> data =
+          body.isNotEmpty ? jsonDecode(body) as Map<String, dynamic> : {};
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse.success(response.statusCode, data);
+      }
+      return ApiResponse.error(
+        response.statusCode,
+        data['error'] as String? ?? 'Yêu cầu thất bại (${response.statusCode})',
+        data,
+      );
+    } catch (e) {
+      return ApiResponse.error(0, _formatNetworkError(e));
+    }
+  }
+
+  /// Phương thức POST JSON tổng quát
+  Future<ApiResponse> postJson(
+    String path,
+    Map<String, dynamic> payload, {
+    String? overrideToken,
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    try {
+      final cleanPath = path.startsWith('/') ? path : '/$path';
+      final uri = Uri.parse('$baseUrl$cleanPath');
+      final request = await _httpClient.postUrl(uri).timeout(timeout);
+      _headers(overrideToken).forEach((k, v) => request.headers.set(k, v));
+      request.write(jsonEncode(payload));
+      final response = await request.close().timeout(timeout);
+      final body = await response.transform(utf8.decoder).join();
+      final Map<String, dynamic> data =
+          body.isNotEmpty ? jsonDecode(body) as Map<String, dynamic> : {};
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse.success(response.statusCode, data);
+      }
+      return ApiResponse.error(
+        response.statusCode,
+        data['error'] as String? ?? 'Yêu cầu thất bại (${response.statusCode})',
+        data,
+      );
+    } catch (e) {
+      return ApiResponse.error(0, _formatNetworkError(e));
+    }
+  }
+
+  /// Phương thức PUT JSON tổng quát
+  Future<ApiResponse> putJson(
+    String path,
+    Map<String, dynamic> payload, {
+    String? overrideToken,
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    try {
+      final cleanPath = path.startsWith('/') ? path : '/$path';
+      final uri = Uri.parse('$baseUrl$cleanPath');
+      final request = await _httpClient.putUrl(uri).timeout(timeout);
+      _headers(overrideToken).forEach((k, v) => request.headers.set(k, v));
+      request.write(jsonEncode(payload));
+      final response = await request.close().timeout(timeout);
+      final body = await response.transform(utf8.decoder).join();
+      final Map<String, dynamic> data =
+          body.isNotEmpty ? jsonDecode(body) as Map<String, dynamic> : {};
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse.success(response.statusCode, data);
+      }
+      return ApiResponse.error(
+        response.statusCode,
+        data['error'] as String? ?? 'Cập nhật thất bại (${response.statusCode})',
+        data,
+      );
+    } catch (e) {
+      return ApiResponse.error(0, _formatNetworkError(e));
+    }
+  }
+
+  /// Phương thức DELETE JSON tổng quát
+  Future<ApiResponse> deleteJson(
+    String path, {
+    String? overrideToken,
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    try {
+      final cleanPath = path.startsWith('/') ? path : '/$path';
+      final uri = Uri.parse('$baseUrl$cleanPath');
+      final request = await _httpClient.deleteUrl(uri).timeout(timeout);
+      _headers(overrideToken).forEach((k, v) => request.headers.set(k, v));
+      final response = await request.close().timeout(timeout);
+      final body = await response.transform(utf8.decoder).join();
+      final Map<String, dynamic> data =
+          body.isNotEmpty ? jsonDecode(body) as Map<String, dynamic> : {};
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse.success(response.statusCode, data);
+      }
+      return ApiResponse.error(
+        response.statusCode,
+        data['error'] as String? ?? 'Xóa thất bại (${response.statusCode})',
+        data,
+      );
+    } catch (e) {
+      return ApiResponse.error(0, _formatNetworkError(e));
+    }
+  }
 }

@@ -116,12 +116,19 @@ class AuthController extends ChangeNotifier {
               displayName: serverUser['displayName'] as String? ?? _user.displayName,
               email: serverUser['email'] as String? ?? _user.email,
               avatarUrl: serverUser['avatarUrl'] as String? ?? _user.avatarUrl,
+              role: serverUser['role'] as String? ?? _user.role,
               emailVerified: serverUser['emailVerified'] == true,
+              isLocked: serverUser['isLocked'] == true,
+              lockedReason: serverUser['lockedReason'] as String? ?? '',
             );
             await _repository.saveAuthUser(_user);
           }
-        } else if (res.statusCode == 401) {
-          logout();
+        } else if (res.statusCode == 401 || (res.statusCode == 403 && res.data?['isLocked'] == true)) {
+          final lockMsg = res.errorMessage;
+          await logout();
+          if (lockMsg != null && lockMsg.isNotEmpty) {
+            _errorMessage = lockMsg;
+          }
         }
       }
     } catch (_) {
@@ -134,6 +141,40 @@ class AuthController extends ChangeNotifier {
   void updateProfile(UserProfile updated) {
     _user = updated;
     notifyListeners();
+  }
+
+  /// Chuyển đổi hoặc đồng bộ vai trò người dùng ('student' | 'teacher' | 'admin')
+  Future<bool> switchRole(String targetRole) async {
+    if (!['student', 'teacher', 'admin'].contains(targetRole)) return false;
+    _isLoading = true;
+    notifyListeners();
+    try {
+      if (_token != null && _token!.isNotEmpty) {
+        await _apiClient.postJson(
+          '/auth/switch-role',
+          {'targetRole': targetRole},
+          overrideToken: _token,
+        );
+      }
+      _user = _user.copyWith(
+        role: targetRole,
+        isLoggedIn: _user.isLoggedIn || targetRole != 'student',
+        authProvider: _user.isGuest && targetRole != 'student' ? 'email' : _user.authProvider,
+        displayName: _user.isGuest && targetRole == 'teacher'
+            ? 'Giáo viên EngPass'
+            : (_user.isGuest && targetRole == 'admin' ? 'Quản trị viên EngPass' : _user.displayName),
+      );
+      await _repository.saveAuthUser(_user);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      _user = _user.copyWith(role: targetRole);
+      await _repository.saveAuthUser(_user);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    }
   }
 
   void setPlan({
