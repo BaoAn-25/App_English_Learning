@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../data/app_repository.dart';
+import '../../../data/models/word.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../../../data/trial_lesson_repository.dart';
 import '../../theme/app_tokens.dart';
@@ -7,13 +11,16 @@ import '../../theme/app_tokens.dart';
 /// Kế thừa bố cục Mockup 8: Quản lý 10 Unit SGK Global Success 12 thật,
 /// danh sách câu hỏi thật, Form soạn câu hỏi và Trình số hóa sách mới.
 class AdminContentTab extends StatefulWidget {
-  const AdminContentTab({super.key});
+  final AppRepository? repository;
+
+  const AdminContentTab({super.key, this.repository});
 
   @override
   State<AdminContentTab> createState() => _AdminContentTabState();
 }
 
 class _AdminContentTabState extends State<AdminContentTab> {
+  late AppRepository _repo;
   int _selectedUnitNumber = 1;
   String _selectedSection = 'Reading';
   final TextEditingController _questionSearchCtrl = TextEditingController();
@@ -34,6 +41,12 @@ class _AdminContentTabState extends State<AdminContentTab> {
   void initState() {
     super.initState();
     _loadQuestionsForUnit();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _repo = widget.repository ?? context.read<AppRepository>();
   }
 
   @override
@@ -357,12 +370,33 @@ class _AdminContentTabState extends State<AdminContentTab> {
                             Text('• Câu hỏi trắc nghiệm: ${(digitizedResult!['questions'] as List).length} câu kèm giải nghĩa'),
                             const SizedBox(height: 8),
                             FilledButton.tonal(
-                              onPressed: () {
-                                Navigator.pop(ctx);
+                              onPressed: () async {
+                                final vocabs = digitizedResult!['vocabulary'] as List? ?? [];
+                                final batchWords = <Word>[];
+                                for (int i = 0; i < vocabs.length; i++) {
+                                  final v = Map<String, dynamic>.from(vocabs[i] as Map);
+                                  final eng = (v['english'] ?? '').toString().trim();
+                                  if (eng.isEmpty) continue;
+                                  batchWords.add(Word(
+                                    id: 'w_u${_selectedUnitNumber}_${DateTime.now().millisecondsSinceEpoch}_$i',
+                                    topicId: 't$_selectedUnitNumber',
+                                    grade: 12,
+                                    english: eng,
+                                    ipa: (v['ipa'] ?? '/$eng/').toString(),
+                                    meaningVi: (v['meaningVi'] ?? '').toString(),
+                                    example: (v['example'] ?? '').toString(),
+                                  ));
+                                }
+                                if (batchWords.isNotEmpty) {
+                                  await _repo.insertWords(batchWords);
+                                }
+                                if (ctx.mounted) Navigator.pop(ctx);
                                 _loadQuestionsForUnit();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Đã lưu nội dung số hóa vào Ngân hàng học liệu!')),
-                                );
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Đã lưu nội dung số hóa: ${batchWords.length} từ vựng và câu hỏi vào Unit $_selectedUnitNumber!')),
+                                  );
+                                }
                               },
                               child: const Text('Áp dụng vào Unit này'),
                             ),
@@ -639,8 +673,31 @@ class _AdminContentTabState extends State<AdminContentTab> {
                       IconButton(
                         icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppTokens.danger),
                         onPressed: () async {
-                          await RbacProctorAiService.instance.deleteTeacherQuestion(q['id'].toString());
-                          _loadQuestionsForUnit();
+                          final sm = ScaffoldMessenger.of(context);
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (dCtx) => AlertDialog(
+                              title: const Text('Xác nhận xóa câu hỏi'),
+                              content: const Text('Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi không?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(dCtx, false), child: const Text('Hủy')),
+                                FilledButton(
+                                  style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                                  onPressed: () => Navigator.pop(dCtx, true),
+                                  child: const Text('Xóa'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            await RbacProctorAiService.instance.deleteTeacherQuestion(q['id'].toString());
+                            _loadQuestionsForUnit();
+                            if (mounted) {
+                              sm.showSnackBar(
+                                const SnackBar(content: Text('Đã xóa câu hỏi khỏi ngân hàng đề!')),
+                              );
+                            }
+                          }
                         },
                       ),
                     ],
@@ -693,38 +750,205 @@ class _AdminContentTabState extends State<AdminContentTab> {
     );
   }
 
-  void _showParagraphsViewer(TrialLessonData lesson) {
-    showModalBottomSheet(
+  // ===========================================================================
+  // QUẢN LÝ BÀI ĐỌC (XEM, THÊM, SỬA, XÓA ĐOẠN VĂN & LƯU VÀO DATABASE)
+  // ===========================================================================
+  Future<void> _showParagraphsViewer(TrialLessonData lesson) async {
+    final customRaw = await _repo.getSetting('custom_reading_unit_$_selectedUnitNumber');
+    List<Map<String, dynamic>> paragraphsList = [];
+    if (customRaw != null && customRaw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(customRaw) as List;
+        paragraphsList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {}
+    }
+    if (paragraphsList.isEmpty) {
+      paragraphsList = lesson.paragraphs.map((p) => {
+        'label': p.label,
+        'text': p.text,
+        'translation': p.translation,
+      }).toList();
+    }
+
+    if (!mounted) return;
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.4,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (ctx, scrollCtrl) {
-            return ListView.separated(
-              controller: scrollCtrl,
-              padding: const EdgeInsets.all(20),
-              itemCount: lesson.paragraphs.length,
-              separatorBuilder: (_, _) => const Divider(height: 24),
-              itemBuilder: (ctx, idx) {
-                final p = lesson.paragraphs[idx];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(p.label, style: const TextStyle(fontWeight: FontWeight.w900, color: AppTokens.primary, fontSize: 13.5)),
-                    const SizedBox(height: 6),
-                    Text(p.text, style: const TextStyle(fontSize: 13, height: 1.45)),
-                    if (p.translation.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text('Bản dịch: ${p.translation}', style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
-                    ],
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            void showEditParagraphDialog({int? index}) {
+              final isEdit = index != null;
+              final pItem = isEdit ? paragraphsList[index] : null;
+              final labelCtrl = TextEditingController(text: pItem?['label']?.toString() ?? 'Đoạn ${paragraphsList.length + 1}');
+              final textCtrl = TextEditingController(text: pItem?['text']?.toString() ?? '');
+              final transCtrl = TextEditingController(text: pItem?['translation']?.toString() ?? '');
+
+              showDialog(
+                context: ctx,
+                builder: (dCtx) => AlertDialog(
+                  title: Text(isEdit ? 'Chỉnh sửa đoạn văn' : 'Thêm đoạn văn mới'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: labelCtrl,
+                          decoration: const InputDecoration(labelText: 'Tên đoạn (VD: Đoạn 1, Paragraph A)', border: OutlineInputBorder()),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: textCtrl,
+                          maxLines: 5,
+                          decoration: const InputDecoration(labelText: 'Nội dung tiếng Anh chuẩn SGK', border: OutlineInputBorder()),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: transCtrl,
+                          maxLines: 4,
+                          decoration: const InputDecoration(labelText: 'Bản dịch tiếng Việt', border: OutlineInputBorder()),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Hủy')),
+                    FilledButton(
+                      onPressed: () async {
+                        if (textCtrl.text.trim().isEmpty) return;
+                        setSheetState(() {
+                          final item = {
+                            'label': labelCtrl.text.trim(),
+                            'text': textCtrl.text.trim(),
+                            'translation': transCtrl.text.trim(),
+                          };
+                          if (isEdit) {
+                            paragraphsList[index] = item;
+                          } else {
+                            paragraphsList.add(item);
+                          }
+                        });
+                        final sm = ScaffoldMessenger.of(context);
+                        await _repo.setSetting('custom_reading_unit_$_selectedUnitNumber', jsonEncode(paragraphsList));
+                        if (dCtx.mounted) Navigator.pop(dCtx);
+                        if (mounted) {
+                          sm.showSnackBar(
+                            SnackBar(content: Text('Đã cập nhật ${labelCtrl.text.trim()}!')),
+                          );
+                        }
+                      },
+                      child: Text(isEdit ? 'Cập nhật' : 'Thêm đoạn'),
+                    ),
                   ],
-                );
-              },
+                ),
+              );
+            }
+
+            return Container(
+              height: MediaQuery.of(ctx).size.height * 0.88,
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.menu_book_rounded, color: AppTokens.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Bài đọc Unit $_selectedUnitNumber: ${lesson.unitTitle}',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '${paragraphsList.length} đoạn văn • Quản trị toàn quyền Thêm, Sửa, Xóa',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+                          onPressed: () => showEditParagraphDialog(),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Thêm đoạn văn mới'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: paragraphsList.isEmpty
+                        ? const Center(child: Text('Chưa có đoạn văn nào trong bài đọc này.'))
+                        : ListView.separated(
+                            itemCount: paragraphsList.length,
+                            separatorBuilder: (_, _) => const Divider(height: 20),
+                            itemBuilder: (ctx, idx) {
+                              final p = paragraphsList[idx];
+                              return Card(
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: Colors.grey[200]!),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            (p['label'] ?? 'Đoạn ${idx + 1}').toString(),
+                                            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A), fontSize: 13.5),
+                                          ),
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blue),
+                                                onPressed: () => showEditParagraphDialog(index: idx),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                                onPressed: () async {
+                                                  setSheetState(() => paragraphsList.removeAt(idx));
+                                                  await _repo.setSetting('custom_reading_unit_$_selectedUnitNumber', jsonEncode(paragraphsList));
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text((p['text'] ?? '').toString(), style: const TextStyle(fontSize: 13, height: 1.45)),
+                                      if ((p['translation'] ?? '').toString().isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Text('Dịch: ${p['translation']}', style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -732,46 +956,266 @@ class _AdminContentTabState extends State<AdminContentTab> {
     );
   }
 
-  void _showVocabularyViewer(TrialLessonData lesson) {
-    showModalBottomSheet(
+  // ===========================================================================
+  // QUẢN LÝ TỪ VỰNG TRỌNG TÂM (XEM, THÊM, SỬA, XÓA TRỰC TIẾP TRONG DATABASE SQLITE)
+  // ===========================================================================
+  Future<void> _showVocabularyViewer(TrialLessonData lesson) async {
+    final topicId = 't$_selectedUnitNumber';
+    List<Word> words = await _repo.getWordsByTopicId(topicId);
+
+    // Nếu database chưa có từ vựng cho unit này, khởi tạo từ lesson default
+    if (words.isEmpty && lesson.vocabulary.isNotEmpty) {
+      final initialWords = <Word>[];
+      int i = 0;
+      for (final e in lesson.vocabulary.entries) {
+        initialWords.add(Word(
+          id: 'w_u${_selectedUnitNumber}_${DateTime.now().millisecondsSinceEpoch}_$i',
+          topicId: topicId,
+          grade: 12,
+          english: e.key,
+          ipa: '/${e.key}/',
+          meaningVi: e.value,
+          example: 'Steve Jobs was an innovator.',
+        ));
+        i++;
+      }
+      await _repo.insertWords(initialWords);
+      words = await _repo.getWordsByTopicId(topicId);
+    }
+
+    if (!mounted) return;
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.4,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (ctx, scrollCtrl) {
-            final entries = lesson.vocabulary.entries.toList();
-            return ListView.separated(
-              controller: scrollCtrl,
-              padding: const EdgeInsets.all(20),
-              itemCount: entries.length,
-              separatorBuilder: (_, _) => const Divider(height: 16),
-              itemBuilder: (ctx, idx) {
-                final e = entries[idx];
-                return Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: const Color(0xFF059669).withAlpha(20), borderRadius: BorderRadius.circular(8)),
-                      child: Text('${idx + 1}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            void showWordEditDialog({Word? editWord}) {
+              final sm = ScaffoldMessenger.of(ctx);
+              final isEdit = editWord != null;
+              final engCtrl = TextEditingController(text: editWord?.english ?? '');
+              final ipaCtrl = TextEditingController(text: editWord?.ipa ?? '');
+              final meaningCtrl = TextEditingController(text: editWord?.meaningVi ?? '');
+              final exCtrl = TextEditingController(text: editWord?.example ?? '');
+
+              showDialog(
+                context: ctx,
+                builder: (dCtx) => AlertDialog(
+                  title: Text(isEdit ? 'Chỉnh sửa từ vựng' : 'Thêm từ vựng mới vào Unit $_selectedUnitNumber'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: engCtrl,
+                          decoration: const InputDecoration(labelText: 'Từ tiếng Anh (English)', border: OutlineInputBorder()),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: ipaCtrl,
+                          decoration: const InputDecoration(labelText: 'Phiên âm IPA (VD: /ˈæksəbl/)', border: OutlineInputBorder()),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: meaningCtrl,
+                          decoration: const InputDecoration(labelText: 'Nghĩa tiếng Việt', border: OutlineInputBorder()),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: exCtrl,
+                          maxLines: 2,
+                          decoration: const InputDecoration(labelText: 'Câu ví dụ tiếng Anh', border: OutlineInputBorder()),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(e.key, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-                          Text(e.value, style: const TextStyle(color: Colors.grey, fontSize: 12.5)),
-                        ],
-                      ),
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Hủy')),
+                    FilledButton(
+                      onPressed: () async {
+                        final eng = engCtrl.text.trim();
+                        final meaning = meaningCtrl.text.trim();
+                        if (eng.isEmpty || meaning.isEmpty) return;
+
+                        if (isEdit) {
+                          final updated = editWord.copyWith(
+                            english: eng,
+                            ipa: ipaCtrl.text.trim().isEmpty ? '/$eng/' : ipaCtrl.text.trim(),
+                            meaningVi: meaning,
+                            example: exCtrl.text.trim(),
+                          );
+                          await _repo.updateWord(updated);
+                        } else {
+                          final newWord = Word(
+                            id: 'w_u${_selectedUnitNumber}_${DateTime.now().millisecondsSinceEpoch}',
+                            topicId: topicId,
+                            grade: 12,
+                            english: eng,
+                            ipa: ipaCtrl.text.trim().isEmpty ? '/$eng/' : ipaCtrl.text.trim(),
+                            meaningVi: meaning,
+                            example: exCtrl.text.trim(),
+                          );
+                          await _repo.insertWord(newWord);
+                        }
+
+                        final updatedList = await _repo.getWordsByTopicId(topicId);
+                        setSheetState(() => words = updatedList);
+                        if (dCtx.mounted) Navigator.pop(dCtx);
+
+                        if (mounted) {
+                          sm.showSnackBar(
+                            SnackBar(content: Text(isEdit ? 'Đã cập nhật từ "$eng"!' : 'Đã thêm từ mới "$eng" vào Unit $_selectedUnitNumber!')),
+                          );
+                        }
+                      },
+                      child: Text(isEdit ? 'Cập nhật' : 'Thêm từ'),
                     ),
                   ],
-                );
-              },
+                ),
+              );
+            }
+
+            return Container(
+              height: MediaQuery.of(ctx).size.height * 0.88,
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.spellcheck_rounded, color: Color(0xFF059669)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Từ vựng Unit $_selectedUnitNumber: ${lesson.unitTitle}',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '${words.length} từ vựng trong cơ sở dữ liệu thật • Thêm, Sửa, Xóa trực tiếp',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(backgroundColor: const Color(0xFF059669)),
+                          onPressed: () => showWordEditDialog(),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Thêm từ vựng mới'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: words.isEmpty
+                        ? const Center(child: Text('Chưa có từ vựng nào trong Unit này.'))
+                        : ListView.separated(
+                            itemCount: words.length,
+                            separatorBuilder: (_, _) => const Divider(height: 12),
+                            itemBuilder: (ctx, idx) {
+                              final w = words[idx];
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: const Color(0xFF059669).withValues(alpha: 0.12),
+                                  child: Text('${idx + 1}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                                ),
+                                title: Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: w.english,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87),
+                                      ),
+                                      if (w.ipa.isNotEmpty)
+                                        TextSpan(
+                                          text: ' ${w.ipa}',
+                                          style: const TextStyle(color: Colors.grey, fontSize: 12.5, fontWeight: FontWeight.normal),
+                                        ),
+                                    ],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(w.meaningVi, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                                    if (w.example.isNotEmpty)
+                                      Text('VD: ${w.example}', style: TextStyle(fontSize: 11.5, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                                  ],
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.all(4),
+                                      constraints: const BoxConstraints(),
+                                      icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blue),
+                                      onPressed: () => showWordEditDialog(editWord: w),
+                                      tooltip: 'Sửa từ',
+                                    ),
+                                    const SizedBox(width: 4),
+                                    IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.all(4),
+                                      constraints: const BoxConstraints(),
+                                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                      onPressed: () async {
+                                        final confirm = await showDialog<bool>(
+                                          context: ctx,
+                                          builder: (dCtx) => AlertDialog(
+                                            title: const Text('Xác nhận xóa từ vựng'),
+                                            content: Text('Bạn có chắc muốn xóa từ "${w.english}" khỏi Unit $_selectedUnitNumber?'),
+                                            actions: [
+                                              TextButton(onPressed: () => Navigator.pop(dCtx, false), child: const Text('Hủy')),
+                                              FilledButton(
+                                                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                                                onPressed: () => Navigator.pop(dCtx, true),
+                                                child: const Text('Xóa'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirm == true) {
+                                          await _repo.deleteWord(w.id);
+                                          final updatedList = await _repo.getWordsByTopicId(topicId);
+                                          setSheetState(() => words = updatedList);
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Đã xóa từ "${w.english}"!')),
+                                            );
+                                          }
+                                        }
+                                      },
+                                      tooltip: 'Xóa từ',
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             );
           },
         );

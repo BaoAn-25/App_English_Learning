@@ -512,6 +512,34 @@ class AppDatabase {
     return maps.map(Word.fromMap).toList();
   }
 
+  Future<void> insertWord(Word word) async {
+    final db = await database;
+    await db.insert(
+      'words',
+      word.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateWord(Word word) async {
+    final db = await database;
+    await db.update(
+      'words',
+      word.toMap(),
+      where: 'id = ?',
+      whereArgs: [word.id],
+    );
+  }
+
+  Future<void> deleteWord(String wordId) async {
+    final db = await database;
+    await db.delete(
+      'words',
+      where: 'id = ?',
+      whereArgs: [wordId],
+    );
+  }
+
   // --- Questions ---
   Future<void> insertQuestions(List<Question> questions) async {
     final db = await database;
@@ -1054,6 +1082,11 @@ class AppDatabase {
       orderBy: 'date ASC',
     );
     return maps.map(DailyStat.fromMap).toList();
+  }
+
+  Future<DailyStat?> getDailyStat(String date, {String? ownerId}) async {
+    final list = await getDailyStatsInRange(date, date, ownerId: ownerId);
+    return list.isNotEmpty ? list.first : null;
   }
 
   /// Lưu toàn bộ kết quả hoặc không lưu gì nếu có lỗi.

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../data/app_repository.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
+import '../../admin/components/class_code_dialog.dart';
 
 /// Tab 2 (Giáo viên): Quản lý Lớp học, Tạo lớp mới, Duyệt học sinh & Hồ sơ học sinh chi tiết
 class TeacherClassesTab extends StatefulWidget {
@@ -326,6 +327,14 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
                           onAdded: reloadInsideModal,
                         ),
                       ),
+                      IconButton(
+                        tooltip: 'Giải tán lớp học',
+                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                        onPressed: () => _confirmDeleteClass(
+                          currentClass,
+                          onSuccess: () => Navigator.pop(ctx),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -379,8 +388,22 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
                             ),
                             TextButton.icon(
                               onPressed: () async {
-                                await _service.regenerateClassCode(classId);
+                                final oldCode = currentClass['code']?.toString() ?? '';
+                                final newCode = await _service.regenerateClassCode(classId);
                                 await reloadInsideModal();
+                                if (mounted) {
+                                  await ClassCodeDialog.show(
+                                    context,
+                                    className: currentClass['name']?.toString() ?? 'Lớp học',
+                                    oldCode: oldCode,
+                                    initialNewCode: newCode,
+                                    onRegenerateAnother: () async {
+                                      final another = await _service.regenerateClassCode(classId);
+                                      await reloadInsideModal();
+                                      return another;
+                                    },
+                                  );
+                                }
                               },
                               icon: const Icon(Icons.refresh, size: 16),
                               label: const Text('Mã mới'),
@@ -701,6 +724,66 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
               await onAdded();
             },
             child: const Text('Thêm vào lớp'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteClass(Map<String, dynamic> c, {VoidCallback? onSuccess}) {
+    final className = (c['name'] ?? 'Lớp học').toString();
+    final classId = c['id'].toString();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Giải tán $className?')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hành động này sẽ xóa vĩnh viễn lớp "$className" (Mã: ${c['code']}) khỏi hệ thống.',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '• Học sinh sẽ bị gỡ khỏi danh sách lớp.\n• Mã tham gia lớp lập tức bị vô hiệu hóa.\n• Dữ liệu gắn với lớp này sẽ được làm sạch.',
+              style: TextStyle(fontSize: 12.5, color: Colors.black87, height: 1.4),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy bỏ'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red[700]),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await _service.deleteClass(classId);
+              if (success) {
+                await _loadClasses();
+                onSuccess?.call();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã giải tán lớp "$className" thành công!'),
+                      backgroundColor: Colors.red[800],
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.delete_forever, size: 18),
+            label: const Text('Xác nhận giải tán'),
           ),
         ],
       ),
@@ -1069,6 +1152,11 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
                                   );
                                   await _loadClasses();
                                 },
+                              ),
+                              IconButton(
+                                tooltip: 'Giải tán / Xóa lớp',
+                                icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+                                onPressed: () => _confirmDeleteClass(c),
                               ),
                             ],
                           ),

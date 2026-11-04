@@ -1,3 +1,4 @@
+import '../classes/student_classes_screen.dart';
 import '../auth/welcome_screen.dart';
 import '../auth/auth_controller.dart';
 import '../auth/login_screen.dart';
@@ -16,8 +17,9 @@ import '../theme/components/app_card.dart';
 import '../theme/components/section_header.dart';
 import '../theme/components/sync_status_badge.dart';
 import 'settings_controller.dart';
-import '../teacher/teacher_portal_screen.dart';
-import '../admin/admin_portal_screen.dart';
+import '../teacher/teacher_main_shell.dart';
+import '../admin/admin_main_shell.dart';
+import '../admin/components/student_preview_mode.dart';
 
 /// Màn hình Cá nhân & Cài đặt.
 /// Xuất widget công khai để MainShell gắn vào NavigationBar.
@@ -97,6 +99,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   const SizedBox(height: AppTokens.space16),
                 ],
 
+                // 1.6. Lớp học của tôi (Dành cho Học sinh tham gia theo mã)
+                _buildStudentClassesCard(context),
+                const SizedBox(height: AppTokens.space16),
+
                 // 2. Mục tiêu luyện tập hàng ngày
                 _buildDailyGoalCard(context, controller),
                 const SizedBox(height: AppTokens.space16),
@@ -119,6 +125,63 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+
+  // --- Khối Lớp học của tôi (Học sinh tham gia lớp theo mã) ---
+  Widget _buildStudentClassesCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AppCard(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StudentClassesScreen()),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.school_rounded, color: Color(0xFF2563EB), size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Lớp học của tôi',
+                      style: TextStyle(
+                        fontFamily: 'BeVietnamPro',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppTokens.textMain,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tham gia lớp bằng mã, nhận bài tập & đề thi từ giáo viên',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+            ],
+          ),
         ),
       ),
     );
@@ -205,9 +268,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
+                        if (StudentPreviewMode.instance.isPreviewActive) {
+                          StudentPreviewMode.instance.exitPreview();
+                        }
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                          MaterialPageRoute(builder: (_) => AdminMainShell(repository: _repo)),
                         );
                       },
                       icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
@@ -221,7 +287,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                          MaterialPageRoute(builder: (_) => TeacherMainShell(repository: _repo)),
                         );
                       },
                       icon: const Icon(Icons.school_rounded, size: 18),
@@ -299,7 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                    MaterialPageRoute(builder: (_) => TeacherMainShell(repository: _repo)),
                   );
                 },
                 icon: const Icon(Icons.school_rounded, size: 18),

@@ -7,6 +7,7 @@ import '../../data/trial_lesson_repository.dart';
 import '../../navigation/main_shell.dart';
 import '../ai/ai_tutor_sheet.dart';
 import '../auth/auth_controller.dart';
+import '../classes/student_classes_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
 import '../onboarding/onboarding_target_screen.dart';
@@ -27,8 +28,8 @@ import 'home_controller.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../translation/translation_hub_screen.dart';
 import '../practice/supervised_exam_screen.dart';
-import '../teacher/teacher_portal_screen.dart';
-import '../admin/admin_portal_screen.dart';
+import '../teacher/teacher_main_shell.dart';
+import '../admin/admin_main_shell.dart';
 
 class RoadmapUnitItem {
   final int number; // 0 for Review
@@ -186,6 +187,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildExploreDuolingoHub(context),
                   const SizedBox(height: 16),
 
+                  // 3.6. Banner Lớp học dành cho học sinh
+                  _buildClassBanner(context),
+                  const SizedBox(height: 16),
+
                   // 4. Khối Tiếp tục học / Bài học dở (chỉ hiện khi có phiên học thực tế)
                   if (controller.learningSession != null) ...[
                     _buildContinueLearningCard(context, controller, auth),
@@ -212,6 +217,75 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  // --- Banner Lớp học & Mã lớp giáo viên ---
+  Widget _buildClassBanner(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3B82F6) : const Color(0xFFBFDBFE),
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.school_rounded, color: Color(0xFF2563EB), size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Lớp học & Giáo viên',
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14.5,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Nhập mã từ thầy cô để vào lớp và nhận bài tập',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const StudentClassesScreen()),
+              );
+            },
+            child: const Text('Vào lớp', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
@@ -548,9 +622,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton.icon(
                   style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                   onPressed: () {
+                    final repo = context.read<AppRepository>();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const TeacherPortalScreen()),
+                      MaterialPageRoute(builder: (_) => TeacherMainShell(repository: repo)),
                     );
                   },
                   icon: const Icon(Icons.school_rounded, size: 16),
@@ -560,9 +635,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton.icon(
                   style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                   onPressed: () {
+                    final repo = context.read<AppRepository>();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AdminPortalScreen()),
+                      MaterialPageRoute(builder: (_) => AdminMainShell(repository: repo)),
                     );
                   },
                   icon: const Icon(Icons.admin_panel_settings_rounded, size: 16),

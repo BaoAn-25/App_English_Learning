@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../navigation/main_shell.dart';
+import '../../navigation/role_routing_shell.dart';
 import '../theme/components/app_button.dart';
 import 'auth_controller.dart';
 import 'login_screen.dart';
@@ -254,7 +254,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
+        MaterialPageRoute(builder: (_) => const RoleRoutingShell()),
         (route) => false,
       );
     } else {
@@ -302,7 +302,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
+        MaterialPageRoute(builder: (_) => const RoleRoutingShell()),
         (route) => false,
       );
     } else {
@@ -711,6 +711,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _isSubmitting ? null : _handleGoogleAuth,
                 ),
                 const SizedBox(height: 20),
+
+                // Vào học thử với vai trò Khách
+                Center(
+                  child: TextButton.icon(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('has_completed_onboarding', true);
+                            if (!context.mounted) return;
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => const RoleRoutingShell()),
+                              (route) => false,
+                            );
+                          },
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                    label: const Text(
+                      'Học thử ngay với vai trò Khách',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
                 // Link chuyển sang Đăng nhập
                 Wrap(

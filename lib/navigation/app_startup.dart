@@ -46,13 +46,47 @@ class _AppStartupState extends State<AppStartup> {
         }
       } else {
         final repository = context.read<AppRepository>();
-        await ApiClient.sanitizeOrMigrateApiUrl(repository);
-        await AssetSeeder.seedIfEmpty();
-        await AssetSeeder.syncVocabulary();
-        await AssetSeeder.syncInterestWords();
-        await QuestionSyncService.syncQuestions(repository);
-        await AuthController.instance.restoreSession();
 
+        // 1. Chuẩn hóa địa chỉ API máy chủ Render
+        try {
+          await ApiClient.sanitizeOrMigrateApiUrl(repository);
+        } catch (e) {
+          debugPrint('ApiClient.sanitizeOrMigrateApiUrl error: $e');
+        }
+
+        // 2. Khởi tạo dữ liệu học liệu cốt lõi (Bảo vệ độc lập từng bước để không bao giờ treo app)
+        try {
+          await AssetSeeder.seedIfEmpty();
+        } catch (e) {
+          debugPrint('AssetSeeder.seedIfEmpty error: $e');
+        }
+
+        try {
+          await AssetSeeder.syncVocabulary();
+        } catch (e) {
+          debugPrint('AssetSeeder.syncVocabulary error: $e');
+        }
+
+        try {
+          await AssetSeeder.syncInterestWords();
+        } catch (e) {
+          debugPrint('AssetSeeder.syncInterestWords error: $e');
+        }
+
+        try {
+          await QuestionSyncService.syncQuestions(repository);
+        } catch (e) {
+          debugPrint('QuestionSyncService.syncQuestions error: $e');
+        }
+
+        // 3. Khôi phục phiên đăng nhập
+        try {
+          await AuthController.instance.restoreSession();
+        } catch (e) {
+          debugPrint('AuthController.restoreSession error: $e');
+        }
+
+        // 4. Kiểm tra trạng thái đã hoàn thành onboarding
         try {
           final prefs = await SharedPreferences.getInstance();
           final savedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
@@ -63,9 +97,12 @@ class _AppStartupState extends State<AppStartup> {
             await prefs.setBool('has_completed_onboarding', true);
           }
         } catch (_) {
-          _hasCompletedOnboarding = true;
+          _hasCompletedOnboarding = false;
         }
       }
+    } catch (criticalErr) {
+      debugPrint('Critical AppStartup error: $criticalErr');
+      rethrow;
     } finally {
       _initializing = false;
     }
@@ -73,10 +110,12 @@ class _AppStartupState extends State<AppStartup> {
 
   void _retry() {
     if (_initializing) return;
+    _initializing = true;
     setState(() {
       _initialization = _initialize();
     });
   }
+
 
   @override
   Widget build(BuildContext context) => FutureBuilder<void>(
@@ -84,7 +123,7 @@ class _AppStartupState extends State<AppStartup> {
     builder: (context, snapshot) {
       final loading = snapshot.connectionState != ConnectionState.done;
       if (!loading && !snapshot.hasError) {
-        // Cơ chế điều hướng minh bạch:
+        // Cơ chế điều hướng:
         // 1. Nếu có chỉ định rõ ràng qua startWithOnboarding
         if (widget.startWithOnboarding == true) {
           return const WelcomeScreen();
@@ -98,9 +137,10 @@ class _AppStartupState extends State<AppStartup> {
           return const RoleRoutingShell();
         }
 
-        // Chưa hoàn thành onboarding -> vào thẳng màn hình chào mừng & học thử (Ảnh 1)
+        // Chưa hoàn thành onboarding -> vào thẳng màn hình chào mừng & học thử
         return const WelcomeScreen();
       }
+
       return Scaffold(
         body: SafeArea(
           child: Center(
@@ -116,15 +156,27 @@ class _AppStartupState extends State<AppStartup> {
                       const SizedBox(height: 24),
                       Semantics(
                         liveRegion: true,
-                        child: const Text('Đang chuẩn bị dữ liệu học…'),
+                        child: const Text(
+                          'Đang chuẩn bị dữ liệu học…',
+                          style: TextStyle(fontFamily: 'BeVietnamPro', fontSize: 15),
+                        ),
                       ),
                     ] else ...[
+                      const Icon(
+                        Icons.cloud_off_rounded,
+                        size: 56,
+                        color: Color(0xFFEF4444),
+                      ),
+                      const SizedBox(height: 16),
                       Semantics(
                         liveRegion: true,
                         child: Text(
                           'Không tải được dữ liệu.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontFamily: 'BeVietnamPro',
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -133,9 +185,35 @@ class _AppStartupState extends State<AppStartup> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: _retry,
-                        child: const Text('Thử lại'),
+
+                      // Nút 1: Thử lại (FilledButton)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton(
+                          onPressed: _retry,
+                          child: const Text('Thử lại'),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Nút 2: Tiếp tục vào học (Bỏ qua lỗi để không bao giờ bị kẹt)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                          label: const Text('Tiếp tục vào học'),
+                        ),
                       ),
                     ],
                   ],

@@ -839,8 +839,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     await client.query('COMMIT');
 
-    if (isSystemAdminEmail(user.email)) user.role = 'admin';
-    const token = generateToken({ id: userId, email, role: 'student' });
+    const userRole = isSystemAdminEmail(email) ? 'admin' : 'student';
+    const token = generateToken({ id: userId, email, role: userRole });
 
     // Gửi email xác minh nếu có cấu hình SMTP
     let emailSent = false;
@@ -879,7 +879,7 @@ app.post('/api/auth/register', async (req, res) => {
         email,
         displayName: name,
         authProvider: 'email',
-        role: 'student',
+        role: userRole,
         emailVerified: false,
       },
       token,
@@ -1843,14 +1843,14 @@ app.get('/api/leaderboard', async (req, res) => {
       SELECT 
         u.id,
         u.display_name AS name,
-        COALESCE(p.school_name, 'Lớp 12 · Mục tiêu THPT') AS school,
+        'Lớp 12 · Mục tiêu THPT' AS school,
         COALESCE(SUM(d.xp_earned), p.total_xp, 0)::int AS xp,
         COALESCE(p.current_streak, 0)::int AS streak,
         COALESCE(u.avatar_url, '') AS avatar_url
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
       LEFT JOIN daily_stats d ON u.id = d.user_id
-      GROUP BY u.id, u.display_name, p.school_name, p.total_xp, p.current_streak, u.avatar_url
+      GROUP BY u.id, u.display_name, p.total_xp, p.current_streak, u.avatar_url
       ORDER BY xp DESC
       LIMIT 50
     `);

@@ -29,6 +29,26 @@ class Word {
     );
   }
 
+  Word copyWith({
+    String? id,
+    String? topicId,
+    int? grade,
+    String? english,
+    String? ipa,
+    String? meaningVi,
+    String? example,
+  }) {
+    return Word(
+      id: id ?? this.id,
+      topicId: topicId ?? this.topicId,
+      grade: grade ?? this.grade,
+      english: english ?? this.english,
+      ipa: ipa ?? this.ipa,
+      meaningVi: meaningVi ?? this.meaningVi,
+      example: example ?? this.example,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

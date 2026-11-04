@@ -690,33 +690,100 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                 ),
               ),
 
-            Row(
-              children: [
-                ChoiceChip(
-                  label: const Text('Đang mở'),
-                  selected: _assignmentFilter == 'open',
-                  onSelected: (_) => setState(() => _assignmentFilter = 'open'),
-                ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  label: const Text('Đã đóng'),
-                  selected: _assignmentFilter == 'closed',
-                  onSelected: (_) => setState(() => _assignmentFilter = 'closed'),
-                ),
-                const Spacer(),
-                FilledButton.tonalIcon(
-                  onPressed: _showCreateSupervisedExamModal,
-                  icon: const Icon(Icons.shield_outlined, size: 16),
-                  label: const Text('Tạo thi 10s'),
-                ),
-                const SizedBox(width: 6),
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
-                  onPressed: _showCreateAssignmentModal,
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Giao bài'),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 430;
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          ChoiceChip(
+                            visualDensity: VisualDensity.compact,
+                            label: const Text('Đang mở'),
+                            selected: _assignmentFilter == 'open',
+                            onSelected: (_) => setState(() => _assignmentFilter = 'open'),
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            visualDensity: VisualDensity.compact,
+                            label: const Text('Đã đóng'),
+                            selected: _assignmentFilter == 'closed',
+                            onSelected: (_) => setState(() => _assignmentFilter = 'closed'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: _showCreateSupervisedExamModal,
+                              icon: const Icon(Icons.shield_outlined, size: 16),
+                              label: const Text('Tạo thi 10s', style: TextStyle(fontSize: 12.5)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF283593),
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: _showCreateAssignmentModal,
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Giao bài', style: TextStyle(fontSize: 12.5)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    ChoiceChip(
+                      visualDensity: VisualDensity.compact,
+                      label: const Text('Đang mở'),
+                      selected: _assignmentFilter == 'open',
+                      onSelected: (_) => setState(() => _assignmentFilter = 'open'),
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      visualDensity: VisualDensity.compact,
+                      label: const Text('Đã đóng'),
+                      selected: _assignmentFilter == 'closed',
+                      onSelected: (_) => setState(() => _assignmentFilter = 'closed'),
+                    ),
+                    const Spacer(),
+                    FilledButton.tonalIcon(
+                      style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                      onPressed: _showCreateSupervisedExamModal,
+                      icon: const Icon(Icons.shield_outlined, size: 16),
+                      label: const Text('Tạo thi 10s'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF283593),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: _showCreateAssignmentModal,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Giao bài'),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 14),
 
@@ -873,17 +940,23 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                           style: TextStyle(fontWeight: FontWeight.bold),
                         )
                       : DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: _selectedExam?.id,
                           decoration: const InputDecoration(
                             labelText: 'Đề thi đang giám sát',
                             border: OutlineInputBorder(),
                             isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                           ),
                           items: _exams
                               .map(
                                 (e) => DropdownMenuItem(
                                   value: e.id,
-                                  child: Text(e.title, overflow: TextOverflow.ellipsis),
+                                  child: Text(
+                                    e.title,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
                                 ),
                               )
                               .toList(),
@@ -900,7 +973,11 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                 ),
                 const SizedBox(width: 8),
                 FilledButton.icon(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF283593),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    visualDensity: VisualDensity.compact,
+                  ),
                   onPressed: _showCreateSupervisedExamModal,
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Cài đặt đề'),
@@ -946,14 +1023,75 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      'Thời lượng: ${_selectedExam!.durationMinutes} phút • Cảnh báo rời app: ${_selectedExam!.graceSeconds} giây',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Thời lượng: ${_selectedExam!.durationMinutes} phút • Cảnh báo rời app: ${_selectedExam!.graceSeconds} giây',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                          ),
+                        ),
+                        TextButton.icon(
+                          style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                          onPressed: () => _showExamResultsModal(_selectedExam!),
+                          icon: const Icon(Icons.bar_chart_rounded, size: 16),
+                          label: const Text('Xem kết quả', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
+
+              // Banner cảnh báo bất thường khi có học sinh rời app hoặc gửi giải trình (Chuẩn Hình 16 & 17)
+              if (autoSubmittedOrViolatedCount > 0)
+                InkWell(
+                  onTap: _showExplanationCenterModal,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFFECACA)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red[100],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.warning_amber_rounded, color: Colors.red[900], size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$autoSubmittedOrViolatedCount cảnh báo bất thường cần xem',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                  color: Colors.red[900],
+                                ),
+                              ),
+                              Text(
+                                'Bấm để duyệt giải trình sự cố hoặc xem diễn biến học sinh rời app',
+                                style: TextStyle(fontSize: 11.5, color: Colors.red[800]),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.red[900]),
+                      ],
+                    ),
+                  ),
+                ),
 
               // 3 Thẻ thống kê trực tiếp (Đang làm / Đã nộp / Tự nộp)
               Row(
@@ -1101,26 +1239,46 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
                                   ],
                                 ),
                               ),
-                              if (isAutoSubmitted)
-                                FilledButton.tonal(
-                                  onPressed: () async {
-                                    await _service.performTeacherProctorAction(
-                                      exam: _selectedExam!,
-                                      session: s,
-                                      action: 'reset_violation',
-                                    );
-                                    await _loadSessionsForSelectedExam(_selectedExam!.id);
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Đã mở khóa cho ${s.studentName} làm lại bài thi!'),
-                                          backgroundColor: const Color(0xFF1B5E20),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: const Text('Cho làm lại'),
-                                ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (s.violationCount > 0 || isAutoSubmitted)
+                                    OutlinedButton(
+                                      style: OutlinedButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      ),
+                                      onPressed: () => _showIncidentDetailModal(s),
+                                      child: const Text('Xem sự cố', style: TextStyle(fontSize: 12)),
+                                    ),
+                                  if (isAutoSubmitted) ...[
+                                    const SizedBox(width: 6),
+                                    FilledButton.tonal(
+                                      style: FilledButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      ),
+                                      onPressed: () async {
+                                        await _service.performTeacherProctorAction(
+                                          exam: _selectedExam!,
+                                          session: s,
+                                          action: 'reset_violation',
+                                        );
+                                        await _loadSessionsForSelectedExam(_selectedExam!.id);
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Đã mở khóa cho ${s.studentName} làm lại bài thi!'),
+                                              backgroundColor: const Color(0xFF1B5E20),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: const Text('Cho làm lại', style: TextStyle(fontSize: 12)),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ],
                           ),
                           if (hasExplanation) ...[
@@ -1312,5 +1470,566 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
       ),
     );
   }
-}
 
+  // ===========================================================================
+  // 1. MODAL CHI TIẾT SỰ CỐ CỦA HỌC SINH (CHUẨN HÌNH 17: TIMELINE DIỄN BIẾN THẬT)
+  // ===========================================================================
+  void _showIncidentDetailModal(ExamLiveSessionModel session) {
+    final logs = session.violationLogs;
+    final totalOutOfAppSec = logs.fold<int>(0, (sum, l) => sum + ((l['outOfAppSeconds'] as num?)?.toInt() ?? 10));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          height: MediaQuery.of(ctx).size.height * 0.88,
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.red[100],
+                    child: Text(
+                      session.studentName.isNotEmpty ? session.studentName[0].toUpperCase() : 'H',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red[900]),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(session.studentName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text('Lớp ${_selectedExam?.className ?? "12A1"} • Rời app: ${session.violationCount} lần', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Khối điểm tạm tính & thời gian ngoài app
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Điểm tạm tính', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${session.score} đ',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange[900]),
+                          ),
+                          Text('Đã làm ${session.answeredCount}/${session.totalQuestions} câu', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Thời gian ngoài app', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$totalOutOfAppSec giây',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red[900]),
+                          ),
+                          Text('Giới hạn cho phép: ${_selectedExam?.graceSeconds ?? 10}s', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Khối Giải trình của học sinh (nếu có)
+              if (session.studentExplanation != null && session.studentExplanation!.isNotEmpty) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.record_voice_over_outlined, size: 16, color: Color(0xFF15803D)),
+                          const SizedBox(width: 6),
+                          const Text('Giải trình của học sinh:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Color(0xFF15803D))),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${session.studentExplanation}',
+                        style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              const Text('Timeline Diễn biến chi tiết', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+
+              // Danh sách Timeline các mốc sự kiện thực tế
+              Expanded(
+                child: ListView(
+                  children: [
+                    _buildTimelineTile(
+                      time: session.startedAt,
+                      title: 'Vào phòng thi và bắt đầu làm bài',
+                      isPositive: true,
+                    ),
+                    ...logs.map((l) {
+                      final timeStr = l['timestamp']?.toString();
+                      final dt = timeStr != null ? DateTime.tryParse(timeStr) : null;
+                      final sec = l['outOfAppSeconds'] ?? 10;
+                      final isOver = sec >= (_selectedExam?.graceSeconds ?? 10);
+                      return _buildTimelineTile(
+                        time: dt,
+                        title: isOver
+                            ? 'Rời app $sec giây (quá thời hạn cho phép -> tự nộp bài)'
+                            : 'Rời app, quay lại sau $sec giây',
+                        isNegative: isOver,
+                        isWarning: !isOver,
+                      );
+                    }),
+                    if (session.submittedAt != null)
+                      _buildTimelineTile(
+                        time: session.submittedAt,
+                        title: 'Kết thúc phiên thi • Ghi nhận kết quả vào cơ sở dữ liệu',
+                        isPositive: true,
+                      ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Đóng'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        await _service.performTeacherProctorAction(
+                          exam: _selectedExam!,
+                          session: session,
+                          action: 'reset_violation',
+                        );
+                        await _loadSessionsForSelectedExam(_selectedExam!.id);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Đã phê duyệt cho ${session.studentName} làm lại bài thi!'),
+                              backgroundColor: const Color(0xFF1B5E20),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Cho làm lại bài'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimelineTile({
+    DateTime? time,
+    required String title,
+    bool isPositive = false,
+    bool isWarning = false,
+    bool isNegative = false,
+  }) {
+    Color dotColor = Colors.grey;
+    if (isPositive) dotColor = Colors.green;
+    if (isWarning) dotColor = Colors.orange;
+    if (isNegative) dotColor = Colors.red;
+
+    final timeFormatted = time != null
+        ? '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}'
+        : '--:--:--';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(timeFormatted, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
+          const SizedBox(width: 10),
+          Icon(Icons.circle, size: 10, color: dotColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(title, style: TextStyle(fontSize: 13, color: isNegative ? Colors.red[900] : Colors.black87)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // 2. MODAL TRUNG TÂM GIẢI TRÌNH CỦA HỌC SINH (CHUẨN HÌNH 18: CHỜ DUYỆT & ĐÃ XỬ LÝ)
+  // ===========================================================================
+  void _showExplanationCenterModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final explainedSessions = _liveSessions
+              .where((s) => s.studentExplanation != null && s.studentExplanation!.isNotEmpty)
+              .toList();
+
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.88,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.assignment_late_outlined, color: Color(0xFF283593)),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Giải trình của học sinh',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  ],
+                ),
+                Text(
+                  '${_selectedExam?.title ?? "Phòng thi"} • ${explainedSessions.length} học sinh gửi giải trình',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 14),
+
+                Expanded(
+                  child: explainedSessions.isEmpty
+                      ? const Center(child: Text('Hiện chưa có học sinh nào gửi giải trình sự cố.'))
+                      : ListView.separated(
+                          itemCount: explainedSessions.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 12),
+                          itemBuilder: (ctx, idx) {
+                            final s = explainedSessions[idx];
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.grey[200]!),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: const Color(0xFFE8EAF6),
+                                        child: Text(
+                                          s.studentName.isNotEmpty ? s.studentName[0].toUpperCase() : 'H',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF283593)),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(s.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                            Text('Lớp ${_selectedExam?.className ?? "12A1"} • Điểm: ${s.score}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(6)),
+                                        child: Text(
+                                          'Rời app ${s.violationCount} lần',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.red[900]),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.grey[200]!),
+                                    ),
+                                    child: Text(
+                                      '💬 "${s.studentExplanation}"',
+                                      style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () => _showIncidentDetailModal(s),
+                                        child: const Text('Xem nhật ký'),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      FilledButton(
+                                        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF283593)),
+                                        onPressed: () async {
+                                          Navigator.pop(ctx);
+                                          await _service.performTeacherProctorAction(
+                                            exam: _selectedExam!,
+                                            session: s,
+                                            action: 'reset_violation',
+                                          );
+                                          await _loadSessionsForSelectedExam(_selectedExam!.id);
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Đã phê duyệt cho ${s.studentName} làm lại bài!')),
+                                            );
+                                          }
+                                        },
+                                        child: const Text('Cho làm lại'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // 3. MODAL BÁO CÁO KẾT QUẢ KỲ THI (CHUẨN HÌNH 18: PHÂN BỐ ĐIỂM SỐ & PHÂN LOẠI)
+  // ===========================================================================
+  void _showExamResultsModal(SupervisedExamModel exam) {
+    final total = _liveSessions.length;
+    final submitted = _liveSessions.where((s) => !s.isActive).length;
+    final autoSub = _liveSessions.where((s) => s.status == 'force_submitted_auto').length;
+    final avgScore = total > 0
+        ? _liveSessions.fold<double>(0.0, (sum, s) => sum + s.score) / total
+        : 0.0;
+    final maxScore = _liveSessions.fold<double>(0.0, (m, s) => s.score > m ? s.score : m);
+
+    // Phân bố phổ điểm
+    final cBelow5 = _liveSessions.where((s) => s.score < 5.0).length;
+    final c5to6 = _liveSessions.where((s) => s.score >= 5.0 && s.score < 6.0).length;
+    final c6to7 = _liveSessions.where((s) => s.score >= 6.0 && s.score < 7.0).length;
+    final c7to8 = _liveSessions.where((s) => s.score >= 7.0 && s.score < 8.0).length;
+    final cAbove8 = _liveSessions.where((s) => s.score >= 8.0).length;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(ctx).size.height * 0.88,
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.analytics_outlined, color: Color(0xFF283593)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Kết quả thi: ${exam.title}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('Lớp ${exam.className ?? "12A1"} • $total thí sinh tham gia', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // KPI
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: const Color(0xFFE8EAF6), borderRadius: BorderRadius.circular(12)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Điểm trung bình', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                        const SizedBox(height: 2),
+                        Text(avgScore.toStringAsFixed(1), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF283593))),
+                        Text('Cao nhất: $maxScore', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(12)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Đã nộp bài', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                        const SizedBox(height: 2),
+                        Text('$submitted/$total', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green[900])),
+                        Text('$autoSub em bị tự nộp', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            const Text('Phân bố điểm số', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+
+            // Biểu đồ cột phân bố điểm
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildScoreBar('<5 đ', cBelow5, total),
+                  _buildScoreBar('5–6 đ', c5to6, total),
+                  _buildScoreBar('6–7 đ', c6to7, total),
+                  _buildScoreBar('7–8 đ', c7to8, total),
+                  _buildScoreBar('≥8 đ', cAbove8, total),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            const Text('Danh sách thí sinh', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+
+            Expanded(
+              child: _liveSessions.isEmpty
+                  ? const Center(child: Text('Chưa có dữ liệu bài nộp.'))
+                  : ListView.separated(
+                      itemCount: _liveSessions.length,
+                      separatorBuilder: (_, _) => const Divider(height: 8),
+                      itemBuilder: (ctx, idx) {
+                        final s = _liveSessions[idx];
+                        final isAuto = s.status == 'force_submitted_auto';
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: isAuto ? Colors.red[100] : const Color(0xFFE8EAF6),
+                            child: Text(
+                              s.studentName.isNotEmpty ? s.studentName[0].toUpperCase() : 'H',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isAuto ? Colors.red : const Color(0xFF283593)),
+                            ),
+                          ),
+                          title: Text(s.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                          subtitle: Text('Rời app: ${s.violationCount} lần • Trạng thái: ${isAuto ? "Tự nộp sau 10s" : "Hoàn thành"}', style: const TextStyle(fontSize: 11.5)),
+                          trailing: Text(
+                            '${s.score} đ',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF283593)),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreBar(String label, int count, int total) {
+    final pct = total > 0 ? (count / total).clamp(0.05, 1.0) : 0.05;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$count', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        Container(
+          width: 28,
+          height: 60 * pct,
+          decoration: BoxDecoration(
+            color: const Color(0xFF283593),
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.black54)),
+      ],
+    );
+  }
+
+}
