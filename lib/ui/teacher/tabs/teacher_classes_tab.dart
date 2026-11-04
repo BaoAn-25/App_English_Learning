@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../data/app_repository.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
+import '../../admin/components/class_code_dialog.dart';
 
 /// Tab 2 (Giáo viên): Quản lý Lớp học, Tạo lớp mới, Duyệt học sinh & Hồ sơ học sinh chi tiết
 class TeacherClassesTab extends StatefulWidget {
@@ -379,8 +380,22 @@ class _TeacherClassesTabState extends State<TeacherClassesTab> {
                             ),
                             TextButton.icon(
                               onPressed: () async {
-                                await _service.regenerateClassCode(classId);
+                                final oldCode = currentClass['code']?.toString() ?? '';
+                                final newCode = await _service.regenerateClassCode(classId);
                                 await reloadInsideModal();
+                                if (mounted) {
+                                  await ClassCodeDialog.show(
+                                    context,
+                                    className: currentClass['name']?.toString() ?? 'Lớp học',
+                                    oldCode: oldCode,
+                                    initialNewCode: newCode,
+                                    onRegenerateAnother: () async {
+                                      final another = await _service.regenerateClassCode(classId);
+                                      await reloadInsideModal();
+                                      return another;
+                                    },
+                                  );
+                                }
                               },
                               icon: const Icon(Icons.refresh, size: 16),
                               label: const Text('Mã mới'),

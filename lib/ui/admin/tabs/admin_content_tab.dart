@@ -1137,12 +1137,22 @@ class _AdminContentTabState extends State<AdminContentTab> {
                                   backgroundColor: const Color(0xFF059669).withValues(alpha: 0.12),
                                   child: Text('${idx + 1}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF059669))),
                                 ),
-                                title: Row(
-                                  children: [
-                                    Text(w.english, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                    const SizedBox(width: 6),
-                                    Text(w.ipa, style: const TextStyle(color: Colors.grey, fontSize: 12.5)),
-                                  ],
+                                title: Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: w.english,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87),
+                                      ),
+                                      if (w.ipa.isNotEmpty)
+                                        TextSpan(
+                                          text: ' ${w.ipa}',
+                                          style: const TextStyle(color: Colors.grey, fontSize: 12.5, fontWeight: FontWeight.normal),
+                                        ),
+                                    ],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1156,11 +1166,18 @@ class _AdminContentTabState extends State<AdminContentTab> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.all(4),
+                                      constraints: const BoxConstraints(),
                                       icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.blue),
                                       onPressed: () => showWordEditDialog(editWord: w),
                                       tooltip: 'Sửa từ',
                                     ),
+                                    const SizedBox(width: 4),
                                     IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.all(4),
+                                      constraints: const BoxConstraints(),
                                       icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
                                       onPressed: () async {
                                         final confirm = await showDialog<bool>(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../data/app_repository.dart';
 import '../../../data/rbac_proctor_ai_service.dart';
 import '../components/admin_kpi_card.dart';
+import '../components/class_code_dialog.dart';
 
 /// Tab 4: Quản lý Lớp học, Giám sát Phòng thi 10s Live & Thông báo Hệ thống
 class AdminProctorTab extends StatefulWidget {
@@ -175,6 +176,31 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _handleRegenerateClassCode(Map<String, dynamic> cls) async {
+    final classId = cls['id'].toString();
+    final className = (cls['name'] ?? 'Lớp học').toString();
+    final oldCode = (cls['code'] ?? '').toString();
+
+    // Sinh mã lớp mới từ cơ sở dữ liệu thật
+    final newCode = await _service.regenerateClassCode(classId);
+    await _loadData();
+
+    if (!mounted) return;
+
+    // Hiển thị cửa sổ nhỏ thông báo đổi mã trực quan với các con số/ký tự nổi bật
+    await ClassCodeDialog.show(
+      context,
+      className: className,
+      oldCode: oldCode,
+      initialNewCode: newCode,
+      onRegenerateAnother: () async {
+        final anotherCode = await _service.regenerateClassCode(classId);
+        await _loadData();
+        return anotherCode;
+      },
     );
   }
 
@@ -644,15 +670,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                           const SizedBox(width: 8),
                           OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-                            onPressed: () async {
-                              final newCode = await _service.regenerateClassCode(c['id'].toString());
-                              await _loadData();
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Đã đổi mã lớp mới: $newCode')),
-                                );
-                              }
-                            },
+                            onPressed: () => _handleRegenerateClassCode(c),
                             icon: const Icon(Icons.refresh, size: 14),
                             label: const Text('Đổi mã'),
                           ),
