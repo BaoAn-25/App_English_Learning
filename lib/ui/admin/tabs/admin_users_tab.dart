@@ -267,12 +267,21 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     );
   }
 
-  void _showInviteTeacherModal() {
+  void _showAddTeacherModal() {
     final nameCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
-    final schoolCtrl = TextEditingController(text: 'THPT Nguyễn Trãi');
+    final schoolCtrl = TextEditingController();
     bool canProctor = true;
     bool canCreateExams = true;
+    int selectedTab = 0; // 0: Cấp quyền tài khoản có sẵn, 1: Thêm tài khoản mới
+
+    final studentUsers = _users.where((u) {
+      final r = (u['role'] ?? 'student').toString().toLowerCase();
+      final em = (u['email'] ?? '').toString();
+      return r != 'teacher' && !UserProfile.isSystemAdmin(em);
+    }).toList();
+
+    String? selectedUserId = studentUsers.isNotEmpty ? studentUsers.first['id']?.toString() : null;
 
     showModalBottomSheet(
       context: context,
@@ -308,7 +317,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
-                        'Mời giáo viên mới tham gia',
+                        'Thêm & Phân quyền Giáo viên',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -318,78 +327,247 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Họ và tên giáo viên',
-                    hintText: 'VD: Cô Thu Hà',
-                    border: OutlineInputBorder(),
+                const SizedBox(height: 14),
+
+                // Chọn chế độ: Cấp quyền tài khoản có sẵn vs Tạo mới
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setSheetState(() => selectedTab = 0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: selectedTab == 0 ? Colors.white : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: selectedTab == 0
+                                  ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))]
+                                  : null,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Cấp quyền tài khoản có sẵn',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
+                                color: selectedTab == 0 ? const Color(0xFF1E3A8A) : Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setSheetState(() => selectedTab = 1),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: selectedTab == 1 ? Colors.white : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: selectedTab == 1
+                                  ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))]
+                                  : null,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Tạo tài khoản mới',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
+                                color: selectedTab == 1 ? const Color(0xFF1E3A8A) : Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Địa chỉ Email trường / cá nhân',
-                    hintText: 'thuha@nguyentrai.edu.vn',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: schoolCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Trường THPT công tác',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
                 const SizedBox(height: 16),
-                const Text('Quyền hạn khi tham gia:', style: TextStyle(fontWeight: FontWeight.w600)),
-                CheckboxListTile(
-                  title: const Text('Soạn bài & Tạo đề thi trắc nghiệm'),
-                  value: canCreateExams,
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  onChanged: (v) => setSheetState(() => canCreateExams = v ?? true),
-                ),
-                CheckboxListTile(
-                  title: const Text('Giám sát phòng thi 10s (Bắt gian lận realtime)'),
-                  value: canProctor,
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  onChanged: (v) => setSheetState(() => canProctor = v ?? true),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
-                    onPressed: () async {
-                      if (emailCtrl.text.trim().isEmpty) return;
-                      Navigator.pop(ctx);
-                      await _service.createAdminUser(
-                        email: emailCtrl.text.trim(),
-                        password: 'TeacherPass2026!',
-                        displayName: nameCtrl.text.trim(),
-                        role: 'teacher',
-                      );
-                      await _loadData();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Đã gửi lời mời giáo viên tới ${emailCtrl.text.trim()}!'),
-                            backgroundColor: const Color(0xFF1B5E20),
+
+                if (selectedTab == 0) ...[
+                  // TAB 0: Phân quyền từ tài khoản có sẵn
+                  if (studentUsers.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Tất cả tài khoản hiện tại đều đã là Giáo viên hoặc Admin.\nHãy chuyển sang tab "Tạo tài khoản mới".',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: Colors.grey),
+                        ),
+                      ),
+                    )
+                  else ...[
+                    const Text(
+                      'Chọn tài khoản cần cấp quyền Giáo viên:',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: selectedUserId,
+                      decoration: const InputDecoration(
+                        labelText: 'Tài khoản người dùng',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: studentUsers.map((u) {
+                        final name = (u['display_name'] ?? u['displayName'] ?? u['email']?.toString().split('@').first ?? 'User').toString();
+                        final email = (u['email'] ?? '').toString();
+                        return DropdownMenuItem(
+                          value: u['id'].toString(),
+                          child: Text(
+                            '$name ($email)',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13.5),
                           ),
                         );
-                      }
-                    },
-                    icon: const Icon(Icons.mail_outline),
-                    label: const Text('Gửi lời mời & Cấp quyền Giáo viên'),
+                      }).toList(),
+                      onChanged: (v) => setSheetState(() => selectedUserId = v),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Quyền hạn cấp cho Giáo viên:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    CheckboxListTile(
+                      title: const Text('Soạn bài & Tạo đề thi trắc nghiệm', style: TextStyle(fontSize: 13)),
+                      value: canCreateExams,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (v) => setSheetState(() => canCreateExams = v ?? true),
+                    ),
+                    CheckboxListTile(
+                      title: const Text('Giám sát phòng thi 10s (Bắt gian lận realtime)', style: TextStyle(fontSize: 13)),
+                      value: canProctor,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (v) => setSheetState(() => canProctor = v ?? true),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF059669)),
+                        onPressed: selectedUserId == null
+                            ? null
+                            : () async {
+                                final targetUser = studentUsers.firstWhere((u) => u['id'].toString() == selectedUserId);
+                                final name = (targetUser['display_name'] ?? targetUser['displayName'] ?? targetUser['email'] ?? 'người dùng').toString();
+                                Navigator.pop(ctx);
+                                await _service.updateAdminUser(
+                                  userId: selectedUserId!,
+                                  role: 'teacher',
+                                );
+                                await _loadData();
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Đã cấp quyền Giáo viên thành công cho "$name"!'),
+                                      backgroundColor: const Color(0xFF059669),
+                                    ),
+                                  );
+                                }
+                              },
+                        icon: const Icon(Icons.verified_user_rounded, size: 18),
+                        label: const Text('Cấp quyền Giáo viên ngay', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ] else ...[
+                  // TAB 1: Tạo tài khoản giáo viên mới
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Họ và tên giáo viên',
+                      hintText: 'VD: Cô Thu Hà',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Địa chỉ Email trường / cá nhân',
+                      hintText: 'thuha@nguyentrai.edu.vn',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: schoolCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Trường THPT công tác',
+                      hintText: 'VD: THPT Nguyễn Trãi',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Quyền hạn khi tham gia:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(height: 4),
+                  CheckboxListTile(
+                    title: const Text('Soạn bài & Tạo đề thi trắc nghiệm', style: TextStyle(fontSize: 13)),
+                    value: canCreateExams,
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (v) => setSheetState(() => canCreateExams = v ?? true),
+                  ),
+                  CheckboxListTile(
+                    title: const Text('Giám sát phòng thi 10s (Bắt gian lận realtime)', style: TextStyle(fontSize: 13)),
+                    value: canProctor,
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (v) => setSheetState(() => canProctor = v ?? true),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+                      onPressed: () async {
+                        final email = emailCtrl.text.trim();
+                        final name = nameCtrl.text.trim();
+                        if (email.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Vui lòng nhập email giáo viên!'), backgroundColor: Colors.orange),
+                          );
+                          return;
+                        }
+                        Navigator.pop(ctx);
+                        await _service.createAdminUser(
+                          email: email,
+                          password: 'TeacherPass2026!',
+                          displayName: name.isNotEmpty ? name : email.split('@').first,
+                          role: 'teacher',
+                        );
+                        await _loadData();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Đã thêm tài khoản Giáo viên "$email" thành công!'),
+                              backgroundColor: const Color(0xFF1B5E20),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.person_add_rounded, size: 18),
+                      label: const Text('Thêm tài khoản Giáo viên', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -562,9 +740,9 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 ),
                 const SizedBox(width: 6),
                 FilledButton.icon(
-                  onPressed: _showInviteTeacherModal,
+                  onPressed: _showAddTeacherModal,
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Mời GV'),
+                  label: const Text('Thêm GV'),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF1E3A8A),
                     visualDensity: VisualDensity.compact,

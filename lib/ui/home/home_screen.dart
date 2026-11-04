@@ -584,41 +584,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-
-        // Thanh truy cập nhanh Trợ lý AI Cá nhân & Cổng Giáo viên / Admin
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E2430) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
+        if (currentUser.isTeacher || currentUser.isAdmin) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => AiTutorSheet.show(context),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB), size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Trợ lý AI Cá nhân',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (currentUser.isTeacher || currentUser.isAdmin)
+              if (currentUser.isTeacher)
                 TextButton.icon(
                   style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                   onPressed: () {
@@ -629,7 +600,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                   icon: const Icon(Icons.school_rounded, size: 16),
-                  label: const Text('Giáo viên', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                  label: const Text('Cổng Giáo viên', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                 ),
               if (currentUser.isAdmin)
                 TextButton.icon(
@@ -642,11 +613,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                   icon: const Icon(Icons.admin_panel_settings_rounded, size: 16),
-                  label: const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                  label: const Text('Cổng Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                 ),
             ],
           ),
-        ),
+        ],
       ],
     );
   }

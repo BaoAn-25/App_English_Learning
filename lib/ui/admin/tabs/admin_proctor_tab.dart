@@ -321,6 +321,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 const SizedBox(height: 12),
                 if (_classes.isNotEmpty)
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: selectedClassId,
                     decoration: const InputDecoration(
                       labelText: 'Giao cho lớp học',
@@ -377,6 +378,7 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
+                  isExpanded: true,
                   initialValue: unitForExam,
                   decoration: const InputDecoration(
                     labelText: 'Trích xuất đề từ Ngân hàng SGK 12',
@@ -692,12 +694,18 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   const Text('Chọn nhanh học sinh đã đăng ký:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Danh sách học sinh', border: OutlineInputBorder(), isDense: true),
                     items: studentUsers
                         .map(
                           (u) => DropdownMenuItem(
                             value: u['email'].toString(),
-                            child: Text('${u['display_name'] ?? u['displayName'] ?? u['email']} (${u['email']})', overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              '${u['display_name'] ?? u['displayName'] ?? u['email']} (${u['email']})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13),
+                            ),
                           ),
                         )
                         .toList(),
@@ -1199,32 +1207,74 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Danh sách lớp học:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FilledButton.tonalIcon(
-                      onPressed: _showCreateSupervisedExamModal,
-                      icon: const Icon(Icons.shield_outlined, size: 16),
-                      label: const Text('Tạo thi 10s'),
-                      style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: _showAddClassModal,
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Thêm lớp'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF1E3A8A),
-                        visualDensity: VisualDensity.compact,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 430;
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Danh sách lớp học:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.tonalIcon(
+                              onPressed: _showCreateSupervisedExamModal,
+                              icon: const Icon(Icons.shield_outlined, size: 16),
+                              label: const Text('Tạo thi 10s', style: TextStyle(fontSize: 12.5)),
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: _showAddClassModal,
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Thêm lớp', style: TextStyle(fontSize: 12.5)),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF1E3A8A),
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                    ],
+                  );
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Danh sách lớp học:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FilledButton.tonalIcon(
+                          onPressed: _showCreateSupervisedExamModal,
+                          icon: const Icon(Icons.shield_outlined, size: 16),
+                          label: const Text('Tạo thi 10s'),
+                          style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.icon(
+                          onPressed: _showAddClassModal,
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Thêm lớp'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E3A8A),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
             const SizedBox(height: 10),
             ListView.separated(
@@ -1296,32 +1346,43 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                      Wrap(
+                        alignment: WrapAlignment.end,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 6,
                         children: [
                           OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+                            style: OutlinedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
                             onPressed: () => _showClassMembersModal(c),
                             icon: const Icon(Icons.group_outlined, size: 14),
-                            label: const Text('Học sinh'),
+                            label: const Text('Học sinh', style: TextStyle(fontSize: 12)),
                           ),
-                          const SizedBox(width: 6),
                           OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+                            style: OutlinedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
                             onPressed: () => _showAssignTeacherModal(c),
                             icon: const Icon(Icons.person_add_alt, size: 14),
-                            label: Text(needsTeacher ? 'Gán GV' : 'Đổi GV'),
+                            label: Text(needsTeacher ? 'Gán GV' : 'Đổi GV', style: const TextStyle(fontSize: 12)),
                           ),
-                          const SizedBox(width: 6),
                           OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+                            style: OutlinedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
                             onPressed: () => _handleRegenerateClassCode(c),
                             icon: const Icon(Icons.refresh, size: 14),
-                            label: const Text('Đổi mã'),
+                            label: const Text('Đổi mã', style: TextStyle(fontSize: 12)),
                           ),
-                          const SizedBox(width: 6),
                           IconButton(
                             visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(),
                             tooltip: 'Giải tán lớp',
                             icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
                             onPressed: () => _confirmDeleteClass(c),
