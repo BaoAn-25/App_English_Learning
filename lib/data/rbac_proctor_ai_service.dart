@@ -1592,6 +1592,63 @@ class RbacProctorAiService {
   // ===========================================================================
   // 5. ADMIN: QUẢN LÝ NGƯỜI DÙNG, KHÓA TÀI KHOẢN & PHÂN QUYỀN (USERS CRUD & RBAC)
   // ===========================================================================
+  Future<Map<String, dynamic>> _getLockedAccountsMap() async {
+    final raw = await _repo.getSetting('admin_locked_accounts_map_json');
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      } catch (_) {}
+    }
+    return {};
+  }
+
+  Future<void> _applyLockedAccountsOverride(List<Map<String, dynamic>> users) async {
+    final lockedMap = await _getLockedAccountsMap();
+    if (lockedMap.isEmpty) return;
+
+    for (var i = 0; i < users.length; i++) {
+      final em = (users[i]['email'] ?? '').toString().trim().toLowerCase();
+      final id = (users[i]['id'] ?? '').toString();
+      final key = lockedMap.containsKey(em) ? em : (lockedMap.containsKey(id) ? id : null);
+      if (key != null) {
+        final info = lockedMap[key];
+        if (info is Map) {
+          final isLocked = info['isLocked'] == true;
+          users[i]['is_locked'] = isLocked;
+          if (info['reason'] != null && info['reason'].toString().isNotEmpty) {
+            users[i]['locked_reason'] = info['reason'].toString();
+          }
+        } else if (info == true) {
+          users[i]['is_locked'] = true;
+        }
+      }
+    }
+  }
+
+  Future<void> _recordLockedAccountState({
+    required String userId,
+    String? email,
+    required bool isLocked,
+    String? reason,
+  }) async {
+    final lockedMap = await _getLockedAccountsMap();
+    final cleanEmail = email?.trim().toLowerCase();
+
+    if (isLocked) {
+      final info = {'isLocked': true, 'reason': reason ?? ''};
+      if (cleanEmail != null && cleanEmail.isNotEmpty) {
+        lockedMap[cleanEmail] = info;
+      }
+      lockedMap[userId] = info;
+    } else {
+      if (cleanEmail != null && cleanEmail.isNotEmpty) {
+        lockedMap.remove(cleanEmail);
+      }
+      lockedMap.remove(userId);
+    }
+    await _repo.setSetting('admin_locked_accounts_map_json', jsonEncode(lockedMap));
+  }
+
   Future<List<Map<String, dynamic>>> getAdminUsers({String? roleFilter, String? search}) async {
     try {
       final client = await _client();
@@ -1606,6 +1663,7 @@ class RbacProctorAiService {
         final serverUsers = (res.data!['users'] as List)
             .map((e) => Map<String, dynamic>.from(e as Map))
             .toList();
+        await _applyLockedAccountsOverride(serverUsers);
         await _repo.setSetting('admin_cached_users_json', jsonEncode(serverUsers));
         return serverUsers;
       }
@@ -1619,6 +1677,8 @@ class RbacProctorAiService {
         users = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       } catch (_) {}
     }
+
+    await _applyLockedAccountsOverride(users);
 
     // Luôn đảm bảo tài khoản quản trị hệ thống tongan542@gmail.com mang vai trò admin
     for (var i = 0; i < users.length; i++) {
@@ -1753,6 +1813,15 @@ class RbacProctorAiService {
       if (lockedReason != null) cur['locked_reason'] = lockedReason;
       list[idx] = cur;
       await _repo.setSetting('admin_cached_users_json', jsonEncode(list));
+    }
+
+    if (isLocked != null) {
+      await _recordLockedAccountState(
+        userId: userId,
+        email: cleanEmail,
+        isLocked: isLocked,
+        reason: lockedReason,
+      );
     }
 
     await recordAuditLog(

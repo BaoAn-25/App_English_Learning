@@ -127,7 +127,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       return;
     }
 
-    final reasonCtrl = TextEditingController(text: 'Vi phạm quy chế thi nhiều lần (out app >10s)');
+    final reasonCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -146,6 +146,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               maxLines: 2,
               decoration: const InputDecoration(
                 labelText: 'Lý do khóa tài khoản',
+                hintText: 'Nhập lý do khóa tài khoản...',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -162,21 +163,30 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               final lockReason = reasonCtrl.text.trim();
               Navigator.pop(ctx);
               final email = (user['email'] ?? '').toString();
-              final success = await _service.updateAdminUser(
-                userId: user['id'].toString(),
+              final uId = user['id'].toString();
+              final targetReason = lockReason.isNotEmpty ? lockReason : 'Tạm khóa bởi Quản trị viên';
+
+              final idx = _users.indexWhere((u) =>
+                  u['id']?.toString() == uId ||
+                  (email.isNotEmpty && u['email']?.toString().toLowerCase() == email.toLowerCase()));
+              if (idx >= 0) {
+                setState(() {
+                  _users[idx]['is_locked'] = true;
+                  _users[idx]['locked_reason'] = targetReason;
+                });
+              }
+
+              await _service.updateAdminUser(
+                userId: uId,
                 email: email,
                 isLocked: true,
-                lockedReason: lockReason.isNotEmpty ? lockReason : 'Vi phạm quy chế thi',
+                lockedReason: targetReason,
               );
               await _loadData();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                      success
-                          ? 'Đã khóa tài khoản $email thành công trên hệ thống.'
-                          : 'Đã cập nhật trạng thái khóa tài khoản.',
-                    ),
+                    content: Text('Đã khóa tài khoản $email. Tài khoản đã chuyển vào mục "Bị khóa".'),
                     backgroundColor: Colors.red[700],
                   ),
                 );
@@ -191,8 +201,20 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
   void _showUnlockUser(Map<String, dynamic> user) async {
     final email = (user['email'] ?? '').toString();
-    final success = await _service.updateAdminUser(
-      userId: user['id'].toString(),
+    final uId = user['id'].toString();
+
+    final idx = _users.indexWhere((u) =>
+        u['id']?.toString() == uId ||
+        (email.isNotEmpty && u['email']?.toString().toLowerCase() == email.toLowerCase()));
+    if (idx >= 0) {
+      setState(() {
+        _users[idx]['is_locked'] = false;
+        _users[idx]['locked_reason'] = '';
+      });
+    }
+
+    await _service.updateAdminUser(
+      userId: uId,
       email: email,
       isLocked: false,
       lockedReason: '',
@@ -201,11 +223,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            success
-                ? 'Đã mở khóa tài khoản $email thành công.'
-                : 'Đã mở khóa tài khoản.',
-          ),
+          content: Text('Đã mở khóa tài khoản $email thành công.'),
           backgroundColor: const Color(0xFF1B5E20),
         ),
       );
