@@ -2507,24 +2507,17 @@ Trả về JSON thuần túy theo cấu trúc:
     }
   });
 
-  app.post('/api/classes/join', async (req, res) => {
+  app.post('/api/classes/join', requireRoles(['student']), async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
-    const { joinCode, studentId, studentName, studentEmail } = req.body;
+    const { joinCode } = req.body;
     if (!joinCode || String(joinCode).trim().length === 0) {
       return res.status(400).json({ error: 'Vui lòng nhập mã lớp.' });
     }
 
     // Nhận diện người dùng: ưu tiên Bearer token nếu có, fallback sang thông tin body từ app mobile
-    let authUser = null;
-    try {
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
-      if (token) authUser = verifyToken(token);
-    } catch (_) {}
-
-    const targetStudentId = (authUser && authUser.id) || studentId || `stu_${Date.now()}`;
-    const targetStudentName = (authUser && (authUser.displayName || authUser.email)) || studentName || 'Học sinh';
-    const targetStudentEmail = (authUser && authUser.email) || studentEmail || '';
+    const targetStudentId = req.user.id;
+    const targetStudentName = req.user.displayName || req.user.email || 'Học sinh';
+    const targetStudentEmail = req.user.email || '';
 
     try {
       const clsRes = await pool.query(
@@ -3074,4 +3067,3 @@ module.exports = {
   initRbacAndProctoringTables,
   registerRbacProctorAiRoutes,
 };
-

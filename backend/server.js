@@ -1047,7 +1047,12 @@ app.post('/api/auth/google', async (req, res) => {
           lockedReason: lockedRow.locked_reason || 'Tạm khóa bởi Quản trị viên.',
         });
       }
-    } catch (_) {}
+    } catch (lockErr) {
+      console.error('[Google Auth] Không thể kiểm tra trạng thái khóa tài khoản:', lockErr.message);
+      return res.status(503).json({
+        error: 'Không thể xác minh trạng thái tài khoản lúc này. Vui lòng thử lại sau.',
+      });
+    }
 
     const client = await pool.connect();
     try {

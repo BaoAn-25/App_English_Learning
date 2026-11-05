@@ -1858,6 +1858,35 @@ class RbacProctorAiService {
       idx = list.indexWhere((u) => u['email']?.toString().trim().toLowerCase() == cleanEmail);
     }
 
+    bool serverSuccess = false;
+    try {
+      final client = await _client();
+      final payload = <String, dynamic>{};
+      if (displayName != null) payload['displayName'] = displayName;
+      if (role != null) payload['role'] = role;
+      if (isLocked != null) payload['isLocked'] = isLocked;
+      if (lockedReason != null) payload['lockedReason'] = lockedReason;
+      if (cleanEmail != null && cleanEmail.isNotEmpty) payload['email'] = cleanEmail;
+
+      final res = await client.putJson('/admin/users/$userId', payload);
+      if (res.isSuccess) {
+        serverSuccess = true;
+        if (res.data?['user'] is Map) {
+          final serverUser = Map<String, dynamic>.from(res.data!['user'] as Map);
+          if (idx >= 0) {
+            list[idx] = serverUser;
+          } else {
+            list.add(serverUser);
+          }
+          await _repo.setSetting('admin_cached_users_json', jsonEncode(list));
+        }
+      }
+    } catch (_) {}
+
+    if (!serverSuccess) {
+      return false;
+    }
+
     if (idx >= 0) {
       final cur = Map<String, dynamic>.from(list[idx]);
       if (displayName != null) cur['display_name'] = displayName;
@@ -1886,32 +1915,6 @@ class RbacProctorAiService {
       details: 'Cập nhật người dùng $userId (${cleanEmail ?? ''}) (Role: ${role ?? "giữ nguyên"}, Khóa: ${isLocked ?? false})',
     );
 
-    bool serverSuccess = false;
-    try {
-      final client = await _client();
-      final payload = <String, dynamic>{};
-      if (displayName != null) payload['displayName'] = displayName;
-      if (role != null) payload['role'] = role;
-      if (isLocked != null) payload['isLocked'] = isLocked;
-      if (lockedReason != null) payload['lockedReason'] = lockedReason;
-      if (cleanEmail != null && cleanEmail.isNotEmpty) payload['email'] = cleanEmail;
-
-      final res = await client.putJson('/admin/users/$userId', payload);
-      if (res.isSuccess) {
-        serverSuccess = true;
-        if (res.data?['user'] is Map) {
-          final serverUser = Map<String, dynamic>.from(res.data!['user'] as Map);
-          if (idx >= 0) {
-            list[idx] = serverUser;
-          } else {
-            list.add(serverUser);
-          }
-          await _repo.setSetting('admin_cached_users_json', jsonEncode(list));
-        }
-      }
-    } catch (_) {}
-
-    unawaited(syncLockedAccountsToCloud());
     return serverSuccess;
   }
 
@@ -2720,6 +2723,12 @@ class RbacProctorAiService {
           'status': status,
           'message': res.data!['message'] ?? 'Tham gia lớp học thành công.',
           'classItem': classMap,
+        };
+      }
+      if (res.statusCode == 401 || res.statusCode == 403) {
+        return {
+          'ok': false,
+          'message': res.errorMessage ?? 'Phiên đăng nhập không hợp lệ hoặc tài khoản không được phép tham gia lớp.',
         };
       }
 

@@ -455,79 +455,100 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
     if (lower.contains('coffee') ||
         lower.contains('latte') ||
         lower.contains('cappuccino') ||
-        lower.contains('espresso'))
+        lower.contains('espresso')) {
       return Icons.local_cafe_rounded;
-    if (lower.contains('tea') || lower.contains('matcha'))
+    }
+    if (lower.contains('tea') || lower.contains('matcha')) {
       return Icons.emoji_food_beverage_rounded;
-    if (lower.contains('milk')) return Icons.local_drink_rounded;
-    if (lower.contains('sugar') || lower.contains('sweetness'))
+    }
+    if (lower.contains('milk')) {
+      return Icons.local_drink_rounded;
+    }
+    if (lower.contains('sugar') || lower.contains('sweetness')) {
       return Icons.grain_rounded;
-    if (lower.contains('bubble') || lower.contains('pearl'))
+    }
+    if (lower.contains('bubble') || lower.contains('pearl')) {
       return Icons.bubble_chart_rounded;
+    }
     if (lower.contains('ball') ||
         lower.contains('striker') ||
         lower.contains('goal') ||
         lower.contains('penalty') ||
-        lower.contains('champion'))
+        lower.contains('champion')) {
       return Icons.sports_soccer_rounded;
-    if (lower.contains('passport')) return Icons.badge_outlined;
-    if (lower.contains('ticket') || lower.contains('boarding'))
+    }
+    if (lower.contains('passport')) {
+      return Icons.badge_outlined;
+    }
+    if (lower.contains('ticket') || lower.contains('boarding')) {
       return Icons.airplane_ticket_rounded;
-    if (lower.contains('luggage') || lower.contains('baggage'))
+    }
+    if (lower.contains('luggage') || lower.contains('baggage')) {
       return Icons.luggage_rounded;
+    }
     if (lower.contains('flight') ||
         lower.contains('gate') ||
-        lower.contains('terminal'))
+        lower.contains('terminal')) {
       return Icons.flight_takeoff_rounded;
+    }
     if (lower.contains('sister') ||
         lower.contains('aunt') ||
         lower.contains('mother') ||
-        lower.contains('niece'))
+        lower.contains('niece')) {
       return Icons.face_3_rounded;
+    }
     if (lower.contains('brother') ||
         lower.contains('uncle') ||
         lower.contains('father') ||
-        lower.contains('nephew'))
+        lower.contains('nephew')) {
       return Icons.face_rounded;
+    }
     if (lower.contains('workout') ||
         lower.contains('muscle') ||
         lower.contains('dumbbell') ||
         lower.contains('barbell') ||
-        lower.contains('gym'))
+        lower.contains('gym')) {
       return Icons.fitness_center_rounded;
+    }
     if (lower.contains('menu') ||
         lower.contains('food') ||
         lower.contains('delicious') ||
         lower.contains('appetizer') ||
-        lower.contains('course'))
+        lower.contains('course')) {
       return Icons.restaurant_rounded;
+    }
     if (lower.contains('outfit') ||
         lower.contains('fashion') ||
         lower.contains('shirt') ||
-        lower.contains('dress'))
+        lower.contains('dress')) {
       return Icons.checkroom_rounded;
+    }
     if (lower.contains('movie') ||
         lower.contains('blockbuster') ||
         lower.contains('popcorn') ||
-        lower.contains('cinema'))
+        lower.contains('cinema')) {
       return Icons.movie_filter_rounded;
+    }
     if (lower.contains('music') ||
         lower.contains('melody') ||
         lower.contains('concert') ||
-        lower.contains('song'))
+        lower.contains('song')) {
       return Icons.music_note_rounded;
+    }
     if (lower.contains('code') ||
         lower.contains('developer') ||
         lower.contains('database') ||
         lower.contains('bug') ||
-        lower.contains('software'))
+        lower.contains('software')) {
       return Icons.terminal_rounded;
+    }
     if (lower.contains('puppy') ||
         lower.contains('dog') ||
         lower.contains('cat') ||
         lower.contains('kitten') ||
-        lower.contains('pet'))
+        lower.contains('pet')) {
       return Icons.pets_rounded;
+    }
     return Icons.menu_book_rounded;
   }
 
@@ -2377,34 +2398,47 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
     if (lower.contains('coffee') ||
         lower.contains('latte') ||
         lower.contains('cappuccino') ||
-        lower.contains('espresso'))
+        lower.contains('espresso')) {
       return Icons.local_cafe_rounded;
-    if (lower.contains('tea') || lower.contains('matcha'))
+    }
+    if (lower.contains('tea') || lower.contains('matcha')) {
       return Icons.emoji_food_beverage_rounded;
-    if (lower.contains('milk')) return Icons.local_drink_rounded;
-    if (lower.contains('sugar') || lower.contains('sweetness'))
+    }
+    if (lower.contains('milk')) {
+      return Icons.local_drink_rounded;
+    }
+    if (lower.contains('sugar') || lower.contains('sweetness')) {
       return Icons.grain_rounded;
-    if (lower.contains('bubble') || lower.contains('pearl'))
+    }
+    if (lower.contains('bubble') || lower.contains('pearl')) {
       return Icons.bubble_chart_rounded;
+    }
     if (lower.contains('ball') ||
         lower.contains('striker') ||
         lower.contains('goal') ||
-        lower.contains('penalty'))
+        lower.contains('penalty')) {
       return Icons.sports_soccer_rounded;
-    if (lower.contains('passport')) return Icons.badge_outlined;
-    if (lower.contains('ticket') || lower.contains('boarding'))
+    }
+    if (lower.contains('passport')) {
+      return Icons.badge_outlined;
+    }
+    if (lower.contains('ticket') || lower.contains('boarding')) {
       return Icons.airplane_ticket_rounded;
-    if (lower.contains('luggage') || lower.contains('baggage'))
+    }
+    if (lower.contains('luggage') || lower.contains('baggage')) {
       return Icons.luggage_rounded;
+    }
     if (lower.contains('workout') ||
         lower.contains('muscle') ||
         lower.contains('dumbbell') ||
-        lower.contains('barbell'))
+        lower.contains('barbell')) {
       return Icons.fitness_center_rounded;
+    }
     if (lower.contains('menu') ||
         lower.contains('food') ||
-        lower.contains('delicious'))
+        lower.contains('delicious')) {
       return Icons.restaurant_rounded;
+    }
     return Icons.menu_book_rounded;
   }
 }

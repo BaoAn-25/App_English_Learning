@@ -164,8 +164,8 @@ class AuthController extends ChangeNotifier {
       final res = await _apiClient.getCurrentUser(token);
       if (res.statusCode == 403 && res.data?['isLocked'] == true) {
         final lockReason = res.data?['lockedReason'] as String? ?? 'Vi phạm quy định hệ thống.';
-        _user = _user.copyWith(isLocked: true, lockedReason: lockReason);
-        await _repository.saveAuthUser(_user);
+        await logout();
+        _errorMessage = 'Tài khoản đã bị khóa. Lý do: $lockReason';
         notifyListeners();
         return true;
       } else if (res.isSuccess && res.data?['user'] is Map) {

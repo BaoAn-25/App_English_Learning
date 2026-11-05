@@ -176,12 +176,29 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 });
               }
 
-              await _service.updateAdminUser(
+              final updated = await _service.updateAdminUser(
                 userId: uId,
                 email: email,
                 isLocked: true,
                 lockedReason: targetReason,
               );
+              if (!updated) {
+                if (mounted && idx >= 0) {
+                  setState(() {
+                    _users[idx]['is_locked'] = false;
+                    _users[idx]['locked_reason'] = '';
+                  });
+                }
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Không thể khóa tài khoản trên máy chủ. Vui lòng kiểm tra kết nối và thử lại.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+                return;
+              }
               await _loadData();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -213,12 +230,28 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       });
     }
 
-    await _service.updateAdminUser(
+    final updated = await _service.updateAdminUser(
       userId: uId,
       email: email,
       isLocked: false,
       lockedReason: '',
     );
+    if (!updated) {
+      if (mounted && idx >= 0) {
+        setState(() {
+          _users[idx]['is_locked'] = true;
+        });
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể mở khóa tài khoản trên máy chủ. Vui lòng kiểm tra kết nối và thử lại.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
     await _loadData();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
