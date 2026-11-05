@@ -1102,8 +1102,9 @@ class RbacProctorAiService {
       final unitNum = (q['unitNumber'] as num?)?.toInt() ?? 1;
       final options =
           (q['options'] as List?)?.map((e) => e.toString()).toList() ?? [];
-      if ((q['stem'] ?? '').toString().trim().isEmpty || options.length < 2)
+      if ((q['stem'] ?? '').toString().trim().isEmpty || options.length < 2) {
         continue;
+      }
 
       final questionObj = Question(
         id: qId,
@@ -1890,8 +1891,9 @@ class RbacProctorAiService {
     try {
       final client = await _client();
       final queryParams = <String>[];
-      if (roleFilter != null && roleFilter != 'all')
+      if (roleFilter != null && roleFilter != 'all') {
         queryParams.add('role=$roleFilter');
+      }
       if (search != null && search.trim().isNotEmpty) {
         queryParams.add('search=${Uri.encodeComponent(search.trim())}');
       }
@@ -1942,8 +1944,9 @@ class RbacProctorAiService {
       final name = (u['display_name'] ?? u['displayName'] ?? '')
           .toString()
           .toLowerCase();
-      if (UserProfile.isSystemAdmin(em))
+      if (UserProfile.isSystemAdmin(em)) {
         return false; // Không bao giờ xóa admin hệ thống
+      }
       return id.contains('mock') ||
           id.contains('fake') ||
           id.contains('teacher_pending') ||
@@ -2008,18 +2011,6 @@ class RbacProctorAiService {
     required String displayName,
     required String role,
   }) async {
-    final newUser = {
-      'id': 'usr_${DateTime.now().millisecondsSinceEpoch}',
-      'email': email.trim().toLowerCase(),
-      'display_name': displayName.trim().isEmpty
-          ? email.split('@').first
-          : displayName.trim(),
-      'role': role,
-      'is_locked': false,
-      'locked_reason': '',
-      'created_at': DateTime.now().toIso8601String(),
-    };
-
     try {
       final client = await _client();
       final res = await client.postJson('/admin/users', {
@@ -2033,17 +2024,12 @@ class RbacProctorAiService {
         await _upsertLocalAdminUser(created);
         return created;
       }
-    } catch (_) {}
-
-    await _upsertLocalAdminUser(newUser);
-    await recordAuditLog(
-      action: 'ADMIN_CREATE_USER',
-      targetType: 'user',
-      targetId: newUser['id'].toString(),
-      details:
-          'Tạo tài khoản ${newUser['email']} với vai trò ${role.toUpperCase()}',
-    );
-    return newUser;
+      throw StateError(
+        res.errorMessage ?? 'Máy chủ không xác nhận việc tạo tài khoản.',
+      );
+    } catch (error) {
+      throw StateError('Không thể tạo tài khoản trên máy chủ: $error');
+    }
   }
 
   Future<bool> updateAdminUser({
@@ -2072,8 +2058,9 @@ class RbacProctorAiService {
       if (role != null) payload['role'] = role;
       if (isLocked != null) payload['isLocked'] = isLocked;
       if (lockedReason != null) payload['lockedReason'] = lockedReason;
-      if (cleanEmail != null && cleanEmail.isNotEmpty)
+      if (cleanEmail != null && cleanEmail.isNotEmpty) {
         payload['email'] = cleanEmail;
+      }
 
       final res = await client.putJson('/admin/users/$userId', payload);
       if (res.isSuccess) {
@@ -3960,36 +3947,28 @@ class RbacProctorAiService {
     String password = '',
   }) async {
     final requests = await getTeacherRequests();
-    requests.removeWhere((r) => r['id'] == request['id']);
-    await _repo.setSetting('admin_teacher_requests_json', jsonEncode(requests));
-
-    if (approve) {
-      final pwd = password.trim().isNotEmpty
-          ? password.trim()
-          : 'GV${DateTime.now().millisecondsSinceEpoch % 100000}!';
-      await createAdminUser(
-        email: (request['email'] ?? '').toString(),
-        password: pwd,
-        displayName: (request['display_name'] ?? request['displayName'] ?? '')
-            .toString(),
-        role: 'teacher',
-      );
-    } else {
-      await recordAuditLog(
-        action: 'REJECT_TEACHER_REQUEST',
-        targetType: 'teacher_request',
-        targetId: (request['id'] ?? '').toString(),
-        details: 'Từ chối yêu cầu tài khoản giáo viên: ${request['email']}',
-      );
-    }
-
     try {
       final client = await _client();
-      await client.postJson(
+      final res = await client.postJson(
         '/admin/teacher-requests/${request['id']}/decision',
         {'approve': approve},
       );
-    } catch (_) {}
+      if (!res.isSuccess) {
+        throw StateError(
+          res.errorMessage ?? 'Máy chủ không xác nhận quyết định hồ sơ giáo viên.',
+        );
+      }
+      requests.removeWhere((r) => r['id'] == request['id']);
+      await _repo.setSetting('admin_teacher_requests_json', jsonEncode(requests));
+      await recordAuditLog(
+        action: approve ? 'APPROVE_TEACHER_REQUEST' : 'REJECT_TEACHER_REQUEST',
+        targetType: 'teacher_request',
+        targetId: (request['id'] ?? '').toString(),
+        details: '${approve ? 'Duyệt' : 'Từ chối'} yêu cầu tài khoản giáo viên: ${request['email']}',
+      );
+    } catch (error) {
+      throw StateError('Không thể cập nhật yêu cầu giáo viên trên máy chủ: $error');
+    }
   }
 
   // ===========================================================================
@@ -4306,10 +4285,12 @@ class RbacProctorAiService {
     try {
       final client = await _client();
       final q = <String>[];
-      if (email.trim().isNotEmpty)
+      if (email.trim().isNotEmpty) {
         q.add('email=${Uri.encodeComponent(email.trim())}');
-      if (userId != null && userId.trim().isNotEmpty)
+      }
+      if (userId != null && userId.trim().isNotEmpty) {
         q.add('userId=${Uri.encodeComponent(userId.trim())}');
+      }
       final res = await client.getJson(
         '/auth/check-lock?${q.join('&')}',
         timeout: const Duration(seconds: 4),

@@ -140,12 +140,21 @@ class _AdminPortalScreenState extends State<AdminPortalScreen>
     );
 
     if (confirmed == true) {
-      await RbacProctorAiService.instance.createAdminUser(
-        email: emailCtrl.text.trim(),
-        password: passCtrl.text,
-        displayName: nameCtrl.text.trim(),
-        role: selectedRole,
-      );
+      try {
+        await RbacProctorAiService.instance.createAdminUser(
+          email: emailCtrl.text.trim(),
+          password: passCtrl.text,
+          displayName: nameCtrl.text.trim(),
+          role: selectedRole,
+        );
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+          );
+        }
+        return;
+      }
       await _loadAllAdminData();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
