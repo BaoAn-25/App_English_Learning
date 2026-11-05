@@ -443,7 +443,9 @@ class ClassReminderModel {
 /// Quản lý Phiên bản Sách Giáo Khoa & Trợ lý AI Cá nhân Đa vai trò.
 class RbacProctorAiService {
   RbacProctorAiService._();
+
   static final RbacProctorAiService instance = RbacProctorAiService._();
+  String? lastAdminUserError;
 
   final AppRepository _repo = AppRepository();
 
@@ -2052,6 +2054,7 @@ class RbacProctorAiService {
     bool? isLocked,
     String? lockedReason,
   }) async {
+    lastAdminUserError = null;
     final list = await getAdminUsers();
     final cleanEmail = email?.trim().toLowerCase();
     int idx = list.indexWhere((u) => u['id']?.toString() == userId);
@@ -2086,8 +2089,12 @@ class RbacProctorAiService {
           }
           await _repo.setSetting('admin_cached_users_json', jsonEncode(list));
         }
+      } else {
+        lastAdminUserError = res.errorMessage ?? 'Máy chủ từ chối cập nhật tài khoản.';
       }
-    } catch (_) {}
+    } catch (error) {
+      lastAdminUserError = 'Không thể kết nối máy chủ: $error';
+    }
 
     if (!serverSuccess) {
       return false;

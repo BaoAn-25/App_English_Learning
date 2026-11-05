@@ -1885,6 +1885,22 @@ Trả về JSON thuần túy theo cấu trúc:
     const { displayName, role, isLocked, lockedReason, email } = req.body;
     try {
       const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+      const target = await pool.query(
+        `SELECT id
+         FROM users
+         WHERE id = $1
+            OR LOWER(email) = LOWER($1)
+            OR ($2::text IS NOT NULL AND LOWER(email) = LOWER($2))
+         LIMIT 1`,
+        [id, cleanEmail]
+      );
+      if (target.rows.length === 0) {
+        return res.status(404).json({
+          error: 'Không tìm thấy tài khoản Google này trong cơ sở dữ liệu. Vui lòng tải lại danh sách người dùng.',
+        });
+      }
+
+      const targetId = target.rows[0].id;
       const result = await pool.query(
         `UPDATE users
          SET display_name = CASE WHEN $1::text IS NOT NULL THEN $1::text ELSE display_name END,
@@ -1893,43 +1909,17 @@ Trả về JSON thuần túy theo cấu trúc:
              locked_reason = CASE WHEN $4::text IS NOT NULL THEN $4::text ELSE locked_reason END,
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $5
-            OR (LOWER(email) = LOWER($5))
-            OR (LOWER(email) = LOWER($6) AND $6 IS NOT NULL)
          RETURNING id, email, display_name, role, is_locked, locked_reason, created_at`,
         [
           displayName || null,
           role && ['student', 'teacher', 'admin'].includes(role) ? role : null,
           isLocked !== undefined ? Boolean(isLocked) : null,
           lockedReason !== undefined ? String(lockedReason) : null,
-          id,
-          cleanEmail,
+          targetId,
         ]
       );
       if (result.rows.length === 0) {
-        const targetEmail = cleanEmail || (id.includes('@') ? id.trim().toLowerCase() : null);
-        if (targetEmail) {
-          const newUserId = id.startsWith('usr_') ? id : `usr_lock_${Date.now()}`;
-          const insRes = await pool.query(
-            `INSERT INTO users (id, email, display_name, role, auth_provider, is_locked, locked_reason)
-             VALUES ($1, $2, $3, $4, 'google', $5, $6)
-             ON CONFLICT (email) DO UPDATE SET
-               is_locked = EXCLUDED.is_locked,
-               locked_reason = EXCLUDED.locked_reason,
-               updated_at = CURRENT_TIMESTAMP
-             RETURNING id, email, display_name, role, is_locked, locked_reason, created_at`,
-            [
-              newUserId,
-              targetEmail,
-              displayName || targetEmail.split('@')[0],
-              role || 'student',
-              isLocked !== undefined ? Boolean(isLocked) : true,
-              lockedReason || 'Tạm khóa bởi Quản trị viên',
-            ]
-          );
-          result = insRes;
-        } else {
-          return res.status(404).json({ error: 'Không tìm thấy người dùng trong hệ thống.' });
-        }
+        return res.status(404).json({ error: 'Không thể cập nhật tài khoản trong cơ sở dữ liệu.' });
       }
       const updatedUser = result.rows[0];
       await logAudit(pool, req.user, 'ADMIN_UPDATE_USER', 'users', updatedUser.id, { role, isLocked, lockedReason });

@@ -191,8 +191,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 }
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Không thể khóa tài khoản trên máy chủ. Vui lòng kiểm tra kết nối và thử lại.'),
+                    SnackBar(
+                      content: Text(
+                        _service.lastAdminUserError ??
+                            'Không thể khóa tài khoản trên máy chủ. Vui lòng tải lại danh sách và thử lại.',
+                      ),
                       backgroundColor: Colors.red,
                     ),
                   );
