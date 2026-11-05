@@ -1208,7 +1208,18 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      await client.postJson('/teacher/exams', model.toMap());
+      final res = await client.postJson('/teacher/exams', model.toMap());
+      if (res.isSuccess && res.data?['exam'] is Map) {
+        final serverExam = SupervisedExamModel.fromMap(Map<String, dynamic>.from(res.data!['exam'] as Map));
+        final sIdx = exams.indexWhere((e) => e.id == serverExam.id || e.id == examId);
+        if (sIdx >= 0) {
+          exams[sIdx] = serverExam;
+        } else {
+          exams.insert(0, serverExam);
+        }
+        await _saveSupervisedExamsLocal(exams);
+        return serverExam;
+      }
     } catch (_) {}
 
     return model;

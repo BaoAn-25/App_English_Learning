@@ -1114,12 +1114,16 @@ Trả về JSON thuần túy theo cấu trúc:
   app.post('/api/teacher/exams', requireRoles(['teacher', 'admin']), async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
     const {
+      id,
       title,
       description = '',
+      classId,
+      className,
       durationMinutes = 45,
       deadlineAt,
       graceSeconds = 10,
       maxViolations = 2,
+      maxAttempts = 1,
       violationAction = 'force_submit',
       questions = [],
     } = req.body;
@@ -1129,20 +1133,37 @@ Trả về JSON thuần túy theo cấu trúc:
     }
 
     try {
-      const examId = `sexam_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const examId = id && String(id).trim().length > 0
+        ? String(id).trim()
+        : `sexam_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+
       const finalQuestions = Array.isArray(questions) && questions.length > 0
         ? questions
         : buildGeneratedQuestionsFallback(1, 'grammar', 2, 10, title);
 
       const result = await pool.query(
         `INSERT INTO supervised_exams
-          (id, title, description, duration_minutes, deadline_at, grace_seconds, max_violations, violation_action, questions_json, is_active, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10)
+          (id, title, description, class_id, max_attempts, duration_minutes, deadline_at, grace_seconds, max_violations, violation_action, questions_json, is_active, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE, $12)
+         ON CONFLICT (id) DO UPDATE SET
+          title = EXCLUDED.title,
+          description = EXCLUDED.description,
+          class_id = EXCLUDED.class_id,
+          max_attempts = EXCLUDED.max_attempts,
+          duration_minutes = EXCLUDED.duration_minutes,
+          deadline_at = EXCLUDED.deadline_at,
+          grace_seconds = EXCLUDED.grace_seconds,
+          max_violations = EXCLUDED.max_violations,
+          violation_action = EXCLUDED.violation_action,
+          questions_json = EXCLUDED.questions_json,
+          is_active = TRUE
          RETURNING *`,
         [
           examId,
           String(title).trim(),
           String(description || '').trim(),
+          classId || null,
+          Number(maxAttempts) || 1,
           Number(durationMinutes) || 45,
           deadlineAt ? new Date(deadlineAt).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString(),
           Number(graceSeconds) || 10,
@@ -1357,7 +1378,8 @@ Trả về JSON thuần túy theo cấu trúc:
       const result = await pool.query(`
         SELECT e.id, e.title, e.description, e.duration_minutes, e.deadline_at,
                e.grace_seconds, e.max_violations, e.violation_action, e.is_active,
-               jsonb_array_length(e.questions_json) AS question_count,
+               e.class_id, e.max_attempts, e.questions_json,
+               jsonb_array_length(COALESCE(e.questions_json, '[]'::jsonb)) AS question_count,
                (SELECT row_to_json(s) FROM (
                   SELECT id, status, score, violation_count, started_at, submitted_at
                   FROM exam_live_sessions

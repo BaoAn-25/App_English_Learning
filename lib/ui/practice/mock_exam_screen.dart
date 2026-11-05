@@ -6,6 +6,7 @@ import '../../data/models/question.dart';
 import 'mock_exam_history_screen.dart';
 import 'mock_exam_quiz_screen.dart';
 import 'services/exam_builder_service.dart';
+import 'supervised_exam_screen.dart';
 
 class MockExamScreen extends StatefulWidget {
   const MockExamScreen({super.key});
@@ -136,7 +137,66 @@ class _MockExamScreenState extends State<MockExamScreen> {
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // Banner Kỳ thi có giám sát chính thức do Thầy/Cô & Admin giao
+                Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7ED),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFF97316), width: 1.2),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEA580C),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.shield_rounded, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Đề thi Giám sát từ Thầy/Cô',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Color(0xFF9A3412),
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Các bài thi chính thức có giám sát chống gian lận 10s',
+                              style: TextStyle(fontSize: 11.5, color: Color(0xFFC2410C)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFEA580C),
+                          foregroundColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SupervisedExamListScreen()),
+                          );
+                        },
+                        child: const Text('Xem đề thi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                ),
 
                 // Lựa chọn chế độ thi
                 Row(
