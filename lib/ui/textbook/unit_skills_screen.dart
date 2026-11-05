@@ -5,6 +5,7 @@ import '../auth/auth_controller.dart';
 import '../theme/app_tokens.dart';
 import '../theme/components/app_button.dart';
 import 'textbook_screen.dart';
+import 'widgets/speaking_practice_widget.dart';
 
 /// Màn hình học số hóa tương tác chuyên sâu cho các kỹ năng SGK 12:
 /// Speaking, Writing, Communication & Culture / CLIL, Looking Back & Project.
@@ -224,6 +225,17 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
     }
   }
 
+  Future<void> _markSectionCompleted() async {
+    try {
+      final ownerId = await _getEffectiveOwnerId();
+      final progressKey = 'unit_section_progress_${ownerId}_u${widget.unitNumber}_${_cleanKey(widget.sectionTitle)}';
+      await _repository.setSetting(progressKey, 'completed');
+      if (mounted) {
+        setState(() => _isCompleted = true);
+      }
+    } catch (_) {}
+  }
+
   Future<void> _openTextbookOriginal() async {
     try {
       Navigator.push(
@@ -390,6 +402,21 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
                   ),
 
                   const SizedBox(height: 14),
+
+                  // Khối Thu Âm & Chấm Điểm Luyện Nói AI Tương Tác
+                  if (widget.sectionTitle.contains('Speaking')) ...[
+                    SpeakingPracticeWidget(
+                      title: 'Luyện Nói AI Tương Tác (Speech AI Practice)',
+                      description: 'Nói theo các câu mẫu hội thoại SGK 12 bên dưới. AI sẽ tự động chấm điểm phát âm, phát hiện từ sai và gợi ý sửa.',
+                      prompts: _getSpeakingPromptsForUnit(widget.unitNumber),
+                      onPracticeCompleted: (score, data) {
+                        if (!_isCompleted) {
+                          _markSectionCompleted();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Dàn ý gợi ý & Mẫu câu Useful Expressions
                   if (skill.outline != null || skill.usefulLanguage != null) ...[
@@ -1166,6 +1193,71 @@ class _UnitSkillsScreenState extends State<UnitSkillsScreen> {
         'Kế hoạch dự án có tính khả thi và sáng tạo.',
       ],
     );
+  }
+
+  List<SpeakingPracticePrompt> _getSpeakingPromptsForUnit(int u) {
+    switch (u) {
+      case 1:
+        return const [
+          SpeakingPracticePrompt(
+            text: 'General Vo Nguyen Giap was born in 1911 in Quang Binh Province.',
+            ipa: "/'dʒenərəl 'vɔ: 'ŋwi:ən 'zæp wəz bɔ:n in 1911 in 'kwɑ:ŋ 'bi:n prɒvins/",
+            translation: 'Đại tướng Võ Nguyên Giáp sinh năm 1911 tại tỉnh Quảng Bình.',
+            contextTip: 'Chú ý nối âm giữa "born in" và nhấn đúng tên riêng.',
+          ),
+          SpeakingPracticePrompt(
+            text: 'He led the Vietnamese army to historic victories, including Dien Bien Phu in 1954.',
+            ipa: "/hi: led ðə vjetnə'mi:z 'ɑ:mi tʊ hi'stɒrik 'viktəriz in'klu:diŋ 'ðjen 'bjen 'fu:/",
+            translation: 'Ông đã lãnh đạo quân đội Việt Nam giành những chiến thắng lịch sử, bao gồm Điện Biên Phủ năm 1954.',
+            contextTip: 'Nhấn mạnh từ "historic victories" và từ chỉ năm "1954".',
+          ),
+          SpeakingPracticePrompt(
+            text: 'His courage and devotion have won the admiration of people worldwide.',
+            ipa: "/hiz 'kʌridʒ ænd di'vəʊʃn hæv wʌn ðə ædmə'reiʃn əv 'pi:pl 'wɜ:ldwaid/",
+            translation: 'Lòng dũng cảm và sự cống hiến của ông đã giành được sự ngưỡng mộ của mọi người trên thế giới.',
+            contextTip: 'Chú ý phát âm rõ trọng âm từ "courage" và "admiration".',
+          ),
+        ];
+      case 2:
+        return const [
+          SpeakingPracticePrompt(
+            text: 'The Mid-Autumn Festival is celebrated in many Asian countries.',
+            ipa: "/ðə mid 'ɔ:təm 'festvl iz 'selibreitid in 'meni 'eiʃn 'kʌntriz/",
+            translation: 'Lễ hội Trung thu được tổ chức ở nhiều quốc gia châu Á.',
+            contextTip: 'Phát âm rõ âm đuôi /ed/ trong "celebrated".',
+          ),
+          SpeakingPracticePrompt(
+            text: 'People enjoy eating mooncakes and watching lion dances during the festival.',
+            ipa: "/'pi:pl in'dʒɔi 'i:tiŋ 'mu:nkeiks ænd 'wɒtʃiŋ 'laiən 'dɑ:nsiz 'djʊəriŋ ðə 'festvl/",
+            translation: 'Mọi người thích ăn bánh trung thu và xem múa lân trong dịp lễ hội.',
+            contextTip: 'Chú ý âm đuôi /s/ trong "mooncakes" và "dances".',
+          ),
+        ];
+      case 3:
+        return const [
+          SpeakingPracticePrompt(
+            text: 'We should reduce our carbon footprint by using public transport.',
+            ipa: "/wi: ʃʊd ri'dju:s ɑ: 'kɑ:bən 'fʊtprint bai 'ju:ziŋ 'pʌblik 'trænspɔ:t/",
+            translation: 'Chúng ta nên giảm lượng khí thải carbon bằng cách sử dụng phương tiện công cộng.',
+            contextTip: 'Nhấn rõ hai từ trọng tâm "reduce" và "carbon footprint".',
+          ),
+          SpeakingPracticePrompt(
+            text: 'Recycling single-use plastic bottles helps protect the environment.',
+            ipa: "/ri:'saikliŋ 'siŋgl ju:s 'plæstik 'bɒtlz helps prə'tekt ðə in'vaiərənmənt/",
+            translation: 'Tái chế chai nhựa dùng một lần giúp bảo vệ môi trường.',
+            contextTip: 'Chú ý phát âm đúng âm /ŋ/ trong "recycling".',
+          ),
+        ];
+      default:
+        return [
+          SpeakingPracticePrompt(
+            text: 'Developing skills and knowledge is essential for Unit $u Global Success 12.',
+            ipa: "/di'veləpiŋ skilz ænd 'nɒlidʒ iz i'senʃl fɔ: 'ju:nit $u 'gləʊbl sək'ses/",
+            translation: 'Rèn luyện kỹ năng và kiến thức là yếu tố then chốt cho Unit $u SGK Global Success 12.',
+            contextTip: 'Luyện tập phát âm trôi chảy với tốc độ vừa phải.',
+          ),
+        ];
+    }
   }
 }
 

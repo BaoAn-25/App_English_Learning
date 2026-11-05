@@ -1114,12 +1114,16 @@ Trả về JSON thuần túy theo cấu trúc:
   app.post('/api/teacher/exams', requireRoles(['teacher', 'admin']), async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
     const {
+      id,
       title,
       description = '',
+      classId,
+      className,
       durationMinutes = 45,
       deadlineAt,
       graceSeconds = 10,
       maxViolations = 2,
+      maxAttempts = 1,
       violationAction = 'force_submit',
       questions = [],
     } = req.body;
@@ -1129,26 +1133,45 @@ Trả về JSON thuần túy theo cấu trúc:
     }
 
     try {
-      const examId = `sexam_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const examId = id && String(id).trim().length > 0
+        ? String(id).trim()
+        : `sexam_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+
       const finalQuestions = Array.isArray(questions) && questions.length > 0
         ? questions
         : buildGeneratedQuestionsFallback(1, 'grammar', 2, 10, title);
 
       const result = await pool.query(
         `INSERT INTO supervised_exams
-          (id, title, description, duration_minutes, deadline_at, grace_seconds, max_violations, violation_action, questions_json, is_active, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10)
+          (id, title, description, class_id, max_attempts, duration_minutes, deadline_at, grace_seconds, max_violations, violation_action, questions_json, shuffle_questions, is_active, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE, $13)
+         ON CONFLICT (id) DO UPDATE SET
+          title = EXCLUDED.title,
+          description = EXCLUDED.description,
+          class_id = EXCLUDED.class_id,
+          max_attempts = EXCLUDED.max_attempts,
+          duration_minutes = EXCLUDED.duration_minutes,
+          deadline_at = EXCLUDED.deadline_at,
+          grace_seconds = EXCLUDED.grace_seconds,
+          max_violations = EXCLUDED.max_violations,
+          violation_action = EXCLUDED.violation_action,
+          questions_json = EXCLUDED.questions_json,
+          shuffle_questions = EXCLUDED.shuffle_questions,
+          is_active = TRUE
          RETURNING *`,
         [
           examId,
           String(title).trim(),
           String(description || '').trim(),
+          classId || null,
+          Number(maxAttempts) || 1,
           Number(durationMinutes) || 45,
           deadlineAt ? new Date(deadlineAt).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString(),
           Number(graceSeconds) || 10,
           Number(maxViolations) || 2,
           violationAction === 'invalidate' ? 'invalidate' : 'force_submit',
           JSON.stringify(finalQuestions),
+          req.body.shuffleQuestions !== false,
           req.user.id,
         ]
       );
@@ -1165,6 +1188,93 @@ Trả về JSON thuần túy theo cấu trúc:
       });
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Đồng bộ hàng loạt kỳ thi có giám sát từ Admin / Giáo viên lên Cloud PostgreSQL
+  app.post('/api/teacher/exams/batch-sync', requireRoles(['teacher', 'admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ ok: false, error: 'Database chưa sẵn sàng.' });
+    const { exams } = req.body;
+    if (!Array.isArray(exams) || exams.length === 0) {
+      return res.status(400).json({ ok: false, error: 'Danh sách bài thi đồng bộ rỗng.' });
+    }
+    const synced = [];
+    try {
+      for (const item of exams) {
+        const examId = item.id && String(item.id).trim().length > 0
+          ? String(item.id).trim()
+          : `sexam_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+        const title = (item.title || 'Kỳ thi có giám sát').toString().trim();
+        const description = (item.description || '').toString().trim();
+        const classId = item.classId || item.class_id || null;
+        const maxAttempts = Number(item.maxAttempts ?? item.max_attempts ?? 1);
+        const durationMinutes = Number(item.durationMinutes ?? item.duration_minutes ?? 45);
+        const deadlineAt = item.deadlineAt || item.deadline_at
+          ? new Date(item.deadlineAt || item.deadline_at).toISOString()
+          : new Date(Date.now() + 7 * 86400000).toISOString();
+        const graceSeconds = Number(item.graceSeconds ?? item.grace_seconds ?? 10);
+        const maxViolations = Number(item.maxViolations ?? item.max_violations ?? 2);
+        const violationAction = (item.violationAction || item.violation_action) === 'invalidate' ? 'invalidate' : 'force_submit';
+        const shuffleQuestions = item.shuffleQuestions !== false && item.shuffle_questions !== false;
+        const isActive = item.isActive !== false && item.is_active !== false;
+
+        let questionsJson = '[]';
+        if (Array.isArray(item.questions)) {
+          questionsJson = JSON.stringify(item.questions);
+        } else if (Array.isArray(item.questions_json)) {
+          questionsJson = JSON.stringify(item.questions_json);
+        } else if (typeof item.questions_json === 'string') {
+          questionsJson = item.questions_json;
+        } else {
+          questionsJson = JSON.stringify(buildGeneratedQuestionsFallback(1, 'grammar', 2, 10, title));
+        }
+
+        const upsertRes = await pool.query(
+          `INSERT INTO supervised_exams
+            (id, title, description, class_id, max_attempts, duration_minutes, deadline_at, grace_seconds, max_violations, violation_action, questions_json, shuffle_questions, is_active, created_by)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+           ON CONFLICT (id) DO UPDATE SET
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            class_id = EXCLUDED.class_id,
+            max_attempts = EXCLUDED.max_attempts,
+            duration_minutes = EXCLUDED.duration_minutes,
+            deadline_at = EXCLUDED.deadline_at,
+            grace_seconds = EXCLUDED.grace_seconds,
+            max_violations = EXCLUDED.max_violations,
+            violation_action = EXCLUDED.violation_action,
+            questions_json = EXCLUDED.questions_json,
+            shuffle_questions = EXCLUDED.shuffle_questions,
+            is_active = EXCLUDED.is_active,
+            updated_at = CURRENT_TIMESTAMP
+           RETURNING *`,
+          [
+            examId,
+            title,
+            description,
+            classId,
+            maxAttempts,
+            durationMinutes,
+            deadlineAt,
+            graceSeconds,
+            maxViolations,
+            violationAction,
+            questionsJson,
+            shuffleQuestions,
+            isActive,
+            req.user.id,
+          ]
+        );
+        synced.push(upsertRes.rows[0]);
+      }
+      return res.json({
+        ok: true,
+        message: `Đã đồng bộ thành công ${synced.length} bài thi có giám sát lên máy chủ Cloud.`,
+        syncedCount: synced.length,
+        exams: synced,
+      });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
     }
   });
 
@@ -1357,7 +1467,8 @@ Trả về JSON thuần túy theo cấu trúc:
       const result = await pool.query(`
         SELECT e.id, e.title, e.description, e.duration_minutes, e.deadline_at,
                e.grace_seconds, e.max_violations, e.violation_action, e.is_active,
-               jsonb_array_length(e.questions_json) AS question_count,
+               e.class_id, e.max_attempts, e.questions_json,
+               jsonb_array_length(COALESCE(e.questions_json, '[]'::jsonb)) AS question_count,
                (SELECT row_to_json(s) FROM (
                   SELECT id, status, score, violation_count, started_at, submitted_at
                   FROM exam_live_sessions
@@ -1771,14 +1882,31 @@ Trả về JSON thuần túy theo cấu trúc:
   app.put('/api/admin/users/:id', requireRoles(['admin']), async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
     const { id } = req.params;
-    const { displayName, role, isLocked, lockedReason } = req.body;
+    const { displayName, role, isLocked, lockedReason, email } = req.body;
     try {
+      const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+      const target = await pool.query(
+        `SELECT id
+         FROM users
+         WHERE id = $1
+            OR LOWER(email) = LOWER($1)
+            OR ($2::text IS NOT NULL AND LOWER(email) = LOWER($2))
+         LIMIT 1`,
+        [id, cleanEmail]
+      );
+      if (target.rows.length === 0) {
+        return res.status(404).json({
+          error: 'Không tìm thấy tài khoản Google này trong cơ sở dữ liệu. Vui lòng tải lại danh sách người dùng.',
+        });
+      }
+
+      const targetId = target.rows[0].id;
       const result = await pool.query(
         `UPDATE users
-         SET display_name = COALESCE($1, display_name),
-             role = COALESCE($2, role),
-             is_locked = COALESCE($3, is_locked),
-             locked_reason = COALESCE($4, locked_reason),
+         SET display_name = CASE WHEN $1::text IS NOT NULL THEN $1::text ELSE display_name END,
+             role = CASE WHEN $2::text IS NOT NULL THEN $2::text ELSE role END,
+             is_locked = CASE WHEN $3::boolean IS NOT NULL THEN $3::boolean ELSE is_locked END,
+             locked_reason = CASE WHEN $4::text IS NOT NULL THEN $4::text ELSE locked_reason END,
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $5
          RETURNING id, email, display_name, role, is_locked, locked_reason, created_at`,
@@ -1787,14 +1915,54 @@ Trả về JSON thuần túy theo cấu trúc:
           role && ['student', 'teacher', 'admin'].includes(role) ? role : null,
           isLocked !== undefined ? Boolean(isLocked) : null,
           lockedReason !== undefined ? String(lockedReason) : null,
-          id,
+          targetId,
         ]
       );
-      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
-      await logAudit(pool, req.user, 'ADMIN_UPDATE_USER', 'users', id, { role, isLocked, lockedReason });
-      res.json({ message: 'Đã cập nhật thông tin & quyền người dùng.', user: result.rows[0] });
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Không thể cập nhật tài khoản trong cơ sở dữ liệu.' });
+      }
+      const updatedUser = result.rows[0];
+      await logAudit(pool, req.user, 'ADMIN_UPDATE_USER', 'users', updatedUser.id, { role, isLocked, lockedReason });
+      res.json({ message: 'Đã cập nhật thông tin & quyền người dùng.', user: updatedUser });
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Đồng bộ hàng loạt danh sách tài khoản bị Admin khóa lên Cloud PostgreSQL
+  app.post('/api/admin/users/sync-locked', requireRoles(['admin']), async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ ok: false, error: 'Database chưa sẵn sàng.' });
+    const { lockedAccounts } = req.body;
+    if (!Array.isArray(lockedAccounts) || lockedAccounts.length === 0) {
+      return res.json({ ok: true, syncedCount: 0, message: 'Danh sách khóa rỗng.' });
+    }
+    const synced = [];
+    try {
+      for (const item of lockedAccounts) {
+        const email = (item.email || item.userEmail || '').toString().trim().toLowerCase();
+        if (!email || !email.includes('@')) continue;
+        const reason = (item.reason || item.lockedReason || 'Tạm khóa bởi Quản trị viên').toString().trim();
+        const userId = item.userId || `usr_lock_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+
+        const upsertRes = await pool.query(
+          `INSERT INTO users (id, email, display_name, role, auth_provider, is_locked, locked_reason)
+           VALUES ($1, $2, $3, 'student', 'google', TRUE, $4)
+           ON CONFLICT (email) DO UPDATE SET
+             is_locked = TRUE,
+             locked_reason = EXCLUDED.locked_reason,
+             updated_at = CURRENT_TIMESTAMP
+           RETURNING id, email, display_name, is_locked, locked_reason`,
+          [userId, email, email.split('@')[0], reason]
+        );
+        synced.push(upsertRes.rows[0]);
+      }
+      return res.json({
+        ok: true,
+        message: `Đã đồng bộ thành công ${synced.length} tài khoản bị khóa lên Cloud.`,
+        syncedCount: synced.length,
+      });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
     }
   });
 
@@ -2038,7 +2206,7 @@ Trả về JSON thuần túy theo cấu trúc:
         `SELECT c.*,
            (SELECT COUNT(*)::int FROM class_members m WHERE m.class_id = c.id AND m.status = 'active') AS student_count
          FROM classes c
-         WHERE UPPER(TRIM(c.join_code)) = UPPER(TRIM($1)) AND c.is_archived = FALSE
+         WHERE REPLACE(REPLACE(UPPER(TRIM(c.join_code)), '-', ''), ' ', '') = REPLACE(REPLACE(UPPER(TRIM($1)), '-', ''), ' ', '') AND c.is_archived = FALSE
          LIMIT 1`,
         [String(code)]
       );
@@ -2059,21 +2227,23 @@ Trả về JSON thuần túy theo cấu trúc:
       return res.status(400).json({ ok: false, error: 'Danh sách lớp đồng bộ rỗng.' });
     }
     const synced = [];
-    try {
-      for (const item of classes) {
-        const id = item.id || `cls_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
-        const name = (item.name || 'Lớp học').toString().trim();
-        const code = (item.code || item.joinCode || item.join_code || `ENG-${crypto.randomBytes(2).toString('hex')}`).toString().trim().toUpperCase();
-        const schoolName = (item.schoolName || item.school_name || '').toString().trim();
-        const academicYear = (item.schoolYear || item.academicYear || item.academic_year || '2025-2026').toString().trim();
-        const teacherId = item.teacherId || item.teacher_id || null;
-        const teacherName = (item.teacherName || item.teacher_name || 'Giáo viên').toString().trim();
-        const teacherEmail = (item.teacherEmail || item.teacher_email || '').toString().trim();
-        const requireApproval = Boolean(item.requireApproval ?? item.require_approval ?? false);
-        const showLeaderboard = Boolean(item.showLeaderboard ?? item.show_leaderboard ?? true);
-        const allowJoin = Boolean(item.allowJoin ?? item.allow_join ?? true);
-        const isArchived = Boolean(item.isArchived ?? item.is_archived ?? item.status === 'archived');
+    const errors = [];
+    for (const item of classes) {
+      const id = item.id || `cls_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+      const name = (item.name || 'Lớp học').toString().trim();
+      const code = (item.code || item.joinCode || item.join_code || `ENG-${crypto.randomBytes(2).toString('hex')}`).toString().trim().toUpperCase();
+      const schoolName = (item.schoolName || item.school_name || '').toString().trim();
+      const academicYear = (item.schoolYear || item.academicYear || item.academic_year || '2025-2026').toString().trim();
+      const teacherId = item.teacherId || item.teacher_id || null;
+      const teacherName = (item.teacherName || item.teacher_name || 'Giáo viên').toString().trim();
+      const teacherEmail = (item.teacherEmail || item.teacher_email || '').toString().trim();
+      const requireApproval = Boolean(item.requireApproval ?? item.require_approval ?? false);
+      const showLeaderboard = Boolean(item.showLeaderboard ?? item.show_leaderboard ?? true);
+      const allowJoin = Boolean(item.allowJoin ?? item.allow_join ?? true);
+      const isArchived = Boolean(item.isArchived ?? item.is_archived ?? item.status === 'archived');
+      const params = [id, name, schoolName, academicYear, code, teacherId, teacherName, teacherEmail, requireApproval, showLeaderboard, allowJoin, isArchived];
 
+      try {
         const upsertRes = await pool.query(
           `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard, allow_join, is_archived)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -2091,14 +2261,36 @@ Trả về JSON thuần túy theo cấu trúc:
              is_archived = EXCLUDED.is_archived,
              updated_at = CURRENT_TIMESTAMP
            RETURNING *`,
-          [id, name, schoolName, academicYear, code, teacherId, teacherName, teacherEmail, requireApproval, showLeaderboard, allowJoin, isArchived]
+          params
         );
         synced.push(upsertRes.rows[0]);
+      } catch (innerErr) {
+        // Lỗi join_code unique constraint: cập nhật lớp đã có cùng mã lớp
+        if (innerErr.code === '23505') {
+          try {
+            const fallbackRes = await pool.query(
+              `UPDATE classes SET
+                 name = $1, school_name = $2, academic_year = $3,
+                 teacher_id = COALESCE($4, classes.teacher_id),
+                 teacher_name = COALESCE($5, classes.teacher_name),
+                 teacher_email = COALESCE($6, classes.teacher_email),
+                 require_approval = $7, show_leaderboard = $8,
+                 allow_join = $9, is_archived = $10,
+                 updated_at = CURRENT_TIMESTAMP
+               WHERE UPPER(TRIM(join_code)) = UPPER(TRIM($11))
+               RETURNING *`,
+              [name, schoolName, academicYear, teacherId, teacherName, teacherEmail, requireApproval, showLeaderboard, allowJoin, isArchived, code]
+            );
+            if (fallbackRes.rows.length > 0) synced.push(fallbackRes.rows[0]);
+          } catch (_) {
+            errors.push({ id, code, error: innerErr.message });
+          }
+        } else {
+          errors.push({ id, code, error: innerErr.message });
+        }
       }
-      return res.json({ ok: true, message: `Đã đồng bộ thành công ${synced.length} lớp học lên máy chủ Cloud.`, syncedCount: synced.length, classes: synced });
-    } catch (err) {
-      return res.status(500).json({ ok: false, error: err.message });
     }
+    return res.json({ ok: true, message: `Đã đồng bộ thành công ${synced.length} lớp học lên máy chủ Cloud.`, syncedCount: synced.length, classes: synced, errors });
   });
 
   app.post('/api/classes', async (req, res) => {
@@ -2107,6 +2299,7 @@ Trả về JSON thuần túy theo cấu trúc:
       id: customId,
       name,
       schoolName = '',
+      schoolYear,
       academicYear = '2025-2026',
       joinCode,
       teacherId,
@@ -2120,6 +2313,17 @@ Trả về JSON thuần túy theo cấu trúc:
       return res.status(400).json({ error: 'Vui lòng nhập tên lớp học.' });
     }
     try {
+      let selectedTeacher = null;
+      if (teacherId) {
+        const teacherRes = await pool.query(
+          "SELECT id, email, display_name FROM users WHERE id = $1 AND role = 'teacher' AND is_locked = FALSE",
+          [teacherId]
+        );
+        if (teacherRes.rows.length === 0) {
+          return res.status(400).json({ error: 'Tài khoản giáo viên được chọn không hợp lệ hoặc đã bị khóa.' });
+        }
+        selectedTeacher = teacherRes.rows[0];
+      }
       // Nhận diện user nếu có token (không ép buộc gây chặn lưu trên Cloud)
       let authUser = null;
       try {
@@ -2132,40 +2336,64 @@ Trả về JSON thuần túy theo cấu trúc:
       const code = (joinCode && String(joinCode).trim().length >= 4)
         ? String(joinCode).trim().toUpperCase()
         : `ENG-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+      const finalAcademicYear = (schoolYear || academicYear || '2025-2026').toString().trim();
       const finalTeacherId = teacherId || (authUser?.role === 'teacher' ? authUser.id : null);
-      const finalTeacherName = teacherName || (authUser ? (authUser.displayName || authUser.email) : 'Giáo viên');
-      const finalTeacherEmail = teacherEmail || (authUser ? authUser.email : '');
+      const finalTeacherName = selectedTeacher?.display_name ||
+        teacherName ||
+        (authUser ? (authUser.displayName || authUser.email) : 'Giáo viên');
+      const finalTeacherEmail = selectedTeacher?.email || teacherEmail || (authUser ? authUser.email : '');
 
-      const result = await pool.query(
-        `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard, allow_join)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-         ON CONFLICT (id) DO UPDATE SET
-           name = EXCLUDED.name,
-           school_name = EXCLUDED.school_name,
-           academic_year = EXCLUDED.academic_year,
-           join_code = EXCLUDED.join_code,
-           teacher_id = COALESCE(EXCLUDED.teacher_id, classes.teacher_id),
-           teacher_name = COALESCE(EXCLUDED.teacher_name, classes.teacher_name),
-           teacher_email = COALESCE(EXCLUDED.teacher_email, classes.teacher_email),
-           require_approval = EXCLUDED.require_approval,
-           show_leaderboard = EXCLUDED.show_leaderboard,
-           allow_join = EXCLUDED.allow_join,
-           updated_at = CURRENT_TIMESTAMP
-         RETURNING *`,
-        [
-          id,
-          String(name).trim(),
-          String(schoolName).trim(),
-          String(academicYear).trim(),
-          code,
-          finalTeacherId,
-          finalTeacherName,
-          finalTeacherEmail,
-          Boolean(requireApproval),
-          Boolean(showLeaderboard),
-          Boolean(allowJoin),
-        ]
-      );
+      let result;
+      try {
+        result = await pool.query(
+          `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard, allow_join)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+           ON CONFLICT (id) DO UPDATE SET
+             name = EXCLUDED.name,
+             school_name = EXCLUDED.school_name,
+             academic_year = EXCLUDED.academic_year,
+             join_code = EXCLUDED.join_code,
+             teacher_id = COALESCE(EXCLUDED.teacher_id, classes.teacher_id),
+             teacher_name = COALESCE(EXCLUDED.teacher_name, classes.teacher_name),
+             teacher_email = COALESCE(EXCLUDED.teacher_email, classes.teacher_email),
+             require_approval = EXCLUDED.require_approval,
+             show_leaderboard = EXCLUDED.show_leaderboard,
+             allow_join = EXCLUDED.allow_join,
+             updated_at = CURRENT_TIMESTAMP
+           RETURNING *`,
+          [
+            id,
+            String(name).trim(),
+            String(schoolName).trim(),
+            finalAcademicYear,
+            code,
+            finalTeacherId,
+            finalTeacherName,
+            finalTeacherEmail,
+            Boolean(requireApproval),
+            Boolean(showLeaderboard),
+            Boolean(allowJoin),
+          ]
+        );
+      } catch (insertErr) {
+        // join_code trùng với lớp khác → cập nhật lớp có cùng mã
+        if (insertErr.code === '23505') {
+          result = await pool.query(
+            `UPDATE classes SET
+               name = $1, school_name = $2, academic_year = $3,
+               teacher_id = COALESCE($4, classes.teacher_id),
+               teacher_name = COALESCE($5, classes.teacher_name),
+               teacher_email = COALESCE($6, classes.teacher_email),
+               require_approval = $7, show_leaderboard = $8, allow_join = $9,
+               updated_at = CURRENT_TIMESTAMP
+             WHERE UPPER(TRIM(join_code)) = UPPER(TRIM($10))
+             RETURNING *`,
+            [String(name).trim(), String(schoolName).trim(), finalAcademicYear, finalTeacherId, finalTeacherName, finalTeacherEmail, Boolean(requireApproval), Boolean(showLeaderboard), Boolean(allowJoin), code]
+          );
+        } else {
+          throw insertErr;
+        }
+      }
       if (authUser) {
         await logAudit(pool, authUser, 'CREATE_CLASS', 'classes', id, { name, joinCode: code });
       }
@@ -2180,6 +2408,17 @@ Trả về JSON thuần túy theo cấu trúc:
     const { id } = req.params;
     const { name, schoolName, academicYear, joinCode, teacherId, teacherName, teacherEmail, requireApproval, showLeaderboard, allowJoin, isArchived } = req.body;
     try {
+      let selectedTeacher = null;
+      if (teacherId) {
+        const teacherRes = await pool.query(
+          "SELECT id, email, display_name FROM users WHERE id = $1 AND role = 'teacher' AND is_locked = FALSE",
+          [teacherId]
+        );
+        if (teacherRes.rows.length === 0) {
+          return res.status(400).json({ error: 'Tài khoản giáo viên được chọn không hợp lệ hoặc đã bị khóa.' });
+        }
+        selectedTeacher = teacherRes.rows[0];
+      }
       const result = await pool.query(
         `UPDATE classes
          SET name = COALESCE($1, name),
@@ -2201,8 +2440,8 @@ Trả về JSON thuần túy theo cấu trúc:
           academicYear || null,
           joinCode ? String(joinCode).trim().toUpperCase() : null,
           teacherId !== undefined ? teacherId : null,
-          teacherName !== undefined ? teacherName : null,
-          teacherEmail !== undefined ? teacherEmail : null,
+          selectedTeacher?.display_name || (teacherName !== undefined ? teacherName : null),
+          selectedTeacher?.email || (teacherEmail !== undefined ? teacherEmail : null),
           requireApproval !== undefined ? Boolean(requireApproval) : null,
           showLeaderboard !== undefined ? Boolean(showLeaderboard) : null,
           allowJoin !== undefined ? Boolean(allowJoin) : null,
@@ -2210,7 +2449,36 @@ Trả về JSON thuần túy theo cấu trúc:
           id,
         ]
       );
-      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy lớp học.' });
+      if (result.rows.length === 0) {
+        const insRes = await pool.query(
+          `INSERT INTO classes (id, name, school_name, academic_year, join_code, teacher_id, teacher_name, teacher_email, require_approval, show_leaderboard, allow_join, is_archived)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (id) DO UPDATE SET
+             name = EXCLUDED.name,
+             join_code = EXCLUDED.join_code,
+             require_approval = EXCLUDED.require_approval,
+             show_leaderboard = EXCLUDED.show_leaderboard,
+             allow_join = EXCLUDED.allow_join,
+             is_archived = EXCLUDED.is_archived,
+             updated_at = CURRENT_TIMESTAMP
+           RETURNING *`,
+          [
+            id,
+            name || 'Lớp học',
+            schoolName || 'THPT',
+            academicYear || '2025-2026',
+            joinCode ? String(joinCode).trim().toUpperCase() : `ENG-${crypto.randomBytes(2).toString('hex')}`,
+            teacherId || req.user.id,
+            selectedTeacher?.display_name || teacherName || req.user.displayName || 'Giáo viên',
+            selectedTeacher?.email || teacherEmail || req.user.email || '',
+            Boolean(requireApproval),
+            Boolean(showLeaderboard ?? true),
+            Boolean(allowJoin ?? true),
+            Boolean(isArchived),
+          ]
+        );
+        return res.json({ message: 'Đã tạo mới và đồng bộ lớp học thành công.', classItem: insRes.rows[0], class: insRes.rows[0] });
+      }
       await logAudit(pool, req.user, 'UPDATE_CLASS', 'classes', id, { joinCode, teacherName, isArchived });
       res.json({ message: 'Đã cập nhật lớp học.', classItem: result.rows[0], class: result.rows[0] });
     } catch (err) {
@@ -2253,28 +2521,21 @@ Trả về JSON thuần túy theo cấu trúc:
     }
   });
 
-  app.post('/api/classes/join', async (req, res) => {
+  app.post('/api/classes/join', requireRoles(['student']), async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
-    const { joinCode, studentId, studentName, studentEmail } = req.body;
+    const { joinCode } = req.body;
     if (!joinCode || String(joinCode).trim().length === 0) {
       return res.status(400).json({ error: 'Vui lòng nhập mã lớp.' });
     }
 
     // Nhận diện người dùng: ưu tiên Bearer token nếu có, fallback sang thông tin body từ app mobile
-    let authUser = null;
-    try {
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
-      if (token) authUser = verifyToken(token);
-    } catch (_) {}
-
-    const targetStudentId = (authUser && authUser.id) || studentId || `stu_${Date.now()}`;
-    const targetStudentName = (authUser && (authUser.displayName || authUser.email)) || studentName || 'Học sinh';
-    const targetStudentEmail = (authUser && authUser.email) || studentEmail || '';
+    const targetStudentId = req.user.id;
+    const targetStudentName = req.user.displayName || req.user.email || 'Học sinh';
+    const targetStudentEmail = req.user.email || '';
 
     try {
       const clsRes = await pool.query(
-        'SELECT * FROM classes WHERE UPPER(TRIM(join_code)) = UPPER(TRIM($1)) AND is_archived = FALSE',
+        "SELECT * FROM classes WHERE REPLACE(REPLACE(UPPER(TRIM(join_code)), '-', ''), ' ', '') = REPLACE(REPLACE(UPPER(TRIM($1)), '-', ''), ' ', '') AND is_archived = FALSE",
         [String(joinCode)]
       );
       if (clsRes.rows.length === 0) {
@@ -2627,7 +2888,7 @@ Trả về JSON thuần túy theo cấu trúc:
       return res.status(400).json({ ok: false, error: 'Thiếu định danh học sinh (userId hoặc userEmail).' });
     }
     const finalUserId = userId || userEmail;
-    const finalEmail = userEmail || '';
+    const finalEmail = userEmail ? String(userEmail).trim().toLowerCase() : '';
     const unit = parseInt(unitNumber, 10) || 1;
     const section = String(sectionName || 'general').trim();
 
@@ -2643,6 +2904,93 @@ Trả về JSON thuần túy theo cấu trúc:
         [finalUserId, finalEmail, unit, section, status, score]
       );
       res.json({ ok: true, message: 'Đã lưu tiến độ học tập lên Cloud thành công.' });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // Đồng bộ hàng loạt toàn bộ tiến độ SGK của học sinh lên Cloud
+  app.post('/api/students/progress/batch-sync', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.status(503).json({ ok: false, error: 'Database chưa sẵn sàng.' });
+    const { userId, userEmail, streak = 0, totalXp = 0, sections = [] } = req.body;
+    if (!userId && !userEmail) {
+      return res.status(400).json({ ok: false, error: 'Thiếu định danh học sinh.' });
+    }
+
+    const finalUserId = userId || userEmail;
+    const finalEmail = userEmail ? String(userEmail).trim().toLowerCase() : '';
+    let syncedCount = 0;
+
+    try {
+      if (Array.isArray(sections) && sections.length > 0) {
+        for (const sec of sections) {
+          const unit = parseInt(sec.unitNumber, 10) || 1;
+          const section = String(sec.sectionName || sec.sectionKey || 'general').trim();
+          const status = String(sec.status || 'completed').trim();
+          const score = Number(sec.score) || 100;
+
+          await pool.query(
+            `INSERT INTO textbook_progress (user_id, user_email, unit_number, section_name, status, score, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+             ON CONFLICT (user_id, unit_number, section_name) DO UPDATE SET
+               status = EXCLUDED.status,
+               score = EXCLUDED.score,
+               user_email = COALESCE(NULLIF(EXCLUDED.user_email, ''), textbook_progress.user_email),
+               updated_at = CURRENT_TIMESTAMP`,
+            [finalUserId, finalEmail, unit, section, status, score]
+          );
+          syncedCount++;
+        }
+      }
+
+      // Cập nhật streak & XP vào user_profiles nếu có
+      if (finalUserId) {
+        await pool.query(
+          `INSERT INTO user_profiles (user_id, current_streak, total_xp)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (user_id) DO UPDATE SET
+             current_streak = GREATEST(user_profiles.current_streak, EXCLUDED.current_streak),
+             total_xp = GREATEST(user_profiles.total_xp, EXCLUDED.total_xp)`,
+          [finalUserId, Number(streak) || 0, Number(totalXp) || 0]
+        );
+      }
+
+      res.json({ ok: true, syncedCount, message: `Đã đồng bộ ${syncedCount} phần bài học lên Cloud.` });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // Kiểm tra trạng thái khóa tài khoản thời gian thực (Public endpoint nhẹ)
+  app.get('/api/auth/check-lock', async (req, res) => {
+    if (!process.env.DATABASE_URL) return res.json({ ok: true, isLocked: false });
+    const { email, userId } = req.query;
+    if (!email && !userId) return res.json({ ok: true, isLocked: false });
+
+    try {
+      const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+      const cleanId = userId ? String(userId).trim() : null;
+
+      const result = await pool.query(
+        `SELECT id, email, is_locked, locked_reason
+         FROM users
+         WHERE (id = $1 AND $1 IS NOT NULL)
+            OR (LOWER(email) = LOWER($2) AND $2 IS NOT NULL)
+         LIMIT 1`,
+        [cleanId, cleanEmail]
+      );
+
+      if (result.rows.length === 0) {
+        return res.json({ ok: true, isLocked: false, exists: false });
+      }
+
+      const user = result.rows[0];
+      const isLocked = Boolean(user.is_locked);
+      res.json({
+        ok: true,
+        isLocked,
+        lockedReason: isLocked ? (user.locked_reason || 'Vi phạm quy định hệ thống.') : '',
+      });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
@@ -2733,4 +3081,3 @@ module.exports = {
   initRbacAndProctoringTables,
   registerRbacProctorAiRoutes,
 };
-

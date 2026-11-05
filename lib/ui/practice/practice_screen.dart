@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../data/app_repository.dart';
 import '../../data/models/question.dart';
+import '../../data/rbac_proctor_ai_service.dart';
 import 'mock_exam_screen.dart';
 import 'practice_history_screen.dart';
 import 'practice_quiz_screen.dart';
 import 'services/exam_builder_service.dart';
+import 'supervised_exam_screen.dart';
 import 'widgets/adaptive_learning_section.dart';
 import 'wrong_book_screen.dart';
 
@@ -21,6 +23,23 @@ class PracticeScreen extends StatefulWidget {
 class _PracticeScreenState extends State<PracticeScreen> {
   final GlobalKey<AdaptiveLearningSectionState> _adaptiveKey =
       GlobalKey<AdaptiveLearningSectionState>();
+
+  List<SupervisedExamModel> _supervisedExams = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSupervisedExams();
+  }
+
+  Future<void> _loadSupervisedExams() async {
+    try {
+      final exams = await RbacProctorAiService.instance.getSupervisedExams();
+      if (mounted) {
+        setState(() => _supervisedExams = exams.where((e) => e.isActive).toList());
+      }
+    } catch (_) {}
+  }
 
   static const Map<String, _TypeInfo> _questionTypeDetails = {
     'grammar': _TypeInfo(
@@ -89,6 +108,155 @@ class _PracticeScreenState extends State<PracticeScreen> {
             ),
           ),
           const SizedBox(height: 10),
+
+          // Card Phòng thi Giám sát Live 10s (Chống gian lận)
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(
+                color: Color(0xFFF97316),
+                width: 1.5,
+              ),
+            ),
+            color: const Color(0xFFFFF7ED),
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEA580C),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.shield_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  title: Row(
+                    children: [
+                      const Text(
+                        'Phòng thi Giám sát 10s',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.5,
+                          color: Color(0xFF9A3412),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDC2626),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    _supervisedExams.isNotEmpty
+                        ? '${_supervisedExams.length} bài thi đang mở do Thầy/Cô & Admin giao'
+                        : 'Làm đề thi chính thức có giám sát chống gian lận 10s',
+                    style: const TextStyle(
+                      color: Color(0xFFC2410C),
+                      fontSize: 12,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFFEA580C)),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SupervisedExamListScreen()),
+                    );
+                    _loadSupervisedExams();
+                  },
+                ),
+                if (_supervisedExams.isNotEmpty) ...[
+                  const Divider(height: 1, color: Color(0xFFFED7AA)),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Đề thi giáo viên giao đang mở:',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF9A3412),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        for (final exam in _supervisedExams.take(3))
+                          InkWell(
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const SupervisedExamListScreen()),
+                              );
+                              _loadSupervisedExams();
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.assignment_outlined, size: 16, color: Color(0xFFEA580C)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      exam.title,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFDCFCE7),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'Vào thi',
+                                      style: TextStyle(
+                                        color: Color(0xFF166534),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
 
           // Card Thi thử THPT
           Card(

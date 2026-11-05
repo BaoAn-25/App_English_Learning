@@ -29,7 +29,8 @@ class InterestTopicDetailScreen extends StatefulWidget {
   const InterestTopicDetailScreen({super.key, required this.topic});
 
   @override
-  State<InterestTopicDetailScreen> createState() => _InterestTopicDetailScreenState();
+  State<InterestTopicDetailScreen> createState() =>
+      _InterestTopicDetailScreenState();
 }
 
 class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
@@ -97,7 +98,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
     // 2. Fallback: nếu DB chưa kịp cập nhật hoặc trong test, nạp trực tiếp từ asset json
     if (words.length < 10) {
       try {
-        final jsonStr = await rootBundle.loadString('assets/data/interest_words.json');
+        final jsonStr = await rootBundle.loadString(
+          'assets/data/interest_words.json',
+        );
         final decoded = jsonDecode(jsonStr);
         if (decoded is List) {
           final assetWords = decoded
@@ -154,7 +157,10 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
 
                 // Tiêu đề BottomSheet
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -163,7 +169,11 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                           color: const Color(0xFF2563EB).withAlpha(30),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.menu_book_rounded, color: Color(0xFF2563EB), size: 22),
+                        child: const Icon(
+                          Icons.menu_book_rounded,
+                          color: Color(0xFF2563EB),
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -176,7 +186,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                 fontFamily: 'BeVietnamPro',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 16.5,
-                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
                               ),
                             ),
                             Text(
@@ -209,10 +221,14 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isDark ? const Color(0xFF3B82F6) : const Color(0xFFBFDBFE),
+                            color: isDark
+                                ? const Color(0xFF3B82F6)
+                                : const Color(0xFFBFDBFE),
                           ),
                         ),
                         child: Column(
@@ -220,7 +236,11 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.tips_and_updates_rounded, color: Color(0xFF2563EB), size: 20),
+                                const Icon(
+                                  Icons.tips_and_updates_rounded,
+                                  color: Color(0xFF2563EB),
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Cấu trúc câu then chốt',
@@ -228,7 +248,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     fontFamily: 'BeVietnamPro',
                                     fontWeight: FontWeight.w800,
                                     fontSize: 14.5,
-                                    color: isDark ? Colors.white : const Color(0xFF1E40AF),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1E40AF),
                                   ),
                                 ),
                               ],
@@ -238,7 +260,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                               _getGrammarTip(widget.topic.id),
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDark ? Colors.white70 : const Color(0xFF334155),
+                                color: isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF334155),
                                 height: 1.45,
                               ),
                             ),
@@ -254,7 +278,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -262,10 +288,16 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                       if (phrases.isEmpty)
                         Text(
                           'Đang cập nhật thêm cụm từ...',
-                          style: TextStyle(color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white54
+                                : const Color(0xFF64748B),
+                          ),
                         ),
 
-                      ...phrases.map((phrase) => _buildPhraseCard(phrase, isDark)),
+                      ...phrases.map(
+                        (phrase) => _buildPhraseCard(phrase, isDark),
+                      ),
 
                       const SizedBox(height: 16),
                       Text(
@@ -274,7 +306,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -316,15 +350,23 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Row(
         children: [
           IconButton(
             style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB).withAlpha(isDark ? 50 : 25),
+              backgroundColor: const Color(
+                0xFF2563EB,
+              ).withAlpha(isDark ? 50 : 25),
             ),
-            icon: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB), size: 22),
+            icon: const Icon(
+              Icons.volume_up_rounded,
+              color: Color(0xFF2563EB),
+              size: 22,
+            ),
             onPressed: () => _speak(phrase.english),
           ),
           const SizedBox(width: 12),
@@ -343,7 +385,11 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                 ),
                 Text(
                   phrase.ipa,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF2563EB), fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF2563EB),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -369,11 +415,17 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Row(
         children: [
-          Icon(_getVisualIcon(word.english), size: 20, color: const Color(0xFF2563EB)),
+          Icon(
+            _getVisualIcon(word.english),
+            size: 20,
+            color: const Color(0xFF2563EB),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -386,7 +438,11 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.volume_up_rounded, size: 18, color: Color(0xFF2563EB)),
+            icon: const Icon(
+              Icons.volume_up_rounded,
+              size: 18,
+              color: Color(0xFF2563EB),
+            ),
             onPressed: () => _speak(word.english),
           ),
         ],
@@ -396,25 +452,103 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
 
   IconData _getVisualIcon(String english) {
     final lower = english.toLowerCase();
-    if (lower.contains('coffee') || lower.contains('latte') || lower.contains('cappuccino') || lower.contains('espresso')) return Icons.local_cafe_rounded;
-    if (lower.contains('tea') || lower.contains('matcha')) return Icons.emoji_food_beverage_rounded;
-    if (lower.contains('milk')) return Icons.local_drink_rounded;
-    if (lower.contains('sugar') || lower.contains('sweetness')) return Icons.grain_rounded;
-    if (lower.contains('bubble') || lower.contains('pearl')) return Icons.bubble_chart_rounded;
-    if (lower.contains('ball') || lower.contains('striker') || lower.contains('goal') || lower.contains('penalty') || lower.contains('champion')) return Icons.sports_soccer_rounded;
-    if (lower.contains('passport')) return Icons.badge_outlined;
-    if (lower.contains('ticket') || lower.contains('boarding')) return Icons.airplane_ticket_rounded;
-    if (lower.contains('luggage') || lower.contains('baggage')) return Icons.luggage_rounded;
-    if (lower.contains('flight') || lower.contains('gate') || lower.contains('terminal')) return Icons.flight_takeoff_rounded;
-    if (lower.contains('sister') || lower.contains('aunt') || lower.contains('mother') || lower.contains('niece')) return Icons.face_3_rounded;
-    if (lower.contains('brother') || lower.contains('uncle') || lower.contains('father') || lower.contains('nephew')) return Icons.face_rounded;
-    if (lower.contains('workout') || lower.contains('muscle') || lower.contains('dumbbell') || lower.contains('barbell') || lower.contains('gym')) return Icons.fitness_center_rounded;
-    if (lower.contains('menu') || lower.contains('food') || lower.contains('delicious') || lower.contains('appetizer') || lower.contains('course')) return Icons.restaurant_rounded;
-    if (lower.contains('outfit') || lower.contains('fashion') || lower.contains('shirt') || lower.contains('dress')) return Icons.checkroom_rounded;
-    if (lower.contains('movie') || lower.contains('blockbuster') || lower.contains('popcorn') || lower.contains('cinema')) return Icons.movie_filter_rounded;
-    if (lower.contains('music') || lower.contains('melody') || lower.contains('concert') || lower.contains('song')) return Icons.music_note_rounded;
-    if (lower.contains('code') || lower.contains('developer') || lower.contains('database') || lower.contains('bug') || lower.contains('software')) return Icons.terminal_rounded;
-    if (lower.contains('puppy') || lower.contains('dog') || lower.contains('cat') || lower.contains('kitten') || lower.contains('pet')) return Icons.pets_rounded;
+    if (lower.contains('coffee') ||
+        lower.contains('latte') ||
+        lower.contains('cappuccino') ||
+        lower.contains('espresso')) {
+      return Icons.local_cafe_rounded;
+    }
+    if (lower.contains('tea') || lower.contains('matcha')) {
+      return Icons.emoji_food_beverage_rounded;
+    }
+    if (lower.contains('milk')) {
+      return Icons.local_drink_rounded;
+    }
+    if (lower.contains('sugar') || lower.contains('sweetness')) {
+      return Icons.grain_rounded;
+    }
+    if (lower.contains('bubble') || lower.contains('pearl')) {
+      return Icons.bubble_chart_rounded;
+    }
+    if (lower.contains('ball') ||
+        lower.contains('striker') ||
+        lower.contains('goal') ||
+        lower.contains('penalty') ||
+        lower.contains('champion')) {
+      return Icons.sports_soccer_rounded;
+    }
+    if (lower.contains('passport')) {
+      return Icons.badge_outlined;
+    }
+    if (lower.contains('ticket') || lower.contains('boarding')) {
+      return Icons.airplane_ticket_rounded;
+    }
+    if (lower.contains('luggage') || lower.contains('baggage')) {
+      return Icons.luggage_rounded;
+    }
+    if (lower.contains('flight') ||
+        lower.contains('gate') ||
+        lower.contains('terminal')) {
+      return Icons.flight_takeoff_rounded;
+    }
+    if (lower.contains('sister') ||
+        lower.contains('aunt') ||
+        lower.contains('mother') ||
+        lower.contains('niece')) {
+      return Icons.face_3_rounded;
+    }
+    if (lower.contains('brother') ||
+        lower.contains('uncle') ||
+        lower.contains('father') ||
+        lower.contains('nephew')) {
+      return Icons.face_rounded;
+    }
+    if (lower.contains('workout') ||
+        lower.contains('muscle') ||
+        lower.contains('dumbbell') ||
+        lower.contains('barbell') ||
+        lower.contains('gym')) {
+      return Icons.fitness_center_rounded;
+    }
+    if (lower.contains('menu') ||
+        lower.contains('food') ||
+        lower.contains('delicious') ||
+        lower.contains('appetizer') ||
+        lower.contains('course')) {
+      return Icons.restaurant_rounded;
+    }
+    if (lower.contains('outfit') ||
+        lower.contains('fashion') ||
+        lower.contains('shirt') ||
+        lower.contains('dress')) {
+      return Icons.checkroom_rounded;
+    }
+    if (lower.contains('movie') ||
+        lower.contains('blockbuster') ||
+        lower.contains('popcorn') ||
+        lower.contains('cinema')) {
+      return Icons.movie_filter_rounded;
+    }
+    if (lower.contains('music') ||
+        lower.contains('melody') ||
+        lower.contains('concert') ||
+        lower.contains('song')) {
+      return Icons.music_note_rounded;
+    }
+    if (lower.contains('code') ||
+        lower.contains('developer') ||
+        lower.contains('database') ||
+        lower.contains('bug') ||
+        lower.contains('software')) {
+      return Icons.terminal_rounded;
+    }
+    if (lower.contains('puppy') ||
+        lower.contains('dog') ||
+        lower.contains('cat') ||
+        lower.contains('kitten') ||
+        lower.contains('pet')) {
+      return Icons.pets_rounded;
+    }
     return Icons.menu_book_rounded;
   }
 
@@ -459,7 +593,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
         return AlertDialog(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
           surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -496,7 +632,10 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(12),
@@ -504,7 +643,10 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                 ),
                 child: const Text(
                   '⚡ +20 XP KINH NGHIỆM',
-                  style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFB45309)),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFB45309),
+                  ),
                 ),
               ),
             ],
@@ -514,7 +656,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
                 minimumSize: const Size.fromHeight(44),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               onPressed: () {
                 Navigator.pop(dialogCtx);
@@ -533,7 +677,13 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                 );
                 MainShell.markFirstLessonCompleted(context);
               },
-              child: const Text('NHẬN THƯỞNG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'NHẬN THƯỞNG',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         );
@@ -564,7 +714,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
         _handleBack();
       },
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        backgroundColor: isDark
+            ? const Color(0xFF0F172A)
+            : const Color(0xFFF8FAFC),
         body: SafeArea(
           child: Column(
             children: [
@@ -574,9 +726,16 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
               // 2. CÂY LỘ TRÌNH NỐT ZICZAC
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF2563EB),
+                        ),
+                      )
                     : SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 20,
+                        ),
                         child: Column(
                           children: [
                             const SizedBox(height: 10),
@@ -591,9 +750,13 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     alignment: Alignment.center,
                                     child: Container(
                                       width: 4,
-                                      margin: const EdgeInsets.symmetric(vertical: 40),
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 40,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                                        color: isDark
+                                            ? const Color(0xFF1E293B)
+                                            : const Color(0xFFE2E8F0),
                                         borderRadius: BorderRadius.circular(2),
                                       ),
                                     ),
@@ -607,7 +770,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     _buildTreeNode(
                                       stepNumber: 1,
                                       title: 'Cửa 1: Từ vựng trực quan',
-                                      badgeLabel: _unlockedNode == 1 ? 'BẮT ĐẦU' : null,
+                                      badgeLabel: _unlockedNode == 1
+                                          ? 'BẮT ĐẦU'
+                                          : null,
                                       icon: Icons.star_rounded,
                                       offsetX: -40,
                                       isUnlocked: _unlockedNode >= 1,
@@ -621,7 +786,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     _buildTreeNode(
                                       stepNumber: 2,
                                       title: 'Cửa 2: Bắt âm & Phản xạ',
-                                      badgeLabel: _unlockedNode == 2 ? 'TIẾP TỤC' : null,
+                                      badgeLabel: _unlockedNode == 2
+                                          ? 'TIẾP TỤC'
+                                          : null,
                                       icon: Icons.headphones_rounded,
                                       offsetX: 30,
                                       isUnlocked: _unlockedNode >= 2,
@@ -635,7 +802,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     _buildTreeNode(
                                       stepNumber: 3,
                                       title: 'Cửa 3: Rương kinh nghiệm',
-                                      badgeLabel: _unlockedNode == 3 ? 'MỞ RƯƠNG' : null,
+                                      badgeLabel: _unlockedNode == 3
+                                          ? 'MỞ RƯƠNG'
+                                          : null,
                                       icon: Icons.card_giftcard_rounded,
                                       offsetX: -20,
                                       isUnlocked: _unlockedNode >= 3,
@@ -650,7 +819,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     _buildTreeNode(
                                       stepNumber: 4,
                                       title: 'Cửa 4: Flashcard nhớ sâu',
-                                      badgeLabel: _unlockedNode == 4 ? 'TIẾP TỤC' : null,
+                                      badgeLabel: _unlockedNode == 4
+                                          ? 'TIẾP TỤC'
+                                          : null,
                                       icon: Icons.bolt_rounded,
                                       offsetX: 35,
                                       isUnlocked: _unlockedNode >= 4,
@@ -664,7 +835,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     _buildTreeNode(
                                       stepNumber: 5,
                                       title: 'Cửa 5: Về đích - Ghép câu',
-                                      badgeLabel: _unlockedNode == 5 ? 'VỀ ĐÍCH' : null,
+                                      badgeLabel: _unlockedNode == 5
+                                          ? 'VỀ ĐÍCH'
+                                          : null,
                                       icon: Icons.emoji_events_rounded,
                                       offsetX: 0,
                                       isUnlocked: _unlockedNode >= 5,
@@ -686,11 +859,22 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                                     child: Column(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                                            borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(color: const Color(0xFF2563EB).withAlpha(100)),
+                                            color: isDark
+                                                ? const Color(0xFF1E293B)
+                                                : Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(
+                                                0xFF2563EB,
+                                              ).withAlpha(100),
+                                            ),
                                             boxShadow: const [
                                               BoxShadow(
                                                 color: Color(0x10000000),
@@ -724,9 +908,9 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -753,34 +937,43 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             onPressed: _handleBack,
           ),
           const SizedBox(width: 4),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    Text(
-                      'LỘ TRÌNH SỞ THÍCH • CỬA $_unlockedNode/5',
-                      style: const TextStyle(
-                        fontFamily: 'BeVietnamPro',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11.5,
-                        color: Colors.white70,
-                        letterSpacing: 0.5,
+                    Expanded(
+                      child: Text(
+                        'LỘ TRÌNH SỞ THÍCH • CỬA $_unlockedNode/5',
+                        style: const TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          color: Colors.white70,
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (_totalXpEarned > 0) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       Text(
-                        '⚡ +$_totalXpEarned XP',
+                        '⚡+$_totalXpEarned XP',
                         style: const TextStyle(
                           color: Color(0xFFFDE68A),
                           fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 10.5,
                         ),
                       ),
                     ],
@@ -791,7 +984,7 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                   style: const TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontWeight: FontWeight.w900,
-                    fontSize: 16.5,
+                    fontSize: 15,
                     color: Colors.white,
                   ),
                   maxLines: 1,
@@ -800,25 +993,29 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
 
           // NÚT HƯỚNG DẪN NỔI BẬT TRÊN BANNER
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF2563EB),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            icon: const Icon(Icons.menu_book_rounded, size: 16),
+            icon: const Icon(Icons.menu_book_rounded, size: 14),
             label: const Text(
               'HƯỚNG DẪN',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w900,
-                fontSize: 11.5,
-                letterSpacing: 0.3,
+                fontSize: 11,
+                letterSpacing: 0.2,
               ),
             ),
             onPressed: _openGuidebookModal,
@@ -856,7 +1053,10 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
             if (badgeLabel != null && isCurrent)
               Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F172A),
                   borderRadius: BorderRadius.circular(8),
@@ -922,13 +1122,13 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
 // MODEL CÂU HỎI BÀI HỌC TƯƠNG TÁC
 // -----------------------------------------------------------------------------
 enum _LessonQuestionType {
-  visualChoice,       // Chọn card hình ảnh + từ vựng theo nghĩa tiếng Việt
-  listenAndPickWord,  // Nghe audio phát âm -> chọn từ đúng
-  listenAndPickMean,  // Nghe audio phát âm -> chọn nghĩa tiếng Việt đúng
-  meaningQuiz,        // Trắc nghiệm nghĩa từ vựng
-  sentenceBuilder,    // Ghép câu đàm thoại hoàn chỉnh từ các từ xáo trộn
-  fillBlank,          // Chọn từ điền vào chỗ trống câu đàm thoại
-  flashcard,          // Lật thẻ nhớ sâu 2 mặt (Tiếng Anh <-> Tiếng Việt)
+  visualChoice, // Chọn card hình ảnh + từ vựng theo nghĩa tiếng Việt
+  listenAndPickWord, // Nghe audio phát âm -> chọn từ đúng
+  listenAndPickMean, // Nghe audio phát âm -> chọn nghĩa tiếng Việt đúng
+  meaningQuiz, // Trắc nghiệm nghĩa từ vựng
+  sentenceBuilder, // Ghép câu đàm thoại hoàn chỉnh từ các từ xáo trộn
+  fillBlank, // Chọn từ điền vào chỗ trống câu đàm thoại
+  flashcard, // Lật thẻ nhớ sâu 2 mặt (Tiếng Anh <-> Tiếng Việt)
 }
 
 class _LessonQuestion {
@@ -978,7 +1178,8 @@ class _InteractiveLessonScreen extends StatefulWidget {
   });
 
   @override
-  State<_InteractiveLessonScreen> createState() => _InteractiveLessonScreenState();
+  State<_InteractiveLessonScreen> createState() =>
+      _InteractiveLessonScreenState();
 }
 
 class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
@@ -1029,39 +1230,52 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
       for (int i = 0; i < min(4, sampleWords.length); i++) {
         final target = sampleWords[i];
         final options = <InterestWord>[target];
-        final pool = words.where((w) => w.id != target.id).toList()..shuffle(rand);
+        final pool = words.where((w) => w.id != target.id).toList()
+          ..shuffle(rand);
         options.addAll(pool.take(2));
         options.shuffle(rand);
 
-        questions.add(_LessonQuestion(
-          type: _LessonQuestionType.visualChoice,
-          title: 'TỪ MỚI TRỰC QUAN',
-          prompt: 'Đâu là "${target.meaningVi}"?',
-          audioText: target.english,
-          targetWord: target,
-          wordOptions: options,
-          correctOptionIndex: options.indexOf(target),
-          explanation: '${target.english} (${target.ipa}): ${target.meaningVi}',
-        ));
+        questions.add(
+          _LessonQuestion(
+            type: _LessonQuestionType.visualChoice,
+            title: 'TỪ MỚI TRỰC QUAN',
+            prompt: 'Đâu là "${target.meaningVi}"?',
+            audioText: target.english,
+            targetWord: target,
+            wordOptions: options,
+            correctOptionIndex: options.indexOf(target),
+            explanation:
+                '${target.english} (${target.ipa}): ${target.meaningVi}',
+          ),
+        );
       }
 
       // Dạng 2: Meaning Quiz (4 câu)
       final quizPool = List<InterestWord>.from(words.reversed)..shuffle(rand);
       for (int i = 0; i < min(4, quizPool.length); i++) {
         final target = quizPool[i];
-        final wrongMeanings = words.where((w) => w.id != target.id).map((w) => w.meaningVi).toList()..shuffle(rand);
-        final opts = <String>[target.meaningVi, ...wrongMeanings.take(3)]..shuffle(rand);
+        final wrongMeanings =
+            words
+                .where((w) => w.id != target.id)
+                .map((w) => w.meaningVi)
+                .toList()
+              ..shuffle(rand);
+        final opts = <String>[target.meaningVi, ...wrongMeanings.take(3)]
+          ..shuffle(rand);
 
-        questions.add(_LessonQuestion(
-          type: _LessonQuestionType.meaningQuiz,
-          title: 'TRẮC NGHIỆM TỪ VỰNG',
-          prompt: 'Từ "${target.english}" có nghĩa là gì?',
-          audioText: target.english,
-          targetWord: target,
-          textOptions: opts,
-          correctOptionIndex: opts.indexOf(target.meaningVi),
-          explanation: '${target.english} nghĩa là "${target.meaningVi}". Ví dụ: ${target.exampleEn}',
-        ));
+        questions.add(
+          _LessonQuestion(
+            type: _LessonQuestionType.meaningQuiz,
+            title: 'TRẮC NGHIỆM TỪ VỰNG',
+            prompt: 'Từ "${target.english}" có nghĩa là gì?',
+            audioText: target.english,
+            targetWord: target,
+            textOptions: opts,
+            correctOptionIndex: opts.indexOf(target.meaningVi),
+            explanation:
+                '${target.english} nghĩa là "${target.meaningVi}". Ví dụ: ${target.exampleEn}',
+          ),
+        );
       }
     } else if (widget.stepNumber == 2) {
       // CỬA 2: BẮT ÂM & PHẢN XẠ (8 CÂU)
@@ -1069,52 +1283,70 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
       final listenWords = List<InterestWord>.from(words)..shuffle(rand);
       for (int i = 0; i < min(4, listenWords.length); i++) {
         final target = listenWords[i];
-        final wrongWords = words.where((w) => w.id != target.id).map((w) => w.english).toList()..shuffle(rand);
-        final opts = <String>[target.english, ...wrongWords.take(3)]..shuffle(rand);
+        final wrongWords =
+            words.where((w) => w.id != target.id).map((w) => w.english).toList()
+              ..shuffle(rand);
+        final opts = <String>[target.english, ...wrongWords.take(3)]
+          ..shuffle(rand);
 
-        questions.add(_LessonQuestion(
-          type: _LessonQuestionType.listenAndPickWord,
-          title: 'BẮT ÂM TỪ VỰNG',
-          prompt: 'Bấm vào loa và chọn từ bạn nghe được:',
-          audioText: target.english,
-          targetWord: target,
-          textOptions: opts,
-          correctOptionIndex: opts.indexOf(target.english),
-          explanation: '${target.english} (${target.ipa}): ${target.meaningVi}',
-        ));
+        questions.add(
+          _LessonQuestion(
+            type: _LessonQuestionType.listenAndPickWord,
+            title: 'BẮT ÂM TỪ VỰNG',
+            prompt: 'Bấm vào loa và chọn từ bạn nghe được:',
+            audioText: target.english,
+            targetWord: target,
+            textOptions: opts,
+            correctOptionIndex: opts.indexOf(target.english),
+            explanation:
+                '${target.english} (${target.ipa}): ${target.meaningVi}',
+          ),
+        );
       }
 
       // Dạng 2: Nghe câu đàm thoại chọn nghĩa đúng (4 câu)
-      final listenPhrases = List<InterestWord>.from(phrases.isNotEmpty ? phrases : allWords)..shuffle(rand);
+      final listenPhrases = List<InterestWord>.from(
+        phrases.isNotEmpty ? phrases : allWords,
+      )..shuffle(rand);
       for (int i = 0; i < min(4, listenPhrases.length); i++) {
         final target = listenPhrases[i];
-        final wrongMeanings = allWords.where((w) => w.id != target.id).map((w) => w.meaningVi).toList()..shuffle(rand);
-        final opts = <String>[target.meaningVi, ...wrongMeanings.take(3)]..shuffle(rand);
+        final wrongMeanings =
+            allWords
+                .where((w) => w.id != target.id)
+                .map((w) => w.meaningVi)
+                .toList()
+              ..shuffle(rand);
+        final opts = <String>[target.meaningVi, ...wrongMeanings.take(3)]
+          ..shuffle(rand);
 
-        questions.add(_LessonQuestion(
-          type: _LessonQuestionType.listenAndPickMean,
-          title: 'PHẢN XẠ ĐÀM THOẠI',
-          prompt: 'Bấm loa nghe câu và chọn nghĩa tiếng Việt chính xác:',
-          audioText: target.english,
-          targetWord: target,
-          textOptions: opts,
-          correctOptionIndex: opts.indexOf(target.meaningVi),
-          explanation: '${target.english}\n➜ ${target.meaningVi}',
-        ));
+        questions.add(
+          _LessonQuestion(
+            type: _LessonQuestionType.listenAndPickMean,
+            title: 'PHẢN XẠ ĐÀM THOẠI',
+            prompt: 'Bấm loa nghe câu và chọn nghĩa tiếng Việt chính xác:',
+            audioText: target.english,
+            targetWord: target,
+            textOptions: opts,
+            correctOptionIndex: opts.indexOf(target.meaningVi),
+            explanation: '${target.english}\n➜ ${target.meaningVi}',
+          ),
+        );
       }
     } else if (widget.stepNumber == 4) {
       // CỬA 4: FLASHCARD NHỚ SÂU & NỐI NGHĨA (8 THẺ / CÂU)
       final flashWords = List<InterestWord>.from(words)..shuffle(rand);
       for (int i = 0; i < min(5, flashWords.length); i++) {
         final w = flashWords[i];
-        questions.add(_LessonQuestion(
-          type: _LessonQuestionType.flashcard,
-          title: 'LẬT THẺ NHỚ SÂU',
-          prompt: 'Chạm vào thẻ để lật xem phiên âm, nghĩa và ví dụ:',
-          audioText: w.english,
-          targetWord: w,
-          explanation: 'Đã hoàn thành ôn tập thẻ "${w.english}".',
-        ));
+        questions.add(
+          _LessonQuestion(
+            type: _LessonQuestionType.flashcard,
+            title: 'LẬT THẺ NHỚ SÂU',
+            prompt: 'Chạm vào thẻ để lật xem phiên âm, nghĩa và ví dụ:',
+            audioText: w.english,
+            targetWord: w,
+            explanation: 'Đã hoàn thành ôn tập thẻ "${w.english}".',
+          ),
+        );
       }
 
       // 3 câu điền từ củng cố
@@ -1125,59 +1357,76 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
         if (tokens.length >= 3) {
           final missingIndex = rand.nextInt(tokens.length);
           final missingWord = tokens[missingIndex];
-          final promptSentence = tokens.map((t) => t == missingWord ? '_____' : t).join(' ');
+          final promptSentence = tokens
+              .map((t) => t == missingWord ? '_____' : t)
+              .join(' ');
 
-          final wrongWords = words.map((w) => w.english).where((w) => w.toLowerCase() != missingWord.toLowerCase()).toList()..shuffle(rand);
-          final opts = <String>[missingWord, ...wrongWords.take(3)]..shuffle(rand);
+          final wrongWords =
+              words
+                  .map((w) => w.english)
+                  .where((w) => w.toLowerCase() != missingWord.toLowerCase())
+                  .toList()
+                ..shuffle(rand);
+          final opts = <String>[missingWord, ...wrongWords.take(3)]
+            ..shuffle(rand);
 
-          questions.add(_LessonQuestion(
-            type: _LessonQuestionType.fillBlank,
-            title: 'ĐIỀN TỪ HOÀN CHỈNH',
-            prompt: 'Chọn từ chính xác để hoàn thành câu:\n"$promptSentence"',
-            audioText: p.english,
-            targetWord: p,
-            textOptions: opts,
-            correctOptionIndex: opts.indexOf(missingWord),
-            explanation: 'Câu hoàn chỉnh: "${p.english}" (${p.meaningVi})',
-          ));
+          questions.add(
+            _LessonQuestion(
+              type: _LessonQuestionType.fillBlank,
+              title: 'ĐIỀN TỪ HOÀN CHỈNH',
+              prompt: 'Chọn từ chính xác để hoàn thành câu:\n"$promptSentence"',
+              audioText: p.english,
+              targetWord: p,
+              textOptions: opts,
+              correctOptionIndex: opts.indexOf(missingWord),
+              explanation: 'Câu hoàn chỉnh: "${p.english}" (${p.meaningVi})',
+            ),
+          );
         }
       }
     } else {
       // CỬA 5: VỀ ĐÍCH - GHÉP CÂU ĐÀM THOẠI (6 - 8 CÂU)
-      final targetPhrases = List<InterestWord>.from(phrases.isNotEmpty ? phrases : allWords)..shuffle(rand);
+      final targetPhrases = List<InterestWord>.from(
+        phrases.isNotEmpty ? phrases : allWords,
+      )..shuffle(rand);
       final count = min(6, targetPhrases.length);
       for (int i = 0; i < count; i++) {
         final p = targetPhrases[i];
         final cleanSentence = p.english.replaceAll(RegExp(r'[.!?]'), '').trim();
         final tokens = cleanSentence.split(' ');
-        final scrambled = List<String>.from(tokens)..shuffle(Random(rand.nextInt(100) + 1));
+        final scrambled = List<String>.from(tokens)
+          ..shuffle(Random(rand.nextInt(100) + 1));
 
-        questions.add(_LessonQuestion(
-          type: _LessonQuestionType.sentenceBuilder,
-          title: 'GHÉP CÂU ĐÀM THOẠI',
-          prompt: 'Ghép các từ bên dưới để tạo thành câu hoàn chỉnh:',
-          audioText: p.english,
-          targetWord: p,
-          targetSentence: cleanSentence,
-          sentenceMeaningVi: p.meaningVi,
-          scrambledTokens: scrambled,
-          explanation: 'Câu giao tiếp chuẩn: "${p.english}" (${p.meaningVi})',
-        ));
+        questions.add(
+          _LessonQuestion(
+            type: _LessonQuestionType.sentenceBuilder,
+            title: 'GHÉP CÂU ĐÀM THOẠI',
+            prompt: 'Ghép các từ bên dưới để tạo thành câu hoàn chỉnh:',
+            audioText: p.english,
+            targetWord: p,
+            targetSentence: cleanSentence,
+            sentenceMeaningVi: p.meaningVi,
+            scrambledTokens: scrambled,
+            explanation: 'Câu giao tiếp chuẩn: "${p.english}" (${p.meaningVi})',
+          ),
+        );
       }
     }
 
     // Nếu questions rỗng (đề phòng dữ liệu lỗi), fallback ít nhất 3 câu
     if (questions.isEmpty && widget.words.isNotEmpty) {
       final w = widget.words.first;
-      questions.add(_LessonQuestion(
-        type: _LessonQuestionType.meaningQuiz,
-        title: 'TỪ VỰNG CHỦ ĐỀ',
-        prompt: 'Từ "${w.english}" có nghĩa là gì?',
-        audioText: w.english,
-        targetWord: w,
-        textOptions: [w.meaningVi, 'Nghĩa khác 1', 'Nghĩa khác 2'],
-        correctOptionIndex: 0,
-      ));
+      questions.add(
+        _LessonQuestion(
+          type: _LessonQuestionType.meaningQuiz,
+          title: 'TỪ VỰNG CHỦ ĐỀ',
+          prompt: 'Từ "${w.english}" có nghĩa là gì?',
+          audioText: w.english,
+          targetWord: w,
+          textOptions: [w.meaningVi, 'Nghĩa khác 1', 'Nghĩa khác 2'],
+          correctOptionIndex: 0,
+        ),
+      );
     }
 
     setState(() {
@@ -1233,12 +1482,17 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
         _handleClose();
       },
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        backgroundColor: isDark
+            ? const Color(0xFF0F172A)
+            : const Color(0xFFF8FAFC),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.close_rounded, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            icon: Icon(
+              Icons.close_rounded,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
             onPressed: _handleClose,
           ),
           title: ClipRRect(
@@ -1246,8 +1500,12 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+              backgroundColor: isDark
+                  ? const Color(0xFF1E293B)
+                  : const Color(0xFFE2E8F0),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF2563EB),
+              ),
             ),
           ),
           actions: [
@@ -1343,11 +1601,17 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? (isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF))
+                            ? (isDark
+                                  ? const Color(0xFF1E3A8A)
+                                  : const Color(0xFFEFF6FF))
                             : (isDark ? const Color(0xFF1E293B) : Colors.white),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFF2563EB) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          color: isSelected
+                              ? const Color(0xFF2563EB)
+                              : (isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0)),
                           width: isSelected ? 2.2 : 1.2,
                         ),
                         boxShadow: [
@@ -1365,7 +1629,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                           Icon(
                             _getWordIcon(word.english),
                             size: 44,
-                            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                            color: isSelected
+                                ? const Color(0xFF2563EB)
+                                : const Color(0xFF64748B),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -1374,7 +1640,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                               fontFamily: 'BeVietnamPro',
                               fontWeight: FontWeight.w800,
                               fontSize: 14,
-                              color: isSelected ? const Color(0xFF2563EB) : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                              color: isSelected
+                                  ? const Color(0xFF2563EB)
+                                  : (isDark
+                                        ? Colors.white
+                                        : const Color(0xFF0F172A)),
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,
@@ -1384,7 +1654,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                             word.ipa,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+                              color: isDark
+                                  ? Colors.white54
+                                  : const Color(0xFF94A3B8),
                             ),
                           ),
                         ],
@@ -1428,13 +1700,22 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2563EB),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   icon: const Icon(Icons.volume_up_rounded, size: 28),
                   label: const Text(
                     'NGHE PHÁT ÂM',
-                    style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.w900, fontSize: 14),
+                    style: TextStyle(
+                      fontFamily: 'BeVietnamPro',
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                    ),
                   ),
                   onPressed: () => _speak(q.audioText!),
                 ),
@@ -1450,17 +1731,25 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               child: InkWell(
-                onTap: _isChecked ? null : () => setState(() => _selectedOptionIndex = idx),
+                onTap: _isChecked
+                    ? null
+                    : () => setState(() => _selectedOptionIndex = idx),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? (isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF))
+                        ? (isDark
+                              ? const Color(0xFF1E3A8A)
+                              : const Color(0xFFEFF6FF))
                         : (isDark ? const Color(0xFF1E293B) : Colors.white),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFF2563EB) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      color: isSelected
+                          ? const Color(0xFF2563EB)
+                          : (isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0)),
                       width: isSelected ? 2.2 : 1.2,
                     ),
                   ),
@@ -1471,9 +1760,15 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                         height: 28,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected ? const Color(0xFF2563EB) : Colors.transparent,
+                          color: isSelected
+                              ? const Color(0xFF2563EB)
+                              : Colors.transparent,
                           border: Border.all(
-                            color: isSelected ? const Color(0xFF2563EB) : (isDark ? Colors.white38 : const Color(0xFFCBD5E1)),
+                            color: isSelected
+                                ? const Color(0xFF2563EB)
+                                : (isDark
+                                      ? Colors.white38
+                                      : const Color(0xFFCBD5E1)),
                             width: 1.5,
                           ),
                         ),
@@ -1483,7 +1778,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark
+                                        ? Colors.white70
+                                        : const Color(0xFF64748B)),
                             ),
                           ),
                         ),
@@ -1498,7 +1797,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                             fontSize: 15,
                             color: isSelected
                                 ? const Color(0xFF2563EB)
-                                : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                : (isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A)),
                           ),
                         ),
                       ),
@@ -1549,13 +1850,23 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1), width: 1.5),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFCBD5E1),
+                width: 1.5,
+              ),
             ),
             child: _assembledTokens.isEmpty
                 ? Center(
                     child: Text(
                       'Chạm vào các từ bên dưới để ghép vào đây',
-                      style: TextStyle(color: isDark ? Colors.white38 : const Color(0xFF94A3B8), fontSize: 13),
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.white38
+                            : const Color(0xFF94A3B8),
+                        fontSize: 13,
+                      ),
                     ),
                   )
                 : Wrap(
@@ -1574,7 +1885,10 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                               },
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 9,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF2563EB),
                             borderRadius: BorderRadius.circular(12),
@@ -1613,12 +1927,17 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                       },
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFCBD5E1),
                       width: 1.5,
                     ),
                   ),
@@ -1678,7 +1997,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                   color: isDark ? const Color(0xFF1E293B) : Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: _isFlashcardFlipped ? const Color(0xFF10B981) : const Color(0xFF2563EB),
+                    color: _isFlashcardFlipped
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF2563EB),
                     width: 2,
                   ),
                   boxShadow: [
@@ -1693,9 +2014,13 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      _isFlashcardFlipped ? Icons.translate_rounded : Icons.touch_app_rounded,
+                      _isFlashcardFlipped
+                          ? Icons.translate_rounded
+                          : Icons.touch_app_rounded,
                       size: 40,
-                      color: _isFlashcardFlipped ? const Color(0xFF10B981) : const Color(0xFF2563EB),
+                      color: _isFlashcardFlipped
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFF2563EB),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -1711,7 +2036,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                     const SizedBox(height: 6),
                     Text(
                       word.ipa,
-                      style: const TextStyle(fontSize: 15, color: Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Color(0xFF2563EB),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     const Divider(),
@@ -1723,7 +2052,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                           fontFamily: 'BeVietnamPro',
                           fontWeight: FontWeight.w800,
                           fontSize: 20,
-                          color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+                          color: isDark
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF059669),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -1733,7 +2064,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                         style: TextStyle(
                           fontSize: 13.5,
                           fontStyle: FontStyle.italic,
-                          color: isDark ? Colors.white70 : const Color(0xFF475569),
+                          color: isDark
+                              ? Colors.white70
+                              : const Color(0xFF475569),
                           height: 1.4,
                         ),
                         textAlign: TextAlign.center,
@@ -1744,7 +2077,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                          color: isDark
+                              ? Colors.white38
+                              : const Color(0xFF94A3B8),
                         ),
                       ),
                     ],
@@ -1773,7 +2108,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
           const SizedBox(width: 5),
           Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: color),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -1790,10 +2129,7 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
           Stack(
             alignment: Alignment.bottomRight,
             children: [
-              const EngPassMascot(
-                mood: MascotMood.celebrate,
-                size: 112,
-              ),
+              const EngPassMascot(mood: MascotMood.celebrate, size: 112),
               Container(
                 width: 32,
                 height: 32,
@@ -1806,7 +2142,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                   ),
                 ),
                 child: const Center(
-                  child: Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 22),
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFF16A34A),
+                    size: 22,
+                  ),
                 ),
               ),
             ],
@@ -1837,7 +2177,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFE2E8F0),
+              ),
             ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1846,7 +2190,12 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                 SizedBox(width: 8),
                 Text(
                   '+20 XP KINH NGHIỆM',
-                  style: TextStyle(fontFamily: 'BeVietnamPro', fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFFF59E0B)),
+                  style: TextStyle(
+                    fontFamily: 'BeVietnamPro',
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: Color(0xFFF59E0B),
+                  ),
                 ),
               ],
             ),
@@ -1878,7 +2227,12 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          border: Border(top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), width: 1.5)),
+          border: Border(
+            top: BorderSide(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              width: 1.5,
+            ),
+          ),
         ),
         child: AppButton(
           label: 'ĐÃ THUỘC TỪ NÀY → TIẾP TỤC',
@@ -1896,7 +2250,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
 
     // Nếu đã bấm Kiểm tra: hiện thông báo Đúng/Sai kèm nút Tiếp tục
     if (_isChecked) {
-      final color = _isCorrect ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+      final color = _isCorrect
+          ? const Color(0xFF16A34A)
+          : const Color(0xFFDC2626);
       final bgColor = _isCorrect
           ? (isDark ? const Color(0xFF143320) : const Color(0xFFDCFCE7))
           : (isDark ? const Color(0xFF3E1D22) : const Color(0xFFFEE2E2));
@@ -1913,11 +2269,19 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
           children: [
             Row(
               children: [
-                Icon(_isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded, color: color, size: 28),
+                Icon(
+                  _isCorrect
+                      ? Icons.check_circle_rounded
+                      : Icons.cancel_rounded,
+                  color: color,
+                  size: 28,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    _isCorrect ? 'Chính xác! Làm rất tốt! 🎉' : 'Chưa chính xác!',
+                    _isCorrect
+                        ? 'Chính xác! Làm rất tốt! 🎉'
+                        : 'Chưa chính xác!',
                     style: TextStyle(
                       fontFamily: 'BeVietnamPro',
                       fontWeight: FontWeight.w900,
@@ -1942,7 +2306,9 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
             const SizedBox(height: 12),
             AppButton(
               label: 'TIẾP TỤC',
-              variant: _isCorrect ? AppButtonVariant.success : AppButtonVariant.primary,
+              variant: _isCorrect
+                  ? AppButtonVariant.success
+                  : AppButtonVariant.primary,
               height: 48,
               onPressed: () {
                 setState(() {
@@ -1957,8 +2323,11 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
     }
 
     // Trạng thái chờ người dùng chọn đáp án và bấm Kiểm tra
-    final canCheck = (q.type == _LessonQuestionType.sentenceBuilder && _assembledTokens.isNotEmpty) ||
-        (q.type != _LessonQuestionType.sentenceBuilder && _selectedOptionIndex != null);
+    final canCheck =
+        (q.type == _LessonQuestionType.sentenceBuilder &&
+            _assembledTokens.isNotEmpty) ||
+        (q.type != _LessonQuestionType.sentenceBuilder &&
+            _selectedOptionIndex != null);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -1998,11 +2367,15 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
                   ? () {
                       bool correct = false;
                       if (q.type == _LessonQuestionType.sentenceBuilder) {
-                        final assembled = _assembledTokens.join(' ').trim().toLowerCase();
+                        final assembled = _assembledTokens
+                            .join(' ')
+                            .trim()
+                            .toLowerCase();
                         final target = q.targetSentence.trim().toLowerCase();
                         correct = (assembled == target);
                       } else {
-                        correct = (_selectedOptionIndex == q.correctOptionIndex);
+                        correct =
+                            (_selectedOptionIndex == q.correctOptionIndex);
                       }
                       setState(() {
                         _isChecked = true;
@@ -2022,17 +2395,50 @@ class _InteractiveLessonScreenState extends State<_InteractiveLessonScreen> {
 
   IconData _getWordIcon(String english) {
     final lower = english.toLowerCase();
-    if (lower.contains('coffee') || lower.contains('latte') || lower.contains('cappuccino') || lower.contains('espresso')) return Icons.local_cafe_rounded;
-    if (lower.contains('tea') || lower.contains('matcha')) return Icons.emoji_food_beverage_rounded;
-    if (lower.contains('milk')) return Icons.local_drink_rounded;
-    if (lower.contains('sugar') || lower.contains('sweetness')) return Icons.grain_rounded;
-    if (lower.contains('bubble') || lower.contains('pearl')) return Icons.bubble_chart_rounded;
-    if (lower.contains('ball') || lower.contains('striker') || lower.contains('goal') || lower.contains('penalty')) return Icons.sports_soccer_rounded;
-    if (lower.contains('passport')) return Icons.badge_outlined;
-    if (lower.contains('ticket') || lower.contains('boarding')) return Icons.airplane_ticket_rounded;
-    if (lower.contains('luggage') || lower.contains('baggage')) return Icons.luggage_rounded;
-    if (lower.contains('workout') || lower.contains('muscle') || lower.contains('dumbbell') || lower.contains('barbell')) return Icons.fitness_center_rounded;
-    if (lower.contains('menu') || lower.contains('food') || lower.contains('delicious')) return Icons.restaurant_rounded;
+    if (lower.contains('coffee') ||
+        lower.contains('latte') ||
+        lower.contains('cappuccino') ||
+        lower.contains('espresso')) {
+      return Icons.local_cafe_rounded;
+    }
+    if (lower.contains('tea') || lower.contains('matcha')) {
+      return Icons.emoji_food_beverage_rounded;
+    }
+    if (lower.contains('milk')) {
+      return Icons.local_drink_rounded;
+    }
+    if (lower.contains('sugar') || lower.contains('sweetness')) {
+      return Icons.grain_rounded;
+    }
+    if (lower.contains('bubble') || lower.contains('pearl')) {
+      return Icons.bubble_chart_rounded;
+    }
+    if (lower.contains('ball') ||
+        lower.contains('striker') ||
+        lower.contains('goal') ||
+        lower.contains('penalty')) {
+      return Icons.sports_soccer_rounded;
+    }
+    if (lower.contains('passport')) {
+      return Icons.badge_outlined;
+    }
+    if (lower.contains('ticket') || lower.contains('boarding')) {
+      return Icons.airplane_ticket_rounded;
+    }
+    if (lower.contains('luggage') || lower.contains('baggage')) {
+      return Icons.luggage_rounded;
+    }
+    if (lower.contains('workout') ||
+        lower.contains('muscle') ||
+        lower.contains('dumbbell') ||
+        lower.contains('barbell')) {
+      return Icons.fitness_center_rounded;
+    }
+    if (lower.contains('menu') ||
+        lower.contains('food') ||
+        lower.contains('delicious')) {
+      return Icons.restaurant_rounded;
+    }
     return Icons.menu_book_rounded;
   }
 }

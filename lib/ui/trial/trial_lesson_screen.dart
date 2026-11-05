@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import '../../data/models/attempt_answer.dart';
 import '../../data/models/daily_stat.dart';
 import '../../data/models/learning_session.dart';
 import '../../data/models/wrong_book_entry.dart';
+import '../../data/rbac_proctor_ai_service.dart';
 import '../../data/trial_lesson_repository.dart';
 import '../../data/trial_policy.dart';
 import '../../navigation/main_shell.dart';
@@ -349,6 +351,10 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
 
       // Ghi nhận bài học thử đã hoàn thành cho chủ sở hữu này
       await repo.setCompletedTrialLessonId(ownerId, _lesson.lessonId);
+      await repo.setSetting('unit_section_progress_${ownerId}_u${_lesson.unitNumber}_reading', 'completed');
+      if (authCtrl.user.email.isNotEmpty) {
+        await repo.setSetting('unit_section_progress_${authCtrl.user.email.toLowerCase().trim()}_u${_lesson.unitNumber}_reading', 'completed');
+      }
 
       // Cập nhật session hoàn thành
       await repo.saveLearningSession(
@@ -366,6 +372,15 @@ class _TrialLessonScreenState extends State<TrialLessonScreen>
           nextLessonTitle: 'Đăng ký tài khoản để mở khóa toàn bộ 10 Unit',
         ),
       );
+
+      // Đồng bộ ngay tiến độ lên Cloud PostgreSQL cho Giáo viên/Admin theo dõi
+      final percentScore = _questions.isNotEmpty ? ((correctCount / _questions.length) * 100).toInt() : 100;
+      unawaited(RbacProctorAiService.instance.syncTextbookProgressToCloud(
+        unitNumber: _lesson.unitNumber,
+        sectionKey: 'reading',
+        score: percentScore,
+      ));
+      unawaited(RbacProctorAiService.instance.syncAllStudentProgressToCloud());
 
       _isResultSaved = true;
       if (mounted) {

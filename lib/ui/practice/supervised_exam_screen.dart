@@ -42,8 +42,21 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
 
   Future<void> _loadExams() async {
     setState(() => _isLoading = true);
+    final isLocked = await AuthController.instance.checkLockStatus();
+    if (isLocked && mounted) {
+      setState(() => _isLoading = false);
+      _showAccountLockedDialog(AuthController.instance.user.lockedReason);
+      return;
+    }
+
     final list = await RbacProctorAiService.instance.getSupervisedExams();
     final assigns = await RbacProctorAiService.instance.getAssignments();
+    final joinedClasses = await RbacProctorAiService.instance.getMyJoinedClasses();
+    final joinedClassIds = joinedClasses
+        .map((c) => (c['id'] ?? '').toString())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
     final user = AuthController.instance.user;
     final Map<String, ExamLiveSessionModel> mySessions = {};
 
@@ -57,7 +70,12 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
 
     if (!mounted) return;
     setState(() {
-      _exams = list.where((e) => e.isActive).toList();
+      _exams = list.where((e) {
+        if (!e.isActive) return false;
+        final cid = (e.classId ?? '').toString().trim();
+        if (cid.isEmpty || cid.toUpperCase() == 'ALL' || cid == 'Toàn trường') return true;
+        return joinedClassIds.contains(cid);
+      }).toList();
       _assignments = assigns.where((a) => a['status'] != 'closed').toList();
       _myExamSessions = mySessions;
       _isLoading = false;
@@ -67,6 +85,72 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
     if (!_isGuest) {
       unawaited(RbacProctorAiService.instance.syncStudentClassReminders(user.id));
     }
+  }
+
+  void _showAccountLockedDialog(String reason) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.gpp_bad_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Tài Khoản Bị Khóa',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Tài khoản của bạn đã bị Quản trị viên tạm khóa và không được phép tham gia làm bài thi có giám sát.',
+              style: TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Text(
+                'Lý do: ${reason.isNotEmpty ? reason : "Vi phạm quy chế thi nhiều lần (out app >10s)"}',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Vui lòng liên hệ Thầy/Cô giáo bộ môn hoặc Quản trị viên hệ thống để được xem xét mở khóa tài khoản.',
+              style: TextStyle(fontSize: 12.5, color: Colors.black54),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('Đã hiểu & Thoát ra'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showGuestWarningDialog() {
@@ -152,6 +236,12 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
   void _showExamRulesSheet(SupervisedExamModel exam) {
     if (_isGuest) {
       _showGuestWarningDialog();
+      return;
+    }
+
+    final user = AuthController.instance.user;
+    if (user.isLocked) {
+      _showAccountLockedDialog(user.lockedReason);
       return;
     }
 
@@ -505,9 +595,11 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+          : RefreshIndicator(
+              onRefresh: _loadExams,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
                 if (_isGuest)
                   Container(
                     margin: const EdgeInsets.only(bottom: 14),
@@ -863,6 +955,7 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                 }),
               ],
             ),
+          ),
     );
   }
 
@@ -935,49 +1028,79 @@ class _SupervisedExamPlayerScreenState extends State<SupervisedExamPlayerScreen>
 
   Future<void> _initSession() async {
     final user = AuthController.instance.user;
-    final started = await RbacProctorAiService.instance.startSupervisedExamSession(
-      exam: widget.exam,
-      userId: user.id,
-      studentName: user.displayName,
-      studentEmail: user.email,
-    );
-    if (!mounted) return;
-    setState(() {
-      _session = started;
-      _answers.addAll(started.currentAnswers);
-    });
+    if (user.isLocked) {
+      if (mounted) {
+        ExamLockGuard.instance.exitSupervisedExam();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tài khoản của bạn đã bị khóa: ${user.lockedReason.isNotEmpty ? user.lockedReason : "Vi phạm quy chế thi"}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.pop(context);
+      }
+      return;
+    }
 
-    if (!started.isActive) {
+    try {
+      final started = await RbacProctorAiService.instance.startSupervisedExamSession(
+        exam: widget.exam,
+        userId: user.id,
+        studentName: user.displayName,
+        studentEmail: user.email,
+      );
+      if (!mounted) return;
       setState(() {
-        _isFinished = true;
-        _finalResultMessage = started.teacherWarningMessage ??
-            (started.status.startsWith('submitted')
-                ? 'Bạn đã hoàn thành bài thi này.'
-                : 'Bài thi đã bị khóa kết thúc do vi phạm quy chế.');
+        _session = started;
+        _answers.addAll(started.currentAnswers);
       });
-      return;
-    }
 
-    final elapsedSec = DateTime.now().difference(started.startedAt).inSeconds;
-    final totalSec = widget.exam.durationMinutes * 60;
-    _remainingExamSeconds = (totalSec - elapsedSec).clamp(0, totalSec);
-    if (_remainingExamSeconds <= 0) {
-      _submitExamNow(isAutoTimeout: true);
-      return;
-    }
-
-    _examTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted || _isFinished) {
-        timer.cancel();
+      if (!started.isActive) {
+        setState(() {
+          _isFinished = true;
+          _finalResultMessage = started.teacherWarningMessage ??
+              (started.status.startsWith('submitted')
+                  ? 'Bạn đã hoàn thành bài thi này.'
+                  : 'Bài thi đã bị khóa kết thúc do vi phạm quy chế.');
+        });
         return;
       }
-      if (_remainingExamSeconds <= 1) {
-        timer.cancel();
+
+      final elapsedSec = DateTime.now().difference(started.startedAt).inSeconds;
+      final totalSec = widget.exam.durationMinutes * 60;
+      _remainingExamSeconds = (totalSec - elapsedSec).clamp(0, totalSec);
+      if (_remainingExamSeconds <= 0) {
         _submitExamNow(isAutoTimeout: true);
-      } else {
-        setState(() => _remainingExamSeconds -= 1);
+        return;
       }
-    });
+
+      _examTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted || _isFinished) {
+          timer.cancel();
+          return;
+        }
+        if (_remainingExamSeconds <= 1) {
+          timer.cancel();
+          _submitExamNow(isAutoTimeout: true);
+        } else {
+          setState(() => _remainingExamSeconds -= 1);
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ExamLockGuard.instance.exitSupervisedExam();
+        final errText = e.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errText.startsWith('ACCOUNT_LOCKED:')
+                ? 'Tài khoản của bạn đã bị khóa: ${errText.substring(15)}'
+                : 'Lỗi khởi tạo phòng thi: $errText'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    }
   }
 
   /// Phát hiện sự kiện Học sinh thoát ứng dụng / mở cửa sổ đa nhiệm / chuyển sang ChatGPT

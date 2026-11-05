@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/app_repository.dart';
+import '../../data/rbac_proctor_ai_service.dart';
 import '../../data/models/topic.dart';
 import '../../data/trial_lesson_repository.dart';
 import '../../navigation/main_shell.dart';
@@ -67,7 +68,113 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAccountLockStatus();
+      _syncProgressToCloud();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAccountLockStatus();
+    }
+  }
+
+  Future<void> _checkAccountLockStatus() async {
+    final auth = AuthController.instance;
+    if (!auth.isAuthenticated || auth.user.isGuest) return;
+    final email = auth.user.email;
+    final userId = auth.user.id;
+    if (email.isEmpty && userId.isEmpty) return;
+
+    final res = await RbacProctorAiService.instance.checkRemoteAccountLockStatus(email, userId: userId);
+    if (res['isLocked'] == true && mounted) {
+      final reason = (res['lockedReason'] ?? '').toString();
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.block_rounded, color: Colors.red, size: 28),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Tài khoản bị khóa',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 17),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tài khoản của bạn đã bị Quản trị viên khóa truy cập trên toàn hệ thống.',
+                style: TextStyle(fontSize: 13.5, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.red[200]!),
+                ),
+                child: Text(
+                  'Lý do: ${reason.isNotEmpty ? reason : "Tạm khóa bởi Quản trị viên"}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Vui lòng liên hệ Thầy/Cô hoặc Quản trị viên để được hỗ trợ mở khóa.',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await auth.logout();
+                if (mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+              child: const Text('Đăng xuất ngay'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _syncProgressToCloud() async {
+    try {
+      await RbacProctorAiService.instance.syncAllStudentProgressToCloud();
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     AppRepository repo;

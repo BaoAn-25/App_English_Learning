@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 import '../data/app_repository.dart';
 import '../ui/admin/admin_main_shell.dart';
@@ -16,31 +17,50 @@ import 'main_shell.dart';
 class RoleRoutingShell extends StatefulWidget {
   final int initialIndex;
 
-  const RoleRoutingShell({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const RoleRoutingShell({super.key, this.initialIndex = 0});
 
   @override
   State<RoleRoutingShell> createState() => _RoleRoutingShellState();
 }
 
-class _RoleRoutingShellState extends State<RoleRoutingShell> {
+class _RoleRoutingShellState extends State<RoleRoutingShell>
+    with WidgetsBindingObserver {
   final AuthController _auth = AuthController.instance;
   final StudentPreviewMode _previewMode = StudentPreviewMode.instance;
+  Timer? _lockCheckTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _auth.addListener(_onStateChanged);
     _previewMode.addListener(_onStateChanged);
+    _checkLockStatus();
+    _lockCheckTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => _checkLockStatus(),
+    );
   }
 
   @override
   void dispose() {
+    _lockCheckTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _auth.removeListener(_onStateChanged);
     _previewMode.removeListener(_onStateChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkLockStatus();
+    }
+  }
+
+  Future<void> _checkLockStatus() async {
+    if (!_auth.isAuthenticated || _auth.user.isGuest) return;
+    await _auth.checkLockStatus();
   }
 
   void _onStateChanged() {
@@ -61,11 +81,7 @@ class _RoleRoutingShellState extends State<RoleRoutingShell> {
         body: Column(
           children: [
             const StudentPreviewBanner(),
-            Expanded(
-              child: MainShell(
-                initialIndex: widget.initialIndex,
-              ),
-            ),
+            Expanded(child: MainShell(initialIndex: widget.initialIndex)),
           ],
         ),
       );
@@ -73,21 +89,15 @@ class _RoleRoutingShellState extends State<RoleRoutingShell> {
 
     // 2. Trường hợp Admin đang đăng nhập -> Vào thẳng AdminMainShell (5 Tab)
     if (isAdmin) {
-      return AdminMainShell(
-        repository: repository,
-      );
+      return AdminMainShell(repository: repository);
     }
 
     // 3. Trường hợp Giáo viên đang đăng nhập -> Vào thẳng TeacherMainShell (4 Tab)
     if (isTeacher) {
-      return TeacherMainShell(
-        repository: repository,
-      );
+      return TeacherMainShell(repository: repository);
     }
 
     // 4. Trường hợp là Học viên (Student) hoặc Khách chưa đăng nhập
-    return MainShell(
-      initialIndex: widget.initialIndex,
-    );
+    return MainShell(initialIndex: widget.initialIndex);
   }
 }

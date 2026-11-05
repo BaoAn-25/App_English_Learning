@@ -77,13 +77,23 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   Future<void> _approveTeacher(Map<String, dynamic> teacher) async {
     setState(() => _isLoading = true);
     final tName = (teacher['display_name'] ?? teacher['name'] ?? teacher['email'] ?? 'Giáo viên').toString();
-    await _service.decideTeacherRequest(
-      request: {
-        ...teacher,
-        'display_name': tName,
-      },
-      approve: true,
-    );
+    try {
+      await _service.decideTeacherRequest(
+        request: {
+          ...teacher,
+          'display_name': tName,
+        },
+        approve: true,
+      );
+    } catch (error) {
+      await _loadData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
     await _loadData();
 
     if (mounted) {
@@ -127,7 +137,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       return;
     }
 
-    final reasonCtrl = TextEditingController(text: 'Vi phạm quy chế thi nhiều lần (out app >10s)');
+    final reasonCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -146,6 +156,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               maxLines: 2,
               decoration: const InputDecoration(
                 labelText: 'Lý do khóa tài khoản',
+                hintText: 'Nhập lý do khóa tài khoản...',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -159,16 +170,55 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
+              final lockReason = reasonCtrl.text.trim();
               Navigator.pop(ctx);
-              await _service.updateAdminUser(
-                userId: user['id'].toString(),
+              final email = (user['email'] ?? '').toString();
+              final uId = user['id'].toString();
+              final targetReason = lockReason.isNotEmpty ? lockReason : 'Tạm khóa bởi Quản trị viên';
+
+              final idx = _users.indexWhere((u) =>
+                  u['id']?.toString() == uId ||
+                  (email.isNotEmpty && u['email']?.toString().toLowerCase() == email.toLowerCase()));
+              if (idx >= 0) {
+                setState(() {
+                  _users[idx]['is_locked'] = true;
+                  _users[idx]['locked_reason'] = targetReason;
+                });
+              }
+
+              final updated = await _service.updateAdminUser(
+                userId: uId,
+                email: email,
                 isLocked: true,
-                lockedReason: reasonCtrl.text.trim(),
+                lockedReason: targetReason,
               );
+              if (!updated) {
+                if (mounted && idx >= 0) {
+                  setState(() {
+                    _users[idx]['is_locked'] = false;
+                    _users[idx]['locked_reason'] = '';
+                  });
+                }
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        _service.lastAdminUserError ??
+                            'Không thể khóa tài khoản trên máy chủ. Vui lòng tải lại danh sách và thử lại.',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+                return;
+              }
               await _loadData();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã khóa tài khoản thành công')),
+                  SnackBar(
+                    content: Text('Đã khóa tài khoản $email. Tài khoản đã chuyển vào mục "Bị khóa".'),
+                    backgroundColor: Colors.red[700],
+                  ),
                 );
               }
             },
@@ -180,17 +230,47 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   }
 
   void _showUnlockUser(Map<String, dynamic> user) async {
-    await _service.updateAdminUser(
-      userId: user['id'].toString(),
+    final email = (user['email'] ?? '').toString();
+    final uId = user['id'].toString();
+
+    final idx = _users.indexWhere((u) =>
+        u['id']?.toString() == uId ||
+        (email.isNotEmpty && u['email']?.toString().toLowerCase() == email.toLowerCase()));
+    if (idx >= 0) {
+      setState(() {
+        _users[idx]['is_locked'] = false;
+        _users[idx]['locked_reason'] = '';
+      });
+    }
+
+    final updated = await _service.updateAdminUser(
+      userId: uId,
+      email: email,
       isLocked: false,
       lockedReason: '',
     );
+    if (!updated) {
+      if (mounted && idx >= 0) {
+        setState(() {
+          _users[idx]['is_locked'] = true;
+        });
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể mở khóa tài khoản trên máy chủ. Vui lòng kiểm tra kết nối và thử lại.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
     await _loadData();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã mở khóa tài khoản thành công'),
-          backgroundColor: Color(0xFF1B5E20),
+        SnackBar(
+          content: Text('Đã mở khóa tài khoản $email thành công.'),
+          backgroundColor: const Color(0xFF1B5E20),
         ),
       );
     }
@@ -248,10 +328,25 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
             FilledButton(
               onPressed: () async {
                 Navigator.pop(ctx);
-                await _service.updateAdminUser(
+                final updated = await _service.updateAdminUser(
                   userId: user['id'].toString(),
+                  email: (user['email'] ?? '').toString(),
                   role: selectedRole,
                 );
+                if (!updated) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          _service.lastAdminUserError ??
+                              'Không thể cập nhật vai trò trên máy chủ.',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  return;
+                }
                 await _loadData();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -270,9 +365,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   void _showAddTeacherModal() {
     final nameCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
-    final schoolCtrl = TextEditingController();
-    bool canProctor = true;
-    bool canCreateExams = true;
+    final passwordCtrl = TextEditingController();
+    final confirmPasswordCtrl = TextEditingController();
     int selectedTab = 0; // 0: Cấp quyền tài khoản có sẵn, 1: Thêm tài khoản mới
 
     final studentUsers = _users.where((u) {
@@ -438,22 +532,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                       onChanged: (v) => setSheetState(() => selectedUserId = v),
                     ),
                     const SizedBox(height: 14),
-                    const Text('Quyền hạn cấp cho Giáo viên:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 4),
-                    CheckboxListTile(
-                      title: const Text('Soạn bài & Tạo đề thi trắc nghiệm', style: TextStyle(fontSize: 13)),
-                      value: canCreateExams,
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (v) => setSheetState(() => canCreateExams = v ?? true),
+                    const Text(
+                      'Quyền được cấp theo vai trò Giáo viên trên máy chủ: soạn bài, tạo đề và giám sát phòng thi.',
+                      style: TextStyle(fontSize: 12.5, color: Colors.black54),
                     ),
-                    CheckboxListTile(
-                      title: const Text('Giám sát phòng thi 10s (Bắt gian lận realtime)', style: TextStyle(fontSize: 13)),
-                      value: canProctor,
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: (v) => setSheetState(() => canProctor = v ?? true),
-                    ),
+                    const SizedBox(height: 12),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
@@ -465,11 +548,27 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                             : () async {
                                 final targetUser = studentUsers.firstWhere((u) => u['id'].toString() == selectedUserId);
                                 final name = (targetUser['display_name'] ?? targetUser['displayName'] ?? targetUser['email'] ?? 'người dùng').toString();
+                                final targetEmail = (targetUser['email'] ?? '').toString();
                                 Navigator.pop(ctx);
-                                await _service.updateAdminUser(
+                                final updated = await _service.updateAdminUser(
                                   userId: selectedUserId!,
+                                  email: targetEmail,
                                   role: 'teacher',
                                 );
+                                if (!updated) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          _service.lastAdminUserError ??
+                                              'Không thể cấp quyền trên máy chủ.',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                  return;
+                                }
                                 await _loadData();
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -507,29 +606,27 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                   ),
                   const SizedBox(height: 12),
                   TextField(
-                    controller: schoolCtrl,
+                    controller: passwordCtrl,
+                    obscureText: true,
                     decoration: const InputDecoration(
-                      labelText: 'Trường THPT công tác',
-                      hintText: 'VD: THPT Nguyễn Trãi',
+                      labelText: 'Mật khẩu đăng nhập *',
+                      hintText: 'Tối thiểu 6 ký tự',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmPasswordCtrl,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Xác nhận mật khẩu *',
                       border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const Text('Quyền hạn khi tham gia:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                  const SizedBox(height: 4),
-                  CheckboxListTile(
-                    title: const Text('Soạn bài & Tạo đề thi trắc nghiệm', style: TextStyle(fontSize: 13)),
-                    value: canCreateExams,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (v) => setSheetState(() => canCreateExams = v ?? true),
-                  ),
-                  CheckboxListTile(
-                    title: const Text('Giám sát phòng thi 10s (Bắt gian lận realtime)', style: TextStyle(fontSize: 13)),
-                    value: canProctor,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (v) => setSheetState(() => canProctor = v ?? true),
+                  const Text(
+                    'Quyền được cấp theo vai trò Giáo viên trên máy chủ: soạn bài, tạo đề và giám sát phòng thi.',
+                    style: TextStyle(fontSize: 12.5, color: Colors.black54),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
@@ -540,19 +637,42 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                       onPressed: () async {
                         final email = emailCtrl.text.trim();
                         final name = nameCtrl.text.trim();
-                        if (email.isEmpty) {
+                        final password = passwordCtrl.text;
+                        if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                            .hasMatch(email)) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Vui lòng nhập email giáo viên!'), backgroundColor: Colors.orange),
+                            const SnackBar(content: Text('Vui lòng nhập email giáo viên hợp lệ!'), backgroundColor: Colors.orange),
+                          );
+                          return;
+                        }
+                        if (password.length < 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Mật khẩu phải có ít nhất 6 ký tự!'), backgroundColor: Colors.orange),
+                          );
+                          return;
+                        }
+                        if (password != confirmPasswordCtrl.text) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Mật khẩu xác nhận không khớp!'), backgroundColor: Colors.orange),
                           );
                           return;
                         }
                         Navigator.pop(ctx);
-                        await _service.createAdminUser(
-                          email: email,
-                          password: 'TeacherPass2026!',
-                          displayName: name.isNotEmpty ? name : email.split('@').first,
-                          role: 'teacher',
-                        );
+                        try {
+                          await _service.createAdminUser(
+                            email: email,
+                            password: password,
+                            displayName: name.isNotEmpty ? name : email.split('@').first,
+                            role: 'teacher',
+                          );
+                        } catch (error) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+                            );
+                          }
+                          return;
+                        }
                         await _loadData();
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

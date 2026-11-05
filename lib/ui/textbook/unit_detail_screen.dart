@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../data/app_repository.dart';
 import '../../data/rbac_proctor_ai_service.dart';
@@ -105,9 +106,20 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
   void initState() {
     super.initState();
     _loadSectionStatuses();
+    // Đồng bộ toàn bộ tiến độ lên Cloud
+    unawaited(RbacProctorAiService.instance.syncAllStudentProgressToCloud());
   }
 
   String _cleanKey(String title) {
+    final t = title.trim().toLowerCase();
+    if (t.contains('getting started')) return 'getting_started';
+    if (t.contains('language')) return 'language';
+    if (t.contains('reading')) return 'reading';
+    if (t.contains('listening')) return 'listening';
+    if (t.contains('speaking')) return 'speaking';
+    if (t.contains('writing')) return 'writing';
+    if (t.contains('communication') || t.contains('clil')) return 'communication_culture';
+    if (t.contains('looking back') || t.contains('project')) return 'looking_back';
     return title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
   }
 
@@ -212,15 +224,20 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
 
   Future<void> _recordSectionCompletion(String key) async {
     final ownerId = await _getEffectiveOwnerId();
+    final authEmail = AuthController.instance.user.email.toLowerCase().trim();
     final prev = await _repository.getSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key');
     await _repository.setSetting('unit_section_progress_${ownerId}_u${widget.unitNumber}_$key', 'completed');
+    if (authEmail.isNotEmpty) {
+      await _repository.setSetting('unit_section_progress_${authEmail}_u${widget.unitNumber}_$key', 'completed');
+    }
     if (prev != 'completed') {
       await _repository.recordStudyReward(xp: 25, minutes: 5, questionsDone: 5, correct: 5, ownerId: ownerId);
     }
-    RbacProctorAiService.instance.syncTextbookProgressToCloud(
+    unawaited(RbacProctorAiService.instance.syncTextbookProgressToCloud(
       unitNumber: widget.unitNumber,
       sectionKey: key,
-    ).catchError((_) => false);
+    ));
+    unawaited(RbacProctorAiService.instance.syncAllStudentProgressToCloud());
     if (mounted) {
       await MainShell.markFirstLessonCompleted(context);
     }
