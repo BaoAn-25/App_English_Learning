@@ -1318,8 +1318,15 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      await client.postJson('/exams/supervised/${exam.id}/start', {});
-    } catch (_) {}
+      final res = await client.postJson('/exams/supervised/${exam.id}/start', {});
+      if (res.statusCode == 403 && res.data?['isLocked'] == true) {
+        ExamLockGuard.instance.exitSupervisedExam();
+        final reason = res.data?['lockedReason']?.toString() ?? 'Tài khoản đã bị tạm khóa.';
+        throw Exception('ACCOUNT_LOCKED:$reason');
+      }
+    } catch (e) {
+      if (e.toString().contains('ACCOUNT_LOCKED')) rethrow;
+    }
 
     return session;
   }
@@ -1712,15 +1719,21 @@ class RbacProctorAiService {
     return newUser;
   }
 
-  Future<void> updateAdminUser({
+  Future<bool> updateAdminUser({
     required String userId,
+    String? email,
     String? displayName,
     String? role,
     bool? isLocked,
     String? lockedReason,
   }) async {
     final list = await getAdminUsers();
-    final idx = list.indexWhere((u) => u['id'] == userId);
+    final cleanEmail = email?.trim().toLowerCase();
+    int idx = list.indexWhere((u) => u['id']?.toString() == userId);
+    if (idx < 0 && cleanEmail != null && cleanEmail.isNotEmpty) {
+      idx = list.indexWhere((u) => u['email']?.toString().trim().toLowerCase() == cleanEmail);
+    }
+
     if (idx >= 0) {
       final cur = Map<String, dynamic>.from(list[idx]);
       if (displayName != null) cur['display_name'] = displayName;
@@ -1737,9 +1750,10 @@ class RbacProctorAiService {
           : 'UPDATE_USER_ROLE',
       targetType: 'user',
       targetId: userId,
-      details: 'Cập nhật người dùng $userId (Role: ${role ?? "giữ nguyên"}, Khóa: ${isLocked ?? false})',
+      details: 'Cập nhật người dùng $userId (${cleanEmail ?? ''}) (Role: ${role ?? "giữ nguyên"}, Khóa: ${isLocked ?? false})',
     );
 
+    bool serverSuccess = false;
     try {
       final client = await _client();
       final payload = <String, dynamic>{};
@@ -1747,8 +1761,24 @@ class RbacProctorAiService {
       if (role != null) payload['role'] = role;
       if (isLocked != null) payload['isLocked'] = isLocked;
       if (lockedReason != null) payload['lockedReason'] = lockedReason;
-      await client.putJson('/admin/users/$userId', payload);
+      if (cleanEmail != null && cleanEmail.isNotEmpty) payload['email'] = cleanEmail;
+
+      final res = await client.putJson('/admin/users/$userId', payload);
+      if (res.isSuccess) {
+        serverSuccess = true;
+        if (res.data?['user'] is Map) {
+          final serverUser = Map<String, dynamic>.from(res.data!['user'] as Map);
+          if (idx >= 0) {
+            list[idx] = serverUser;
+          } else {
+            list.add(serverUser);
+          }
+          await _repo.setSetting('admin_cached_users_json', jsonEncode(list));
+        }
+      }
     } catch (_) {}
+
+    return serverSuccess;
   }
 
   Future<void> deleteAdminUser(String userId) async {

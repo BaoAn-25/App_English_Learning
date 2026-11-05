@@ -763,24 +763,28 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      'LỘ TRÌNH SỞ THÍCH • CỬA $_unlockedNode/5',
-                      style: const TextStyle(
-                        fontFamily: 'BeVietnamPro',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11.5,
-                        color: Colors.white70,
-                        letterSpacing: 0.5,
+                    Flexible(
+                      child: Text(
+                        'LỘ TRÌNH SỞ THÍCH • CỬA $_unlockedNode/5',
+                        style: const TextStyle(
+                          fontFamily: 'BeVietnamPro',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          color: Colors.white70,
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (_totalXpEarned > 0) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Text(
                         '⚡ +$_totalXpEarned XP',
                         style: const TextStyle(
                           color: Color(0xFFFDE68A),
                           fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 10.5,
                         ),
                       ),
                     ],
@@ -791,7 +795,7 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
                   style: const TextStyle(
                     fontFamily: 'BeVietnamPro',
                     fontWeight: FontWeight.w900,
-                    fontSize: 16.5,
+                    fontSize: 16,
                     color: Colors.white,
                   ),
                   maxLines: 1,
@@ -800,25 +804,26 @@ class _InterestTopicDetailScreenState extends State<InterestTopicDetailScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
 
           // NÚT HƯỚNG DẪN NỔI BẬT TRÊN BANNER
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF2563EB),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               elevation: 0,
+              visualDensity: VisualDensity.compact,
             ),
-            icon: const Icon(Icons.menu_book_rounded, size: 16),
+            icon: const Icon(Icons.menu_book_rounded, size: 15),
             label: const Text(
               'HƯỚNG DẪN',
               style: TextStyle(
                 fontFamily: 'BeVietnamPro',
                 fontWeight: FontWeight.w900,
-                fontSize: 11.5,
-                letterSpacing: 0.3,
+                fontSize: 11,
+                letterSpacing: 0.2,
               ),
             ),
             onPressed: _openGuidebookModal,

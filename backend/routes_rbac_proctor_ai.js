@@ -1771,16 +1771,19 @@ Trả về JSON thuần túy theo cấu trúc:
   app.put('/api/admin/users/:id', requireRoles(['admin']), async (req, res) => {
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Database chưa sẵn sàng.' });
     const { id } = req.params;
-    const { displayName, role, isLocked, lockedReason } = req.body;
+    const { displayName, role, isLocked, lockedReason, email } = req.body;
     try {
+      const cleanEmail = email ? String(email).trim().toLowerCase() : null;
       const result = await pool.query(
         `UPDATE users
-         SET display_name = COALESCE($1, display_name),
-             role = COALESCE($2, role),
-             is_locked = COALESCE($3, is_locked),
-             locked_reason = COALESCE($4, locked_reason),
+         SET display_name = CASE WHEN $1::text IS NOT NULL THEN $1::text ELSE display_name END,
+             role = CASE WHEN $2::text IS NOT NULL THEN $2::text ELSE role END,
+             is_locked = CASE WHEN $3::boolean IS NOT NULL THEN $3::boolean ELSE is_locked END,
+             locked_reason = CASE WHEN $4::text IS NOT NULL THEN $4::text ELSE locked_reason END,
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $5
+            OR (LOWER(email) = LOWER($5))
+            OR (LOWER(email) = LOWER($6) AND $6 IS NOT NULL)
          RETURNING id, email, display_name, role, is_locked, locked_reason, created_at`,
         [
           displayName || null,
@@ -1788,11 +1791,13 @@ Trả về JSON thuần túy theo cấu trúc:
           isLocked !== undefined ? Boolean(isLocked) : null,
           lockedReason !== undefined ? String(lockedReason) : null,
           id,
+          cleanEmail,
         ]
       );
-      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
-      await logAudit(pool, req.user, 'ADMIN_UPDATE_USER', 'users', id, { role, isLocked, lockedReason });
-      res.json({ message: 'Đã cập nhật thông tin & quyền người dùng.', user: result.rows[0] });
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy người dùng trong hệ thống.' });
+      const updatedUser = result.rows[0];
+      await logAudit(pool, req.user, 'ADMIN_UPDATE_USER', 'users', updatedUser.id, { role, isLocked, lockedReason });
+      res.json({ message: 'Đã cập nhật thông tin & quyền người dùng.', user: updatedUser });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

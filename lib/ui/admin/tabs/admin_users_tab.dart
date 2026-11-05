@@ -159,16 +159,26 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
+              final lockReason = reasonCtrl.text.trim();
               Navigator.pop(ctx);
-              await _service.updateAdminUser(
+              final email = (user['email'] ?? '').toString();
+              final success = await _service.updateAdminUser(
                 userId: user['id'].toString(),
+                email: email,
                 isLocked: true,
-                lockedReason: reasonCtrl.text.trim(),
+                lockedReason: lockReason.isNotEmpty ? lockReason : 'Vi phạm quy chế thi',
               );
               await _loadData();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã khóa tài khoản thành công')),
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Đã khóa tài khoản $email thành công trên hệ thống.'
+                          : 'Đã cập nhật trạng thái khóa tài khoản.',
+                    ),
+                    backgroundColor: Colors.red[700],
+                  ),
                 );
               }
             },
@@ -180,17 +190,23 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   }
 
   void _showUnlockUser(Map<String, dynamic> user) async {
-    await _service.updateAdminUser(
+    final email = (user['email'] ?? '').toString();
+    final success = await _service.updateAdminUser(
       userId: user['id'].toString(),
+      email: email,
       isLocked: false,
       lockedReason: '',
     );
     await _loadData();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã mở khóa tài khoản thành công'),
-          backgroundColor: Color(0xFF1B5E20),
+        SnackBar(
+          content: Text(
+            success
+                ? 'Đã mở khóa tài khoản $email thành công.'
+                : 'Đã mở khóa tài khoản.',
+          ),
+          backgroundColor: const Color(0xFF1B5E20),
         ),
       );
     }
@@ -250,6 +266,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 Navigator.pop(ctx);
                 await _service.updateAdminUser(
                   userId: user['id'].toString(),
+                  email: (user['email'] ?? '').toString(),
                   role: selectedRole,
                 );
                 await _loadData();
@@ -465,9 +482,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                             : () async {
                                 final targetUser = studentUsers.firstWhere((u) => u['id'].toString() == selectedUserId);
                                 final name = (targetUser['display_name'] ?? targetUser['displayName'] ?? targetUser['email'] ?? 'người dùng').toString();
+                                final targetEmail = (targetUser['email'] ?? '').toString();
                                 Navigator.pop(ctx);
                                 await _service.updateAdminUser(
                                   userId: selectedUserId!,
+                                  email: targetEmail,
                                   role: 'teacher',
                                 );
                                 await _loadData();

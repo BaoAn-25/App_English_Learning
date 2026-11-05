@@ -1128,6 +1128,16 @@ app.post('/api/auth/google', async (req, res) => {
 
       await client.query('COMMIT');
 
+      // Kiểm tra trạng thái khóa tài khoản
+      const checkLock = await pool.query('SELECT is_locked, locked_reason FROM users WHERE id = $1', [userId]);
+      if (checkLock.rows.length > 0 && checkLock.rows[0].is_locked) {
+        return res.status(403).json({
+          error: `Tài khoản của bạn đã bị khóa bởi Quản trị viên. Lý do: ${checkLock.rows[0].locked_reason || 'Vi phạm quy định hệ thống.'}`,
+          isLocked: true,
+          lockedReason: checkLock.rows[0].locked_reason || 'Vi phạm quy định hệ thống.',
+        });
+      }
+
       // Cấp JWT Token của hệ thống English 12 (không dùng ID Token Google làm session token vô thời hạn)
       if (isSystemAdminEmail(googleEmail)) userRole = 'admin';
       const token = generateToken({ id: userId, email: googleEmail, role: userRole });

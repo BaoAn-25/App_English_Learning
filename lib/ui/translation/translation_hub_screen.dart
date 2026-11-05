@@ -410,9 +410,11 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
               labelColor: AppTokens.primary,
               unselectedLabelColor: textSub,
               indicatorColor: AppTokens.primary,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
               tabs: const [
-                Tab(icon: Icon(Icons.translate_rounded, size: 20), text: 'Văn bản Realtime'),
+                Tab(icon: Icon(Icons.translate_rounded, size: 20), text: 'Dịch Văn bản'),
                 Tab(icon: Icon(Icons.mic_rounded, size: 20), text: 'Dịch Giọng nói'),
                 Tab(icon: Icon(Icons.document_scanner_rounded, size: 20), text: 'Dịch Ảnh OCR'),
               ],
@@ -691,41 +693,52 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
       child: Row(
         children: [
           IconButton(
+            constraints: const BoxConstraints(),
+            padding: const EdgeInsets.all(6),
             icon: const Icon(Icons.volume_up_rounded, color: AppTokens.primary),
             onPressed: () => AppAudioController.instance.speakText(w.displayWord),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 2,
                   children: [
                     Text(
                       w.displayWord,
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textMain),
                     ),
-                    if (w.phonetic != null && w.phonetic!.isNotEmpty) ...[
-                      const SizedBox(width: 8),
+                    if (w.phonetic != null && w.phonetic!.isNotEmpty)
                       Text(
                         w.phonetic!,
-                        style: const TextStyle(fontSize: 12.5, color: AppTokens.primary, fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 12, color: AppTokens.primary, fontWeight: FontWeight.w600),
                       ),
-                    ],
                   ],
                 ),
                 const SizedBox(height: 3),
                 Text(
                   w.meaning,
-                  style: TextStyle(fontSize: 13.5, color: textSub),
+                  style: TextStyle(fontSize: 13, color: textSub),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           FilledButton.tonalIcon(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              visualDensity: VisualDensity.compact,
+            ),
             onPressed: isSaved ? null : () => _saveWordToSrs(w),
-            icon: Icon(isSaved ? Icons.check_rounded : Icons.bookmark_add_rounded, size: 18),
-            label: Text(isSaved ? 'Đã lưu SRS' : '+ Lưu SRS'),
+            icon: Icon(isSaved ? Icons.check_rounded : Icons.bookmark_add_rounded, size: 16),
+            label: Text(
+              isSaved ? 'Đã lưu SRS' : '+ Lưu SRS',
+              style: const TextStyle(fontSize: 12),
+            ),
           ),
         ],
       ),
@@ -869,18 +882,22 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
                 ),
                 const Divider(height: 22),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'Bản dịch (${_voiceSourceLang == 'en' ? 'Tiếng Việt' : 'Tiếng Anh'}):',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppTokens.primary,
+                    Expanded(
+                      child: Text(
+                        'Bản dịch (${_voiceSourceLang == 'en' ? 'Tiếng Việt' : 'Tiếng Anh'}):',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppTokens.primary,
+                        ),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.volume_up_rounded, color: AppTokens.primary),
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(6),
+                      icon: const Icon(Icons.volume_up_rounded, color: AppTokens.primary, size: 20),
                       tooltip: 'Đọc to bản dịch',
                       onPressed: () {
                         AppAudioController.instance.speakText(
@@ -1012,17 +1029,21 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text(
-                      '1. Văn bản Tiếng Anh nhận diện từ trang sách (OCR):',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppTokens.primary,
+                    const Expanded(
+                      child: Text(
+                        '1. Văn bản Tiếng Anh nhận diện từ trang sách (OCR):',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppTokens.primary,
+                        ),
                       ),
                     ),
                     IconButton(
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(6),
                       icon: const Icon(Icons.volume_up_rounded, color: AppTokens.primary, size: 20),
                       onPressed: () => AppAudioController.instance.speakText(_ocrRecognizedText),
                     ),

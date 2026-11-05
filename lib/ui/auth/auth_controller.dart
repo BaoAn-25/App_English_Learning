@@ -156,6 +156,31 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Kiểm tra trạng thái khóa tài khoản thời gian thực với Server
+  Future<bool> checkLockStatus() async {
+    final token = _token ?? await _repository.getAuthToken();
+    if (token == null || token.isEmpty) return false;
+    try {
+      final res = await _apiClient.getCurrentUser(token);
+      if (res.statusCode == 403 && res.data?['isLocked'] == true) {
+        final lockReason = res.data?['lockedReason'] as String? ?? 'Vi phạm quy định hệ thống.';
+        _user = _user.copyWith(isLocked: true, lockedReason: lockReason);
+        await _repository.saveAuthUser(_user);
+        notifyListeners();
+        return true;
+      } else if (res.isSuccess && res.data?['user'] is Map) {
+        final serverUser = res.data!['user'] as Map<String, dynamic>;
+        final isLocked = serverUser['isLocked'] == true;
+        final lockReason = serverUser['lockedReason'] as String? ?? '';
+        _user = _user.copyWith(isLocked: isLocked, lockedReason: lockReason);
+        await _repository.saveAuthUser(_user);
+        notifyListeners();
+        return isLocked;
+      }
+    } catch (_) {}
+    return _user.isLocked;
+  }
+
   /// Chuyển đổi hoặc đồng bộ vai trò người dùng ('student' | 'teacher' | 'admin')
   Future<bool> switchRole(String targetRole) async {
     if (!['student', 'teacher', 'admin'].contains(targetRole)) return false;
