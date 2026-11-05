@@ -29,7 +29,10 @@ class ExamLockGuard extends ChangeNotifier {
   String? get activeExamId => _activeExamId;
   String? get activeExamTitle => _activeExamTitle;
 
-  void enterSupervisedExam({required String examId, required String examTitle}) {
+  void enterSupervisedExam({
+    required String examId,
+    required String examTitle,
+  }) {
     _isLocked = true;
     _activeExamId = examId;
     _activeExamTitle = examTitle;
@@ -46,8 +49,9 @@ class ExamLockGuard extends ChangeNotifier {
 
 /// Cầu nối gọi Nhận diện Giọng nói (Speech-to-Text) và Chụp ảnh/Chọn ảnh (OCR) gốc trên Android
 class NativeMediaBridge {
-  static const MethodChannel _channel =
-      MethodChannel('com.example.thpt_english/native_media');
+  static const MethodChannel _channel = MethodChannel(
+    'com.example.thpt_english/native_media',
+  );
 
   /// Gọi hộp thoại nhận diện giọng nói Android gốc ('en-US' hoặc 'vi-VN')
   static Future<String?> recognizeSpeech({
@@ -159,25 +163,38 @@ class SupervisedExamModel {
     }
 
     return SupervisedExamModel(
-      id: (map['id'] ?? 'sexam_${DateTime.now().millisecondsSinceEpoch}').toString(),
+      id: (map['id'] ?? 'sexam_${DateTime.now().millisecondsSinceEpoch}')
+          .toString(),
       title: (map['title'] ?? 'Đề kiểm tra có giám sát').toString(),
       description: (map['description'] ?? '').toString(),
       classId: (map['classId'] ?? map['class_id'])?.toString(),
       className: (map['className'] ?? map['class_name'])?.toString(),
-      durationMinutes: (map['durationMinutes'] ?? map['duration_minutes'] as num?)?.toInt() ?? 45,
-      deadlineAt: DateTime.tryParse(
+      durationMinutes:
+          (map['durationMinutes'] ?? map['duration_minutes'] as num?)
+              ?.toInt() ??
+          45,
+      deadlineAt:
+          DateTime.tryParse(
             (map['deadlineAt'] ?? map['deadline_at'] ?? '').toString(),
           ) ??
           DateTime.now().add(const Duration(days: 7)),
-      graceSeconds: (map['graceSeconds'] ?? map['grace_seconds'] as num?)?.toInt() ?? 10,
-      maxViolations: (map['maxViolations'] ?? map['max_violations'] as num?)?.toInt() ?? 2,
-      maxAttempts: (map['maxAttempts'] ?? map['max_attempts'] as num?)?.toInt() ?? 1,
-      shuffleQuestions: (map['shuffleQuestions'] ?? map['shuffle_questions']) != false,
-      violationAction: (map['violationAction'] ?? map['violation_action'] ?? 'force_submit').toString(),
+      graceSeconds:
+          (map['graceSeconds'] ?? map['grace_seconds'] as num?)?.toInt() ?? 10,
+      maxViolations:
+          (map['maxViolations'] ?? map['max_violations'] as num?)?.toInt() ?? 2,
+      maxAttempts:
+          (map['maxAttempts'] ?? map['max_attempts'] as num?)?.toInt() ?? 1,
+      shuffleQuestions:
+          (map['shuffleQuestions'] ?? map['shuffle_questions']) != false,
+      violationAction:
+          (map['violationAction'] ?? map['violation_action'] ?? 'force_submit')
+              .toString(),
       questions: parsedQuestions,
       isActive: (map['isActive'] ?? map['is_active']) != false,
-      createdBy: (map['createdBy'] ?? map['created_by'] ?? 'teacher').toString(),
-      createdAt: DateTime.tryParse(
+      createdBy: (map['createdBy'] ?? map['created_by'] ?? 'teacher')
+          .toString(),
+      createdAt:
+          DateTime.tryParse(
             (map['createdAt'] ?? map['created_at'] ?? '').toString(),
           ) ??
           DateTime.now(),
@@ -230,7 +247,8 @@ class ExamLiveSessionModel {
     required this.lastHeartbeatAt,
   });
 
-  bool get isActive => status == 'in_progress' || status == 'warning_out_of_app';
+  bool get isActive =>
+      status == 'in_progress' || status == 'warning_out_of_app';
 
   String get statusLabel {
     switch (status) {
@@ -279,7 +297,9 @@ class ExamLiveSessionModel {
     final rawLogs = map['violationLogs'] ?? map['violation_logs'];
     List<Map<String, dynamic>> parsedLogs = [];
     if (rawLogs is List) {
-      parsedLogs = rawLogs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      parsedLogs = rawLogs
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     }
 
     final rawAnswers = map['currentAnswers'] ?? map['current_answers'];
@@ -294,26 +314,52 @@ class ExamLiveSessionModel {
       id: (map['id'] ?? '').toString(),
       examId: (map['examId'] ?? map['exam_id'] ?? '').toString(),
       userId: (map['userId'] ?? map['user_id'] ?? '').toString(),
-      studentName: (map['studentName'] ?? map['student_name'] ?? 'Học viên').toString(),
-      studentEmail: (map['studentEmail'] ?? map['student_email'] ?? '').toString(),
+      studentName: (map['studentName'] ?? map['student_name'] ?? 'Học viên')
+          .toString(),
+      studentEmail: (map['studentEmail'] ?? map['student_email'] ?? '')
+          .toString(),
       status: (map['status'] ?? 'in_progress').toString(),
-      violationCount: (map['violationCount'] ?? map['violation_count'] as num?)?.toInt() ?? 0,
+      violationCount:
+          (map['violationCount'] ?? map['violation_count'] as num?)?.toInt() ??
+          0,
       violationLogs: parsedLogs,
-      teacherWarningMessage: (map['teacherWarningMessage'] ?? map['teacher_warning_message'])?.toString(),
-      studentExplanation: (map['studentExplanation'] ?? map['student_explanation'])?.toString(),
-      explanationSubmittedAt: (map['explanationSubmittedAt'] ?? map['explanation_submitted_at']) != null
-          ? DateTime.tryParse((map['explanationSubmittedAt'] ?? map['explanation_submitted_at']).toString())
+      teacherWarningMessage:
+          (map['teacherWarningMessage'] ?? map['teacher_warning_message'])
+              ?.toString(),
+      studentExplanation:
+          (map['studentExplanation'] ?? map['student_explanation'])?.toString(),
+      explanationSubmittedAt:
+          (map['explanationSubmittedAt'] ?? map['explanation_submitted_at']) !=
+              null
+          ? DateTime.tryParse(
+              (map['explanationSubmittedAt'] ?? map['explanation_submitted_at'])
+                  .toString(),
+            )
           : null,
-      answeredCount: (map['answeredCount'] ?? map['answered_count'] as num?)?.toInt() ?? 0,
-      totalQuestions: (map['totalQuestions'] ?? map['total_questions'] as num?)?.toInt() ?? 0,
+      answeredCount:
+          (map['answeredCount'] ?? map['answered_count'] as num?)?.toInt() ?? 0,
+      totalQuestions:
+          (map['totalQuestions'] ?? map['total_questions'] as num?)?.toInt() ??
+          0,
       currentAnswers: parsedAnswers,
       score: (map['score'] as num?)?.toDouble() ?? 0.0,
       aiFeedback: (map['aiFeedback'] ?? map['ai_feedback'])?.toString(),
-      startedAt: DateTime.tryParse((map['startedAt'] ?? map['started_at'] ?? '').toString()) ?? DateTime.now(),
+      startedAt:
+          DateTime.tryParse(
+            (map['startedAt'] ?? map['started_at'] ?? '').toString(),
+          ) ??
+          DateTime.now(),
       submittedAt: (map['submittedAt'] ?? map['submitted_at']) != null
-          ? DateTime.tryParse((map['submittedAt'] ?? map['submitted_at']).toString())
+          ? DateTime.tryParse(
+              (map['submittedAt'] ?? map['submitted_at']).toString(),
+            )
           : null,
-      lastHeartbeatAt: DateTime.tryParse((map['lastHeartbeatAt'] ?? map['last_heartbeat_at'] ?? '').toString()) ?? DateTime.now(),
+      lastHeartbeatAt:
+          DateTime.tryParse(
+            (map['lastHeartbeatAt'] ?? map['last_heartbeat_at'] ?? '')
+                .toString(),
+          ) ??
+          DateTime.now(),
     );
   }
 }
@@ -359,18 +405,38 @@ class ClassReminderModel {
     'isActive': isActive,
   };
 
-  factory ClassReminderModel.fromMap(Map<String, dynamic> map) => ClassReminderModel(
-    id: (map['id'] ?? '').toString(),
-    classId: (map['classId'] ?? map['class_id'] ?? '').toString(),
-    className: (map['className'] ?? map['class_name'] ?? '').toString(),
-    title: (map['title'] ?? '').toString(),
-    message: (map['message'] ?? map['content'] ?? '').toString(),
-    scheduledAt: DateTime.tryParse((map['scheduledAt'] ?? map['scheduled_at'] ?? map['remind_at'] ?? '').toString()) ?? DateTime.now(),
-    teacherName: (map['teacherName'] ?? map['teacher_name'] ?? map['sent_by'] ?? 'Giáo viên').toString(),
-    teacherEmail: (map['teacherEmail'] ?? map['teacher_email'] ?? '').toString(),
-    createdAt: DateTime.tryParse((map['createdAt'] ?? map['created_at'] ?? map['sent_at'] ?? '').toString()) ?? DateTime.now(),
-    isActive: map['isActive'] != false && map['status'] != 'cancelled',
-  );
+  factory ClassReminderModel.fromMap(Map<String, dynamic> map) =>
+      ClassReminderModel(
+        id: (map['id'] ?? '').toString(),
+        classId: (map['classId'] ?? map['class_id'] ?? '').toString(),
+        className: (map['className'] ?? map['class_name'] ?? '').toString(),
+        title: (map['title'] ?? '').toString(),
+        message: (map['message'] ?? map['content'] ?? '').toString(),
+        scheduledAt:
+            DateTime.tryParse(
+              (map['scheduledAt'] ??
+                      map['scheduled_at'] ??
+                      map['remind_at'] ??
+                      '')
+                  .toString(),
+            ) ??
+            DateTime.now(),
+        teacherName:
+            (map['teacherName'] ??
+                    map['teacher_name'] ??
+                    map['sent_by'] ??
+                    'Giáo viên')
+                .toString(),
+        teacherEmail: (map['teacherEmail'] ?? map['teacher_email'] ?? '')
+            .toString(),
+        createdAt:
+            DateTime.tryParse(
+              (map['createdAt'] ?? map['created_at'] ?? map['sent_at'] ?? '')
+                  .toString(),
+            ) ??
+            DateTime.now(),
+        isActive: map['isActive'] != false && map['status'] != 'cancelled',
+      );
 }
 
 /// Dịch vụ trung tâm quản lý RBAC (Giáo viên & Admin), Phòng thi Giám sát 10s,
@@ -391,12 +457,16 @@ class RbacProctorAiService {
   // ===========================================================================
   Future<Map<String, dynamic>> getAiConfig() async {
     final localKey = await _repo.getSetting('ai_gemini_api_key') ?? '';
-    final localModel = await _repo.getSetting('ai_gemini_model') ?? 'gemini-2.5-flash';
+    final localModel =
+        await _repo.getSetting('ai_gemini_model') ?? 'gemini-2.5-flash';
     final localProvider = await _repo.getSetting('ai_provider') ?? 'gemini';
 
     try {
       final client = await _client();
-      final res = await client.getJson('/admin/ai-config', timeout: const Duration(seconds: 6));
+      final res = await client.getJson(
+        '/admin/ai-config',
+        timeout: const Duration(seconds: 6),
+      );
       if (res.isSuccess && res.data != null) {
         final serverHasKey = res.data!['hasApiKey'] == true;
         return {
@@ -420,7 +490,9 @@ class RbacProctorAiService {
       'maskedApiKey': localKey.isNotEmpty
           ? '${localKey.substring(0, localKey.length > 6 ? 6 : localKey.length)}••••••••••••'
           : '',
-      'source': localKey.isNotEmpty ? 'Đã cấu hình trên thiết bị' : 'Chưa cấu hình khóa API (Đang dùng Trợ lý Nội bộ)',
+      'source': localKey.isNotEmpty
+          ? 'Đã cấu hình trên thiết bị'
+          : 'Chưa cấu hình khóa API (Đang dùng Trợ lý Nội bộ)',
     };
   }
 
@@ -484,8 +556,8 @@ class RbacProctorAiService {
       'testReply': verified
           ? testReply
           : (effectiveKey.isEmpty
-              ? 'Đã lưu cấu hình. Hiện chưa nhập API Key nên hệ thống sử dụng Bộ xử lý Học thuật Nội bộ.'
-              : 'Đã lưu API Key. Vui lòng kiểm tra lại kết nối mạng hoặc mã khóa nếu cần gọi trực tuyến.'),
+                ? 'Đã lưu cấu hình. Hiện chưa nhập API Key nên hệ thống sử dụng Bộ xử lý Học thuật Nội bộ.'
+                : 'Đã lưu API Key. Vui lòng kiểm tra lại kết nối mạng hoặc mã khóa nếu cần gọi trực tuyến.'),
     };
   }
 
@@ -503,39 +575,44 @@ class RbacProctorAiService {
       'gemini-1.5-flash',
     }.toList();
 
-    final httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    final httpClient = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
     try {
       for (final m in models) {
         try {
           final uri = Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$apiKey',
           );
-          final req = await httpClient.postUrl(uri).timeout(const Duration(seconds: 12));
+          final req = await httpClient
+              .postUrl(uri)
+              .timeout(const Duration(seconds: 12));
           req.headers.set('Content-Type', 'application/json; charset=utf-8');
 
           final parts = <Map<String, dynamic>>[
             {'text': userPrompt},
           ];
           if (imageBase64 != null && imageBase64.isNotEmpty) {
-            final cleanB64 = imageBase64.replaceFirst(RegExp(r'^data:image/\w+;base64,'), '');
+            final cleanB64 = imageBase64.replaceFirst(
+              RegExp(r'^data:image/\w+;base64,'),
+              '',
+            );
             parts.add({
-              'inline_data': {
-                'mime_type': 'image/jpeg',
-                'data': cleanB64,
-              }
+              'inline_data': {'mime_type': 'image/jpeg', 'data': cleanB64},
             });
           }
 
-          req.write(jsonEncode({
-            'system_instruction': {
-              'parts': [
-                {'text': systemInstruction}
-              ]
-            },
-            'contents': [
-              {'parts': parts}
-            ],
-          }));
+          req.write(
+            jsonEncode({
+              'system_instruction': {
+                'parts': [
+                  {'text': systemInstruction},
+                ],
+              },
+              'contents': [
+                {'parts': parts},
+              ],
+            }),
+          );
 
           final res = await req.close().timeout(const Duration(seconds: 12));
           if (res.statusCode == 200) {
@@ -566,7 +643,8 @@ class RbacProctorAiService {
   // ===========================================================================
   Future<Map<String, dynamic>> askRoleCopilot({
     required String role, // 'student' | 'teacher' | 'admin'
-    required String mode, // 'general' | 'writing_check' | 'exam_explain' | 'teacher_assist' | 'admin_assist'
+    required String
+    mode, // 'general' | 'writing_check' | 'exam_explain' | 'teacher_assist' | 'admin_assist'
     required String message,
     int? unitNumber,
     String? contextText,
@@ -575,14 +653,16 @@ class RbacProctorAiService {
     if (role == 'student' && ExamLockGuard.instance.isLocked) {
       return {
         'isLocked': true,
-        'answer': '🔒 **Tính năng Trợ lý AI đang bị khóa tạm thời!**\n\n'
+        'answer':
+            '🔒 **Tính năng Trợ lý AI đang bị khóa tạm thời!**\n\n'
             'Bạn đang trong Phòng thi có giám sát: **"${ExamLockGuard.instance.activeExamTitle ?? "Kiểm tra định kỳ"}"**.\n'
             'Để đảm bảo công bằng, mọi công cụ AI và Dịch thuật chỉ mở lại sau khi bạn nộp bài.',
       };
     }
 
     final localKey = await _repo.getSetting('ai_gemini_api_key') ?? '';
-    final localModel = await _repo.getSetting('ai_gemini_model') ?? 'gemini-2.5-flash';
+    final localModel =
+        await _repo.getSetting('ai_gemini_model') ?? 'gemini-2.5-flash';
 
     final systemInstruction = _buildRoleSystemPrompt(role, mode, unitNumber);
 
@@ -619,14 +699,18 @@ class RbacProctorAiService {
       if (res.statusCode == 403 && res.data?['examLocked'] == true) {
         return {
           'isLocked': true,
-          'answer': res.errorMessage ?? '🔒 Tính năng AI bị khóa khi đang làm bài thi có giám sát.',
+          'answer':
+              res.errorMessage ??
+              '🔒 Tính năng AI bị khóa khi đang làm bài thi có giám sát.',
         };
       }
 
       if (res.isSuccess && res.data != null && res.data!['answer'] != null) {
         return {
           'isAvailable': res.data!['isAvailable'] == true,
-          'source': res.data!['isAvailable'] == true ? 'Cloud AI Backend' : 'Trợ lý Học thuật Nội bộ',
+          'source': res.data!['isAvailable'] == true
+              ? 'Cloud AI Backend'
+              : 'Trợ lý Học thuật Nội bộ',
           'answer': res.data!['answer'].toString(),
         };
       }
@@ -716,10 +800,12 @@ class RbacProctorAiService {
     String topicPrompt = '',
   }) async {
     final localKey = await _repo.getSetting('ai_gemini_api_key') ?? '';
-    final localModel = await _repo.getSetting('ai_gemini_model') ?? 'gemini-2.5-flash';
+    final localModel =
+        await _repo.getSetting('ai_gemini_model') ?? 'gemini-2.5-flash';
 
     if (localKey.isNotEmpty) {
-      final prompt = 'Tạo $count câu hỏi trắc nghiệm Tiếng Anh lớp 12 (Global Success) cho Unit $unitNumber, '
+      final prompt =
+          'Tạo $count câu hỏi trắc nghiệm Tiếng Anh lớp 12 (Global Success) cho Unit $unitNumber, '
           'kỹ năng "$skill", độ khó $difficulty/3. Yêu cầu thêm: ${topicPrompt.isEmpty ? "Chuẩn thi THPT" : topicPrompt}. '
           'Chỉ trả về JSON Array thuần túy: [{"stem":"...","options":["A. ...","B. ...","C. ...","D. ..."],"correctIndex":0,"explanation":"..."}]';
       final raw = await _callDirectGemini(
@@ -730,17 +816,22 @@ class RbacProctorAiService {
       );
       if (raw != null) {
         try {
-          final cleaned = raw.replaceAll('```json', '').replaceAll('```', '').trim();
+          final cleaned = raw
+              .replaceAll('```json', '')
+              .replaceAll('```', '')
+              .trim();
           final decoded = jsonDecode(cleaned) as List;
           return decoded.asMap().entries.map((entry) {
             final m = Map<String, dynamic>.from(entry.value as Map);
             return {
-              'id': 'ai_q_${DateTime.now().millisecondsSinceEpoch}_${entry.key}',
+              'id':
+                  'ai_q_${DateTime.now().millisecondsSinceEpoch}_${entry.key}',
               'unitNumber': unitNumber,
               'skill': skill,
               'difficulty': difficulty,
               'stem': (m['stem'] ?? '').toString(),
-              'options': (m['options'] as List?)?.map((e) => e.toString()).toList() ??
+              'options':
+                  (m['options'] as List?)?.map((e) => e.toString()).toList() ??
                   ['A. Đáp án 1', 'B. Đáp án 2', 'C. Đáp án 3', 'D. Đáp án 4'],
               'correctIndex': (m['correctIndex'] as num?)?.toInt() ?? 0,
               'explanation': (m['explanation'] ?? '').toString(),
@@ -767,7 +858,13 @@ class RbacProctorAiService {
     } catch (_) {}
 
     // Truy vấn trực tiếp từ Ngân hàng câu hỏi thật trong SQLite & Học liệu SGK 12 thật
-    return _loadRealQuestionsFromBank(unitNumber, skill, difficulty, count, topicPrompt);
+    return _loadRealQuestionsFromBank(
+      unitNumber,
+      skill,
+      difficulty,
+      count,
+      topicPrompt,
+    );
   }
 
   Future<List<Map<String, dynamic>>> _loadRealQuestionsFromBank(
@@ -784,32 +881,39 @@ class RbacProctorAiService {
     final pool = <Question>[...dbQuestions];
 
     if (pool.isEmpty) {
-      final allUnitQuestions = await getTeacherQuestions(unitNumber: unitNumber);
+      final allUnitQuestions = await getTeacherQuestions(
+        unitNumber: unitNumber,
+      );
       pool.addAll(allUnitQuestions);
     }
 
     if (pool.isEmpty) {
-      final lesson = TrialLessonRepository.instance.getLessonByUnit(unitNumber) ??
+      final lesson =
+          TrialLessonRepository.instance.getLessonByUnit(unitNumber) ??
           TrialLessonRepository.instance.getDefaultLesson();
       pool.addAll(lesson.questionsAsStandardQuestions);
     }
 
     if (pool.isEmpty) {
-      pool.addAll(TrialLessonRepository.instance.getAllReadyStandardQuestions());
+      pool.addAll(
+        TrialLessonRepository.instance.getAllReadyStandardQuestions(),
+      );
     }
 
     final out = <Map<String, dynamic>>[];
     for (var i = 0; i < count && pool.isNotEmpty; i++) {
       final item = pool[i % pool.length];
       out.add({
-        'id': 'q_bank_${unitNumber}_${DateTime.now().millisecondsSinceEpoch}_$i',
+        'id':
+            'q_bank_${unitNumber}_${DateTime.now().millisecondsSinceEpoch}_$i',
         'unitNumber': unitNumber,
         'skill': skill.isNotEmpty ? skill : item.type,
         'difficulty': difficulty,
         'stem': item.stem,
         'options': List<String>.from(item.options),
         'correctIndex': item.correctIndex,
-        'explanation': '${item.explanation}${topicPrompt.isNotEmpty ? " ($topicPrompt)" : ""}',
+        'explanation':
+            '${item.explanation}${topicPrompt.isNotEmpty ? " ($topicPrompt)" : ""}',
       });
     }
     return out;
@@ -909,7 +1013,13 @@ class RbacProctorAiService {
       }
     }
 
-    final questions = await _loadRealQuestionsFromBank(unitNumber, 'reading', 2, 4, title);
+    final questions = await _loadRealQuestionsFromBank(
+      unitNumber,
+      'reading',
+      2,
+      4,
+      title,
+    );
 
     return {
       'unitNumber': unitNumber,
@@ -920,7 +1030,8 @@ class RbacProctorAiService {
       'translationVi': lesson != null && lesson.paragraphs.isNotEmpty
           ? lesson.paragraphs.map((p) => p.translation).join('\n\n')
           : '',
-      'grammarSummary': lesson?.lessonTitle ?? 'Nội dung bài học Unit $unitNumber',
+      'grammarSummary':
+          lesson?.lessonTitle ?? 'Nội dung bài học Unit $unitNumber',
       'vocabulary': vocabList,
       'questions': questions,
     };
@@ -929,7 +1040,10 @@ class RbacProctorAiService {
   // ===========================================================================
   // 3. QUẢN LÝ NGÂN HÀNG CÂU HỎI & TÀI LIỆU CỦA GIÁO VIÊN / ADMIN (FULL CRUD)
   // ===========================================================================
-  Future<List<Question>> getTeacherQuestions({int? unitNumber, String? skill}) async {
+  Future<List<Question>> getTeacherQuestions({
+    int? unitNumber,
+    String? skill,
+  }) async {
     final db = await AppDatabase.instance.database;
     String where = '1=1';
     final args = <Object?>[];
@@ -971,18 +1085,23 @@ class RbacProctorAiService {
         'options': options,
         'correctIndex': correctIndex,
         'explanation': explanation,
-      }
+      },
     ]);
   }
 
-  Future<void> saveTeacherQuestions(List<Map<String, dynamic>> rawQuestions) async {
+  Future<void> saveTeacherQuestions(
+    List<Map<String, dynamic>> rawQuestions,
+  ) async {
     final db = await AppDatabase.instance.database;
     final batch = db.batch();
     for (final q in rawQuestions) {
-      final qId = (q['id'] ?? 'tq_${DateTime.now().millisecondsSinceEpoch}').toString();
+      final qId = (q['id'] ?? 'tq_${DateTime.now().millisecondsSinceEpoch}')
+          .toString();
       final unitNum = (q['unitNumber'] as num?)?.toInt() ?? 1;
-      final options = (q['options'] as List?)?.map((e) => e.toString()).toList() ?? [];
-      if ((q['stem'] ?? '').toString().trim().isEmpty || options.length < 2) continue;
+      final options =
+          (q['options'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      if ((q['stem'] ?? '').toString().trim().isEmpty || options.length < 2)
+        continue;
 
       final questionObj = Question(
         id: qId,
@@ -1038,12 +1157,17 @@ class RbacProctorAiService {
     if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw) as List;
-        localList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        localList = decoded
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       } catch (_) {}
     }
     try {
       final client = await _client();
-      final res = await client.getJson('/teacher/materials', timeout: const Duration(seconds: 6));
+      final res = await client.getJson(
+        '/teacher/materials',
+        timeout: const Duration(seconds: 6),
+      );
       if (res.isSuccess && res.data?['materials'] is List) {
         final serverList = (res.data!['materials'] as List)
             .map((e) => Map<String, dynamic>.from(e as Map))
@@ -1054,7 +1178,10 @@ class RbacProctorAiService {
               localList.add(sMat);
             }
           }
-          await _repo.setSetting('teacher_study_materials_json', jsonEncode(localList));
+          await _repo.setSetting(
+            'teacher_study_materials_json',
+            jsonEncode(localList),
+          );
         }
       }
     } catch (_) {}
@@ -1063,7 +1190,9 @@ class RbacProctorAiService {
 
   Future<void> saveStudyMaterial(Map<String, dynamic> material) async {
     final list = await getStudyMaterials();
-    final id = (material['id'] ?? 'mat_${DateTime.now().millisecondsSinceEpoch}').toString();
+    final id =
+        (material['id'] ?? 'mat_${DateTime.now().millisecondsSinceEpoch}')
+            .toString();
     final updatedItem = {
       ...material,
       'id': id,
@@ -1114,7 +1243,11 @@ class RbacProctorAiService {
       try {
         final decoded = jsonDecode(raw) as List;
         localExams = decoded
-            .map((e) => SupervisedExamModel.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => SupervisedExamModel.fromMap(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
       } catch (_) {}
     }
@@ -1127,10 +1260,17 @@ class RbacProctorAiService {
     // Đồng bộ từ Backend nếu có mạng
     try {
       final client = await _client();
-      final res = await client.getJson('/exams/supervised', timeout: const Duration(seconds: 6));
+      final res = await client.getJson(
+        '/exams/supervised',
+        timeout: const Duration(seconds: 6),
+      );
       if (res.isSuccess && res.data?['exams'] is List) {
         final serverList = (res.data!['exams'] as List)
-            .map((e) => SupervisedExamModel.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => SupervisedExamModel.fromMap(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
         if (serverList.isNotEmpty) {
           for (final sExam in serverList) {
@@ -1157,11 +1297,9 @@ class RbacProctorAiService {
       final decoded = jsonDecode(raw) as List;
       if (decoded.isEmpty) return {'syncedCount': 0};
       final client = await _client();
-      final res = await client.postJson(
-        '/teacher/exams/batch-sync',
-        {'exams': decoded},
-        timeout: const Duration(seconds: 10),
-      );
+      final res = await client.postJson('/teacher/exams/batch-sync', {
+        'exams': decoded,
+      }, timeout: const Duration(seconds: 10));
       if (res.isSuccess && res.data != null) {
         return res.data!;
       }
@@ -1169,7 +1307,9 @@ class RbacProctorAiService {
     return {'syncedCount': 0};
   }
 
-  Future<void> _saveSupervisedExamsLocal(List<SupervisedExamModel> exams) async {
+  Future<void> _saveSupervisedExamsLocal(
+    List<SupervisedExamModel> exams,
+  ) async {
     await _repo.setSetting(
       'supervised_exams_json',
       jsonEncode(exams.map((e) => e.toMap()).toList()),
@@ -1228,15 +1368,20 @@ class RbacProctorAiService {
       action: idx >= 0 ? 'UPDATE_SUPERVISED_EXAM' : 'CREATE_SUPERVISED_EXAM',
       targetType: 'supervised_exam',
       targetId: examId,
-      details: 'Cấu hình đề thi giám sát "$title" (Ân hạn: ${graceSeconds}s, Vi phạm tối đa: $maxViolations lần)',
+      details:
+          'Cấu hình đề thi giám sát "$title" (Ân hạn: ${graceSeconds}s, Vi phạm tối đa: $maxViolations lần)',
     );
 
     try {
       final client = await _client();
       final res = await client.postJson('/teacher/exams', model.toMap());
       if (res.isSuccess && res.data?['exam'] is Map) {
-        final serverExam = SupervisedExamModel.fromMap(Map<String, dynamic>.from(res.data!['exam'] as Map));
-        final sIdx = exams.indexWhere((e) => e.id == serverExam.id || e.id == examId);
+        final serverExam = SupervisedExamModel.fromMap(
+          Map<String, dynamic>.from(res.data!['exam'] as Map),
+        );
+        final sIdx = exams.indexWhere(
+          (e) => e.id == serverExam.id || e.id == examId,
+        );
         if (sIdx >= 0) {
           exams[sIdx] = serverExam;
         } else {
@@ -1269,14 +1414,20 @@ class RbacProctorAiService {
   }
 
   /// Lấy danh sách các phiên làm bài trực tiếp của 1 đề thi (Dành cho Bảng Giám sát Giáo viên)
-  Future<List<ExamLiveSessionModel>> getLiveSessionsForExam(String examId) async {
+  Future<List<ExamLiveSessionModel>> getLiveSessionsForExam(
+    String examId,
+  ) async {
     final raw = await _repo.getSetting('exam_live_sessions_json');
     List<ExamLiveSessionModel> all = [];
     if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw) as List;
         all = decoded
-            .map((e) => ExamLiveSessionModel.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => ExamLiveSessionModel.fromMap(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
       } catch (_) {}
     }
@@ -1290,7 +1441,11 @@ class RbacProctorAiService {
       try {
         final decoded = jsonDecode(raw) as List;
         all = decoded
-            .map((e) => ExamLiveSessionModel.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => ExamLiveSessionModel.fromMap(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
       } catch (_) {}
     }
@@ -1356,10 +1511,15 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      final res = await client.postJson('/exams/supervised/${exam.id}/start', {});
+      final res = await client.postJson(
+        '/exams/supervised/${exam.id}/start',
+        {},
+      );
       if (res.statusCode == 403 && res.data?['isLocked'] == true) {
         ExamLockGuard.instance.exitSupervisedExam();
-        final reason = res.data?['lockedReason']?.toString() ?? 'Tài khoản đã bị tạm khóa.';
+        final reason =
+            res.data?['lockedReason']?.toString() ??
+            'Tài khoản đã bị tạm khóa.';
         throw Exception('ACCOUNT_LOCKED:$reason');
       }
     } catch (e) {
@@ -1374,13 +1534,16 @@ class RbacProctorAiService {
     required SupervisedExamModel exam,
     required ExamLiveSessionModel currentSession,
     required Map<String, int> currentAnswers,
-    required String eventType, // 'heartbeat' | 'app_backgrounded' | 'app_resumed' | 'timeout_10s_exceeded'
+    required String
+    eventType, // 'heartbeat' | 'app_backgrounded' | 'app_resumed' | 'timeout_10s_exceeded'
     int outOfAppSeconds = 0,
     String detail = '',
   }) async {
     // Kiểm tra xem Giáo viên có vừa can thiệp (Thu bài / Hủy bài / Nhắc nhở) trên máy không
     final existingList = await getLiveSessionsForExam(exam.id);
-    final latestSaved = existingList.where((s) => s.id == currentSession.id).firstOrNull ?? currentSession;
+    final latestSaved =
+        existingList.where((s) => s.id == currentSession.id).firstOrNull ??
+        currentSession;
     if (!latestSaved.isActive) {
       ExamLockGuard.instance.exitSupervisedExam();
       return latestSaved;
@@ -1405,18 +1568,22 @@ class RbacProctorAiService {
       });
       if (newViolations > exam.maxViolations) {
         autoTerminate = true;
-        warnMsg = 'Hệ thống tự động xử lý: Bạn đã rời ứng dụng $newViolations lần (vượt quá giới hạn ${exam.maxViolations} lần).';
+        warnMsg =
+            'Hệ thống tự động xử lý: Bạn đã rời ứng dụng $newViolations lần (vượt quá giới hạn ${exam.maxViolations} lần).';
       }
-    } else if (eventType == 'timeout_10s_exceeded' || outOfAppSeconds >= exam.graceSeconds) {
+    } else if (eventType == 'timeout_10s_exceeded' ||
+        outOfAppSeconds >= exam.graceSeconds) {
       newViolations += 1;
       logs.add({
         'type': 'EXCEEDED_GRACE_TIME',
         'timestamp': DateTime.now().toIso8601String(),
         'outOfAppSeconds': outOfAppSeconds,
-        'detail': 'Rời ứng dụng quá ${exam.graceSeconds} giây không quay lại làm bài.',
+        'detail':
+            'Rời ứng dụng quá ${exam.graceSeconds} giây không quay lại làm bài.',
       });
       autoTerminate = true;
-      warnMsg = 'Hệ thống tự động xử lý: Bạn đã rời khỏi ứng dụng quá ${exam.graceSeconds} giây quy định của phòng thi.';
+      warnMsg =
+          'Hệ thống tự động xử lý: Bạn đã rời khỏi ứng dụng quá ${exam.graceSeconds} giây quy định của phòng thi.';
     }
 
     double finalScore = latestSaved.score;
@@ -1524,7 +1691,8 @@ class RbacProctorAiService {
   Future<ExamLiveSessionModel> performTeacherProctorAction({
     required SupervisedExamModel exam,
     required ExamLiveSessionModel session,
-    required String action, // 'warn' | 'force_submit' | 'invalidate' | 'reset_violation'
+    required String
+    action, // 'warn' | 'force_submit' | 'invalidate' | 'reset_violation'
     String? customMessage,
   }) async {
     String newStatus = session.status;
@@ -1534,24 +1702,28 @@ class RbacProctorAiService {
     DateTime? submittedAt = session.submittedAt;
 
     if (action == 'warn') {
-      warnMsg = customMessage ??
+      warnMsg =
+          customMessage ??
           '⚠️ Giáo viên nhắc nhở: Đề nghị ${session.studentName} tập trung làm bài nghiêm túc, không chuyển ứng dụng!';
     } else if (action == 'force_submit') {
       newStatus = 'force_submitted_teacher';
       newScore = _computeExamScore(exam.questions, session.currentAnswers);
-      warnMsg = customMessage ??
+      warnMsg =
+          customMessage ??
           'Giáo viên đã chủ động thu bài thi của bạn ngay lập tức.';
       submittedAt = DateTime.now();
     } else if (action == 'invalidate') {
       newStatus = 'invalidated';
       newScore = 0.0;
-      warnMsg = customMessage ??
+      warnMsg =
+          customMessage ??
           'Kết quả bài thi bị hủy (0 điểm) do vi phạm quy chế phòng thi.';
       submittedAt = DateTime.now();
     } else if (action == 'reset_violation') {
       newStatus = 'in_progress';
       newViolations = 0;
-      warnMsg = 'Giáo viên đã xác nhận sự cố kỹ thuật và cho phép bạn tiếp tục làm bài.';
+      warnMsg =
+          'Giáo viên đã xác nhận sự cố kỹ thuật và cho phép bạn tiếp tục làm bài.';
       submittedAt = null;
     }
 
@@ -1580,18 +1752,15 @@ class RbacProctorAiService {
       action: 'TEACHER_PROCTOR_${action.toUpperCase()}',
       targetType: 'exam_live_session',
       targetId: session.id,
-      details: 'Giáo viên thực hiện "$action" đối với học sinh ${session.studentName}',
+      details:
+          'Giáo viên thực hiện "$action" đối với học sinh ${session.studentName}',
     );
 
     try {
       final client = await _client();
       await client.postJson(
         '/teacher/exams/${exam.id}/sessions/${session.id}/action',
-        {
-          'action': action,
-          'message': warnMsg,
-          'reason': warnMsg,
-        },
+        {'action': action, 'message': warnMsg, 'reason': warnMsg},
       );
     } catch (_) {}
 
@@ -1629,14 +1798,18 @@ class RbacProctorAiService {
     return {};
   }
 
-  Future<void> _applyLockedAccountsOverride(List<Map<String, dynamic>> users) async {
+  Future<void> _applyLockedAccountsOverride(
+    List<Map<String, dynamic>> users,
+  ) async {
     final lockedMap = await _getLockedAccountsMap();
     if (lockedMap.isEmpty) return;
 
     for (var i = 0; i < users.length; i++) {
       final em = (users[i]['email'] ?? '').toString().trim().toLowerCase();
       final id = (users[i]['id'] ?? '').toString();
-      final key = lockedMap.containsKey(em) ? em : (lockedMap.containsKey(id) ? id : null);
+      final key = lockedMap.containsKey(em)
+          ? em
+          : (lockedMap.containsKey(id) ? id : null);
       if (key != null) {
         final info = lockedMap[key];
         if (info is Map) {
@@ -1673,7 +1846,10 @@ class RbacProctorAiService {
       }
       lockedMap.remove(userId);
     }
-    await _repo.setSetting('admin_locked_accounts_map_json', jsonEncode(lockedMap));
+    await _repo.setSetting(
+      'admin_locked_accounts_map_json',
+      jsonEncode(lockedMap),
+    );
     unawaited(syncLockedAccountsToCloud());
   }
 
@@ -1687,14 +1863,17 @@ class RbacProctorAiService {
         if (key.contains('@') && val is Map && val['isLocked'] == true) {
           list.add({
             'email': key.trim().toLowerCase(),
-            'reason': (val['reason'] ?? 'Tạm khóa bởi Quản trị viên').toString(),
+            'reason': (val['reason'] ?? 'Tạm khóa bởi Quản trị viên')
+                .toString(),
           });
         }
       });
       if (list.isEmpty) return {'syncedCount': 0};
 
       final client = await _client();
-      final res = await client.postJson('/admin/users/sync-locked', {'lockedAccounts': list});
+      final res = await client.postJson('/admin/users/sync-locked', {
+        'lockedAccounts': list,
+      });
       if (res.isSuccess && res.data != null) {
         return res.data!;
       }
@@ -1702,22 +1881,32 @@ class RbacProctorAiService {
     return {'syncedCount': 0};
   }
 
-  Future<List<Map<String, dynamic>>> getAdminUsers({String? roleFilter, String? search}) async {
+  Future<List<Map<String, dynamic>>> getAdminUsers({
+    String? roleFilter,
+    String? search,
+  }) async {
     try {
       final client = await _client();
       final queryParams = <String>[];
-      if (roleFilter != null && roleFilter != 'all') queryParams.add('role=$roleFilter');
+      if (roleFilter != null && roleFilter != 'all')
+        queryParams.add('role=$roleFilter');
       if (search != null && search.trim().isNotEmpty) {
         queryParams.add('search=${Uri.encodeComponent(search.trim())}');
       }
       final qStr = queryParams.isNotEmpty ? '?${queryParams.join('&')}' : '';
-      final res = await client.getJson('/admin/users$qStr', timeout: const Duration(seconds: 6));
+      final res = await client.getJson(
+        '/admin/users$qStr',
+        timeout: const Duration(seconds: 6),
+      );
       if (res.isSuccess && res.data?['users'] is List) {
         final serverUsers = (res.data!['users'] as List)
             .map((e) => Map<String, dynamic>.from(e as Map))
             .toList();
         await _applyLockedAccountsOverride(serverUsers);
-        await _repo.setSetting('admin_cached_users_json', jsonEncode(serverUsers));
+        await _repo.setSetting(
+          'admin_cached_users_json',
+          jsonEncode(serverUsers),
+        );
         return serverUsers;
       }
     } catch (_) {}
@@ -1727,7 +1916,9 @@ class RbacProctorAiService {
     if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw) as List;
-        users = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        users = decoded
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       } catch (_) {}
     }
 
@@ -1741,14 +1932,16 @@ class RbacProctorAiService {
       }
     }
 
-
     // Xóa sạch toàn bộ tài khoản mock/test ảo cũ nếu còn tồn lưu trong bộ nhớ cache
     final origLen = users.length;
     users.removeWhere((u) {
       final em = (u['email'] ?? '').toString().trim().toLowerCase();
       final id = (u['id'] ?? '').toString().trim().toLowerCase();
-      final name = (u['display_name'] ?? u['displayName'] ?? '').toString().toLowerCase();
-      if (UserProfile.isSystemAdmin(em)) return false; // Không bao giờ xóa admin hệ thống
+      final name = (u['display_name'] ?? u['displayName'] ?? '')
+          .toString()
+          .toLowerCase();
+      if (UserProfile.isSystemAdmin(em))
+        return false; // Không bao giờ xóa admin hệ thống
       return id.contains('mock') ||
           id.contains('fake') ||
           id.contains('teacher_pending') ||
@@ -1774,7 +1967,8 @@ class RbacProctorAiService {
           'locked_reason': '',
           'created_at': DateTime.now().toIso8601String(),
         },
-        if (currentAuth != null && !UserProfile.isSystemAdmin(currentAuth.email))
+        if (currentAuth != null &&
+            !UserProfile.isSystemAdmin(currentAuth.email))
           {
             'id': currentAuth.id,
             'email': currentAuth.email,
@@ -1789,13 +1983,17 @@ class RbacProctorAiService {
     }
 
     return users.where((u) {
-      if (roleFilter != null && roleFilter != 'all' && u['role'] != roleFilter) {
+      if (roleFilter != null &&
+          roleFilter != 'all' &&
+          u['role'] != roleFilter) {
         return false;
       }
       if (search != null && search.trim().isNotEmpty) {
         final s = search.trim().toLowerCase();
         final email = (u['email'] ?? '').toString().toLowerCase();
-        final name = (u['display_name'] ?? u['displayName'] ?? '').toString().toLowerCase();
+        final name = (u['display_name'] ?? u['displayName'] ?? '')
+            .toString()
+            .toLowerCase();
         if (!email.contains(s) && !name.contains(s)) return false;
       }
       return true;
@@ -1811,7 +2009,9 @@ class RbacProctorAiService {
     final newUser = {
       'id': 'usr_${DateTime.now().millisecondsSinceEpoch}',
       'email': email.trim().toLowerCase(),
-      'display_name': displayName.trim().isEmpty ? email.split('@').first : displayName.trim(),
+      'display_name': displayName.trim().isEmpty
+          ? email.split('@').first
+          : displayName.trim(),
       'role': role,
       'is_locked': false,
       'locked_reason': '',
@@ -1838,7 +2038,8 @@ class RbacProctorAiService {
       action: 'ADMIN_CREATE_USER',
       targetType: 'user',
       targetId: newUser['id'].toString(),
-      details: 'Tạo tài khoản ${newUser['email']} với vai trò ${role.toUpperCase()}',
+      details:
+          'Tạo tài khoản ${newUser['email']} với vai trò ${role.toUpperCase()}',
     );
     return newUser;
   }
@@ -1855,7 +2056,9 @@ class RbacProctorAiService {
     final cleanEmail = email?.trim().toLowerCase();
     int idx = list.indexWhere((u) => u['id']?.toString() == userId);
     if (idx < 0 && cleanEmail != null && cleanEmail.isNotEmpty) {
-      idx = list.indexWhere((u) => u['email']?.toString().trim().toLowerCase() == cleanEmail);
+      idx = list.indexWhere(
+        (u) => u['email']?.toString().trim().toLowerCase() == cleanEmail,
+      );
     }
 
     bool serverSuccess = false;
@@ -1866,13 +2069,16 @@ class RbacProctorAiService {
       if (role != null) payload['role'] = role;
       if (isLocked != null) payload['isLocked'] = isLocked;
       if (lockedReason != null) payload['lockedReason'] = lockedReason;
-      if (cleanEmail != null && cleanEmail.isNotEmpty) payload['email'] = cleanEmail;
+      if (cleanEmail != null && cleanEmail.isNotEmpty)
+        payload['email'] = cleanEmail;
 
       final res = await client.putJson('/admin/users/$userId', payload);
       if (res.isSuccess) {
         serverSuccess = true;
         if (res.data?['user'] is Map) {
-          final serverUser = Map<String, dynamic>.from(res.data!['user'] as Map);
+          final serverUser = Map<String, dynamic>.from(
+            res.data!['user'] as Map,
+          );
           if (idx >= 0) {
             list[idx] = serverUser;
           } else {
@@ -1912,7 +2118,8 @@ class RbacProctorAiService {
           : 'UPDATE_USER_ROLE',
       targetType: 'user',
       targetId: userId,
-      details: 'Cập nhật người dùng $userId (${cleanEmail ?? ''}) (Role: ${role ?? "giữ nguyên"}, Khóa: ${isLocked ?? false})',
+      details:
+          'Cập nhật người dùng $userId (${cleanEmail ?? ''}) (Role: ${role ?? "giữ nguyên"}, Khóa: ${isLocked ?? false})',
     );
 
     return serverSuccess;
@@ -1938,7 +2145,9 @@ class RbacProctorAiService {
 
   Future<void> _upsertLocalAdminUser(Map<String, dynamic> user) async {
     final list = await getAdminUsers();
-    final idx = list.indexWhere((u) => u['id'] == user['id'] || u['email'] == user['email']);
+    final idx = list.indexWhere(
+      (u) => u['id'] == user['id'] || u['email'] == user['email'],
+    );
     if (idx >= 0) {
       list[idx] = user;
     } else {
@@ -1956,7 +2165,9 @@ class RbacProctorAiService {
     if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw) as List;
-        versions = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        versions = decoded
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       } catch (_) {}
     }
 
@@ -1966,7 +2177,8 @@ class RbacProctorAiService {
           'id': 'cur_gs12_2025_standard',
           'versionCode': 'GS12-2025.1',
           'title': 'SGK Tiếng Anh 12 Global Success (Bộ chuẩn hiện hành)',
-          'description': 'Đầy đủ 10 Unit chuẩn Bộ GD&ĐT (Life Stories, Multicultural World, Green Living, Urbanisation, World of Work, AI...).',
+          'description':
+              'Đầy đủ 10 Unit chuẩn Bộ GD&ĐT (Life Stories, Multicultural World, Green Living, Urbanisation, World of Work, AI...).',
           'isActive': true,
           'unitCount': 10,
           'updatedAt': DateTime.now().toIso8601String(),
@@ -2021,10 +2233,13 @@ class RbacProctorAiService {
     }
 
     await recordAuditLog(
-      action: activateImmediately ? 'ACTIVATE_NEW_TEXTBOOK' : 'SAVE_CURRICULUM_VERSION',
+      action: activateImmediately
+          ? 'ACTIVATE_NEW_TEXTBOOK'
+          : 'SAVE_CURRICULUM_VERSION',
       targetType: 'curriculum_set',
       targetId: curId,
-      details: '${activateImmediately ? "Thay thế & Kích hoạt" : "Lưu"} bộ sách "$title" ($versionCode)',
+      details:
+          '${activateImmediately ? "Thay thế & Kích hoạt" : "Lưu"} bộ sách "$title" ($versionCode)',
     );
 
     try {
@@ -2064,7 +2279,8 @@ class RbacProctorAiService {
       action: 'SWITCH_ACTIVE_CURRICULUM',
       targetType: 'curriculum_set',
       targetId: curriculumId,
-      details: 'Kích hoạt bộ sách giáo khoa "${target?['title'] ?? curriculumId}" cho toàn hệ thống',
+      details:
+          'Kích hoạt bộ sách giáo khoa "${target?['title'] ?? curriculumId}" cho toàn hệ thống',
     );
 
     try {
@@ -2075,7 +2291,9 @@ class RbacProctorAiService {
 
   Future<void> deleteCurriculumVersion(String curriculumId) async {
     final versions = await getCurriculumVersions();
-    versions.removeWhere((v) => v['id'] == curriculumId && v['isActive'] != true);
+    versions.removeWhere(
+      (v) => v['id'] == curriculumId && v['isActive'] != true,
+    );
     await _repo.setSetting('curriculum_versions_json', jsonEncode(versions));
 
     await recordAuditLog(
@@ -2088,14 +2306,20 @@ class RbacProctorAiService {
 
   /// Đồng bộ dữ liệu từ gói Sách Giáo Khoa Mới vào bảng `topics`, `words`, `questions` của SQLite
   /// mà KHÔNG làm mất dữ liệu `attempts`, `daily_stats`, `word_progress` của học viên!
-  Future<void> _applyCurriculumPayloadToLocalSqlite(Map<String, dynamic> payload) async {
+  Future<void> _applyCurriculumPayloadToLocalSqlite(
+    Map<String, dynamic> payload,
+  ) async {
     if (payload.isEmpty) return;
     final db = await AppDatabase.instance.database;
     final batch = db.batch();
 
     final units = payload['units'] is List
-        ? (payload['units'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList()
-        : (payload['unitNumber'] != null ? [payload] : <Map<String, dynamic>>[]);
+        ? (payload['units'] as List)
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList()
+        : (payload['unitNumber'] != null
+              ? [payload]
+              : <Map<String, dynamic>>[]);
 
     for (final u in units) {
       final unitNum = (u['unitNumber'] as num?)?.toInt() ?? 1;
@@ -2140,12 +2364,16 @@ class RbacProctorAiService {
         for (int i = 0; i < qList.length; i++) {
           final q = Map<String, dynamic>.from(qList[i] as Map);
           final stem = (q['stem'] ?? '').toString().trim();
-          final opts = (q['options'] as List?)?.map((e) => e.toString()).toList() ?? [];
+          final opts =
+              (q['options'] as List?)?.map((e) => e.toString()).toList() ?? [];
           if (stem.isEmpty || opts.length < 2) continue;
           batch.insert(
             'questions',
             Question(
-              id: (q['id'] ?? 'q_u${unitNum}_${DateTime.now().millisecondsSinceEpoch}_$i').toString(),
+              id:
+                  (q['id'] ??
+                          'q_u${unitNum}_${DateTime.now().millisecondsSinceEpoch}_$i')
+                      .toString(),
               grade: 12,
               type: (q['skill'] ?? 'reading').toString(),
               stem: stem,
@@ -2189,7 +2417,9 @@ class RbacProctorAiService {
     final user = await _repo.getAuthUser();
     logs.insert(0, {
       'id': 'log_${DateTime.now().millisecondsSinceEpoch}',
-      'actorEmail': user?.email.isNotEmpty == true ? user!.email : (user?.displayName ?? 'system'),
+      'actorEmail': user?.email.isNotEmpty == true
+          ? user!.email
+          : (user?.displayName ?? 'system'),
       'actorRole': user?.role ?? 'admin',
       'action': action,
       'targetType': targetType,
@@ -2282,7 +2512,9 @@ class RbacProctorAiService {
     final Set<String> deletedIds = {};
     if (delRaw != null && delRaw.isNotEmpty) {
       try {
-        deletedIds.addAll((jsonDecode(delRaw) as List).map((e) => e.toString()));
+        deletedIds.addAll(
+          (jsonDecode(delRaw) as List).map((e) => e.toString()),
+        );
       } catch (_) {}
     }
 
@@ -2293,14 +2525,21 @@ class RbacProctorAiService {
         final decoded = jsonDecode(raw) as List;
         localList = decoded
             .map((e) => Map<String, dynamic>.from(e as Map))
-            .where((c) => !deletedIds.contains(c['id'].toString()) && !deletedIds.contains((c['code'] ?? '').toString()))
+            .where(
+              (c) =>
+                  !deletedIds.contains(c['id'].toString()) &&
+                  !deletedIds.contains((c['code'] ?? '').toString()),
+            )
             .toList();
       } catch (_) {}
     }
 
     try {
       final client = await _client();
-      final res = await client.getJson('/classes', timeout: const Duration(seconds: 6));
+      final res = await client.getJson(
+        '/classes',
+        timeout: const Duration(seconds: 6),
+      );
       if (res.isSuccess && res.data?['classes'] is List) {
         final serverList = (res.data!['classes'] as List)
             .map((e) => _normalizeClassMap(Map<String, dynamic>.from(e as Map)))
@@ -2331,12 +2570,18 @@ class RbacProctorAiService {
       final c = Map<String, dynamic>.from(localList[i]);
       final cid = (c['id'] ?? '').toString();
       final members = await getClassMembers(cid, syncRemote: false);
-      final approvedCount = members.where((m) => m['status'] == 'approved').length;
-      final pendingCount = members.where((m) => m['status'] == 'pending').length;
+      final approvedCount = members
+          .where((m) => m['status'] == 'approved')
+          .length;
+      final pendingCount = members
+          .where((m) => m['status'] == 'pending')
+          .length;
       final openAssignCount = allAssignments
           .where((a) => a['classId'] == cid && a['status'] != 'closed')
           .length;
-      c['studentsCount'] = approvedCount > 0 ? approvedCount : ((c['studentsCount'] as num?)?.toInt() ?? 0);
+      c['studentsCount'] = approvedCount > 0
+          ? approvedCount
+          : ((c['studentsCount'] as num?)?.toInt() ?? 0);
       c['pendingCount'] = pendingCount;
       c['openAssignmentsCount'] = openAssignCount;
       localList[i] = c;
@@ -2350,45 +2595,123 @@ class RbacProctorAiService {
       'id': (m['id'] ?? '').toString(),
       'name': (m['name'] ?? '').toString(),
       'schoolName': (m['schoolName'] ?? m['school_name'] ?? 'THPT').toString(),
-      'schoolYear': (m['schoolYear'] ?? m['school_year'] ?? '2026-2027').toString(),
-      'bookSet': (m['bookSet'] ?? m['book_set'] ?? 'SGK Tiếng Anh 12 Global Success').toString(),
+      'schoolYear': (m['schoolYear'] ?? m['school_year'] ?? '2026-2027')
+          .toString(),
+      'bookSet':
+          (m['bookSet'] ?? m['book_set'] ?? 'SGK Tiếng Anh 12 Global Success')
+              .toString(),
       'teacherId': (m['teacherId'] ?? m['teacher_id'] ?? '').toString(),
       'teacherName': (m['teacherName'] ?? m['teacher_name'] ?? '').toString(),
-      'teacherEmail': (m['teacherEmail'] ?? m['teacher_email'] ?? '').toString(),
+      'teacherEmail': (m['teacherEmail'] ?? m['teacher_email'] ?? '')
+          .toString(),
       'code': (m['code'] ?? m['join_code'] ?? '').toString(),
-      'requireApproval': m['requireApproval'] == true || m['require_approval'] == true,
-      'showLeaderboard': m['showLeaderboard'] != false && m['show_leaderboard'] != false,
+      'requireApproval':
+          m['requireApproval'] == true || m['require_approval'] == true,
+      'showLeaderboard':
+          m['showLeaderboard'] != false && m['show_leaderboard'] != false,
       'allowJoin': m['allowJoin'] != false && m['allow_join'] != false,
-      'membershipStatus': (m['membershipStatus'] ?? m['membership_status'] ?? '').toString(),
+      'membershipStatus':
+          (m['membershipStatus'] ?? m['membership_status'] ?? '').toString(),
       'status': (m['status'] ?? 'active').toString(),
-      'studentsCount': (m['studentsCount'] ?? m['student_count'] ?? 0 as num).toInt(),
-      'pendingCount': (m['pendingCount'] ?? m['pending_count'] ?? 0 as num).toInt(),
-      'progressPercent': (m['progressPercent'] ?? m['progress_percent'] ?? 0 as num).toInt(),
-      'createdAt': (m['createdAt'] ?? m['created_at'] ?? DateTime.now().toIso8601String()).toString(),
+      'studentsCount': (m['studentsCount'] ?? m['student_count'] ?? 0 as num)
+          .toInt(),
+      'pendingCount': (m['pendingCount'] ?? m['pending_count'] ?? 0 as num)
+          .toInt(),
+      'progressPercent':
+          (m['progressPercent'] ?? m['progress_percent'] ?? 0 as num).toInt(),
+      'createdAt':
+          (m['createdAt'] ??
+                  m['created_at'] ??
+                  DateTime.now().toIso8601String())
+              .toString(),
     };
   }
 
   static String generateClassJoinCode(String className) {
     const vietnameseMap = {
-      'a': 'a', 'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
-      'ă': 'a', 'ắ': 'a', 'ằ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
-      'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
-      'd': 'd', 'đ': 'd',
-      'e': 'e', 'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
-      'ê': 'e', 'ế': 'e', 'ề': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
-      'i': 'i', 'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
-      'o': 'o', 'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
-      'ô': 'o', 'ố': 'o', 'ồ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
-      'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
-      'u': 'u', 'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
-      'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
-      'y': 'y', 'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+      'a': 'a',
+      'á': 'a',
+      'à': 'a',
+      'ả': 'a',
+      'ã': 'a',
+      'ạ': 'a',
+      'ă': 'a',
+      'ắ': 'a',
+      'ằ': 'a',
+      'ẳ': 'a',
+      'ẵ': 'a',
+      'ặ': 'a',
+      'â': 'a',
+      'ấ': 'a',
+      'ầ': 'a',
+      'ẩ': 'a',
+      'ẫ': 'a',
+      'ậ': 'a',
+      'd': 'd',
+      'đ': 'd',
+      'e': 'e',
+      'é': 'e',
+      'è': 'e',
+      'ẻ': 'e',
+      'ẽ': 'e',
+      'ẹ': 'e',
+      'ê': 'e',
+      'ế': 'e',
+      'ề': 'e',
+      'ể': 'e',
+      'ễ': 'e',
+      'ệ': 'e',
+      'i': 'i',
+      'í': 'i',
+      'ì': 'i',
+      'ỉ': 'i',
+      'ĩ': 'i',
+      'ị': 'i',
+      'o': 'o',
+      'ó': 'o',
+      'ò': 'o',
+      'ỏ': 'o',
+      'õ': 'o',
+      'ọ': 'o',
+      'ô': 'o',
+      'ố': 'o',
+      'ồ': 'o',
+      'ổ': 'o',
+      'ỗ': 'o',
+      'ộ': 'o',
+      'ơ': 'o',
+      'ớ': 'o',
+      'ờ': 'o',
+      'ở': 'o',
+      'ỡ': 'o',
+      'ợ': 'o',
+      'u': 'u',
+      'ú': 'u',
+      'ù': 'u',
+      'ủ': 'u',
+      'ũ': 'u',
+      'ụ': 'u',
+      'ư': 'u',
+      'ứ': 'u',
+      'ừ': 'u',
+      'ử': 'u',
+      'ữ': 'u',
+      'ự': 'u',
+      'y': 'y',
+      'ý': 'y',
+      'ỳ': 'y',
+      'ỷ': 'y',
+      'ỹ': 'y',
+      'ỵ': 'y',
     };
     var normalized = className.toLowerCase();
-    vietnameseMap.forEach((key, val) => normalized = normalized.replaceAll(key, val));
+    vietnameseMap.forEach(
+      (key, val) => normalized = normalized.replaceAll(key, val),
+    );
     final clean = normalized.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
     final prefix = clean.padRight(4, 'X').substring(0, 4);
-    final rand = (1000 + (DateTime.now().microsecondsSinceEpoch % 9000)).toString();
+    final rand = (1000 + (DateTime.now().microsecondsSinceEpoch % 9000))
+        .toString();
     return '$prefix-$rand';
   }
 
@@ -2400,6 +2723,7 @@ class RbacProctorAiService {
     String? joinCode,
     bool requireApproval = true,
     bool showLeaderboard = true,
+    String? teacherId,
     String? teacherName,
     String? teacherEmail,
   }) async {
@@ -2415,7 +2739,7 @@ class RbacProctorAiService {
       'schoolName': schoolName.trim(),
       'schoolYear': schoolYear.trim(),
       'bookSet': bookSet.trim(),
-      'teacherId': user?.id ?? '',
+      'teacherId': teacherId ?? user?.id ?? '',
       'teacherName': teacherName ?? user?.displayName ?? 'Giáo viên',
       'teacherEmail': teacherEmail ?? user?.email ?? '',
       'code': code,
@@ -2453,9 +2777,12 @@ class RbacProctorAiService {
         'teacherName': newClass['teacherName'],
         'teacherEmail': newClass['teacherEmail'],
       });
-      if (res.isSuccess && (res.data?['classItem'] is Map || res.data?['class'] is Map)) {
+      if (res.isSuccess &&
+          (res.data?['classItem'] is Map || res.data?['class'] is Map)) {
         final rawServer = (res.data?['classItem'] ?? res.data?['class']) as Map;
-        final serverClass = _normalizeClassMap(Map<String, dynamic>.from(rawServer));
+        final serverClass = _normalizeClassMap(
+          Map<String, dynamic>.from(rawServer),
+        );
         classes[0] = serverClass;
         await _repo.setSetting('admin_classes_json', jsonEncode(classes));
         unawaited(syncAllClassesToCloud());
@@ -2471,23 +2798,33 @@ class RbacProctorAiService {
   Future<Map<String, dynamic>> syncAllClassesToCloud() async {
     final classes = await getClasses();
     if (classes.isEmpty) {
-      return {'ok': true, 'count': 0, 'message': 'Không có lớp học nào để đồng bộ.'};
+      return {
+        'ok': true,
+        'count': 0,
+        'message': 'Không có lớp học nào để đồng bộ.',
+      };
     }
     try {
       final client = await _client();
-      final res = await client.postJson('/classes/batch-sync', {'classes': classes});
+      final res = await client.postJson('/classes/batch-sync', {
+        'classes': classes,
+      });
       if (res.isSuccess && res.data != null) {
-        final count = (res.data!['syncedCount'] as num?)?.toInt() ?? classes.length;
+        final count =
+            (res.data!['syncedCount'] as num?)?.toInt() ?? classes.length;
         return {
           'ok': true,
           'count': count,
-          'message': res.data!['message'] ?? 'Đã đồng bộ $count lớp học lên Cloud thành công!',
+          'message':
+              res.data!['message'] ??
+              'Đã đồng bộ $count lớp học lên Cloud thành công!',
         };
       }
       return {
         'ok': false,
         'count': 0,
-        'message': res.data?['error']?.toString() ?? 'Máy chủ Cloud từ chối đồng bộ.',
+        'message':
+            res.data?['error']?.toString() ?? 'Máy chủ Cloud từ chối đồng bộ.',
       };
     } catch (e) {
       return {
@@ -2502,6 +2839,7 @@ class RbacProctorAiService {
     required String classId,
     String? name,
     String? schoolName,
+    String? teacherId,
     String? teacherName,
     String? teacherEmail,
     String? joinCode,
@@ -2517,6 +2855,7 @@ class RbacProctorAiService {
     final cur = Map<String, dynamic>.from(classes[idx]);
     if (name != null) cur['name'] = name.trim();
     if (schoolName != null) cur['schoolName'] = schoolName.trim();
+    if (teacherId != null) cur['teacherId'] = teacherId.trim();
     if (teacherName != null) cur['teacherName'] = teacherName.trim();
     if (teacherEmail != null) cur['teacherEmail'] = teacherEmail.trim();
     if (joinCode != null) cur['code'] = joinCode.trim().toUpperCase();
@@ -2532,7 +2871,8 @@ class RbacProctorAiService {
       action: 'UPDATE_CLASS',
       targetType: 'class',
       targetId: classId,
-      details: 'Cập nhật lớp học "${cur['name']}" (Mã: ${cur['code']}, Trạng thái: ${cur['status']})',
+      details:
+          'Cập nhật lớp học "${cur['name']}" (Mã: ${cur['code']}, Trạng thái: ${cur['status']})',
     );
 
     try {
@@ -2540,6 +2880,7 @@ class RbacProctorAiService {
       await client.putJson('/classes/$classId', {
         'name': cur['name'],
         'schoolName': cur['schoolName'],
+        'teacherId': cur['teacherId'],
         'teacherName': cur['teacherName'],
         'teacherEmail': cur['teacherEmail'],
         'joinCode': cur['code'],
@@ -2557,7 +2898,9 @@ class RbacProctorAiService {
   Future<String> regenerateClassCode(String classId) async {
     final classes = await getClasses();
     final idx = classes.indexWhere((c) => c['id'] == classId);
-    final className = idx >= 0 ? (classes[idx]['name'] ?? 'CLASS').toString() : 'CLASS';
+    final className = idx >= 0
+        ? (classes[idx]['name'] ?? 'CLASS').toString()
+        : 'CLASS';
     final newCode = generateClassJoinCode(className);
     await updateClass(classId: classId, joinCode: newCode);
     return newCode;
@@ -2567,7 +2910,9 @@ class RbacProctorAiService {
   Future<bool> deleteClass(String classId) async {
     final classes = await getClasses();
     final idx = classes.indexWhere(
-      (c) => c['id'].toString() == classId.toString() || (c['code'] ?? '').toString() == classId.toString(),
+      (c) =>
+          c['id'].toString() == classId.toString() ||
+          (c['code'] ?? '').toString() == classId.toString(),
     );
 
     // Lưu ID và mã lớp vào danh sách đã xóa vĩnh viễn để chống auto-fetch hồi sinh
@@ -2575,7 +2920,9 @@ class RbacProctorAiService {
     final Set<String> deletedIds = {};
     if (delRaw != null && delRaw.isNotEmpty) {
       try {
-        deletedIds.addAll((jsonDecode(delRaw) as List).map((e) => e.toString()));
+        deletedIds.addAll(
+          (jsonDecode(delRaw) as List).map((e) => e.toString()),
+        );
       } catch (_) {}
     }
     deletedIds.add(classId.toString());
@@ -2591,18 +2938,31 @@ class RbacProctorAiService {
         action: 'DELETE_CLASS',
         targetType: 'class',
         targetId: classId,
-        details: 'Giải tán / Xóa lớp học "${removed['name']}" (Mã: ${removed['code']})',
+        details:
+            'Giải tán / Xóa lớp học "${removed['name']}" (Mã: ${removed['code']})',
       );
     }
-    await _repo.setSetting('deleted_class_ids_json', jsonEncode(deletedIds.toList()));
+    await _repo.setSetting(
+      'deleted_class_ids_json',
+      jsonEncode(deletedIds.toList()),
+    );
 
     // Xóa khỏi danh sách lớp đã tham gia của học sinh
     final joinedRaw = await _repo.getSetting('student_joined_classes_json');
     if (joinedRaw != null && joinedRaw.isNotEmpty) {
       try {
-        final jList = (jsonDecode(joinedRaw) as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
-        jList.removeWhere((c) => c['id'].toString() == classId.toString() || (c['code'] ?? '').toString() == classId.toString());
-        await _repo.setSetting('student_joined_classes_json', jsonEncode(jList));
+        final jList = (jsonDecode(joinedRaw) as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+        jList.removeWhere(
+          (c) =>
+              c['id'].toString() == classId.toString() ||
+              (c['code'] ?? '').toString() == classId.toString(),
+        );
+        await _repo.setSetting(
+          'student_joined_classes_json',
+          jsonEncode(jList),
+        );
       } catch (_) {}
     }
 
@@ -2624,21 +2984,33 @@ class RbacProctorAiService {
     final Set<String> deletedIds = {};
     if (delRaw != null && delRaw.isNotEmpty) {
       try {
-        deletedIds.addAll((jsonDecode(delRaw) as List).map((e) => e.toString()));
+        deletedIds.addAll(
+          (jsonDecode(delRaw) as List).map((e) => e.toString()),
+        );
       } catch (_) {}
     }
 
     // 1. Thử gọi API lấy lớp học từ server Neon
     try {
       final client = await _client();
-      final res = await client.getJson('/classes', timeout: const Duration(seconds: 6));
+      final res = await client.getJson(
+        '/classes',
+        timeout: const Duration(seconds: 6),
+      );
       if (res.isSuccess && res.data?['classes'] is List) {
         final serverList = (res.data!['classes'] as List)
             .map((e) => _normalizeClassMap(Map<String, dynamic>.from(e as Map)))
-            .where((c) => !deletedIds.contains(c['id'].toString()) && !deletedIds.contains((c['code'] ?? '').toString()))
+            .where(
+              (c) =>
+                  !deletedIds.contains(c['id'].toString()) &&
+                  !deletedIds.contains((c['code'] ?? '').toString()),
+            )
             .toList();
         if (serverList.isNotEmpty) {
-          await _repo.setSetting('student_joined_classes_json', jsonEncode(serverList));
+          await _repo.setSetting(
+            'student_joined_classes_json',
+            jsonEncode(serverList),
+          );
           return serverList;
         }
       }
@@ -2651,7 +3023,11 @@ class RbacProctorAiService {
         final decoded = jsonDecode(cached) as List;
         final list = decoded
             .map((e) => Map<String, dynamic>.from(e as Map))
-            .where((c) => !deletedIds.contains(c['id'].toString()) && !deletedIds.contains((c['code'] ?? '').toString()))
+            .where(
+              (c) =>
+                  !deletedIds.contains(c['id'].toString()) &&
+                  !deletedIds.contains((c['code'] ?? '').toString()),
+            )
             .toList();
         if (list.isNotEmpty) return list;
       } catch (_) {}
@@ -2667,7 +3043,10 @@ class RbacProctorAiService {
       final members = await getClassMembers(cid, syncRemote: false);
       final matchedMember = members.where((m) {
         final mId = (m['studentId'] ?? '').toString();
-        final mEmail = (m['studentEmail'] ?? '').toString().trim().toLowerCase();
+        final mEmail = (m['studentEmail'] ?? '')
+            .toString()
+            .trim()
+            .toLowerCase();
         return (studentId.isNotEmpty && mId == studentId) ||
             (studentEmail.isNotEmpty && mEmail == studentEmail);
       }).firstOrNull;
@@ -2690,7 +3069,9 @@ class RbacProctorAiService {
 
     final user = await _repo.getAuthUser();
     final studentId = user?.id ?? 'usr_student_local';
-    final studentName = (user?.displayName.isNotEmpty == true) ? user!.displayName : 'Học sinh';
+    final studentName = (user?.displayName.isNotEmpty == true)
+        ? user!.displayName
+        : 'Học sinh';
     final studentEmail = user?.email ?? '';
 
     // 1. Gửi request tham gia lớp học lên Cloud Backend Render
@@ -2703,10 +3084,15 @@ class RbacProctorAiService {
         'studentEmail': studentEmail,
       });
       if (res.isSuccess && res.data != null) {
-        final rawStatus = res.data!['membership']?['status'] ?? res.data!['memberStatus'] ?? 'approved';
+        final rawStatus =
+            res.data!['membership']?['status'] ??
+            res.data!['memberStatus'] ??
+            'approved';
         final status = (rawStatus == 'active') ? 'approved' : rawStatus;
         final classData = res.data!['classItem'] ?? res.data!['class'];
-        final classMap = classData is Map ? _normalizeClassMap(Map<String, dynamic>.from(classData)) : null;
+        final classMap = classData is Map
+            ? _normalizeClassMap(Map<String, dynamic>.from(classData))
+            : null;
         if (classMap != null) {
           classMap['membershipStatus'] = status;
           final myJoined = await getMyJoinedClasses();
@@ -2716,7 +3102,10 @@ class RbacProctorAiService {
           } else {
             myJoined.insert(0, classMap);
           }
-          await _repo.setSetting('student_joined_classes_json', jsonEncode(myJoined));
+          await _repo.setSetting(
+            'student_joined_classes_json',
+            jsonEncode(myJoined),
+          );
         }
         return {
           'ok': true,
@@ -2728,7 +3117,9 @@ class RbacProctorAiService {
       if (res.statusCode == 401 || res.statusCode == 403) {
         return {
           'ok': false,
-          'message': res.errorMessage ?? 'Phiên đăng nhập không hợp lệ hoặc tài khoản không được phép tham gia lớp.',
+          'message':
+              res.errorMessage ??
+              'Phiên đăng nhập không hợp lệ hoặc tài khoản không được phép tham gia lớp.',
         };
       }
 
@@ -2736,11 +3127,19 @@ class RbacProctorAiService {
       final lookupRes = await client.getJson('/classes/lookup/$cleanCode');
       if (lookupRes.isSuccess && lookupRes.data?['classItem'] is Map) {
         final rawLookup = lookupRes.data!['classItem'] as Map;
-        final cloudClass = _normalizeClassMap(Map<String, dynamic>.from(rawLookup));
-        if (cloudClass['allowJoin'] == false || cloudClass['status'] == 'archived') {
-          return {'ok': false, 'message': 'Lớp học này hiện đã đóng nhận học sinh mới.'};
+        final cloudClass = _normalizeClassMap(
+          Map<String, dynamic>.from(rawLookup),
+        );
+        if (cloudClass['allowJoin'] == false ||
+            cloudClass['status'] == 'archived') {
+          return {
+            'ok': false,
+            'message': 'Lớp học này hiện đã đóng nhận học sinh mới.',
+          };
         }
-        final status = cloudClass['requireApproval'] == true ? 'pending' : 'approved';
+        final status = cloudClass['requireApproval'] == true
+            ? 'pending'
+            : 'approved';
         cloudClass['membershipStatus'] = status;
 
         final myJoined = await getMyJoinedClasses();
@@ -2750,13 +3149,17 @@ class RbacProctorAiService {
         } else {
           myJoined.insert(0, cloudClass);
         }
-        await _repo.setSetting('student_joined_classes_json', jsonEncode(myJoined));
+        await _repo.setSetting(
+          'student_joined_classes_json',
+          jsonEncode(myJoined),
+        );
 
         await recordAuditLog(
           action: 'STUDENT_JOIN_CLASS_CLOUD',
           targetType: 'class',
           targetId: cloudClass['id'].toString(),
-          details: '$studentName tham gia lớp ${cloudClass['name']} từ Cloud Render qua mã $cleanCode ($status)',
+          details:
+              '$studentName tham gia lớp ${cloudClass['name']} từ Cloud Render qua mã $cleanCode ($status)',
         );
 
         return {
@@ -2770,23 +3173,35 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
-    String norm(String s) => s.replaceAll('-', '').replaceAll(' ', '').toUpperCase();
+    String norm(String s) =>
+        s.replaceAll('-', '').replaceAll(' ', '').toUpperCase();
     final cleanNorm = norm(cleanCode);
 
     final classes = await getClasses();
-    final targetClass = classes.where(
-      (c) => norm((c['code'] ?? c['joinCode'] ?? c['join_code'] ?? '').toString()) == cleanNorm,
-    ).firstOrNull;
+    final targetClass = classes
+        .where(
+          (c) =>
+              norm(
+                (c['code'] ?? c['joinCode'] ?? c['join_code'] ?? '').toString(),
+              ) ==
+              cleanNorm,
+        )
+        .firstOrNull;
 
     if (targetClass == null) {
       return {
         'ok': false,
-        'message': 'Không tìm thấy lớp học với mã "$cleanCode". '
+        'message':
+            'Không tìm thấy lớp học với mã "$cleanCode". '
             'Vui lòng kiểm tra lại mã lớp hoặc yêu cầu giáo viên mở tab Lớp học trên điện thoại để đồng bộ lên hệ thống trước.',
       };
     }
-    if (targetClass['allowJoin'] == false || targetClass['status'] == 'archived') {
-      return {'ok': false, 'message': 'Lớp học này hiện đã đóng nhận học sinh mới.'};
+    if (targetClass['allowJoin'] == false ||
+        targetClass['status'] == 'archived') {
+      return {
+        'ok': false,
+        'message': 'Lớp học này hiện đã đóng nhận học sinh mới.',
+      };
     }
 
     final classId = targetClass['id'].toString();
@@ -2796,13 +3211,21 @@ class RbacProctorAiService {
     final stats = await _repo.getOverallStats();
     final totalDone = (stats['totalDone'] as num?)?.toInt() ?? 0;
     final totalCorrect = (stats['totalCorrect'] as num?)?.toInt() ?? 0;
-    final avgScore = totalDone > 0 ? double.parse(((totalCorrect / totalDone) * 10).toStringAsFixed(1)) : 0.0;
+    final avgScore = totalDone > 0
+        ? double.parse(((totalCorrect / totalDone) * 10).toStringAsFixed(1))
+        : 0.0;
     final streakDays = (stats['streak'] as num?)?.toInt() ?? 0;
 
     final members = await getClassMembers(classId, syncRemote: false);
-    final existingIdx = members.indexWhere((m) => m['studentId'] == studentId || (studentEmail.isNotEmpty && m['studentEmail'] == studentEmail));
+    final existingIdx = members.indexWhere(
+      (m) =>
+          m['studentId'] == studentId ||
+          (studentEmail.isNotEmpty && m['studentEmail'] == studentEmail),
+    );
     final memberItem = {
-      'id': existingIdx >= 0 ? members[existingIdx]['id'] : 'cm_${DateTime.now().millisecondsSinceEpoch}',
+      'id': existingIdx >= 0
+          ? members[existingIdx]['id']
+          : 'cm_${DateTime.now().millisecondsSinceEpoch}',
       'classId': classId,
       'studentId': studentId,
       'studentName': studentName,
@@ -2840,7 +3263,8 @@ class RbacProctorAiService {
       action: 'STUDENT_JOIN_CLASS',
       targetType: 'class',
       targetId: classId,
-      details: '$studentName tham gia lớp ${targetClass['name']} bằng mã $cleanCode ($status)',
+      details:
+          '$studentName tham gia lớp ${targetClass['name']} bằng mã $cleanCode ($status)',
     );
 
     return {
@@ -2853,7 +3277,10 @@ class RbacProctorAiService {
     };
   }
 
-  Future<List<Map<String, dynamic>>> getClassMembers(String classId, {bool syncRemote = true}) async {
+  Future<List<Map<String, dynamic>>> getClassMembers(
+    String classId, {
+    bool syncRemote = true,
+  }) async {
     final raw = await _repo.getSetting('class_members_$classId');
     List<Map<String, dynamic>> list = [];
     if (raw != null && raw.isNotEmpty) {
@@ -2866,7 +3293,10 @@ class RbacProctorAiService {
     if (syncRemote) {
       try {
         final client = await _client();
-        final res = await client.getJson('/classes/$classId/members', timeout: const Duration(seconds: 5));
+        final res = await client.getJson(
+          '/classes/$classId/members',
+          timeout: const Duration(seconds: 5),
+        );
         if (res.isSuccess && res.data?['members'] is List) {
           final serverList = (res.data!['members'] as List).map((e) {
             final m = Map<String, dynamic>.from(e as Map);
@@ -2874,13 +3304,22 @@ class RbacProctorAiService {
               'id': (m['id'] ?? '').toString(),
               'classId': (m['class_id'] ?? m['classId'] ?? classId).toString(),
               'studentId': (m['student_id'] ?? m['studentId'] ?? '').toString(),
-              'studentName': (m['student_name'] ?? m['studentName'] ?? '').toString(),
-              'studentEmail': (m['student_email'] ?? m['studentEmail'] ?? '').toString(),
+              'studentName': (m['student_name'] ?? m['studentName'] ?? '')
+                  .toString(),
+              'studentEmail': (m['student_email'] ?? m['studentEmail'] ?? '')
+                  .toString(),
               'status': (m['status'] ?? 'approved').toString(),
-              'streakDays': (m['streak_days'] ?? m['streakDays'] ?? 0 as num).toInt(),
-              'avgScore': (m['avg_score'] ?? m['avgScore'] ?? 0.0 as num).toDouble(),
-              'overdueCount': (m['overdue_count'] ?? m['overdueCount'] ?? 0 as num).toInt(),
-              'joinedAt': (m['joined_at'] ?? m['joinedAt'] ?? DateTime.now().toIso8601String()).toString(),
+              'streakDays': (m['streak_days'] ?? m['streakDays'] ?? 0 as num)
+                  .toInt(),
+              'avgScore': (m['avg_score'] ?? m['avgScore'] ?? 0.0 as num)
+                  .toDouble(),
+              'overdueCount':
+                  (m['overdue_count'] ?? m['overdueCount'] ?? 0 as num).toInt(),
+              'joinedAt':
+                  (m['joined_at'] ??
+                          m['joinedAt'] ??
+                          DateTime.now().toIso8601String())
+                      .toString(),
             };
           }).toList();
           if (serverList.isNotEmpty) {
@@ -2910,7 +3349,10 @@ class RbacProctorAiService {
     return list;
   }
 
-  Future<void> _saveClassMembersLocal(String classId, List<Map<String, dynamic>> members) async {
+  Future<void> _saveClassMembersLocal(
+    String classId,
+    List<Map<String, dynamic>> members,
+  ) async {
     await _repo.setSetting('class_members_$classId', jsonEncode(members));
   }
 
@@ -2958,15 +3400,20 @@ class RbacProctorAiService {
     await getClasses();
 
     await recordAuditLog(
-      action: status == 'approved' ? 'APPROVE_CLASS_MEMBER' : 'REJECT_CLASS_MEMBER',
+      action: status == 'approved'
+          ? 'APPROVE_CLASS_MEMBER'
+          : 'REJECT_CLASS_MEMBER',
       targetType: 'class_member',
       targetId: memberId,
-      details: '${status == 'approved' ? "Duyệt" : "Từ chối"} học sinh $memberId vào lớp $classId',
+      details:
+          '${status == 'approved' ? "Duyệt" : "Từ chối"} học sinh $memberId vào lớp $classId',
     );
 
     try {
       final client = await _client();
-      await client.postJson('/classes/$classId/members/$memberId/decision', {'status': status});
+      await client.postJson('/classes/$classId/members/$memberId/decision', {
+        'status': status,
+      });
     } catch (_) {}
   }
 
@@ -2987,8 +3434,13 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      final q = classId != null && classId.isNotEmpty ? '?classId=$classId' : '';
-      final res = await client.getJson('/assignments$q', timeout: const Duration(seconds: 5));
+      final q = classId != null && classId.isNotEmpty
+          ? '?classId=$classId'
+          : '';
+      final res = await client.getJson(
+        '/assignments$q',
+        timeout: const Duration(seconds: 5),
+      );
       if (res.isSuccess && res.data?['assignments'] is List) {
         final serverList = (res.data!['assignments'] as List).map((e) {
           final m = Map<String, dynamic>.from(e as Map);
@@ -2997,15 +3449,34 @@ class RbacProctorAiService {
             'title': (m['title'] ?? '').toString(),
             'classId': (m['class_id'] ?? m['classId'] ?? '').toString(),
             'className': (m['class_name'] ?? m['className'] ?? '').toString(),
-            'contentType': (m['content_type'] ?? m['contentType'] ?? 'unit').toString(),
-            'unitNumber': (m['unit_number'] ?? m['unitNumber'] ?? 1 as num).toInt(),
-            'skills': (m['skills'] as List?)?.map((s) => s.toString()).toList() ?? ['reading'],
-            'dueAt': (m['due_at'] ?? m['dueAt'] ?? DateTime.now().add(const Duration(days: 3)).toIso8601String()).toString(),
-            'maxAttempts': (m['max_attempts'] ?? m['maxAttempts'] ?? 2 as num).toInt(),
-            'showAnswerMode': (m['show_answer_mode'] ?? m['showAnswerMode'] ?? 'after_submit').toString(),
+            'contentType': (m['content_type'] ?? m['contentType'] ?? 'unit')
+                .toString(),
+            'unitNumber': (m['unit_number'] ?? m['unitNumber'] ?? 1 as num)
+                .toInt(),
+            'skills':
+                (m['skills'] as List?)?.map((s) => s.toString()).toList() ??
+                ['reading'],
+            'dueAt':
+                (m['due_at'] ??
+                        m['dueAt'] ??
+                        DateTime.now()
+                            .add(const Duration(days: 3))
+                            .toIso8601String())
+                    .toString(),
+            'maxAttempts': (m['max_attempts'] ?? m['maxAttempts'] ?? 2 as num)
+                .toInt(),
+            'showAnswerMode':
+                (m['show_answer_mode'] ?? m['showAnswerMode'] ?? 'after_submit')
+                    .toString(),
             'status': (m['status'] ?? 'open').toString(),
-            'submittedCount': (m['submitted_count'] ?? m['submittedCount'] ?? 0 as num).toInt(),
-            'createdAt': (m['created_at'] ?? m['createdAt'] ?? DateTime.now().toIso8601String()).toString(),
+            'submittedCount':
+                (m['submitted_count'] ?? m['submittedCount'] ?? 0 as num)
+                    .toInt(),
+            'createdAt':
+                (m['created_at'] ??
+                        m['createdAt'] ??
+                        DateTime.now().toIso8601String())
+                    .toString(),
           };
         }).toList();
         if (serverList.isNotEmpty) {
@@ -3026,7 +3497,9 @@ class RbacProctorAiService {
     for (int i = 0; i < list.length; i++) {
       final a = Map<String, dynamic>.from(list[i]);
       final aid = a['id'].toString();
-      final subCount = submissions.where((s) => s['assignmentId'] == aid).length;
+      final subCount = submissions
+          .where((s) => s['assignmentId'] == aid)
+          .length;
       if (subCount > 0) {
         a['submittedCount'] = subCount;
       }
@@ -3090,7 +3563,8 @@ class RbacProctorAiService {
       action: 'CREATE_ASSIGNMENT',
       targetType: 'assignment',
       targetId: item['id'].toString(),
-      details: 'Giao bài "${item['title']}" cho lớp $className (Unit $unitNumber)',
+      details:
+          'Giao bài "${item['title']}" cho lớp $className (Unit $unitNumber)',
     );
 
     try {
@@ -3199,10 +3673,15 @@ class RbacProctorAiService {
     }
 
     return subs.where((s) {
-      if (classId != null && classId.isNotEmpty && classId != 'all' && s['classId'] != classId) {
+      if (classId != null &&
+          classId.isNotEmpty &&
+          classId != 'all' &&
+          s['classId'] != classId) {
         return false;
       }
-      if (assignmentId != null && assignmentId.isNotEmpty && s['assignmentId'] != assignmentId) {
+      if (assignmentId != null &&
+          assignmentId.isNotEmpty &&
+          s['assignmentId'] != assignmentId) {
         return false;
       }
       return true;
@@ -3222,7 +3701,10 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      final res = await client.getJson('/bug-reports', timeout: const Duration(seconds: 5));
+      final res = await client.getJson(
+        '/bug-reports',
+        timeout: const Duration(seconds: 5),
+      );
       if (res.isSuccess && res.data?['reports'] is List) {
         final serverList = (res.data!['reports'] as List)
             .map((e) => Map<String, dynamic>.from(e as Map))
@@ -3275,7 +3757,9 @@ class RbacProctorAiService {
       'skill': skill,
       'issueType': issueType,
       'reason': reason.trim(),
-      'reporter': user?.displayName.isNotEmpty == true ? user!.displayName : (user?.email ?? 'Học sinh'),
+      'reporter': user?.displayName.isNotEmpty == true
+          ? user!.displayName
+          : (user?.email ?? 'Học sinh'),
       'status': 'open',
       'reportCount': 1,
       'createdAt': DateTime.now().toIso8601String(),
@@ -3343,7 +3827,10 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      final res = await client.getJson('/announcements', timeout: const Duration(seconds: 5));
+      final res = await client.getJson(
+        '/announcements',
+        timeout: const Duration(seconds: 5),
+      );
       if (res.isSuccess && res.data?['announcements'] is List) {
         final serverList = (res.data!['announcements'] as List)
             .map((e) => Map<String, dynamic>.from(e as Map))
@@ -3423,14 +3910,20 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      final res = await client.getJson('/admin/teacher-requests', timeout: const Duration(seconds: 5));
+      final res = await client.getJson(
+        '/admin/teacher-requests',
+        timeout: const Duration(seconds: 5),
+      );
       if (res.isSuccess && res.data?['requests'] is List) {
         final serverList = (res.data!['requests'] as List)
             .map((e) => Map<String, dynamic>.from(e as Map))
             .toList();
         if (serverList.isNotEmpty) {
           list = serverList;
-          await _repo.setSetting('admin_teacher_requests_json', jsonEncode(list));
+          await _repo.setSetting(
+            'admin_teacher_requests_json',
+            jsonEncode(list),
+          );
         }
       }
     } catch (_) {}
@@ -3470,7 +3963,8 @@ class RbacProctorAiService {
       await createAdminUser(
         email: (request['email'] ?? '').toString(),
         password: pwd,
-        displayName: (request['display_name'] ?? request['displayName'] ?? '').toString(),
+        displayName: (request['display_name'] ?? request['displayName'] ?? '')
+            .toString(),
         role: 'teacher',
       );
     } else {
@@ -3484,9 +3978,10 @@ class RbacProctorAiService {
 
     try {
       final client = await _client();
-      await client.postJson('/admin/teacher-requests/${request['id']}/decision', {
-        'approve': approve,
-      });
+      await client.postJson(
+        '/admin/teacher-requests/${request['id']}/decision',
+        {'approve': approve},
+      );
     } catch (_) {}
   }
 
@@ -3502,7 +3997,11 @@ class RbacProctorAiService {
       try {
         final decoded = jsonDecode(raw) as List;
         list = decoded
-            .map((e) => ClassReminderModel.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => ClassReminderModel.fromMap(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
       } catch (_) {}
     }
@@ -3510,18 +4009,28 @@ class RbacProctorAiService {
     // Thử đồng bộ từ Backend Render nếu có kết nối
     try {
       final client = await _client();
-      final res = await client.getJson('/announcements', timeout: const Duration(seconds: 4));
+      final res = await client.getJson(
+        '/announcements',
+        timeout: const Duration(seconds: 4),
+      );
       if (res.isSuccess && res.data?['announcements'] is List) {
         final serverList = (res.data!['announcements'] as List)
             .where((a) => (a['type'] ?? '') == 'class_reminder')
-            .map((a) => ClassReminderModel.fromMap(Map<String, dynamic>.from(a as Map)))
+            .map(
+              (a) => ClassReminderModel.fromMap(
+                Map<String, dynamic>.from(a as Map),
+              ),
+            )
             .toList();
         for (final sItem in serverList) {
           if (!list.any((l) => l.id == sItem.id)) {
             list.add(sItem);
           }
         }
-        await _repo.setSetting('class_reminders_json', jsonEncode(list.map((e) => e.toMap()).toList()));
+        await _repo.setSetting(
+          'class_reminders_json',
+          jsonEncode(list.map((e) => e.toMap()).toList()),
+        );
       }
     } catch (_) {}
 
@@ -3545,7 +4054,11 @@ class RbacProctorAiService {
     String? teacherEmail,
   }) async {
     final user = await _repo.getAuthUser();
-    final cleanTeacherName = teacherName ?? (user?.displayName.isNotEmpty == true ? user!.displayName : 'Giáo viên');
+    final cleanTeacherName =
+        teacherName ??
+        (user?.displayName.isNotEmpty == true
+            ? user!.displayName
+            : 'Giáo viên');
     final cleanTeacherEmail = teacherEmail ?? (user?.email ?? '');
 
     final reminder = ClassReminderModel(
@@ -3563,7 +4076,10 @@ class RbacProctorAiService {
 
     final list = await getClassReminders();
     list.insert(0, reminder);
-    await _repo.setSetting('class_reminders_json', jsonEncode(list.map((e) => e.toMap()).toList()));
+    await _repo.setSetting(
+      'class_reminders_json',
+      jsonEncode(list.map((e) => e.toMap()).toList()),
+    );
 
     // Đồng bộ lên Backend Render qua hệ thống Announcements
     try {
@@ -3594,7 +4110,8 @@ class RbacProctorAiService {
       action: 'CREATE_CLASS_REMINDER',
       targetType: 'class_reminder',
       targetId: reminder.id,
-      details: '$cleanTeacherName tạo lịch nhắc hẹn "$title" cho $className lúc ${scheduledAt.toIso8601String()}',
+      details:
+          '$cleanTeacherName tạo lịch nhắc hẹn "$title" cho $className lúc ${scheduledAt.toIso8601String()}',
     );
 
     return reminder;
@@ -3608,21 +4125,27 @@ class RbacProctorAiService {
       final item = list[idx];
       await NotificationService().cancelNotification(item.notificationId);
       list.removeAt(idx);
-      await _repo.setSetting('class_reminders_json', jsonEncode(list.map((e) => e.toMap()).toList()));
+      await _repo.setSetting(
+        'class_reminders_json',
+        jsonEncode(list.map((e) => e.toMap()).toList()),
+      );
     }
   }
 
   /// Học viên đồng bộ lịch nhắc hẹn từ các lớp học mình tham gia vào hệ điều hành
   Future<int> syncStudentClassReminders(String userId) async {
     final myClasses = await getMyJoinedClasses();
-    final joinedClassIds = myClasses.map((c) => (c['id'] ?? '').toString()).toSet();
+    final joinedClassIds = myClasses
+        .map((c) => (c['id'] ?? '').toString())
+        .toSet();
     final allReminders = await getClassReminders();
 
     int scheduledCount = 0;
     for (final reminder in allReminders) {
       if (!reminder.isActive) continue;
       // Nếu học sinh thuộc lớp này (hoặc chưa phân lớp nhưng có lịch demo)
-      final isMember = joinedClassIds.isEmpty || joinedClassIds.contains(reminder.classId);
+      final isMember =
+          joinedClassIds.isEmpty || joinedClassIds.contains(reminder.classId);
       if (isMember && reminder.scheduledAt.isAfter(DateTime.now())) {
         final success = await NotificationService().scheduleClassReminder(
           id: reminder.notificationId,
@@ -3665,7 +4188,9 @@ class RbacProctorAiService {
   }
 
   /// Tra cứu tiến độ học tập chi tiết của học sinh từ Cloud Render
-  Future<Map<String, dynamic>?> getStudentCloudProgress(String identifier) async {
+  Future<Map<String, dynamic>?> getStudentCloudProgress(
+    String identifier,
+  ) async {
     if (identifier.trim().isEmpty) return null;
     try {
       final client = await _client();
@@ -3703,8 +4228,11 @@ class RbacProctorAiService {
     for (int u = 1; u <= 10; u++) {
       // Kiểm tra bài học thử đọc hiểu trial
       final trialDone = await _repo.getCompletedTrialLessonId(userId);
-      final trialEmailDone = userEmail.isNotEmpty ? await _repo.getCompletedTrialLessonId(userEmail) : null;
-      if (trialDone == 'trial_unit${u}_reading' || trialEmailDone == 'trial_unit${u}_reading') {
+      final trialEmailDone = userEmail.isNotEmpty
+          ? await _repo.getCompletedTrialLessonId(userEmail)
+          : null;
+      if (trialDone == 'trial_unit${u}_reading' ||
+          trialEmailDone == 'trial_unit${u}_reading') {
         sectionsToSync.add({
           'unitNumber': u,
           'sectionName': 'reading',
@@ -3714,8 +4242,14 @@ class RbacProctorAiService {
       }
 
       for (final sec in sectionKeys) {
-        final pId = await _repo.getSetting('unit_section_progress_${userId}_u${u}_$sec');
-        final pEmail = userEmail.isNotEmpty ? await _repo.getSetting('unit_section_progress_${userEmail}_u${u}_$sec') : null;
+        final pId = await _repo.getSetting(
+          'unit_section_progress_${userId}_u${u}_$sec',
+        );
+        final pEmail = userEmail.isNotEmpty
+            ? await _repo.getSetting(
+                'unit_section_progress_${userEmail}_u${u}_$sec',
+              )
+            : null;
         if (pId == 'completed' || pEmail == 'completed') {
           sectionsToSync.add({
             'unitNumber': u,
@@ -3746,7 +4280,8 @@ class RbacProctorAiService {
         'sections': sectionsToSync,
       });
       if (res.isSuccess) {
-        return (res.data?['syncedCount'] as num?)?.toInt() ?? sectionsToSync.length;
+        return (res.data?['syncedCount'] as num?)?.toInt() ??
+            sectionsToSync.length;
       }
     } catch (_) {}
 
@@ -3754,15 +4289,20 @@ class RbacProctorAiService {
   }
 
   /// Kiểm tra trạng thái khóa tài khoản thời gian thực từ Cloud PostgreSQL
-  Future<Map<String, dynamic>> checkRemoteAccountLockStatus(String email, {String? userId}) async {
+  Future<Map<String, dynamic>> checkRemoteAccountLockStatus(
+    String email, {
+    String? userId,
+  }) async {
     if (email.trim().isEmpty && (userId == null || userId.trim().isEmpty)) {
       return {'isLocked': false};
     }
     try {
       final client = await _client();
       final q = <String>[];
-      if (email.trim().isNotEmpty) q.add('email=${Uri.encodeComponent(email.trim())}');
-      if (userId != null && userId.trim().isNotEmpty) q.add('userId=${Uri.encodeComponent(userId.trim())}');
+      if (email.trim().isNotEmpty)
+        q.add('email=${Uri.encodeComponent(email.trim())}');
+      if (userId != null && userId.trim().isNotEmpty)
+        q.add('userId=${Uri.encodeComponent(userId.trim())}');
       final res = await client.getJson(
         '/auth/check-lock?${q.join('&')}',
         timeout: const Duration(seconds: 4),

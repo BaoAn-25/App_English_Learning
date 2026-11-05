@@ -2323,6 +2323,17 @@ Trả về JSON thuần túy theo cấu trúc:
       return res.status(400).json({ error: 'Vui lòng nhập tên lớp học.' });
     }
     try {
+      let selectedTeacher = null;
+      if (teacherId) {
+        const teacherRes = await pool.query(
+          "SELECT id, email, display_name FROM users WHERE id = $1 AND role = 'teacher' AND is_locked = FALSE",
+          [teacherId]
+        );
+        if (teacherRes.rows.length === 0) {
+          return res.status(400).json({ error: 'Tài khoản giáo viên được chọn không hợp lệ hoặc đã bị khóa.' });
+        }
+        selectedTeacher = teacherRes.rows[0];
+      }
       // Nhận diện user nếu có token (không ép buộc gây chặn lưu trên Cloud)
       let authUser = null;
       try {
@@ -2337,8 +2348,10 @@ Trả về JSON thuần túy theo cấu trúc:
         : `ENG-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
       const finalAcademicYear = (schoolYear || academicYear || '2025-2026').toString().trim();
       const finalTeacherId = teacherId || (authUser?.role === 'teacher' ? authUser.id : null);
-      const finalTeacherName = teacherName || (authUser ? (authUser.displayName || authUser.email) : 'Giáo viên');
-      const finalTeacherEmail = teacherEmail || (authUser ? authUser.email : '');
+      const finalTeacherName = selectedTeacher?.display_name ||
+        teacherName ||
+        (authUser ? (authUser.displayName || authUser.email) : 'Giáo viên');
+      const finalTeacherEmail = selectedTeacher?.email || teacherEmail || (authUser ? authUser.email : '');
 
       let result;
       try {
@@ -2405,6 +2418,17 @@ Trả về JSON thuần túy theo cấu trúc:
     const { id } = req.params;
     const { name, schoolName, academicYear, joinCode, teacherId, teacherName, teacherEmail, requireApproval, showLeaderboard, allowJoin, isArchived } = req.body;
     try {
+      let selectedTeacher = null;
+      if (teacherId) {
+        const teacherRes = await pool.query(
+          "SELECT id, email, display_name FROM users WHERE id = $1 AND role = 'teacher' AND is_locked = FALSE",
+          [teacherId]
+        );
+        if (teacherRes.rows.length === 0) {
+          return res.status(400).json({ error: 'Tài khoản giáo viên được chọn không hợp lệ hoặc đã bị khóa.' });
+        }
+        selectedTeacher = teacherRes.rows[0];
+      }
       const result = await pool.query(
         `UPDATE classes
          SET name = COALESCE($1, name),
@@ -2426,8 +2450,8 @@ Trả về JSON thuần túy theo cấu trúc:
           academicYear || null,
           joinCode ? String(joinCode).trim().toUpperCase() : null,
           teacherId !== undefined ? teacherId : null,
-          teacherName !== undefined ? teacherName : null,
-          teacherEmail !== undefined ? teacherEmail : null,
+          selectedTeacher?.display_name || (teacherName !== undefined ? teacherName : null),
+          selectedTeacher?.email || (teacherEmail !== undefined ? teacherEmail : null),
           requireApproval !== undefined ? Boolean(requireApproval) : null,
           showLeaderboard !== undefined ? Boolean(showLeaderboard) : null,
           allowJoin !== undefined ? Boolean(allowJoin) : null,
@@ -2455,8 +2479,8 @@ Trả về JSON thuần túy theo cấu trúc:
             academicYear || '2025-2026',
             joinCode ? String(joinCode).trim().toUpperCase() : `ENG-${crypto.randomBytes(2).toString('hex')}`,
             teacherId || req.user.id,
-            teacherName || req.user.displayName || 'Giáo viên',
-            teacherEmail || req.user.email || '',
+            selectedTeacher?.display_name || teacherName || req.user.displayName || 'Giáo viên',
+            selectedTeacher?.email || teacherEmail || req.user.email || '',
             Boolean(requireApproval),
             Boolean(showLeaderboard ?? true),
             Boolean(allowJoin ?? true),

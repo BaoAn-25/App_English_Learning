@@ -17,11 +17,13 @@ class AdminProctorTab extends StatefulWidget {
   State<AdminProctorTab> createState() => _AdminProctorTabState();
 }
 
-class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProviderStateMixin {
+class _AdminProctorTabState extends State<AdminProctorTab>
+    with SingleTickerProviderStateMixin {
   final RbacProctorAiService _service = RbacProctorAiService.instance;
   late TabController _subTabController;
 
   List<Map<String, dynamic>> _classes = [];
+  List<Map<String, dynamic>> _teachers = [];
   List<SupervisedExamModel> _exams = [];
   List<Map<String, dynamic>> _announcements = [];
   bool _isLoading = true;
@@ -34,7 +36,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
     _subTabController = TabController(length: 3, vsync: this);
     _loadData();
     // Tự động làm mới số liệu giám sát phòng thi mỗi 10 giây (Live Proctoring)
-    final isTesting = WidgetsBinding.instance.runtimeType.toString().contains('TestWidgetsFlutterBinding');
+    final isTesting = WidgetsBinding.instance.runtimeType.toString().contains(
+      'TestWidgetsFlutterBinding',
+    );
     if (!isTesting) {
       _liveRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
         if (mounted && _subTabController.index == 1) {
@@ -57,18 +61,22 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
       final classes = await _service.getClasses();
       final exams = await _service.getSupervisedExams();
       final announcements = await _service.getAnnouncements();
+      final teachers = await _service.getAdminUsers(roleFilter: 'teacher');
 
       if (mounted) {
         setState(() {
           _classes = classes;
           _exams = exams;
           _announcements = announcements;
+          _teachers = teachers;
           _isLoading = false;
         });
       }
       // Tự động đồng bộ ngầm các lớp và bài thi giám sát lên Cloud Render
       _service.syncAllClassesToCloud().catchError((_) => <String, dynamic>{});
-      _service.syncAllSupervisedExamsToCloud().catchError((_) => <String, dynamic>{});
+      _service.syncAllSupervisedExamsToCloud().catchError(
+        (_) => <String, dynamic>{},
+      );
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -90,7 +98,11 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red,
+              size: 24,
+            ),
             const SizedBox(width: 8),
             Expanded(child: Text('Giải tán $className?')),
           ],
@@ -106,7 +118,11 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
             const SizedBox(height: 8),
             const Text(
               '• Học sinh sẽ bị gỡ khỏi danh sách lớp.\n• Mã tham gia lớp lập tức bị vô hiệu hóa.\n• Dữ liệu gắn với lớp này sẽ được làm sạch.',
-              style: TextStyle(fontSize: 12.5, color: Colors.black87, height: 1.4),
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Colors.black87,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -144,95 +160,164 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
   void _showAddClassModal() {
     final nameCtrl = TextEditingController();
     final schoolCtrl = TextEditingController(text: 'THPT Nguyễn Trãi');
-    final teacherCtrl = TextEditingController();
+    String? selectedTeacherId;
+    bool requireApproval = true;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: EdgeInsets.only(
-          top: 20,
-          left: 20,
-          right: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-        ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.class_outlined, color: Color(0xFF1E3A8A)),
-                const SizedBox(width: 8),
-                const Text('Thêm lớp học mới', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const Spacer(),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
-              ],
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Tên lớp (VD: 12A3)', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: schoolCtrl,
-              decoration: const InputDecoration(labelText: 'Trường học', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: teacherCtrl,
-              decoration: const InputDecoration(labelText: 'Giáo viên phụ trách (Tùy chọn)', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
-                onPressed: () async {
-                  if (nameCtrl.text.trim().isEmpty) return;
-                  Navigator.pop(ctx);
-                  await _service.createClass(
-                    name: nameCtrl.text.trim(),
-                    schoolName: schoolCtrl.text.trim(),
-                    teacherName: teacherCtrl.text.trim().isEmpty ? 'Chưa có GV' : teacherCtrl.text.trim(),
-                  );
-                  _loadData();
-                },
-                child: const Text('Lưu lớp học'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.class_outlined, color: Color(0xFF1E3A8A)),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Thêm lớp học mới',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 14),
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Tên lớp (VD: 12A3)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: schoolCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Trường học',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: selectedTeacherId,
+                decoration: const InputDecoration(
+                  labelText: 'Tài khoản giáo viên phụ trách',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child: Text('Chưa gán giáo viên'),
+                  ),
+                  ..._teachers.map((teacher) {
+                    final id = (teacher['id'] ?? '').toString();
+                    final name =
+                        (teacher['display_name'] ??
+                                teacher['email'] ??
+                                'Giáo viên')
+                            .toString();
+                    return DropdownMenuItem<String>(
+                      value: id,
+                      child: Text(name),
+                    );
+                  }),
+                ],
+                onChanged: (value) =>
+                    setSheetState(() => selectedTeacherId = value),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Chờ giáo viên duyệt học viên'),
+                subtitle: const Text('Tắt để nhập đúng mã là vào lớp ngay'),
+                value: requireApproval,
+                onChanged: (value) =>
+                    setSheetState(() => requireApproval = value),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E3A8A),
+                  ),
+                  onPressed: () async {
+                    if (nameCtrl.text.trim().isEmpty) return;
+                    Navigator.pop(ctx);
+                    await _service.createClass(
+                      name: nameCtrl.text.trim(),
+                      schoolName: schoolCtrl.text.trim(),
+                      teacherId: selectedTeacherId,
+                      teacherName: null,
+                      requireApproval: requireApproval,
+                    );
+                    _loadData();
+                  },
+                  child: const Text('Lưu lớp học'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _showAssignTeacherModal(Map<String, dynamic> cls) {
-    final teacherCtrl = TextEditingController(text: cls['teacherName'] == 'Chưa có GV' ? '' : (cls['teacherName'] ?? '').toString());
+    String? selectedTeacherId = (cls['teacherId'] ?? cls['teacher_id'])
+        ?.toString();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Gán giáo viên cho lớp ${cls['name']}'),
-        content: TextField(
-          controller: teacherCtrl,
-          decoration: const InputDecoration(labelText: 'Tên giáo viên phụ trách', border: OutlineInputBorder()),
+        content: DropdownButtonFormField<String>(
+          initialValue:
+              _teachers.any((t) => t['id'].toString() == selectedTeacherId)
+              ? selectedTeacherId
+              : null,
+          decoration: const InputDecoration(
+            labelText: 'Tài khoản giáo viên',
+            border: OutlineInputBorder(),
+          ),
+          items: _teachers.map((teacher) {
+            final id = (teacher['id'] ?? '').toString();
+            final name =
+                (teacher['display_name'] ?? teacher['email'] ?? 'Giáo viên')
+                    .toString();
+            return DropdownMenuItem<String>(value: id, child: Text(name));
+          }).toList(),
+          onChanged: (value) => selectedTeacherId = value,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
           FilledButton(
             onPressed: () async {
               Navigator.pop(ctx);
               await _service.updateClass(
                 classId: cls['id'].toString(),
-                teacherName: teacherCtrl.text.trim().isEmpty ? 'Chưa có GV' : teacherCtrl.text.trim(),
-                status: teacherCtrl.text.trim().isEmpty ? 'needs_teacher' : 'active',
+                teacherId: selectedTeacherId,
+                teacherName: null,
+                status: selectedTeacherId == null ? 'needs_teacher' : 'active',
               );
               _loadData();
             },
@@ -269,9 +354,15 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
   }
 
   void _showCreateSupervisedExamModal() {
-    final titleCtrl = TextEditingController(text: 'Kỳ thi Giám sát Khối 12: Đề Ôn tập Trọng điểm');
-    String selectedClassId = _classes.isNotEmpty ? _classes.first['id'].toString() : '';
-    String selectedClassName = _classes.isNotEmpty ? _classes.first['name'].toString() : 'Toàn trường';
+    final titleCtrl = TextEditingController(
+      text: 'Kỳ thi Giám sát Khối 12: Đề Ôn tập Trọng điểm',
+    );
+    String selectedClassId = _classes.isNotEmpty
+        ? _classes.first['id'].toString()
+        : '';
+    String selectedClassName = _classes.isNotEmpty
+        ? _classes.first['name'].toString()
+        : 'Toàn trường';
     int durationMinutes = 45;
     int maxAttempts = 1;
     int graceSeconds = 10;
@@ -307,10 +398,16 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     Expanded(
                       child: Text(
                         'Admin: Tạo bài thi có giám sát ${graceSeconds}s',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -331,7 +428,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       border: OutlineInputBorder(),
                     ),
                     items: [
-                      const DropdownMenuItem(value: 'ALL', child: Text('Tất cả các lớp (Toàn trường)')),
+                      const DropdownMenuItem(
+                        value: 'ALL',
+                        child: Text('Tất cả các lớp (Toàn trường)'),
+                      ),
                       ..._classes.map(
                         (c) => DropdownMenuItem(
                           value: c['id'].toString(),
@@ -341,10 +441,14 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     ],
                     onChanged: (v) {
                       if (v != null) {
-                        final found = _classes.where((c) => c['id'].toString() == v).firstOrNull;
+                        final found = _classes
+                            .where((c) => c['id'].toString() == v)
+                            .firstOrNull;
                         setSheetState(() {
                           selectedClassId = v;
-                          selectedClassName = v == 'ALL' ? 'Toàn trường' : (found?['name']?.toString() ?? '12A1');
+                          selectedClassName = v == 'ALL'
+                              ? 'Toàn trường'
+                              : (found?['name']?.toString() ?? '12A1');
                         });
                       }
                     },
@@ -355,26 +459,34 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         initialValue: durationMinutes,
-                        decoration: const InputDecoration(labelText: 'Thời gian làm bài', border: OutlineInputBorder()),
+                        decoration: const InputDecoration(
+                          labelText: 'Thời gian làm bài',
+                          border: OutlineInputBorder(),
+                        ),
                         items: const [
                           DropdownMenuItem(value: 15, child: Text('15 phút')),
                           DropdownMenuItem(value: 30, child: Text('30 phút')),
                           DropdownMenuItem(value: 45, child: Text('45 phút')),
                           DropdownMenuItem(value: 60, child: Text('60 phút')),
                         ],
-                        onChanged: (v) => setSheetState(() => durationMinutes = v ?? 45),
+                        onChanged: (v) =>
+                            setSheetState(() => durationMinutes = v ?? 45),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         initialValue: maxAttempts,
-                        decoration: const InputDecoration(labelText: 'Số lần làm', border: OutlineInputBorder()),
+                        decoration: const InputDecoration(
+                          labelText: 'Số lần làm',
+                          border: OutlineInputBorder(),
+                        ),
                         items: const [
                           DropdownMenuItem(value: 1, child: Text('1 lần')),
                           DropdownMenuItem(value: 2, child: Text('2 lần')),
                         ],
-                        onChanged: (v) => setSheetState(() => maxAttempts = v ?? 1),
+                        onChanged: (v) =>
+                            setSheetState(() => maxAttempts = v ?? 1),
                       ),
                     ),
                   ],
@@ -389,7 +501,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   ),
                   items: List.generate(
                     10,
-                    (i) => DropdownMenuItem(value: i + 1, child: Text('Unit ${i + 1} (SGK Global Success 12)')),
+                    (i) => DropdownMenuItem(
+                      value: i + 1,
+                      child: Text('Unit ${i + 1} (SGK Global Success 12)'),
+                    ),
                   ),
                   onChanged: (v) => setSheetState(() => unitForExam = v ?? 1),
                 ),
@@ -408,12 +523,19 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     children: [
                       Text(
                         'Quy chế giám sát chống gian lận (${graceSeconds}s Live Proctoring)',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E3A8A)),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF1E3A8A),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         'Thời gian cho phép quay lại khi rời ứng dụng:',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Row(
@@ -421,11 +543,14 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                           for (final sec in [5, 10, 15, 20])
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 2,
+                                ),
                                 child: ChoiceChip(
                                   label: Text('$sec s'),
                                   selected: graceSeconds == sec,
-                                  onSelected: (_) => setSheetState(() => graceSeconds = sec),
+                                  onSelected: (_) =>
+                                      setSheetState(() => graceSeconds = sec),
                                 ),
                               ),
                             ),
@@ -433,16 +558,33 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text('Tự nộp và tính điểm khi quá $graceSeconds giây', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                        subtitle: Text('Tự thu bài và ghi nhận log vi phạm sau $graceSeconds giây rời app', style: const TextStyle(fontSize: 11)),
+                        title: Text(
+                          'Tự nộp và tính điểm khi quá $graceSeconds giây',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Tự thu bài và ghi nhận log vi phạm sau $graceSeconds giây rời app',
+                          style: const TextStyle(fontSize: 11),
+                        ),
                         value: autoSubmitOnTimeout,
-                        onChanged: (v) => setSheetState(() => autoSubmitOnTimeout = v),
+                        onChanged: (v) =>
+                            setSheetState(() => autoSubmitOnTimeout = v),
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Xáo trộn thứ tự câu và đáp án', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        title: const Text(
+                          'Xáo trộn thứ tự câu và đáp án',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         value: shuffleQuestions,
-                        onChanged: (v) => setSheetState(() => shuffleQuestions = v),
+                        onChanged: (v) =>
+                            setSheetState(() => shuffleQuestions = v),
                       ),
                     ],
                   ),
@@ -452,7 +594,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   width: double.infinity,
                   height: 48,
                   child: FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E3A8A),
+                    ),
                     onPressed: () async {
                       if (titleCtrl.text.trim().isEmpty) return;
                       Navigator.pop(ctx);
@@ -465,7 +609,8 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       );
                       final created = await _service.saveSupervisedExam(
                         title: titleCtrl.text.trim(),
-                        description: 'Kỳ thi do Admin phát hành: $selectedClassName (Ân hạn rời app: $graceSeconds giây)',
+                        description:
+                            'Kỳ thi do Admin phát hành: $selectedClassName (Ân hạn rời app: $graceSeconds giây)',
                         classId: selectedClassId,
                         className: selectedClassName,
                         durationMinutes: durationMinutes,
@@ -474,14 +619,18 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         maxViolations: 2,
                         maxAttempts: maxAttempts,
                         shuffleQuestions: shuffleQuestions,
-                        violationAction: autoSubmitOnTimeout ? 'force_submit' : 'invalidate',
+                        violationAction: autoSubmitOnTimeout
+                            ? 'force_submit'
+                            : 'invalidate',
                         questions: qs,
                       );
                       await _loadData();
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Admin đã phát hành bài thi giám sát "${created.title}"!'),
+                            content: Text(
+                              'Admin đã phát hành bài thi giám sát "${created.title}"!',
+                            ),
                             backgroundColor: const Color(0xFF1B5E20),
                           ),
                         );
@@ -502,7 +651,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
   void _showClassMembersModal(Map<String, dynamic> cls) async {
     final classId = cls['id'].toString();
     final className = (cls['name'] ?? 'Lớp học').toString();
-    List<Map<String, dynamic>> members = await _service.getClassMembers(classId);
+    List<Map<String, dynamic>> members = await _service.getClassMembers(
+      classId,
+    );
 
     if (!mounted) return;
 
@@ -512,8 +663,12 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
-          final approvedList = members.where((m) => m['status'] != 'pending').toList();
-          final pendingList = members.where((m) => m['status'] == 'pending').toList();
+          final approvedList = members
+              .where((m) => m['status'] != 'pending')
+              .toList();
+          final pendingList = members
+              .where((m) => m['status'] == 'pending')
+              .toList();
 
           return Container(
             height: MediaQuery.of(ctx).size.height * 0.85,
@@ -533,19 +688,37 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         color: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.groups_rounded, color: Color(0xFF1E3A8A)),
+                      child: const Icon(
+                        Icons.groups_rounded,
+                        color: Color(0xFF1E3A8A),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Lớp $className', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('Giáo viên: ${cls['teacherName'] ?? "Chưa có GV"} • Mã: ${cls['code']}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                          Text(
+                            'Lớp $className',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Giáo viên: ${cls['teacherName'] ?? "Chưa có GV"} • Mã: ${cls['code']}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -554,12 +727,17 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
-                    onPressed: () => _showAddStudentToClassDialog(classId, () async {
-                      final updated = await _service.getClassMembers(classId);
-                      setSheetState(() => members = updated);
-                      _loadData();
-                    }),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E3A8A),
+                    ),
+                    onPressed: () => _showAddStudentToClassDialog(
+                      classId,
+                      () async {
+                        final updated = await _service.getClassMembers(classId);
+                        setSheetState(() => members = updated);
+                        _loadData();
+                      },
+                    ),
                     icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
                     label: const Text('Thêm học sinh vào lớp này'),
                   ),
@@ -568,7 +746,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
 
                 if (pendingList.isNotEmpty) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber[50],
                       borderRadius: BorderRadius.circular(10),
@@ -576,9 +757,21 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.hourglass_top_rounded, size: 16, color: Colors.amber),
+                        const Icon(
+                          Icons.hourglass_top_rounded,
+                          size: 16,
+                          color: Colors.amber,
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: Text('Có ${pendingList.length} yêu cầu vào lớp cần duyệt', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                        Expanded(
+                          child: Text(
+                            'Có ${pendingList.length} yêu cầu vào lớp cần duyệt',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -593,16 +786,28 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       return ListTile(
                         dense: true,
                         tileColor: Colors.amber[50]?.withValues(alpha: 0.5),
-                        title: Text(p['studentName']?.toString() ?? 'Học sinh', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        title: Text(
+                          p['studentName']?.toString() ?? 'Học sinh',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         subtitle: Text(p['studentEmail']?.toString() ?? ''),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.check_circle, color: Colors.green),
+                              icon: const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              ),
                               onPressed: () async {
-                                await _service.decideClassMember(classId: classId, memberId: p['id'].toString(), status: 'approved');
-                                final updated = await _service.getClassMembers(classId);
+                                await _service.decideClassMember(
+                                  classId: classId,
+                                  memberId: p['id'].toString(),
+                                  status: 'approved',
+                                );
+                                final updated = await _service.getClassMembers(
+                                  classId,
+                                );
                                 setSheetState(() => members = updated);
                                 _loadData();
                               },
@@ -610,8 +815,14 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                             IconButton(
                               icon: const Icon(Icons.cancel, color: Colors.red),
                               onPressed: () async {
-                                await _service.decideClassMember(classId: classId, memberId: p['id'].toString(), status: 'rejected');
-                                final updated = await _service.getClassMembers(classId);
+                                await _service.decideClassMember(
+                                  classId: classId,
+                                  memberId: p['id'].toString(),
+                                  status: 'rejected',
+                                );
+                                final updated = await _service.getClassMembers(
+                                  classId,
+                                );
                                 setSheetState(() => members = updated);
                                 _loadData();
                               },
@@ -624,41 +835,84 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   const Divider(height: 20),
                 ],
 
-                Text('Danh sách học sinh chính thức (${approvedList.length}):', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(
+                  'Danh sách học sinh chính thức (${approvedList.length}):',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: 8),
 
                 Expanded(
                   child: approvedList.isEmpty
                       ? Center(
-                          child: Text('Lớp này chưa có học sinh nào.\nBấm nút phía trên để thêm học sinh!', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500])),
+                          child: Text(
+                            'Lớp này chưa có học sinh nào.\nBấm nút phía trên để thêm học sinh!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey[500]),
+                          ),
                         )
                       : ListView.separated(
                           itemCount: approvedList.length,
                           separatorBuilder: (_, _) => const SizedBox(height: 8),
                           itemBuilder: (ctx, idx) {
                             final m = approvedList[idx];
-                            final name = (m['studentName'] ?? 'Học sinh').toString();
+                            final name = (m['studentName'] ?? 'Học sinh')
+                                .toString();
                             final email = (m['studentEmail'] ?? '').toString();
-                            final streak = (m['streakDays'] as num?)?.toInt() ?? 0;
-                            final avg = (m['avgScore'] as num?)?.toDouble() ?? 0.0;
+                            final streak =
+                                (m['streakDays'] as num?)?.toInt() ?? 0;
+                            final avg =
+                                (m['avgScore'] as num?)?.toDouble() ?? 0.0;
 
                             return ListTile(
                               tileColor: Colors.grey[50],
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
-                              leading: CircleAvatar(
-                                backgroundColor: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
-                                child: Text(name.isNotEmpty ? name[0].toUpperCase() : 'H', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: Colors.grey[200]!),
                               ),
-                              title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                              subtitle: Text('$email • Streak: $streak ngày • Điểm: ${avg.toStringAsFixed(1)}', style: const TextStyle(fontSize: 11)),
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(
+                                  0xFF1E3A8A,
+                                ).withValues(alpha: 0.1),
+                                child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : 'H',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1E3A8A),
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '$email • Streak: $streak ngày • Điểm: ${avg.toStringAsFixed(1)}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
                               trailing: IconButton(
                                 tooltip: 'Xem tiến độ học tập',
-                                icon: const Icon(Icons.insights_rounded, color: Color(0xFF1E3A8A), size: 20),
+                                icon: const Icon(
+                                  Icons.insights_rounded,
+                                  color: Color(0xFF1E3A8A),
+                                  size: 20,
+                                ),
                                 onPressed: () {
-                                  StudentProgressSheet.show(ctx, student: m, currentClassName: className, onUpdated: () async {
-                                    final updated = await _service.getClassMembers(classId);
-                                    setSheetState(() => members = updated);
-                                  });
+                                  StudentProgressSheet.show(
+                                    ctx,
+                                    student: m,
+                                    currentClassName: className,
+                                    onUpdated: () async {
+                                      final updated = await _service
+                                          .getClassMembers(classId);
+                                      setSheetState(() => members = updated);
+                                    },
+                                  );
                                 },
                               ),
                             );
@@ -673,7 +927,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
     );
   }
 
-  void _showAddStudentToClassDialog(String classId, VoidCallback onAdded) async {
+  void _showAddStudentToClassDialog(
+    String classId,
+    VoidCallback onAdded,
+  ) async {
     final nameCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
 
@@ -696,7 +953,14 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (studentUsers.isNotEmpty) ...[
-                    const Text('Chọn nhanh học sinh đã đăng ký:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
+                    const Text(
+                      'Chọn nhanh học sinh đã đăng ký:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
@@ -704,11 +968,19 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         labelText: 'Danh sách học sinh',
                         border: OutlineInputBorder(),
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
                       ),
                       selectedItemBuilder: (context) {
                         return studentUsers.map((u) {
-                          final name = (u['display_name'] ?? u['displayName'] ?? u['email'] ?? '').toString();
+                          final name =
+                              (u['display_name'] ??
+                                      u['displayName'] ??
+                                      u['email'] ??
+                                      '')
+                                  .toString();
                           final email = (u['email'] ?? '').toString();
                           return Text(
                             '$name ($email)',
@@ -718,29 +990,36 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                           );
                         }).toList();
                       },
-                      items: studentUsers
-                          .map(
-                            (u) {
-                              final name = (u['display_name'] ?? u['displayName'] ?? u['email'] ?? '').toString();
-                              final email = (u['email'] ?? '').toString();
-                              return DropdownMenuItem(
-                                value: email,
-                                child: Text(
-                                  '$name ($email)',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              );
-                            },
-                          )
-                          .toList(),
+                      items: studentUsers.map((u) {
+                        final name =
+                            (u['display_name'] ??
+                                    u['displayName'] ??
+                                    u['email'] ??
+                                    '')
+                                .toString();
+                        final email = (u['email'] ?? '').toString();
+                        return DropdownMenuItem(
+                          value: email,
+                          child: Text(
+                            '$name ($email)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        );
+                      }).toList(),
                       onChanged: (v) {
                         if (v != null) {
-                          final found = studentUsers.where((u) => u['email'] == v).firstOrNull;
+                          final found = studentUsers
+                              .where((u) => u['email'] == v)
+                              .firstOrNull;
                           if (found != null) {
                             setDlgState(() {
-                              nameCtrl.text = (found['display_name'] ?? found['displayName'] ?? '').toString();
+                              nameCtrl.text =
+                                  (found['display_name'] ??
+                                          found['displayName'] ??
+                                          '')
+                                      .toString();
                               emailCtrl.text = v;
                             });
                           }
@@ -748,27 +1027,52 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       },
                     ),
                     const SizedBox(height: 12),
-                    const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('hoặc nhập mới', style: TextStyle(fontSize: 11, color: Colors.grey))), Expanded(child: Divider())]),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            'hoặc nhập mới',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
                     const SizedBox(height: 10),
                   ],
                   TextField(
                     controller: nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Họ và tên học sinh', border: OutlineInputBorder(), isDense: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Họ và tên học sinh',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'Email học sinh', border: OutlineInputBorder(), isDense: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Email học sinh',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Hủy'),
+            ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF1E3A8A),
+              ),
               onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
                 Navigator.pop(ctx);
@@ -780,7 +1084,12 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 onAdded();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Đã thêm học sinh "${nameCtrl.text.trim()}" vào lớp thành công!'), backgroundColor: Colors.green[800]),
+                    SnackBar(
+                      content: Text(
+                        'Đã thêm học sinh "${nameCtrl.text.trim()}" vào lớp thành công!',
+                      ),
+                      backgroundColor: Colors.green[800],
+                    ),
                   );
                 }
               },
@@ -824,34 +1133,71 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.campaign_outlined, color: Color(0xFF1E3A8A)),
+                    const Icon(
+                      Icons.campaign_outlined,
+                      color: Color(0xFF1E3A8A),
+                    ),
                     const SizedBox(width: 8),
-                    const Text('Soạn thông báo hệ thống', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Soạn thông báo hệ thống',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const Spacer(),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
                   initialValue: target,
-                  decoration: const InputDecoration(labelText: 'Gửi tới', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Gửi tới',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
-                    DropdownMenuItem(value: 'all', child: Text('Tất cả người dùng')),
-                    DropdownMenuItem(value: 'student', child: Text('Chỉ Học sinh')),
-                    DropdownMenuItem(value: 'teacher', child: Text('Chỉ Giáo viên')),
+                    DropdownMenuItem(
+                      value: 'all',
+                      child: Text('Tất cả người dùng'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'student',
+                      child: Text('Chỉ Học sinh'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'teacher',
+                      child: Text('Chỉ Giáo viên'),
+                    ),
                   ],
                   onChanged: (v) => setSheetState(() => target = v ?? 'all'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: type,
-                  decoration: const InputDecoration(labelText: 'Loại thông báo', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Loại thông báo',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
-                    DropdownMenuItem(value: 'maintenance', child: Text('Bảo trì hệ thống')),
-                    DropdownMenuItem(value: 'exam', child: Text('Lịch thi & Giám sát')),
-                    DropdownMenuItem(value: 'update', child: Text('Sách mới & Cập nhật')),
+                    DropdownMenuItem(
+                      value: 'maintenance',
+                      child: Text('Bảo trì hệ thống'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'exam',
+                      child: Text('Lịch thi & Giám sát'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'update',
+                      child: Text('Sách mới & Cập nhật'),
+                    ),
                   ],
-                  onChanged: (v) => setSheetState(() => type = v ?? 'maintenance'),
+                  onChanged: (v) =>
+                      setSheetState(() => type = v ?? 'maintenance'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -863,7 +1209,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     border: const OutlineInputBorder(),
                   ),
                   onChanged: (_) {
-                    if (titleError != null) setSheetState(() => titleError = null);
+                    if (titleError != null) {
+                      setSheetState(() => titleError = null);
+                    }
                   },
                 ),
                 const SizedBox(height: 12),
@@ -877,7 +1225,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                     border: const OutlineInputBorder(),
                   ),
                   onChanged: (_) {
-                    if (contentError != null) setSheetState(() => contentError = null);
+                    if (contentError != null) {
+                      setSheetState(() => contentError = null);
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -885,7 +1235,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   width: double.infinity,
                   height: 48,
                   child: FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF1E3A8A)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E3A8A),
+                    ),
                     onPressed: isSubmitting
                         ? null
                         : () async {
@@ -920,9 +1272,16 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                                   SnackBar(
                                     content: Row(
                                       children: [
-                                        const Icon(Icons.check_circle_rounded, color: Colors.white),
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Colors.white,
+                                        ),
                                         const SizedBox(width: 8),
-                                        Expanded(child: Text('Đã phát thông báo "$title" thành công!')),
+                                        Expanded(
+                                          child: Text(
+                                            'Đã phát thông báo "$title" thành công!',
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     backgroundColor: const Color(0xFF1B5E20),
@@ -946,14 +1305,23 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         ? const SizedBox(
                             width: 22,
                             height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
                           )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.send_rounded, size: 20),
                               SizedBox(width: 8),
-                              Text('Phát thông báo ngay', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                              Text(
+                                'Phát thông báo ngay',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
                             ],
                           ),
                   ),
@@ -1002,18 +1370,27 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                       children: [
                         Text(
                           exam.title,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           'Quy định: Ra ngoài quá ${exam.graceSeconds}s cảnh báo, quá ${exam.maxViolations} lần tự nộp',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
                 ],
               ),
               const Divider(height: 24),
@@ -1022,7 +1399,8 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   Expanded(
                     child: AdminKpiCard(
                       title: 'Đang làm',
-                      value: '${sessions.where((s) => s.status == "in_progress").length}',
+                      value:
+                          '${sessions.where((s) => s.status == "in_progress").length}',
                       subtitle: 'Thí sinh trực tuyến',
                       icon: Icons.edit_note,
                       iconColor: Colors.blue,
@@ -1033,7 +1411,8 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   Expanded(
                     child: AdminKpiCard(
                       title: 'Cảnh báo 10s',
-                      value: '${sessions.where((s) => s.violationCount > 0).length}',
+                      value:
+                          '${sessions.where((s) => s.violationCount > 0).length}',
                       subtitle: 'Vi phạm out app',
                       icon: Icons.warning_amber,
                       iconColor: Colors.amber[800]!,
@@ -1044,7 +1423,8 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   Expanded(
                     child: AdminKpiCard(
                       title: 'Đã nộp/Hủy',
-                      value: '${sessions.where((s) => s.status != "in_progress").length}',
+                      value:
+                          '${sessions.where((s) => s.status != "in_progress").length}',
                       subtitle: 'Hoàn tất',
                       icon: Icons.assignment_turned_in,
                       iconColor: Colors.green,
@@ -1062,7 +1442,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
               Expanded(
                 child: sessions.isEmpty
                     ? Center(
-                        child: Text('Chưa có thí sinh nào vào phòng thi này.', style: TextStyle(color: Colors.grey[600])),
+                        child: Text(
+                          'Chưa có thí sinh nào vào phòng thi này.',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
                       )
                     : ListView.separated(
                         itemCount: sessions.length,
@@ -1073,38 +1456,56 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                           return Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: hasViolations ? Colors.orange[50] : Colors.grey[50],
+                              color: hasViolations
+                                  ? Colors.orange[50]
+                                  : Colors.grey[50],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: hasViolations ? Colors.orange[300]! : Colors.grey[200]!,
+                                color: hasViolations
+                                    ? Colors.orange[300]!
+                                    : Colors.grey[200]!,
                               ),
                             ),
                             child: Row(
                               children: [
                                 CircleAvatar(
                                   radius: 18,
-                                  backgroundColor: hasViolations ? Colors.orange[100] : Colors.blue[100],
+                                  backgroundColor: hasViolations
+                                      ? Colors.orange[100]
+                                      : Colors.blue[100],
                                   child: Icon(
-                                    hasViolations ? Icons.warning_amber_rounded : Icons.person,
+                                    hasViolations
+                                        ? Icons.warning_amber_rounded
+                                        : Icons.person,
                                     size: 18,
-                                    color: hasViolations ? Colors.orange[900] : Colors.blue[900],
+                                    color: hasViolations
+                                        ? Colors.orange[900]
+                                        : Colors.blue[900],
                                   ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         s.studentName,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                       Text(
                                         'Vi phạm out app: ${s.violationCount}/${exam.maxViolations} lần | Trạng thái: ${s.status}',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: hasViolations ? Colors.red[800] : Colors.grey[600],
-                                          fontWeight: hasViolations ? FontWeight.bold : FontWeight.normal,
+                                          color: hasViolations
+                                              ? Colors.red[800]
+                                              : Colors.grey[600],
+                                          fontWeight: hasViolations
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
                                         ),
                                       ),
                                     ],
@@ -1113,29 +1514,45 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                                 if (s.status == 'in_progress') ...[
                                   IconButton(
                                     tooltip: 'Nhắc nhở nóng',
-                                    icon: const Icon(Icons.notifications_active, color: Colors.amber, size: 20),
+                                    icon: const Icon(
+                                      Icons.notifications_active,
+                                      color: Colors.amber,
+                                      size: 20,
+                                    ),
                                     onPressed: () async {
-                                      await _service.performTeacherProctorAction(
-                                        exam: exam,
-                                        session: s,
-                                        action: 'warn',
-                                      );
+                                      await _service
+                                          .performTeacherProctorAction(
+                                            exam: exam,
+                                            session: s,
+                                            action: 'warn',
+                                          );
                                       if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Đã gửi thông báo cảnh cáo tới ${s.studentName}')),
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Đã gửi thông báo cảnh cáo tới ${s.studentName}',
+                                            ),
+                                          ),
                                         );
                                       }
                                     },
                                   ),
                                   IconButton(
                                     tooltip: 'Cưỡng chế nộp bài ngay',
-                                    icon: const Icon(Icons.send_and_archive, color: Colors.red, size: 20),
+                                    icon: const Icon(
+                                      Icons.send_and_archive,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
                                     onPressed: () async {
-                                      await _service.performTeacherProctorAction(
-                                        exam: exam,
-                                        session: s,
-                                        action: 'force_submit',
-                                      );
+                                      await _service
+                                          .performTeacherProctorAction(
+                                            exam: exam,
+                                            session: s,
+                                            action: 'force_submit',
+                                          );
                                       if (ctx.mounted) Navigator.pop(ctx);
                                       _loadData();
                                     },
@@ -1200,7 +1617,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
   }
 
   Widget _buildClassesSubView() {
-    final needsTeacherCount = _classes.where((c) => c['status'] == 'needs_teacher').length;
+    final needsTeacherCount = _classes
+        .where((c) => c['status'] == 'needs_teacher')
+        .length;
     return RefreshIndicator(
       onRefresh: _loadData,
       child: SingleChildScrollView(
@@ -1225,10 +1644,16 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   child: AdminKpiCard(
                     title: 'Cần chú ý',
                     value: '$needsTeacherCount',
-                    subtitle: needsTeacherCount > 0 ? '$needsTeacherCount lớp chưa có GV' : 'Đã phân công đủ',
+                    subtitle: needsTeacherCount > 0
+                        ? '$needsTeacherCount lớp chưa có GV'
+                        : 'Đã phân công đủ',
                     icon: Icons.warning_amber_rounded,
-                    iconColor: needsTeacherCount > 0 ? Colors.orange[800]! : Colors.green,
-                    backgroundColor: needsTeacherCount > 0 ? Colors.orange[50]! : Colors.green[50]!,
+                    iconColor: needsTeacherCount > 0
+                        ? Colors.orange[800]!
+                        : Colors.green,
+                    backgroundColor: needsTeacherCount > 0
+                        ? Colors.orange[50]!
+                        : Colors.green[50]!,
                   ),
                 ),
               ],
@@ -1241,7 +1666,13 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Danh sách lớp học:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Danh sách lớp học:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -1249,10 +1680,15 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                             child: FilledButton.tonalIcon(
                               onPressed: _showCreateSupervisedExamModal,
                               icon: const Icon(Icons.shield_outlined, size: 16),
-                              label: const Text('Tạo thi 10s', style: TextStyle(fontSize: 12.5)),
+                              label: const Text(
+                                'Tạo thi 10s',
+                                style: TextStyle(fontSize: 12.5),
+                              ),
                               style: FilledButton.styleFrom(
                                 visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                               ),
                             ),
                           ),
@@ -1261,11 +1697,16 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                             child: FilledButton.icon(
                               onPressed: _showAddClassModal,
                               icon: const Icon(Icons.add, size: 16),
-                              label: const Text('Thêm lớp', style: TextStyle(fontSize: 12.5)),
+                              label: const Text(
+                                'Thêm lớp',
+                                style: TextStyle(fontSize: 12.5),
+                              ),
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xFF1E3A8A),
                                 visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                               ),
                             ),
                           ),
@@ -1277,7 +1718,13 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Danh sách lớp học:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Danh sách lớp học:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1285,7 +1732,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                           onPressed: _showCreateSupervisedExamModal,
                           icon: const Icon(Icons.shield_outlined, size: 16),
                           label: const Text('Tạo thi 10s'),
-                          style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                          style: FilledButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         FilledButton.icon(
@@ -1323,106 +1772,151 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: needsTeacher ? Colors.orange[300]! : Colors.grey[200]!,
+                          color: needsTeacher
+                              ? Colors.orange[300]!
+                              : Colors.grey[200]!,
                         ),
                       ),
                       child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E3A8A).withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.groups_outlined, color: Color(0xFF1E3A8A)),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${c['name']} - ${c['schoolName'] ?? c['school'] ?? "THPT"}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF1E3A8A,
+                                  ).withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                Text(
-                                  '${c['teacherName'] ?? "Giáo viên"} • ${c['studentsCount'] ?? c['studentCount'] ?? 0} học sinh • Mã: ${c['code']}',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                child: const Icon(
+                                  Icons.groups_outlined,
+                                  color: Color(0xFF1E3A8A),
                                 ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: needsTeacher ? Colors.orange[100] : Colors.green[100],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              needsTeacher ? 'Chưa có GV' : 'Hoạt động',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: needsTeacher ? Colors.orange[900] : Colors.green[900],
                               ),
-                            ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${c['name']} - ${c['schoolName'] ?? c['school'] ?? "THPT"}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${c['teacherName'] ?? "Giáo viên"} • ${c['studentsCount'] ?? c['studentCount'] ?? 0} học sinh • Mã: ${c['code']}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: needsTeacher
+                                      ? Colors.orange[100]
+                                      : Colors.green[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  needsTeacher ? 'Chưa có GV' : 'Hoạt động',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: needsTeacher
+                                        ? Colors.orange[900]
+                                        : Colors.green[900],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                                onPressed: () => _showClassMembersModal(c),
+                                icon: const Icon(
+                                  Icons.group_outlined,
+                                  size: 14,
+                                ),
+                                label: const Text(
+                                  'Học sinh',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                                onPressed: () => _showAssignTeacherModal(c),
+                                icon: const Icon(
+                                  Icons.person_add_alt,
+                                  size: 14,
+                                ),
+                                label: Text(
+                                  needsTeacher ? 'Gán GV' : 'Đổi GV',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                                onPressed: () => _handleRegenerateClassCode(c),
+                                icon: const Icon(Icons.refresh, size: 14),
+                                label: const Text(
+                                  'Đổi mã',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.all(4),
+                                constraints: const BoxConstraints(),
+                                tooltip: 'Giải tán lớp',
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                  color: Colors.redAccent,
+                                ),
+                                onPressed: () => _confirmDeleteClass(c),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        alignment: WrapAlignment.end,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                            ),
-                            onPressed: () => _showClassMembersModal(c),
-                            icon: const Icon(Icons.group_outlined, size: 14),
-                            label: const Text('Học sinh', style: TextStyle(fontSize: 12)),
-                          ),
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                            ),
-                            onPressed: () => _showAssignTeacherModal(c),
-                            icon: const Icon(Icons.person_add_alt, size: 14),
-                            label: Text(needsTeacher ? 'Gán GV' : 'Đổi GV', style: const TextStyle(fontSize: 12)),
-                          ),
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                            ),
-                            onPressed: () => _handleRegenerateClassCode(c),
-                            icon: const Icon(Icons.refresh, size: 14),
-                            label: const Text('Đổi mã', style: TextStyle(fontSize: 12)),
-                          ),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Giải tán lớp',
-                            icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
-                            onPressed: () => _confirmDeleteClass(c),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -1451,7 +1945,11 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   Expanded(
                     child: Text(
                       'Đang bật Giám sát Trực tiếp (Live 10s Anti-Cheat). Tự động cập nhật mỗi 10 giây.',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E40AF)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E40AF),
+                      ),
                     ),
                   ),
                 ],
@@ -1468,7 +1966,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                 FilledButton.icon(
                   onPressed: _showCreateSupervisedExamModal,
                   icon: const Icon(Icons.shield_outlined, size: 15),
-                  label: const Text('Tạo thi 10s', style: TextStyle(fontSize: 12.5)),
+                  label: const Text(
+                    'Tạo thi 10s',
+                    style: TextStyle(fontSize: 12.5),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF1E3A8A),
                     visualDensity: VisualDensity.compact,
@@ -1481,7 +1982,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(32),
-                  child: Text('Chưa có đề thi có giám sát nào được tạo.', style: TextStyle(color: Colors.grey[600])),
+                  child: Text(
+                    'Chưa có đề thi có giám sát nào được tạo.',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ),
               )
             else
@@ -1510,7 +2014,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                                 color: Colors.blue[50],
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.quiz_outlined, color: Colors.blue),
+                              child: const Icon(
+                                Icons.quiz_outlined,
+                                color: Colors.blue,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -1519,19 +2026,30 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                                 children: [
                                   Text(
                                     ex.title,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                   Text(
                                     '${ex.durationMinutes} phút • ${ex.questions.length} câu hỏi • Hạn nộp: ${ex.deadlineAt.hour}:${ex.deadlineAt.minute}',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
-                                color: ex.isActive ? Colors.green[100] : Colors.grey[200],
+                                color: ex.isActive
+                                    ? Colors.green[100]
+                                    : Colors.grey[200],
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -1539,7 +2057,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: ex.isActive ? Colors.green[900] : Colors.grey[700],
+                                  color: ex.isActive
+                                      ? Colors.green[900]
+                                      : Colors.grey[700],
                                 ),
                               ),
                             ),
@@ -1555,7 +2075,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                                 visualDensity: VisualDensity.compact,
                               ),
                               onPressed: () => _showProctorDetailModal(ex),
-                              icon: const Icon(Icons.remove_red_eye_outlined, size: 16),
+                              icon: const Icon(
+                                Icons.remove_red_eye_outlined,
+                                size: 16,
+                              ),
                               label: const Text('Xem giám sát 10s Live'),
                             ),
                           ],
@@ -1580,7 +2103,10 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Thông báo hệ thống:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                'Thông báo hệ thống:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               FilledButton.icon(
                 onPressed: _showSendAnnouncementModal,
                 icon: const Icon(Icons.add, size: 16),
@@ -1600,12 +2126,22 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (ctx, idx) {
               final a = _announcements[idx];
-              final targetVal = (a['target'] ?? a['audience'] ?? 'all').toString();
+              final targetVal = (a['target'] ?? a['audience'] ?? 'all')
+                  .toString();
               final targetLabel = targetVal == 'all'
                   ? 'Tất cả'
-                  : (targetVal == 'student' ? 'Học sinh' : (targetVal == 'teacher' ? 'Giáo viên' : targetVal));
-              final dateRaw = (a['sentAt'] ?? a['sent_at'] ?? a['createdAt'] ?? DateTime.now().toIso8601String()).toString();
-              final sentDate = dateRaw.contains('T') ? dateRaw.split('T').first : (dateRaw.length >= 10 ? dateRaw.substring(0, 10) : dateRaw);
+                  : (targetVal == 'student'
+                        ? 'Học sinh'
+                        : (targetVal == 'teacher' ? 'Giáo viên' : targetVal));
+              final dateRaw =
+                  (a['sentAt'] ??
+                          a['sent_at'] ??
+                          a['createdAt'] ??
+                          DateTime.now().toIso8601String())
+                      .toString();
+              final sentDate = dateRaw.contains('T')
+                  ? dateRaw.split('T').first
+                  : (dateRaw.length >= 10 ? dateRaw.substring(0, 10) : dateRaw);
 
               return Container(
                 padding: const EdgeInsets.all(14),
@@ -1619,23 +2155,36 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.notifications_active_outlined, color: Color(0xFF1E3A8A), size: 20),
+                        const Icon(
+                          Icons.notifications_active_outlined,
+                          color: Color(0xFF1E3A8A),
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             (a['title'] ?? '').toString(),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             targetLabel,
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
