@@ -51,6 +51,12 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
 
     final list = await RbacProctorAiService.instance.getSupervisedExams();
     final assigns = await RbacProctorAiService.instance.getAssignments();
+    final joinedClasses = await RbacProctorAiService.instance.getMyJoinedClasses();
+    final joinedClassIds = joinedClasses
+        .map((c) => (c['id'] ?? '').toString())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
     final user = AuthController.instance.user;
     final Map<String, ExamLiveSessionModel> mySessions = {};
 
@@ -64,7 +70,12 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
 
     if (!mounted) return;
     setState(() {
-      _exams = list.where((e) => e.isActive).toList();
+      _exams = list.where((e) {
+        if (!e.isActive) return false;
+        final cid = (e.classId ?? '').toString().trim();
+        if (cid.isEmpty || cid.toUpperCase() == 'ALL' || cid == 'Toàn trường') return true;
+        return joinedClassIds.contains(cid);
+      }).toList();
       _assignments = assigns.where((a) => a['status'] != 'closed').toList();
       _myExamSessions = mySessions;
       _isLoading = false;
@@ -584,9 +595,11 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+          : RefreshIndicator(
+              onRefresh: _loadExams,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
                 if (_isGuest)
                   Container(
                     margin: const EdgeInsets.only(bottom: 14),
@@ -942,6 +955,7 @@ class _SupervisedExamListScreenState extends State<SupervisedExamListScreen> {
                 }),
               ],
             ),
+          ),
     );
   }
 

@@ -496,15 +496,20 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    'Văn bản gốc (Tự động dịch khi gõ)',
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textSub),
+                  Expanded(
+                    child: Text(
+                      'Văn bản gốc (Tự động dịch khi gõ)',
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textSub),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  Row(
-                    children: [
-                      if (_textController.text.isNotEmpty)
+                  if (_textController.text.isNotEmpty)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         IconButton(
                           visualDensity: VisualDensity.compact,
                           tooltip: 'Đọc văn bản gốc',
@@ -513,7 +518,6 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
                             AppAudioController.instance.speakText(_textController.text.trim());
                           },
                         ),
-                      if (_textController.text.isNotEmpty)
                         IconButton(
                           visualDensity: VisualDensity.compact,
                           tooltip: 'Xóa',
@@ -523,8 +527,8 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
                             _onTextChanged('');
                           },
                         ),
-                    ],
-                  ),
+                      ],
+                    ),
                 ],
               ),
               TextField(
@@ -585,24 +589,31 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.auto_awesome_rounded, size: 18, color: AppTokens.primary),
-                      const SizedBox(width: 6),
-                      Text(
-                        _isTranslating ? 'Đang dịch Realtime...' : 'Bản dịch chuẩn ngữ cảnh',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppTokens.primary,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.auto_awesome_rounded, size: 18, color: AppTokens.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _isTranslating ? 'Đang dịch Realtime...' : 'Bản dịch chuẩn ngữ cảnh',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: AppTokens.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   if (_currentResult != null && _currentResult!.translatedText.isNotEmpty)
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           visualDensity: VisualDensity.compact,
@@ -703,26 +714,27 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  runSpacing: 2,
-                  children: [
-                    Text(
-                      w.displayWord,
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textMain),
-                    ),
-                    if (w.phonetic != null && w.phonetic!.isNotEmpty)
-                      Text(
-                        w.phonetic!,
-                        style: const TextStyle(fontSize: 12, color: AppTokens.primary, fontWeight: FontWeight.w600),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: w.displayWord,
+                        style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: textMain),
                       ),
-                  ],
+                      if (w.phonetic != null && w.phonetic!.isNotEmpty) ...[
+                        const TextSpan(text: '  '),
+                        TextSpan(
+                          text: w.phonetic!,
+                          style: const TextStyle(fontSize: 12, color: AppTokens.primary, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   w.meaning,
-                  style: TextStyle(fontSize: 13, color: textSub),
+                  style: TextStyle(fontSize: 12.5, color: textSub),
                 ),
               ],
             ),
@@ -730,14 +742,15 @@ class _TranslationHubScreenState extends State<TranslationHubScreen>
           const SizedBox(width: 8),
           FilledButton.tonalIcon(
             style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: isSaved ? null : () => _saveWordToSrs(w),
-            icon: Icon(isSaved ? Icons.check_rounded : Icons.bookmark_add_rounded, size: 16),
+            icon: Icon(isSaved ? Icons.check_rounded : Icons.bookmark_add_rounded, size: 15),
             label: Text(
-              isSaved ? 'Đã lưu SRS' : '+ Lưu SRS',
-              style: const TextStyle(fontSize: 12),
+              isSaved ? 'Đã lưu' : '+ Lưu SRS',
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
             ),
           ),
         ],

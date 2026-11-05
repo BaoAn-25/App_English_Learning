@@ -66,8 +66,9 @@ class _AdminProctorTabState extends State<AdminProctorTab> with SingleTickerProv
           _isLoading = false;
         });
       }
-      // Tự động đồng bộ ngầm các lớp lên Cloud Render
+      // Tự động đồng bộ ngầm các lớp và bài thi giám sát lên Cloud Render
       _service.syncAllClassesToCloud().catchError((_) => <String, dynamic>{});
+      _service.syncAllSupervisedExamsToCloud().catchError((_) => <String, dynamic>{});
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }

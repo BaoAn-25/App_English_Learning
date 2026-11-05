@@ -1033,6 +1033,22 @@ app.post('/api/auth/google', async (req, res) => {
       return res.status(400).json({ error: 'Token Google thiếu địa chỉ email.' });
     }
 
+    // 0. Kiểm tra xem email hoặc googleSub này có bị Admin khóa hay không
+    try {
+      const lockCheck = await pool.query(
+        'SELECT is_locked, locked_reason FROM users WHERE google_id = $1 OR LOWER(email) = LOWER($2)',
+        [googleSub, googleEmail]
+      );
+      if (lockCheck.rows.some((r) => r.is_locked)) {
+        const lockedRow = lockCheck.rows.find((r) => r.is_locked);
+        return res.status(403).json({
+          error: `Tài khoản của bạn (${googleEmail}) đã bị khóa bởi Quản trị viên. Lý do: ${lockedRow.locked_reason || 'Tạm khóa bởi Quản trị viên.'}`,
+          isLocked: true,
+          lockedReason: lockedRow.locked_reason || 'Tạm khóa bởi Quản trị viên.',
+        });
+      }
+    } catch (_) {}
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');

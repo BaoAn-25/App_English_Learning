@@ -1119,7 +1119,12 @@ class RbacProctorAiService {
       } catch (_) {}
     }
 
-    // Đồng bộ từ Backend nếu có mạng (Không tự tạo đề thi mẫu giả)
+    // Tự động kích hoạt đồng bộ các bài thi ở local lên Cloud
+    if (localExams.isNotEmpty) {
+      unawaited(syncAllSupervisedExamsToCloud());
+    }
+
+    // Đồng bộ từ Backend nếu có mạng
     try {
       final client = await _client();
       final res = await client.getJson('/exams/supervised', timeout: const Duration(seconds: 6));
@@ -1142,6 +1147,26 @@ class RbacProctorAiService {
     } catch (_) {}
 
     return localExams;
+  }
+
+  /// Đồng bộ toàn bộ các kỳ thi giám sát lưu cục bộ lên Cloud Render
+  Future<Map<String, dynamic>> syncAllSupervisedExamsToCloud() async {
+    final raw = await _repo.getSetting('supervised_exams_json');
+    if (raw == null || raw.isEmpty) return {'syncedCount': 0};
+    try {
+      final decoded = jsonDecode(raw) as List;
+      if (decoded.isEmpty) return {'syncedCount': 0};
+      final client = await _client();
+      final res = await client.postJson(
+        '/teacher/exams/batch-sync',
+        {'exams': decoded},
+        timeout: const Duration(seconds: 10),
+      );
+      if (res.isSuccess && res.data != null) {
+        return res.data!;
+      }
+    } catch (_) {}
+    return {'syncedCount': 0};
   }
 
   Future<void> _saveSupervisedExamsLocal(List<SupervisedExamModel> exams) async {
@@ -1221,6 +1246,8 @@ class RbacProctorAiService {
         return serverExam;
       }
     } catch (_) {}
+
+    unawaited(syncAllSupervisedExamsToCloud());
 
     return model;
   }
@@ -1647,6 +1674,32 @@ class RbacProctorAiService {
       lockedMap.remove(userId);
     }
     await _repo.setSetting('admin_locked_accounts_map_json', jsonEncode(lockedMap));
+    unawaited(syncLockedAccountsToCloud());
+  }
+
+  /// Đồng bộ danh sách tài khoản bị khóa từ local Admin lên Cloud PostgreSQL Render
+  Future<Map<String, dynamic>> syncLockedAccountsToCloud() async {
+    final lockedMap = await _getLockedAccountsMap();
+    if (lockedMap.isEmpty) return {'syncedCount': 0};
+    try {
+      final list = <Map<String, String>>[];
+      lockedMap.forEach((key, val) {
+        if (key.contains('@') && val is Map && val['isLocked'] == true) {
+          list.add({
+            'email': key.trim().toLowerCase(),
+            'reason': (val['reason'] ?? 'Tạm khóa bởi Quản trị viên').toString(),
+          });
+        }
+      });
+      if (list.isEmpty) return {'syncedCount': 0};
+
+      final client = await _client();
+      final res = await client.postJson('/admin/users/sync-locked', {'lockedAccounts': list});
+      if (res.isSuccess && res.data != null) {
+        return res.data!;
+      }
+    } catch (_) {}
+    return {'syncedCount': 0};
   }
 
   Future<List<Map<String, dynamic>>> getAdminUsers({String? roleFilter, String? search}) async {
@@ -1858,6 +1911,7 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
+    unawaited(syncLockedAccountsToCloud());
     return serverSuccess;
   }
 
@@ -2401,10 +2455,12 @@ class RbacProctorAiService {
         final serverClass = _normalizeClassMap(Map<String, dynamic>.from(rawServer));
         classes[0] = serverClass;
         await _repo.setSetting('admin_classes_json', jsonEncode(classes));
+        unawaited(syncAllClassesToCloud());
         return serverClass;
       }
     } catch (_) {}
 
+    unawaited(syncAllClassesToCloud());
     return newClass;
   }
 
@@ -2491,6 +2547,7 @@ class RbacProctorAiService {
       });
     } catch (_) {}
 
+    unawaited(syncAllClassesToCloud());
     return cur;
   }
 
@@ -2704,13 +2761,20 @@ class RbacProctorAiService {
       }
     } catch (_) {}
 
+    String norm(String s) => s.replaceAll('-', '').replaceAll(' ', '').toUpperCase();
+    final cleanNorm = norm(cleanCode);
+
     final classes = await getClasses();
     final targetClass = classes.where(
-      (c) => (c['code'] ?? '').toString().toUpperCase() == cleanCode,
+      (c) => norm((c['code'] ?? c['joinCode'] ?? c['join_code'] ?? '').toString()) == cleanNorm,
     ).firstOrNull;
 
     if (targetClass == null) {
-      return {'ok': false, 'message': 'Không tìm thấy lớp học với mã "$cleanCode".'};
+      return {
+        'ok': false,
+        'message': 'Không tìm thấy lớp học với mã "$cleanCode". '
+            'Vui lòng kiểm tra lại mã lớp hoặc yêu cầu giáo viên mở tab Lớp học trên điện thoại để đồng bộ lên hệ thống trước.',
+      };
     }
     if (targetClass['allowJoin'] == false || targetClass['status'] == 'archived') {
       return {'ok': false, 'message': 'Lớp học này hiện đã đóng nhận học sinh mới.'};
@@ -3605,5 +3669,102 @@ class RbacProctorAiService {
       }
     } catch (_) {}
     return null;
+  }
+
+  /// Đồng bộ toàn diện toàn bộ tiến độ học tập 10 Unit SGK từ thiết bị lên Cloud PostgreSQL
+  Future<int> syncAllStudentProgressToCloud() async {
+    final user = await _repo.getAuthUser();
+    if (user == null || user.isGuest) return 0;
+    final userId = user.id;
+    final userEmail = user.email.toLowerCase().trim();
+
+    final sectionsToSync = <Map<String, dynamic>>[];
+    const sectionKeys = [
+      'getting_started',
+      'language',
+      'reading',
+      'listening',
+      'speaking',
+      'writing',
+      'communication_culture',
+      'looking_back',
+    ];
+
+    // 1. Quét tiến độ 10 Unit SGK từ local SQLite
+    for (int u = 1; u <= 10; u++) {
+      // Kiểm tra bài học thử đọc hiểu trial
+      final trialDone = await _repo.getCompletedTrialLessonId(userId);
+      final trialEmailDone = userEmail.isNotEmpty ? await _repo.getCompletedTrialLessonId(userEmail) : null;
+      if (trialDone == 'trial_unit${u}_reading' || trialEmailDone == 'trial_unit${u}_reading') {
+        sectionsToSync.add({
+          'unitNumber': u,
+          'sectionName': 'reading',
+          'status': 'completed',
+          'score': 100,
+        });
+      }
+
+      for (final sec in sectionKeys) {
+        final pId = await _repo.getSetting('unit_section_progress_${userId}_u${u}_$sec');
+        final pEmail = userEmail.isNotEmpty ? await _repo.getSetting('unit_section_progress_${userEmail}_u${u}_$sec') : null;
+        if (pId == 'completed' || pEmail == 'completed') {
+          sectionsToSync.add({
+            'unitNumber': u,
+            'sectionName': sec,
+            'status': 'completed',
+            'score': 100,
+          });
+        }
+      }
+    }
+
+    // 2. Lấy số ngày streak và điểm trung bình
+    final summary = await _repo.getOverallStats(ownerId: userId);
+    final streak = (summary['streak'] as num?)?.toInt() ?? 0;
+    final totalDone = (summary['totalDone'] as num?)?.toInt() ?? 0;
+    final totalCorrect = (summary['totalCorrect'] as num?)?.toInt() ?? 0;
+    final avgScore = totalDone > 0 ? (totalCorrect / totalDone * 10) : 0.0;
+
+    // 3. Gửi lên Cloud Render
+    try {
+      final client = await _client();
+      final res = await client.postJson('/students/progress/batch-sync', {
+        'userId': userId,
+        'userEmail': userEmail,
+        'streak': streak,
+        'totalXp': totalCorrect * 10,
+        'avgScore': avgScore,
+        'sections': sectionsToSync,
+      });
+      if (res.isSuccess) {
+        return (res.data?['syncedCount'] as num?)?.toInt() ?? sectionsToSync.length;
+      }
+    } catch (_) {}
+
+    return sectionsToSync.length;
+  }
+
+  /// Kiểm tra trạng thái khóa tài khoản thời gian thực từ Cloud PostgreSQL
+  Future<Map<String, dynamic>> checkRemoteAccountLockStatus(String email, {String? userId}) async {
+    if (email.trim().isEmpty && (userId == null || userId.trim().isEmpty)) {
+      return {'isLocked': false};
+    }
+    try {
+      final client = await _client();
+      final q = <String>[];
+      if (email.trim().isNotEmpty) q.add('email=${Uri.encodeComponent(email.trim())}');
+      if (userId != null && userId.trim().isNotEmpty) q.add('userId=${Uri.encodeComponent(userId.trim())}');
+      final res = await client.getJson(
+        '/auth/check-lock?${q.join('&')}',
+        timeout: const Duration(seconds: 4),
+      );
+      if (res.isSuccess && res.data != null) {
+        return {
+          'isLocked': res.data!['isLocked'] == true,
+          'lockedReason': res.data!['lockedReason']?.toString() ?? '',
+        };
+      }
+    } catch (_) {}
+    return {'isLocked': false};
   }
 }

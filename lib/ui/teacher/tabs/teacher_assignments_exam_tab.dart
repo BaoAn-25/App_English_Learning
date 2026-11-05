@@ -90,6 +90,7 @@ class _TeacherAssignmentsExamTabState extends State<TeacherAssignmentsExamTab>
           _isLoading = false;
         });
       }
+      _service.syncAllSupervisedExamsToCloud().catchError((_) => <String, dynamic>{});
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
